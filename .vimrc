@@ -44,6 +44,7 @@ set fileencodings=utf-8,big5,euc-jp,euc-kr,latin1
 set hlsearch
 set incsearch
 set guifont=Uni2-Terminus16
+set laststatus=2
 set expandtab smarttab
 set wildmenu
 set t_Co=256
@@ -87,6 +88,10 @@ fu! DefaultCode()
     call append(14, "}")
   endif
 endf
+
+if !has('gui_running')
+  set t_Co=256
+endif
 
 let g:lightline = {
 \ 'colorscheme': 'wombat',
