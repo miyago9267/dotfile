@@ -8,15 +8,30 @@ N='\033[0m'
 
 printf "${YELLOW}Installing\n${NC}"
 
-" installing curl && git
+# installing curl && git
 sudo apt install curl git
 
-" build link
+# build link
 printf "${Y}Building link to dotfiles${N}\n"
 filepath=$(realpath "$0")
 dir=$(dirname "$filepath")
 ln -sf $dir/.bashrc ~/.bashrc
 ln -sf $dir/.vimrc ~/.vimrc
+
+# install powerline
+sudo apt-get install python-pip git
+pip install --user powerline-status
+
+# setup font
+wget https://github.com/powerline/powerline/raw/develop/font/PowerlineSymbols.otf
+wget https://github.com/powerline/powerline/raw/develop/font/10-powerline-symbols.conf
+mkdir ~/.font/
+mv PowerlineSymbols.otf ~/.fonts/
+fc-cache -vf ~/.fonts/
+mkdir ~/.config/
+mkdir ~/.config/fontconfig/
+mkdir ~/.config/fontconfig/conf.d/
+mv 10-powerline-symbols.conf ~/.config/fontconfig/conf.d/
 
 # setup vundle
 printf "${Y}Setting up Vundle for vim\n${N}"
