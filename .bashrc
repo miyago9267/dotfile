@@ -5,7 +5,7 @@
 alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
-alias l='ls -lCF'
+alias l='ls -l'
 alias ll='ls -alF'
 
 # set a fancy prompt
