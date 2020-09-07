@@ -25,12 +25,12 @@ pip install --user powerline-status
 # setup font
 wget https://github.com/powerline/powerline/raw/develop/font/PowerlineSymbols.otf
 wget https://github.com/powerline/powerline/raw/develop/font/10-powerline-symbols.conf
-mkdir ~/.font/
+mkdir -p ~/.font/
 mv PowerlineSymbols.otf ~/.fonts/
 fc-cache -vf ~/.fonts/
-mkdir ~/.config/
-mkdir ~/.config/fontconfig/
-mkdir ~/.config/fontconfig/conf.d/
+mkdir -p ~/.config/
+mkdir -p ~/.config/fontconfig/
+mkdir -p ~/.config/fontconfig/conf.d/
 mv 10-powerline-symbols.conf ~/.config/fontconfig/conf.d/
 
 # setup vundle
