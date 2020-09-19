@@ -50,23 +50,23 @@ set wildmenu
 set t_Co=256
 set paste
 
-inoremap ( ()<Esc>i
-inoremap " ""<Esc>i
-inoremap ' ''<Esc>i
-inoremap [ []<Esc>i
-inoremap { {}<Esc>i
-
 " different setting for different language
 au Filetype c,cpp setlocal ts=4 sw=4 sts=4 noexpandtab
 au Filetype javascript setlocal ts=2 sw=2 sts=2 expandtab
 
 syntax enable
 syntax on
-" color default
 colorscheme wombat
 set bg=dark
 hi LineNr cterm=bold ctermfg=DarkGrey ctermbg=NONE
 hi CursorLinNr cterm=bold ctermfg=Green ctermbg=NONE
+
+fu! s:transparent_background()
+    highlight Normal guibg=None ctermbg=None
+    highlight NonText guibg=None ctermbg=None
+endf
+
+autocmd ColorScheme * call s:transparent_background()
 
 autocmd FileType cpp call DefaultCode()
 fu! DefaultCode()
@@ -144,3 +144,9 @@ let g:ale_lint_on_enter = 0
 
 " for Vue
 let b:ale_linter_aliases = ['javascript', 'vue']
+
+inoremap ( ()<Esc>i
+inoremap " ""<Esc>i
+inoremap ' ''<Esc>i
+inoremap [ []<Esc>i
+inoremap { {}<Esc>i
