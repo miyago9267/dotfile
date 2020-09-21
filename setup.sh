@@ -7,7 +7,12 @@ N='\033[0m'
 printf "${YELLOW}Installing\n${NC}"
 
 # installing curl && git
-sudo apt install curl git
+sudo apt install curl git zsh
+
+# install zsh
+if [ ! -x "$(command -v zsh)" ]; then
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && chsh -s $(which zsh)
+fi
 
 # build link
 printf "${Y}Building link to dotfiles${N}\n"
@@ -17,11 +22,6 @@ ln -sf $dir/.bashrc ~/.bashrc
 ln -sf $dir/.zshrc ~/.zshrc
 ln -sf $dir/.p10k ~/.p10k
 ln -sf $dir/.vimrc ~/.vimrc
-
-# install zsh
-if [ ! -x "$(command -v zsh)" ]; then
-  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && chsh -s $(which zsh)
-fi
 
 # install powerline
 sudo apt-get install python-pip git
