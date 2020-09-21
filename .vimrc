@@ -15,7 +15,8 @@ Plugin 'itchyny/vim-gitbranch'
 Plugin 'octol/vim-cpp-enhanced-highlight'
 Plugin 'jelera/vim-javascript-syntax'
 
-" Coding 
+" Coding
+Plugin 'preservim/nerdtree' 
 Plugin 'Yggdroot/indentLine'
 Plugin 'luochen1990/rainbow'
 Plugin 'alvan/vim-closetag'
@@ -67,6 +68,10 @@ fu! s:transparent_background()
 endf
 
 autocmd ColorScheme * call s:transparent_background()
+nnoremap <silent> <F6> s:transparent_background()<CR>
+nnoremap <silent> <F7> :colorscheme wombat<CR>
+
+nnoremap <silent> <F5> :NERDTree<CR>
 
 autocmd FileType cpp call DefaultCode()
 fu! DefaultCode()

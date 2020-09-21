@@ -11,7 +11,7 @@ sudo apt install curl git zsh
 
 # install zsh
 if [ ! -x "$(command -v zsh)" ]; then
-  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && chsh -s $(which zsh)
+  sh -c "$(wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)" && chsh -s $(which zsh)
 fi
 
 # build link
@@ -42,6 +42,16 @@ mkdir -p ~/.config/
 mkdir -p ~/.config/fontconfig/
 mkdir -p ~/.config/fontconfig/conf.d/
 mv 10-powerline-symbols.conf ~/.config/fontconfig/conf.d/
+
+ # build link
+printf "${Y}Building link to dotfiles${N}\n"
+filepath=$(realpath "$0")
+dir=$(dirname "$filepath")
+ln -sf $dir/.bashrc ~/.bashrc
+ln -sf $dir/.zshrc ~/.zshrc
+ln -sf $dir/.p10k ~/.p10k
+ln -sf $dir/.vimrc ~/.vimrc
+
 
 # setup vundle
 printf "${Y}Setting up Vundle for vim\n${N}"
