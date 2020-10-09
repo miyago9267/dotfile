@@ -49,7 +49,7 @@ filepath=$(realpath "$0")
 dir=$(dirname "$filepath")
 ln -sf $dir/.bashrc ~/.bashrc
 ln -sf $dir/.zshrc ~/.zshrc
-ln -sf $dir/.p10k ~/.p10k
+ln -sf $dir/.p10k ~/.p10k.zsh
 ln -sf $dir/.vimrc ~/.vimrc
 
 
