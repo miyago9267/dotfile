@@ -42,6 +42,7 @@ mkdir -p ~/.config/
 mkdir -p ~/.config/fontconfig/
 mkdir -p ~/.config/fontconfig/conf.d/
 mv 10-powerline-symbols.conf ~/.config/fontconfig/conf.d/
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
 
  # build link
 printf "${Y}Building link to dotfiles${N}\n"
