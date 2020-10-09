@@ -62,14 +62,11 @@ set bg=dark
 hi LineNr cterm=bold ctermfg=DarkGrey ctermbg=NONE
 hi CursorLinNr cterm=bold ctermfg=Green ctermbg=NONE
 
-fu! s:transparent_background()
-    highlight Normal guibg=None ctermbg=None
-    highlight NonText guibg=None ctermbg=None
-endf
-
-autocmd ColorScheme * call s:transparent_background()
-nnoremap <silent> <F6> s:transparent_background()<CR>
-nnoremap <silent> <F7> :colorscheme wombat<CR>
+" fu! s:transparent_background()
+"     highlight Normal guibg=None ctermbg=None
+"     highlight NonText guibg=None ctermbg=None
+" endf
+" autocmd colorscheme * call s:transparent_background()
 
 nnoremap <silent> <F5> :NERDTree<CR>
 

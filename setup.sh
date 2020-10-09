@@ -52,6 +52,7 @@ ln -sf $dir/.bashrc ~/.bashrc
 ln -sf $dir/.zshrc ~/.zshrc
 ln -sf $dir/.p10k.zsh ~/.p10k.zsh
 ln -sf $dir/.vimrc ~/.vimrc
+ln -sf $dir/.tmux.conf ~/.tmux.conf
 
 
 # setup vundle
