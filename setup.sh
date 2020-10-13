@@ -17,6 +17,16 @@ if [ ! -x "$(command -v zsh)" ]; then
   sh -c "$(curl https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)" && chsh -s $(which zsh)
 fi
 
+# build link
+printf "${Y}Building link to dotfiles${N}\n"
+filepath=$(realpath "$0")
+dir=$(dirname "$filepath")
+ln -sf $dir/.bashrc ~/.bashrc
+ln -sf $dir/.zshrc ~/.zshrc
+ln -sf $dir/.p10k.zsh ~/.p10k.zsh
+ln -sf $dir/.vimrc ~/.vimrc
+ln -sf $dir/.tmux.conf ~/.tmux.conf
+
 # install powerline
 sudo apt-get install python-pip git
 pip install --user powerline-status
@@ -42,17 +52,6 @@ mv 10-powerline-symbols.conf ~/.config/fontconfig/conf.d/
 
 # get p10k.
 sudo git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
-
- # build link
-printf "${Y}Building link to dotfiles${N}\n"
-filepath=$(realpath "$0")
-dir=$(dirname "$filepath")
-ln -sf $dir/.bashrc ~/.bashrc
-ln -sf $dir/.zshrc ~/.zshrc
-ln -sf $dir/.p10k.zsh ~/.p10k.zsh
-ln -sf $dir/.vimrc ~/.vimrc
-ln -sf $dir/.tmux.conf ~/.tmux.conf
-
 
 # setup vundle
 printf "${Y}Setting up Vundle for vim\n${N}"
