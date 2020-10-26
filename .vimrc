@@ -21,6 +21,8 @@ Plugin 'Yggdroot/indentLine'
 Plugin 'luochen1990/rainbow'
 Plugin 'alvan/vim-closetag'
 Plugin 'dense-analysis/ale'
+Plugin 'jiangmiao/auto-pairs'
+Plugin 'zxqfl/tabnine-vim'
 
 " wombat scheme
 Plugin 'sheerun/vim-wombat-scheme'
@@ -31,6 +33,7 @@ filetype plugin indent on
 
 set nu rnu
 set ai
+set nowrap
 set mouse=a
 set ruler cursorline
 set scrolloff=5
@@ -41,7 +44,9 @@ set sw=2 sts=2 ts=2
 set noshowmode
 set showcmd
 set encoding=utf-8
+set clipboard=unnamed
 set fileencodings=utf-8,big5,euc-jp,euc-kr,latin1
+set fileformat=unix
 set hlsearch
 set incsearch
 set guifont=Uni2-Terminus16
@@ -57,18 +62,37 @@ au Filetype javascript setlocal ts=2 sw=2 sts=2 expandtab
 
 syntax enable
 syntax on
+
 colorscheme wombat
 set bg=dark
 hi LineNr cterm=bold ctermfg=DarkGrey ctermbg=NONE
 hi CursorLinNr cterm=bold ctermfg=Green ctermbg=NONE
 
-" fu! s:transparent_background()
+let t:is_transparent_background=1
+fu! Change_Background()
+  if t:is_transparent_background == 0
+    highlight Normal guibg=None ctermbg=None
+		highlight NonText guibg=None ctermbg=None
+    let t:is_transparent_background=1
+  else
+    colors onedark 
+    let t:is_transparent_background=0
+  endif
+endf
+nnoremap <F1> :call Change_Background()<CR>
+
+" fu! t:transparent_background()
 "     highlight Normal guibg=None ctermbg=None
 "     highlight NonText guibg=None ctermbg=None
 " endf
 " autocmd colorscheme * call s:transparent_background()
 
-nnoremap <silent> <F5> :NERDTree<CR>
+" NerdTree settings 
+nnoremap <silent> <F4> :NERDTree<CR>
+autocmd VimEnter * NERDTree | wincmd p " Open on startup and focus on the opened file
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+let NERDTreeMinimalUI=1
+let NERDTreeShowHidden=1
 
 autocmd FileType cpp call DefaultCode()
 fu! DefaultCode()
@@ -82,8 +106,8 @@ fu! DefaultCode()
     call append(6, "")
     call append(7, "")
     call append(8, "")
-    call append(9, "signed main()")
-    call append(10, "{")
+    call append(9, "signed main(){")
+    call append(10, "")
     call append(11, "\tIO;")
     call append(12, "")
     call append(13, "\treturn 0;")
@@ -137,6 +161,9 @@ let g:ale_linters = {
 \   'css': ['prettier']
 \ }
 
+" ale key
+nmap <silent> <leader>k <Plug>(ale_previous_wrap)
+nmap <silent> <leader>j <Plug>(ale_next_wrap)
 let g:ale_sign_column_always = 1
 
 " lint only on save
@@ -147,8 +174,9 @@ let g:ale_lint_on_enter = 0
 " for Vue
 let b:ale_linter_aliases = ['javascript', 'vue']
 
-inoremap ( ()<Esc>i
-inoremap " ""<Esc>i
-inoremap ' ''<Esc>i
-inoremap [ []<Esc>i
-inoremap { {}<Esc>i
+" closetag 
+" inoremap ( ()<Esc>i
+" inoremap " ""<Esc>i
+" inoremap ' ''<Esc>i
+" inoremap [ []<Esc>i
+" inoremap { {}<Esc>i

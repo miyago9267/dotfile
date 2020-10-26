@@ -10,11 +10,11 @@ N='\033[0m'
 printf "${YELLOW}Installing\n${NC}"
 
 # installing curl && git
-sudo apt install curl git zsh
+sudo apt install curl git
 
 # install zsh
 if [ ! -x "$(command -v zsh)" ]; then
-  sh -c "$(curl https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)" && chsh -s $(which zsh)
+  sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && chsh -s $(which zsh)
 fi
 
 # build link
@@ -57,6 +57,9 @@ sudo git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUST
 printf "${Y}Setting up Vundle for vim\n${N}"
 git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 vim +PluginInstall +qall
+
+# set antigen
+curl -sL git.io/antigen > ~/antigen.zsh
 
 # fin
 printf "${Y}Finished!\nPlease restart your device to apply\n${N}"
