@@ -75,7 +75,7 @@ fu! Change_Background()
 		highlight NonText guibg=None ctermbg=None
     let t:is_transparent_background=1
   else
-    colors onedark 
+    colors wombat 
     let t:is_transparent_background=0
   endif
 endf
