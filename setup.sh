@@ -40,15 +40,15 @@ mv "$old_filename" "$new_filename"
 mv "$new_filename" ~/.local/share/fonts
 
 #setup powerline font
-wget https://github.com/powerline/powerline/raw/develop/font/PowerlineSymbols.otf
-wget https://github.com/powerline/powerline/raw/develop/font/10-powerline-symbols.conf
-mkdir -p ~/.font/
-mv PowerlineSymbols.otf ~/.fonts/
-fc-cache -vf ~/.fonts/
-mkdir -p ~/.config/
-mkdir -p ~/.config/fontconfig/
-mkdir -p ~/.config/fontconfig/conf.d/
-mv 10-powerline-symbols.conf ~/.config/fontconfig/conf.d/
+# curl https://github.com/powerline/powerline/raw/develop/font/PowerlineSymbols.otf
+# curl https://github.com/powerline/powerline/raw/develop/font/10-powerline-symbols.conf
+# mkdir -p ~/.font/
+# mkdir -p ~/.config/
+# mkdir -p ~/.config/fontconfig/
+# mkdir -p ~/.config/fontconfig/conf.d/
+# fc-cache -vf ~/.fonts/
+# mv PowerlineSymbols.otf ~/.fonts/
+# mv 10-powerline-symbols.conf ~/.config/fontconfig/conf.d/
 
 # get p10k.
 sudo git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
