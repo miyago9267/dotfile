@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # remove this line to setup
-exit
 
 Y='\033[1;33m'
 R='\033[0;31m'
@@ -10,7 +9,7 @@ N='\033[0m'
 printf "${YELLOW}Installing\n${NC}"
 
 # installing curl && git
-sudo apt install curl git
+sudo apt install curl git zsh python python3-pip
 
 # install zsh
 if [ ! -x "$(command -v zsh)" ]; then
@@ -57,6 +56,13 @@ sudo git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUST
 printf "${Y}Setting up Vundle for vim\n${N}"
 git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 vim +PluginInstall +qall
+
+# setup neovim
+printf "${Y}Setting up NeoVim\n${N}"
+sudo apt install neovim
+sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
+       https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+ln -sf $dir/.init.vim ~/.config/nvim/init.vim
 
 # set antigen
 curl -sL git.io/antigen > ~/.antigen.zsh

@@ -27,7 +27,6 @@ Plugin 'zxqfl/tabnine-vim'
 " wombat scheme
 Plugin 'sheerun/vim-wombat-scheme'
 
-
 call vundle#end()
 filetype plugin indent on
 
