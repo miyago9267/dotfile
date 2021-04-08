@@ -63,6 +63,7 @@ sudo apt install neovim
 sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 ln -sf $dir/.init.vim ~/.config/nvim/init.vim
+pip3 install --user neovim
 
 # set antigen
 curl -sL git.io/antigen > ~/.antigen.zsh
