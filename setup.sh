@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# remove this line to setup
+# Safe
 
+
+# color
 Y='\033[1;33m'
 R='\033[0;31m'
 N='\033[0m'
@@ -9,34 +11,29 @@ N='\033[0m'
 printf "${YELLOW}Installing\n${NC}"
 
 # installing curl && git
-sudo apt install curl git zsh python python3-pip
+sudo apt install curl git zsh python python3-pip python-pip neovim gawk -y
 
-# install zsh
+
+curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh
+# install zsh & zplug
 if [ ! -x "$(command -v zsh)" ]; then
-  sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && chsh -s $(which zsh)
+   && chsh -s $(which zsh)
 fi
 
-# build link
-printf "${Y}Building link to dotfiles${N}\n"
-filepath=$(realpath "$0")
-dir=$(dirname "$filepath")
-ln -sf $dir/.bashrc ~/.bashrc
-ln -sf $dir/.zshrc ~/.zshrc
-ln -sf $dir/.p10k.zsh ~/.p10k.zsh
-ln -sf $dir/.vimrc ~/.vimrc
-ln -sf $dir/.tmux.conf ~/.tmux.conf
+
 
 # install powerline
-sudo apt-get install python-pip git
 pip install --user powerline-status
 
 # setup font
-ir -p ~/.local/share/fonts
-curl -LO https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SourceCodePro/Regular/complete/Sauce%20Code%20Pro%20Nerd%20Font%20Complete%20Mono.ttf
+mkdir -p ~/.local/share/fonts
+# curl -LO https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SourceCodePro/Regular/complete/Sauce%20Code%20Pro%20Nerd%20Font%20Complete%20Mono.ttf
+curl -LO https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf
 old_filename=`ls | grep ttf`
 new_filename=`echo $old_filename | sed "s/%20/ /g"`
 mv "$old_filename" "$new_filename"
 mv "$new_filename" ~/.local/share/fonts
+sudo fc-cache -f -v
 
 #setup powerline font
 # curl https://github.com/powerline/powerline/raw/develop/font/PowerlineSymbols.otf
@@ -52,20 +49,31 @@ mv "$new_filename" ~/.local/share/fonts
 # get p10k.
 sudo git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
 
-# setup vundle
-printf "${Y}Setting up Vundle for vim\n${N}"
-git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
-vim +PluginInstall +qall
+# build link
+printf "${Y}Building link to dotfiles${N}\n"
+filepath=$(realpath "$0")
+dir=$(dirname "$filepath")
+ln -sf $dir/.bashrc ~/.bashrc
+ln -sf $dir/.zshrc ~/.zshrc
+ln -sf $dir/.p10k.zsh ~/.p10k.zsh
+ln -sf $dir/.vimrc ~/.vimrc
+ln -sf $dir/.tmux.conf ~/.tmux.conf
+ln -sf $dir/init.vim ~/.config/nvim/init.vim
 
-# setup neovim
-printf "${Y}Setting up NeoVim\n${N}"
-sudo apt install neovim
+# setup vim plug
+# printf "${Y}Setting up Vundle for vim\n${N}"
+# git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+vim +PlugInstall +qall
+
+# setup vim
+printf "${Y}Setting up Vim\n${N}"
 sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-ln -sf $dir/.init.vim ~/.config/nvim/init.vim
 
 # set antigen
-curl -sL git.io/antigen > ~/.antigen.zsh
+# curl -sL git.io/antigen > ~/.antigen.zsh
 
 # fin
 printf "${Y}Finished!\nPlease restart your device to apply\n${N}"

@@ -1,66 +1,33 @@
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
+######################################################
+##																									##
+##						ZSHRC CONFIGURE USE ZPLUG							##
+##																									##			
+######################################################
+
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
+source ~/.zplug/init.zsh
 
-# Path to your oh-my-zsh installation.
-export ZSH="~/.oh-my-zsh"
+# History config
+HISTSIZE=10000
+SAVEHIST=10000
+HISTFILE=~/.zsh_history
 
-ZSH_THEME="powerlevel10k/powerlevel10k"
+# export config
+
+export TERM="xterm-256color"
+export UPDATE_ZSH_DAYS=7
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=3"
+export LC_ALL=en_US.UTF-8
+export EDITOR="vim"
+export HISTFILE="$HOME/.zsh_history"
+export HISTSIZE=10000000
+export SAVEHIST=10000000
 
 
-ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
-
-zstyle ':zim:git' aliases-prefix 'g'
-WORDCHARS=${WORDCHARS//[\/]}
-
-# ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
-# CASE_SENSITIVE="true"
-# HYPHEN_INSENSITIVE="true"
-# DISABLE_AUTO_UPDATE="true"
-# DISABLE_UPDATE_PROMPT="true"
-# export UPDATE_ZSH_DAYS=13
-# DISABLE_MAGIC_FUNCTIONS="true"
-# DISABLE_LS_COLORS="true"
-# DISABLE_AUTO_TITLE="true"
-# COMPLETION_WAITING_DOTS="true"
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
-
-plugins=(git)
-
-# User configuration
-
-# export MANPATH="/usr/local/man:$MANPATH"
-
-# antigen settings
-
-source ~/.antigen.zsh
-#source /usr/share/zsh-antigen/antigen.zsh
-antigen use oh-my-zsh
-
-function _z() { _zlua "$@"; }
-
-antigen bundle command-not-found
-antigen bundle git
-antigen bundle zsh-users/zsh-syntax-highlighting
-antigen bundle zsh-users/zsh-completions
-antigen bundle zsh-users/zsh-autosuggestions
-antigen bundle docker
-antigen bundle emoji
-antigen bundle npm
-antigen bundle python
-antigen bundle sudo
-antigen bundle vscode
-
-antigen theme romkatv/powerlevel10k
-antigen apply
-
-# aliases
+# alias
 
 alias rm='rm -i'
 alias cp='cp -i'
@@ -79,22 +46,52 @@ HIST_STAMPS="yyyy-mm-dd"
 
 # enable ls color
 if [ -x /usr/bin/dircolors ]; then
-		test -r ~/.dircolors && eval "$(dircolor -b ~/.dircolors)" || eval "$(dircolors -b)"
- 		alias ls='ls --color=auto'
-		alias dir='dir --color=auto'
-		alias grep='grep --color=auto'
-		alias fgrep='fgrep --color=auto'
-		alias egrep='egrap --color=auto'
+	test -r ~/.dircolors && eval "$(dircolor -b ~/.dircolors)" || eval "$(dircolors -b)"
+	alias ls='ls --color=auto'
+	alias dir='dir --color=auto'
+	alias grep='grep --color=auto'
+	alias fgrep='fgrep --color=auto'
+	alias egrep='egrap --color=auto'
 fi
 
-export TERM="xterm-256color"
-export UPDATE_ZSH_DAYS=7
-export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=3"
-export LC_ALL=en_US.UTF-8
-export EDITOR="vim"
-export HISTFILE="$HOME/.zsh_history"
-export HISTSIZE=10000000
-export SAVEHIST=10000000
+
+# zplug plugins
+zplug "romkatv/powerlevel10k", as:theme, depth:1
+zplug 'zplug/zplug', hook-build:'zplug --self-manage'
+zplug "zsh-users/zsh-completions"
+zplug "zsh-users/zsh-history-substring-search"
+zplug "zsh-users/zsh-autosuggestions"
+zplug "zdharma/fast-syntax-highlighting"
+zplug "zpm-zsh/ls"
+zplug "plugins/docker", from:oh-my-zsh
+zplug "plugins/composer", from:oh-my-zsh
+zplug "plugins/extract", from:oh-my-zsh
+zplug "lib/completion", from:oh-my-zsh
+zplug "plugins/sudo", from:oh-my-zsh
+zplug "b4b4r07/enhancd", use:init.sh
+
+
+
+# Configure
+
+# search keybind
+if zplug check zsh-users/zsh-history-substring-search; then
+  bindkey '^[[a' history-substring-search-up
+  bindkey '^[[b' history-substring-search-down
+fi
+# ...
+
+
+# Install packages that have not been installed yet
+if ! zplug check --verbose; then
+    printf "Install? [y/N]: "
+    if read -q; then
+        echo; zplug install
+    else
+        echo
+    fi
+fi
+zplug load
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
