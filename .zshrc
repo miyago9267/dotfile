@@ -35,6 +35,8 @@ alias mv='mv -i'
 alias l='ls -l'
 alias ll='ls -alF'
 alias py='python3'
+alias nv='nvim'
+alias clr='clear'
 
 # set a fancy prompt
 case "$TERM" in

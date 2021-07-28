@@ -136,10 +136,11 @@ hi CursorLinNr cterm=bold ctermfg=Green ctermbg=NONE
 
 " execution/compilation utils
 nnoremap <silent>Q <ESC>:q!<CR>
-nnoremap <C-f> <ESC>/
+nnoremap <C-F> <ESC>/
 nnoremap <F7> <ESC>:w<CR>:!python %<CR>
 nnoremap <F8> <ESC>:w<CR>:!python3 %<CR>
 nnoremap <F9> <ESC>:w<CR>:!g++ -std=c++17 -O2 -Wall -Wextra -Wshadow %<CR>
+nnoremap <C-,> <ESC>:terminal<CR>
 
 
 " Monika Waifuuuuu

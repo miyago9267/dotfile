@@ -17,7 +17,7 @@ sudo apt install curl git zsh python python3-pip python-pip neovim gawk -y
 curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh
 # install zsh & zplug
 if [ ! -x "$(command -v zsh)" ]; then
-   && chsh -s $(which zsh)
+   chsh -s $(which zsh)
 fi
 
 
