@@ -21,6 +21,15 @@ chsh -s $(which zsh)
 # install powerline
 pip install --user powerline-status
 
+# nodejs & npm & nvm
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+nvm install node
+npm install npm@lastest -g
+npm install
+npm install yarm
+yarm install
+
+
 # setup font
 mkdir -p ~/.local/share/fonts
 # curl -LO https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SourceCodePro/Regular/complete/Sauce%20Code%20Pro%20Nerd%20Font%20Complete%20Mono.ttf
