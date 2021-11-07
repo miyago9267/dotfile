@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Safe
-
+exit
 
 # color
 Y='\033[1;33m'
@@ -11,16 +11,12 @@ N='\033[0m'
 printf "${YELLOW}Installing\n${NC}"
 
 # installing curl && git
-sudo apt install curl git zsh python python3-pip python-pip neovim gawk -y
+sudo apt install curl git zsh python python-pip neovim gawk -y
 
 
 curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh
 # install zsh & zplug
-if [ ! -x "$(command -v zsh)" ]; then
-   chsh -s $(which zsh)
-fi
-
-
+chsh -s $(which zsh)
 
 # install powerline
 pip install --user powerline-status
@@ -53,6 +49,7 @@ sudo git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUST
 printf "${Y}Building link to dotfiles${N}\n"
 filepath=$(realpath "$0")
 dir=$(dirname "$filepath")
+mkdir -p ~/.config/nvim
 ln -sf $dir/.bashrc ~/.bashrc
 ln -sf $dir/.zshrc ~/.zshrc
 ln -sf $dir/.p10k.zsh ~/.p10k.zsh
