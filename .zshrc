@@ -37,6 +37,8 @@ alias ll='ls -alF'
 alias py='python3'
 alias nv='nvim'
 alias clr='clear'
+alias sudo='sudo '
+alias rc='sh ~/script/rg.sh '
 
 # set a fancy prompt
 case "$TERM" in
@@ -63,7 +65,7 @@ zplug 'zplug/zplug', hook-build:'zplug --self-manage'
 zplug "zsh-users/zsh-completions"
 zplug "zsh-users/zsh-history-substring-search"
 zplug "zsh-users/zsh-autosuggestions"
-zplug "zdharma/fast-syntax-highlighting"
+zplug "zdharma-continuum/fast-syntax-highlighting"
 zplug "zpm-zsh/ls"
 zplug "plugins/docker", from:oh-my-zsh
 zplug "plugins/composer", from:oh-my-zsh
@@ -97,3 +99,7 @@ zplug load
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
