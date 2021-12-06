@@ -11,7 +11,7 @@ N='\033[0m'
 printf "${YELLOW}Installing\n${NC}"
 
 # installing curl && git
-sudo apt install curl git zsh python python-pip neovim gawk -y
+sudo apt install curl git zsh python3 python3-pip neovim gawk
 
 
 curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh
