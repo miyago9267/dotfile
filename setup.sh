@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Safe
-# exit
+exit
 
 # color
 Y='\033[1;33m'
@@ -74,6 +74,7 @@ sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.
 
 # include nvm & node
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+source ~/.zshrc
 nvm install node && nvm install 14
 npm install -g npm@latest
 npm install
