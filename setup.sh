@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Safe
-exit
+# exit
 
 # color
 Y='\033[1;33m'
@@ -20,15 +20,6 @@ chsh -s $(which zsh)
 
 # install powerline
 pip install --user powerline-status
-
-# nodejs & npm & nvm
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
-nvm install node
-npm install npm@lastest -g
-npm install
-npm install yarm
-yarm install
-
 
 # setup font
 mkdir -p ~/.local/share/fonts
@@ -80,6 +71,13 @@ sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.
 
 # set antigen
 # curl -sL git.io/antigen > ~/.antigen.zsh
+
+# include nvm & node
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+nvm install node && nvm install 14
+npm install -g npm@latest
+npm install
+npm install yarm
 
 # fin
 printf "${Y}Finished!\nPlease restart your device to apply\n${N}"
