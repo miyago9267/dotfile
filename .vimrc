@@ -44,7 +44,7 @@ Plug 'sainnhe/edge'
 
 " NeoVim
 Plug 'scrooloose/syntastic'
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'neoclide/coc.nvim', {'branch': 'master'}
 Plug 'majutsushi/tagbar'
 Plug 'ap/vim-css-color'
 
@@ -161,21 +161,38 @@ nnoremap <F1> :call Change_Background()<CR>
 autocmd FileType cpp call DefaultCode()
 fu! DefaultCode()
   if line("$") == 1
-    call append(0, "#include <bits/stdc++.h>")
-    call append(1, "#define IO ios::sync_with_stdio(0);cin.tie(0)")
-    call append(2, "#define endl '\\n'")
-    call append(3, "#define MAXN maxn")
-    call append(4, "")
-    call append(5, "using namespace std;")
-    call append(6, "")
-    call append(7, "")
-    call append(8, "")
-    call append(9, "signed main(){")
-    call append(10, "")
-    call append(11, "\tIO;")
-    call append(12, "")
-    call append(13, "\treturn 0;")
-    call append(14, "}")
+    call append(0, "// By myg9267")
+    call append(1, "// i m bad in coding, so sad")
+    call append(2, "// it a me mario")
+    call append(3, "#include <bits/stdc++.h>")
+    call append(4, "#pragma GCC optimize("O1")")
+    call append(5, "#pragma GCC optimize("O2")")
+    call append(6, "#pragma GCC optimize("O3")")
+    call append(7, "#define endl "\n"")
+    call append(8, "#define endll "\n\n"")
+    call append(9, "#define pb emplace_back")
+    call append(10, "#define IO ios_base::sync_with_stdio(0);cin.tie(0);cout.sync_with_stdio(0)")
+    call append(11, "#define ll long long")
+    call append(12, "#define MAXN maxn")
+    call append(13, "#define MODN modn")
+    call append(14, "")
+    call append(15, "using namespace std;")
+    call append(16, "")
+    call append(17, "class Solution{")
+    call append(18, "    public:")
+    call append(19, "")
+    call append(20, "    private:")
+    call append(21, "    ")
+    call append(22, "};")
+    call append(23, "")
+    call append(24, "signed main(){")
+    call append(25, "    IO;")
+    call append(26, "    #ifdef DEBUG")
+    call append(27, "		freopen("p.in", "r", stdin);")
+    call append(28, "		freopen("p.out", "w", stdout);")
+    call append(29, "	#endif")
+    call append(30, "    return EXIT_SUCCESS;")
+    call append(31, "}")
   endif
 endf
 
@@ -198,12 +215,17 @@ let g:syntastic_always_populate_loc_list = 1
 let g:syntastic_auto_loc_list = 1
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
+let g:syntastic_cpp_compiler = 'g++'
+let g:syntastic_cpp_compiler_options = ' -std=c++2a --stdlib=libc++'
 
 
 " NerdTree settings 
 nnoremap <silent> <F4> :NERDTree<CR>
 autocmd VimEnter * NERDTree | wincmd p " Open on startup and focus on the opened file
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+
+" coc setting
+" so ~/.config/nvim/coc-config.vim
 
 " UI setting
 " let NERDTreeMinimalUI=1

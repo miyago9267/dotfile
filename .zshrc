@@ -10,6 +10,21 @@ fi
 
 source ~/.zplug/init.zsh
 
+# zplug plugins
+zplug "romkatv/powerlevel10k", as:theme, depth:1
+zplug 'zplug/zplug', hook-build:'zplug --self-manage'
+zplug "zsh-users/zsh-completions"
+zplug "zsh-users/zsh-history-substring-search"
+zplug "zsh-users/zsh-autosuggestions"
+zplug "zdharma/fast-syntax-highlighting"
+zplug "zpm-zsh/ls"
+zplug "plugins/docker", from:oh-my-zsh
+zplug "plugins/composer", from:oh-my-zsh
+zplug "plugins/extract", from:oh-my-zsh
+zplug "lib/completion", from:oh-my-zsh
+zplug "plugins/sudo", from:oh-my-zsh
+zplug "b4b4r07/enhancd", use:init.sh
+
 # History config
 HISTSIZE=10000
 SAVEHIST=10000
@@ -37,6 +52,8 @@ alias ll='ls -alF'
 alias py='python3'
 alias nv='nvim'
 alias clr='clear'
+alias nmsl='cat /home/miyago/welcome.txt'
+alias rc='~/script/rnc '
 
 # set a fancy prompt
 case "$TERM" in
@@ -55,24 +72,6 @@ if [ -x /usr/bin/dircolors ]; then
 	alias fgrep='fgrep --color=auto'
 	alias egrep='egrap --color=auto'
 fi
-
-
-# zplug plugins
-zplug "romkatv/powerlevel10k", as:theme, depth:1
-zplug 'zplug/zplug', hook-build:'zplug --self-manage'
-zplug "zsh-users/zsh-completions"
-zplug "zsh-users/zsh-history-substring-search"
-zplug "zsh-users/zsh-autosuggestions"
-zplug "zdharma/fast-syntax-highlighting"
-zplug "zpm-zsh/ls"
-zplug "plugins/docker", from:oh-my-zsh
-zplug "plugins/composer", from:oh-my-zsh
-zplug "plugins/extract", from:oh-my-zsh
-zplug "lib/completion", from:oh-my-zsh
-zplug "plugins/sudo", from:oh-my-zsh
-zplug "b4b4r07/enhancd", use:init.sh
-
-
 
 # Configure
 
@@ -97,3 +96,7 @@ zplug load
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+
