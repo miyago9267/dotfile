@@ -1,7 +1,11 @@
 #!/bin/bash
 
 # Safe
+<<<<<<< HEAD
 exit
+=======
+# exit
+>>>>>>> 2e2229bcbc72dcec70797ee04737a3377fbec181
 
 # color
 Y='\033[1;33m'
@@ -11,6 +15,7 @@ N='\033[0m'
 printf "${Y}Installing\n${N}"
 
 # installing curl && git
+<<<<<<< HEAD
 if [ -x "$(command -v apt)" ]; then
     cmd="sudo apt install"
     packages=("zsh git curl neovim gawk tmux libtool autoconf automake cmake libncurses5-dev g++ clang")
@@ -29,6 +34,14 @@ curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/instal
 if [ ! -x "$(command -v zsh)" ]; then
    chsh -s $(which zsh)
 fi
+=======
+sudo apt install curl git zsh python3 python3-pip neovim gawk
+
+
+curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh
+# install zsh & zplug
+chsh -s $(which zsh)
+>>>>>>> 2e2229bcbc72dcec70797ee04737a3377fbec181
 
 # install powerline
 pip install --user powerline-status
@@ -50,6 +63,7 @@ printf "${Y}Building link to dotfiles${N}\n"
 mkdir ~/.config
 filepath=$(realpath "$0")
 dir=$(dirname "$filepath")
+mkdir -p ~/.config/nvim
 ln -sf $dir/.bashrc ~/.bashrc
 ln -sf $dir/.zshrc ~/.zshrc
 ln -sf $dir/.p10k.zsh ~/.p10k.zsh
@@ -68,5 +82,19 @@ printf "${Y}Setting up Vim\n${N}"
 sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 
+<<<<<<< HEAD
+=======
+# set antigen
+# curl -sL git.io/antigen > ~/.antigen.zsh
+
+# include nvm & node
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+source ~/.zshrc
+nvm install node && nvm install 14
+npm install -g npm@latest
+npm install
+npm install yarm
+
+>>>>>>> 2e2229bcbc72dcec70797ee04737a3377fbec181
 # fin
 printf "${Y}Finished!\nPlease restart your device to apply\n${N}"

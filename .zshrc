@@ -52,8 +52,13 @@ alias ll='ls -alF'
 alias py='python3'
 alias nv='nvim'
 alias clr='clear'
+<<<<<<< HEAD
 alias nmsl='cat /home/miyago/welcome.txt'
 alias rc='~/script/rnc '
+=======
+alias sudo='sudo '
+alias rc='sh ~/script/rg.sh '
+>>>>>>> 2e2229bcbc72dcec70797ee04737a3377fbec181
 
 # set a fancy prompt
 case "$TERM" in
@@ -73,6 +78,27 @@ if [ -x /usr/bin/dircolors ]; then
 	alias egrep='egrap --color=auto'
 fi
 
+<<<<<<< HEAD
+=======
+
+# zplug plugins
+zplug "romkatv/powerlevel10k", as:theme, depth:1
+zplug 'zplug/zplug', hook-build:'zplug --self-manage'
+zplug "zsh-users/zsh-completions"
+zplug "zsh-users/zsh-history-substring-search"
+zplug "zsh-users/zsh-autosuggestions"
+zplug "zdharma-continuum/fast-syntax-highlighting"
+zplug "zpm-zsh/ls"
+zplug "plugins/docker", from:oh-my-zsh
+zplug "plugins/composer", from:oh-my-zsh
+zplug "plugins/extract", from:oh-my-zsh
+zplug "lib/completion", from:oh-my-zsh
+zplug "plugins/sudo", from:oh-my-zsh
+zplug "b4b4r07/enhancd", use:init.sh
+
+
+
+>>>>>>> 2e2229bcbc72dcec70797ee04737a3377fbec181
 # Configure
 
 # search keybind
@@ -97,6 +123,12 @@ zplug load
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+<<<<<<< HEAD
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 
+=======
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+>>>>>>> 2e2229bcbc72dcec70797ee04737a3377fbec181
