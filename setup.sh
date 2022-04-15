@@ -13,10 +13,10 @@ printf "${Y}Installing\n${N}"
 # installing curl && git
 if [ -x "$(command -v apt)" ]; then
     cmd="sudo apt install"
-    packages=("zsh git curl neovim gawk tmux libtool autoconf automake cmake libncurses5-dev g++ clang")
+    packages=("zsh" "git" "curl" "neovim" "gawk" "tmux" "libtool" "autoconf" "automake" "cmake" "libncurses5-dev" "g++" "clang")
 elif [ -x "$(command -v pacman)" ]; then
     cmd="pacman -S --noconfirm"
-    packages=("zsh git curl neovim python-pynvim tmux cmake g++ clang")
+    packages=("zsh" "git" "curl" "neovim" "python-pynvim" "tmux" "cmake" "g++" "clang")
 fi 
 
 for pkg in $packages; do
