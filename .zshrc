@@ -52,13 +52,8 @@ alias ll='ls -alF'
 alias py='python3'
 alias nv='nvim'
 alias clr='clear'
-<<<<<<< HEAD
-alias nmsl='cat /home/miyago/welcome.txt'
-alias rc='~/script/rnc '
-=======
 alias sudo='sudo '
-alias rc='sh ~/script/rg.sh '
->>>>>>> 2e2229bcbc72dcec70797ee04737a3377fbec181
+alias rc='~/script/rnc '
 
 # set a fancy prompt
 case "$TERM" in
@@ -78,8 +73,6 @@ if [ -x /usr/bin/dircolors ]; then
 	alias egrep='egrap --color=auto'
 fi
 
-<<<<<<< HEAD
-=======
 
 # zplug plugins
 zplug "romkatv/powerlevel10k", as:theme, depth:1
@@ -98,7 +91,6 @@ zplug "b4b4r07/enhancd", use:init.sh
 
 
 
->>>>>>> 2e2229bcbc72dcec70797ee04737a3377fbec181
 # Configure
 
 # search keybind
