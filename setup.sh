@@ -17,6 +17,9 @@ if [ -x "$(command -v apt)" ]; then
 elif [ -x "$(command -v pacman)" ]; then
     cmd="pacman -S --noconfirm"
     packages=("zsh" "git" "curl" "neovim" "python-pynvim" "tmux" "cmake" "g++" "clang")
+else 
+    printf "${R}No package manager found\n${N}"
+    exit
 fi 
 
 for pkg in $packages; do
