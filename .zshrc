@@ -34,26 +34,13 @@ export EDITOR="vim"
 export HISTFILE="$HOME/.zsh_history"
 export HISTSIZE=10000000
 export SAVEHIST=10000000
-./alias.sh
+source ~/dotfile/alias.sh
 
 # Set a fancy prompt
 case "$TERM" in
 		xterm-color|*-256color) color_prompt=yes;;
 esac
 
-# alias  
-# common cmd
-alias rm='rm -i'
-alias cp='cp -i'
-alias mv='mv -i'
-alias l='ls -l'
-alias ll='ls -alF'
-alias py='python3'
-alias nv='nvim'
-alias clr='clear'
-alias sudo='sudo '
-alias rc='zsh ~/script/rc.sh '
-alias lnk='~/script/lnk.sh '
 
 # enable ls color
 if [ -x /usr/bin/dircolors ]; then

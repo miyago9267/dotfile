@@ -75,12 +75,12 @@ fi
 
 # Go fuck urself
 # safe=1
-if [ "$safe" = "1" ]; then
-    if [ -f "./${fileName}.class" ]; then
-        rm -f $fileName.class
-        rm -f t.in
-        rm -f t.out
-    elif [ -f "./${fileName}" ];  then
-        rm -rf $fileName
-    fi
-fi
+# if [ "$safe" = "1" ]; then
+#     if [ -f "./${fileName}.class" ]; then
+#         rm -f $fileName.class
+#         rm -f t.in
+#         rm -f t.out
+#     elif [ -f "./${fileName}" ];  then
+#         rm -rf $fileName
+#     fi
+# fi

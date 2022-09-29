@@ -8,9 +8,9 @@
 #define IO ios_base::sync_with_stdio(0);cin.tie(0);cout.sync_with_stdio(0)
 #define DD(x) cout << #x << " = " << x << endl
 #define DDV(x) for (auto &i:x) cout<<i<<" "; cout<<endl
-#define success(x) cout << "\032[0;31m" << x << "\033[0m" << endl
+#define success(x) cout << "\033[0;32m" << x << "\033[0m" << endl
 #define warning(x) cout << "\033[0;31m" << x << "\033[0m" << endl
-#define info(x) cout << "\034[0;31m" << x << "\033[0m" << endl
+#define info(x) cout << "\033[0;34m" << x << "\033[0m" << endl
 
 using namespace std;
 
@@ -19,26 +19,64 @@ class RunAfterCompiler{
         class java{
             public:
                 void compile(string fileName, vector<string> args){
-                    string command = "javac " + fileName;
-                    system(command.c_str());
+                    string command = "javac " + fileName + ".java";
+                    try {
+                        system(command.c_str());
+                        success("Compiled! Executing...");
+                    } catch (exception &e){
+                        warning("Error: " + string(e.what()));
+                        exit(EXIT_FAILURE);
+                    }
                 }
                 void run(string fileName, vector<string> args){
-                    string command = "java " + fileName + " ";
-                    system(command.c_str());
+                    string command = "java " + fileName;
+                    for (auto &i:args){
+                        command += cmdList[i];
+                    }
+                    try {
+                        system(command.c_str());
+                        success("Done!");
+                    } catch (exception &e){
+                        warning("Error: " + string(e.what()));
+                        exit(EXIT_FAILURE);
+                    }
                 }
+            private:
+                map<string, string> cmdList = {
+                    {"-f", " < t.in > t.out "}, {"-d","-Wall -g "}
+                };
         };
 
         class cpp{
             public:
                 void compile(string fileName, vector<string> args){
-                    string command = "g++ -std=c++17 -O2 -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-result -Wno-unused-local-typedefs -Wno-unknown-pragmas -Wno-missing-braces -Wno-missing-field-initializers -Wno-parentheses -Wno-switch -Wno-implicit-fallthrough -Wno-reorder -Wno-sign-compare -Wno-strict-aliasing -Wno-strict-overflow -Wno-unused-but-set-variable -Wno-unused-const-variable -Wno-unused-variable -Wno-unused-value -Wno-unused-function -Wno-unused-result -Wno-unused-local-typedefs -Wno-unknown-pragmas -Wno-missing-braces -Wno-missing-field-initializers -Wno-parentheses -Wno-switch -Wno-implicit-fallthrough -Wno-reorder -Wno-sign-compare -Wno-strict-aliasing -Wno-strict-overflow -Wno-unused-but-set-variable -Wno-unused-const-variable -Wno-unused-variable -Wno-unused-value -Wno-unused-function -Wno-unused-result -Wno-unused-local-typedefs -Wno-unknown-pragmas -Wno-missing-braces -Wno-missing-field-initializers -Wno-parentheses -Wno-switch -Wno-implicit-fallthrough -Wno-reorder -Wno-sign-compare -Wno-strict-aliasing -Wno-strict-overflow -Wno-unused-but-set-variable -Wno-unused-const-variable -Wno-unused-variable -Wno-unused-value -Wno-unused-function -Wno-unused-result -Wno-unused-local-typedefs -Wno-unknown-pragmas -Wno-missing-braces -Wno-missing-field-initializers -Wno-parentheses -Wno-switch -Wno-implicit-fallthrough -Wno-reorder -Wno-sign-compare -Wno-strict-aliasing -Wno-strict-overflow -Wno-unused-but-set-variable -Wno-unused-const-variable -Wno-unused-variable -Wno-unused-value -Wno-unused-function -Wno-unused-result -Wno-unused-local-t";
-                    command += " -o " + fileName + ".cpp " + fileName;
-                    system(command.c_str());
+                    string command = "g++ -std=c++17 -Wno-unused-variable -O3 ";
+                    for (auto &i:args){
+                        command += cmdList[i];
+                    }
+                    command += fileName + ".cpp -o " + fileName;
+                    try {
+                        system(command.c_str());
+                        success("Compiled! Executing...");
+                    } catch (exception &e){
+                        warning("Error: " + string(e.what()));
+                        exit(EXIT_FAILURE);
+                    }
                 }
                 void run(string fileName, vector<string> args){
-                    string command = "./" + fileName + ".cpp ";
-                    system(command.c_str());
+                    string command = "./" + fileName;
+                    try {
+                        system(command.c_str());
+                        success("Done!");
+                    } catch (exception &e){
+                        warning("Error: " + string(e.what()));
+                        exit(EXIT_FAILURE);
+                    }
                 }
+            private:
+                map<string, string> cmdList = {
+                    {"-f", "-D DEBUG "}, {"-d","-Wall -g "}
+                };
         };
 
         void fileNameCheck(string name, string ext) {
@@ -89,14 +127,7 @@ class RunAfterCompiler{
         vector<string> args;
         vector<string> fileTypeList = {"cpp", "java"};
         string fileName, fileExt, filePath, cmdType, cmd;
-        map<char, string> cmdList = {
-            {'F', " -D DEBUG"}, {'D'," -Wall -g"}
-        };
-        
-    
 };
-
-// rc <cpp/java> <file> [args]
 
 signed main(int argCt, char const *argv[]){
     //IO;
