@@ -1,3 +1,4 @@
+#!/bin/bash
 cmds=("cpp java")
 args=("-d -f")
 res[0]=" -Wall -g"
@@ -23,23 +24,25 @@ if [ "$cmd" = "" ]; then
     exit 1
 fi
 
-if [ -f "./${2%.*}.${cmd}" ]; then
+if [ -f "./${2%.*}.cpp" ]; then
     fileName=`echo "${2%.*}"`
 else
     printf "${R}No such file: ${Y}${2}${N}\n"
     printf "${help}\n"
 fi
+# fileName=$2
+# echo $fileName
 
 if [ "$3" = "-d" ] || [ "$4" = "-d" ]; then
-    debugArgs=${res[0]}
+    debugArgs=" -Wall -g"
 fi
 
 if [ "$3" = "-f" ] || [ "$4" = "-f" ]; then
-    fileTest=${res[1]}
+    fileTest=" -D DEBUG"
 fi
 
 if [ "$cmd" = "cpp" ]; then
-    g++ $fileName.cpp$debugArgs$fileTest -o $fileName
+    g++$debugArgs$fileTest $fileName.cpp -o $fileName
     if [ -f "./${fileName}" ]; then
         printf "${G}Compile Success, executing now${N}\n"
         if [ "$debugArgs" != "" ]; then
