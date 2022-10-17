@@ -39,7 +39,7 @@ Plug 'rakr/vim-one'
 Plug 'altercation/solarized'
 " Plug 'chuling/equinusocio-material.vim'
 Plug 'yunlingz/ci_dark'
-Plug 'kjssad/quantum.vim'
+" Plug 'kjssad/quantum.vim'
 Plug 'sainnhe/edge'
 
 " NeoVim
@@ -54,7 +54,7 @@ filetype plugin indent on
 
 " global setting
 
-set nu rnu
+set nu
 set ai
 set nowrap
 set mouse=a
@@ -96,7 +96,6 @@ if has('termguicolors')
     set termguicolors
 endif
 
-
 " nvim hahapeeyen
 if has('nvim')
     let s:editor_root=expand('~/.config/nvim')
@@ -133,16 +132,6 @@ let g:airline_theme = 'edge'
 hi LineNr cterm=bold ctermfg=DarkGrey ctermbg=NONE
 hi CursorLinNr cterm=bold ctermfg=Green ctermbg=NONE
 
-
-" execution/compilation utils
-nnoremap <silent>Q <ESC>:q!<CR>
-nnoremap <C-F> <ESC>/
-nnoremap <F7> <ESC>:w<CR>:!python %<CR>
-nnoremap <F8> <ESC>:w<CR>:!python3 %<CR>
-nnoremap <F9> <ESC>:w<CR>:!g++ -std=c++17 -O2 -Wall -Wextra -Wshadow %<CR>
-nnoremap <C-,> <ESC>:terminal<CR>
-
-
 " Monika Waifuuuuu
 " Change Background to invisible or one theme (Copy from CSY54)
 let t:is_transparent_background=1
@@ -155,44 +144,12 @@ fu! Change_Background()
     let t:is_transparent_background=0
   endif
 endf
-nnoremap <F1> :call Change_Background()<CR>
-
 
 autocmd FileType cpp call DefaultCode()
 fu! DefaultCode()
-  if line("$") == 1
-    call append(0, "// By myg9267")
-    call append(1, "// i m bad in coding, so sad")
-    call append(2, "// it a me mario")
-    call append(3, "#include <bits/stdc++.h>")
-    call append(4, "#pragma GCC optimize("O1")")
-    call append(5, "#pragma GCC optimize("O2")")
-    call append(6, "#pragma GCC optimize("O3")")
-    call append(7, "#define endl "\n"")
-    call append(8, "#define endll "\n\n"")
-    call append(9, "#define pb emplace_back")
-    call append(10, "#define IO ios_base::sync_with_stdio(0);cin.tie(0);cout.sync_with_stdio(0)")
-    call append(11, "#define ll long long")
-    call append(12, "#define MAXN maxn")
-    call append(13, "#define MODN modn")
-    call append(14, "")
-    call append(15, "using namespace std;")
-    call append(16, "")
-    call append(17, "class Solution{")
-    call append(18, "    public:")
-    call append(19, "")
-    call append(20, "    private:")
-    call append(21, "    ")
-    call append(22, "};")
-    call append(23, "")
-    call append(24, "signed main(){")
-    call append(25, "    IO;")
-    call append(26, "    #ifdef DEBUG")
-    call append(27, "		freopen("p.in", "r", stdin);")
-    call append(28, "		freopen("p.out", "w", stdout);")
-    call append(29, "	#endif")
-    call append(30, "    return EXIT_SUCCESS;")
-    call append(31, "}")
+  if readfile(fnameescape(expand('%'))) == []
+    exec "0r ~/dotfile/template/template.cpp"
+    normal! gg
   endif
 endf
 
@@ -217,7 +174,7 @@ let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 let g:syntastic_cpp_compiler = 'g++'
 let g:syntastic_cpp_compiler_options = ' -std=c++2a --stdlib=libc++'
-
+let g:coc_disable_startup_warning = 1
 
 " NerdTree settings 
 nnoremap <silent> <F4> :NERDTree<CR>
@@ -240,7 +197,7 @@ let g:NERDToggleCheckAllLines=1
 
 
 let g:ft = ''
-function! NERDCommenter_before()
+fu! NERDCommenter_before()
     if &ft == 'vue'
         let g:ft = 'vue'
         let stack = synstack(line('.'), col('.'))
@@ -251,14 +208,14 @@ function! NERDCommenter_before()
             endif
         endif
     endif
-endfunction
+endfu
 
-function! NERDCommenter_after()
+fu! NERDCommenter_after()
     if g:ft == 'vue'
         setf vue
         let g:ft = ''
     endif
-endfunction
+endfu
 
 let g:NERDTreeGitStatusUseNerdFonts=1
 let g:NERDTreeGitStatusShowIgnored=1
@@ -282,7 +239,7 @@ let g:lightline = {
 \   'active': {
 \       'left': [
 \           ['mode', 'paste'],
-\           ['gitbranch', 'cocstatus', 'currentfunction', 'readonly', 'filename', 'modified'],
+\           ['gitbranch', 'cocstatus', 'currentfu', 'readonly', 'filename', 'modified'],
 \       ],
 \       'right': [
 \           ['percent', 'lineinfo'],
@@ -314,11 +271,11 @@ let g:lightline = {
 \       'linter_errors': 'error',
 \       'linter_ok': 'right'
 \   },
-\   'component_function': {
+\   'component_fu': {
 \       'readonly': 'LightlineReadonly',
 \       'gitbranch': 'gitbranch#name',
 \       'cocstatus': 'coc#status',
-\       'currentfunction': 'CocCurrentFunction'
+\       'currentfu': 'CocCurrentfu'
 \   },
 \   'component_raw': {
 \       'buffers': 1
@@ -465,10 +422,10 @@ inoremap <silent><expr> <TAB>
   \ <SID>check_back_space() ? "\<TAB>" :
   \ coc#refresh()
 
-function! s:check_back_space() abort
+fu! s:check_back_space() abort
     let col = col('.') - 1
     return !col || getline('.')[col - 1]  =~# '\s'
-endfunction
+endfu
 
 
 " majutsushi/tagbar
@@ -481,3 +438,28 @@ let g:SuperTabMappingBackward='<tab>'
 " inoremap ' ''<Esc>i
 " inoremap [ []<Esc>i
 " inoremap { {}<Esc>i
+
+" execution/compilation utils
+fu! CompileRunGcc()
+    exec "w"
+    if &filetype == 'cpp'
+        exec "!g++ % -g -Wall -std=c++17 -o %<"
+        exec "! ./%<"
+    endif
+endf
+
+command W w
+command Q q!
+command Wq wq
+command WQ wq
+
+nnoremap Q :q!<CR>
+nnoremap <C-F> <ESC>/
+nnoremap <F1> :call Change_Background()<CR>
+nnoremap <F3> :set nu!<BAR>set nonu?<CR>
+nnoremap <F7> <ESC>:w<CR>:!python %<CR>
+nnoremap <F8> <ESC>:w<CR>:!python3 %<CR>
+nnoremap <F9> <ESC>:w<CR>:call CompileRunGcc()<CR>
+nnoremap <F10> <ESC>:w<CR>:call CompileRunGcc()<CR>
+nnoremap <C-,> <ESC>:terminal<CR>
+inoremap <C-s> <ESC>:w<CR>

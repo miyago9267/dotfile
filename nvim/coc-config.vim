@@ -1,5 +1,15 @@
-let :coc_global_extensions = [
+let g:coc_global_extensions = [
 \ 'coc-sh',
-\ 'coc-html'
-\ 'coc-clangd'
-\ ]g
+\ 'coc-html',
+\ 'coc-clangd',
+\ 'coc-css',
+\ 'coc-tsserver',
+\ 'coc-json',
+\ 'coc-yaml',
+\ 'coc-python',
+\ 'coc-java',
+\ 'coc-go',
+\ 'coc-docker',
+\ 'coc-cmake',
+\ 'coc-copilot',
+\ ]

@@ -8,8 +8,8 @@ alias py='python3'
 alias nv='nvim'
 alias clr='clear'
 alias sudo='sudo '
-alias rc='~/script/rc '
-alias lnk='~/script/lnk.sh '
+alias rc='~/dotfile/script/rc '
+alias lnk='~/dotfile/script/lnk.sh '
 
 # enable ls color
 if [ -x /usr/bin/dircolors ]; then

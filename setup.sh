@@ -52,8 +52,7 @@ sudo git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUST
 
 # build link
 printf "${Y}Building link to dotfiles${N}\n"
-mkdir ~/.config
-mkdir -p ~/.config/nvim
+mkdir -p ~/.config
 dir=$(dirname "$(realpath "$0")")
 ln -sf $dir/.bashrc ~/.bashrc
 ln -sf $dir/.zshrc ~/.zshrc
@@ -62,15 +61,16 @@ ln -sf $dir/.vimrc ~/.vimrc
 ln -sf $dir/.tmux.conf ~/.tmux.conf
 ln -sf $dir/nvim ~/.config/nvim
 ln -sf $dir/script ~/script
+ln -sf $dir/alias.sh ~/alias.sh
 
 # Setup everything
 ## setup nodejs
 ## i cant fix the problem that happen when source zshrc in script
-# nvm install 12
-# nvm use 12
-# npm install
-# npm install npm@latest -g
-# npm install yarn@latest -g
+nvm install 14
+nvm use 14
+npm install
+npm install npm@latest -g
+npm install yarn@latest -g
 
 ## setup vim plug
 curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
@@ -86,9 +86,6 @@ fi
 printf "${Y}Setting up Vim\n${N}"
 sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-
-## alias
-sh ./alias.sh
 
 # Done!
 printf "${Y}Finished!\n${B}Please restart your device to apply\n${N}"
