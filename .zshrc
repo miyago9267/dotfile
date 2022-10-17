@@ -35,9 +35,9 @@ export HISTFILE="$HOME/.zsh_history"
 export HISTSIZE=10000000
 export SAVEHIST=10000000
 
-if [ -f ~/alias.sh]; then
+if [ -f ~/alias.sh ]; then
   source ~/alias.sh
-elif [ -f ~/dotfile/alias.sh]; then
+elif [ -f ~/dotfile/alias.sh ]; then
   source ~/dotfile/alias.sh
 fi
 
