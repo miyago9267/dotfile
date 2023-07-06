@@ -1,5 +1,3 @@
-# WIP i m lazy
-
 from fileinput import filename
 import sys
 import os
@@ -11,8 +9,8 @@ class run:
             self.args = args
             try:
                 os.system('javac' + ' ' + ' '.join(self.args))
-                if (os.path.isfile()):
-                    os.system('java' + ' ' + filename().split('.')[0])
+                if (os.path.isfile(filename())):
+                    os.system('java')
             except:
                 print('Error: java not found')
 
