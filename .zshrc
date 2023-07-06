@@ -35,9 +35,9 @@ export HISTFILE="$HOME/.zsh_history"
 export HISTSIZE=10000000
 export SAVEHIST=10000000
 
-if [ -f ~/alias.sh ]; then
+if [ -f ~/alias.sh]; then
   source ~/alias.sh
-elif [ -f ~/dotfile/alias.sh ]; then
+elif [ -f ~/dotfile/alias.sh]; then
   source ~/dotfile/alias.sh
 fi
 
@@ -91,3 +91,7 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+. "/home/miyago/.acme.sh/acme.sh.env"
+
+
+export PATH="/home/miyago/.local/bin:$PATH"

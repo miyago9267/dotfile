@@ -28,7 +28,7 @@ Plug 'luochen1990/rainbow'
 Plug 'alvan/vim-closetag'
 Plug 'dense-analysis/ale'
 Plug 'jiangmiao/auto-pairs'
-Plug 'zxqfl/tabnine-vim'
+" Plug 'zxqfl/tabnine-vim'
 
 Plug 'posva/vim-vue'
 Plug 'leafOfTree/vim-vue-plugin'
@@ -84,7 +84,7 @@ set shortmess+=c
 set signcolumn=yes
 set splitbelow splitright
 set t_Co=256
-set paste
+" set paste
 let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
 let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
 
