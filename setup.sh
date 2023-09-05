@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Safe, plz remove belove line if u need to start install
-# exit
+exit
 
 # color
 Y='\033[1;33m'
@@ -32,11 +32,10 @@ done
 ## Zsh & Zplug
 curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh
 
+
 ## install powerline
 pip install --user powerline-status
 
-## Install nvm
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 
 # Install font
 curl -LO https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf
@@ -45,7 +44,13 @@ old_filename=`ls | grep ttf`
 new_filename=`echo $old_filename | sed "s/%20/ /g"`
 mv "$old_filename" "$new_filename"
 mv "$new_filename" ~/.local/share/fonts
-sudo fc-cache -f -v
+sudo fc-cache -f -vi
+
+# Install Poetry
+curl -sSL https://install.python-poetry.org | python3 -
+
+# Install PyEnv
+git clone https://github.com/pyenv/pyenv.git ~/.pyenv
 
 # get p10k.
 sudo git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
@@ -59,15 +64,25 @@ ln -sf $dir/.zshrc ~/.zshrc
 ln -sf $dir/.p10k.zsh ~/.p10k.zsh
 ln -sf $dir/.vimrc ~/.vimrc
 ln -sf $dir/.tmux.conf ~/.tmux.conf
-ln -sf $dir/nvim ~/.config/nvim
+ln -sf $dir/nvim ~/.config
 ln -sf $dir/script ~/script
 ln -sf $dir/alias.sh ~/alias.sh
+
+## setup zsh & zplug
+if [ ! -x "$(command -v zsh)" ]; then
+   chsh -s $(which zsh)
+fi
+
+zsh -c 'source ~/.zshrc;'
+
+## Install nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 
 # Setup everything
 ## setup nodejs
 ## i cant fix the problem that happen when source zshrc in script
-nvm install 14
-nvm use 14
+nvm install 18
+nvm use 18
 npm install
 npm install npm@latest -g
 npm install yarn@latest -g
@@ -77,10 +92,7 @@ curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 vim +PlugInstall +qall
 
-## setup zsh & zplug
-if [ ! -x "$(command -v zsh)" ]; then
-   chsh -s $(which zsh)
-fi
+
 
 ## setup vim
 printf "${Y}Setting up Vim\n${N}"
