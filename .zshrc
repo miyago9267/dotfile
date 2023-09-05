@@ -29,15 +29,18 @@ zplug "b4b4r07/enhancd", use:init.sh
 export TERM="xterm-256color"
 export UPDATE_ZSH_DAYS=7
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=3"
+export LANGUAGE=en_US
 export LC_ALL=en_US.UTF-8
 export EDITOR="vim"
 export HISTFILE="$HOME/.zsh_history"
 export HISTSIZE=10000000
 export SAVEHIST=10000000
 
-if [ -f ~/alias.sh]; then
+typeset -g POWERLEVEL9K_INSTANT_PROMPT=off
+
+if [ -f ~/alias.sh ]; then
   source ~/alias.sh
-elif [ -f ~/dotfile/alias.sh]; then
+elif [ -f ~/dotfile/alias.sh ]; then
   source ~/dotfile/alias.sh
 fi
 
@@ -91,7 +94,7 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-. "/home/miyago/.acme.sh/acme.sh.env"
+# . "/home/miyago/.acme.sh/acme.sh.env"
 
 
 export PATH="/home/miyago/.local/bin:$PATH"
