@@ -2,7 +2,7 @@
 alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
-alias l='ls -l'
+alias l='ls -l --color=auto'
 alias ll='ls -alF'
 alias py='python3.10'
 alias nv='nvim'
