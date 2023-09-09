@@ -19,6 +19,9 @@ if [ -x "$(command -v apt)" ]; then
 elif [ -x "$(command -v pacman)" ]; then
     cmd="sudo pacman -S --noconfirm"
     packages=("zsh git curl neovim python-pynvim tmux cmake g++ clang")
+elif [ -x "$(command -v brew)" ]; then
+    cmd="brew install"
+    packages=("zsh curl git tmux")
 else 
     printf "${R}No package manager found\n${N}"
     exit
