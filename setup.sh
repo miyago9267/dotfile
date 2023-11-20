@@ -88,9 +88,13 @@ npm install npm@latest -g
 npm install yarn@latest -g
 
 ## setup vim plug
+git clone https://github.com/github/copilot.vim.git \
+  ~/.config/nvim/pack/github/start/copilot.vim
+
 curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 vim +PlugInstall +qall
+vim +Copilot +setup
 
 
 
