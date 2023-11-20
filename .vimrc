@@ -81,6 +81,7 @@ set cmdheight=2
 set showtabline=2
 set updatetime=300
 set shortmess+=c
+set whichwrap+=<,>,[,]
 set signcolumn=yes
 set splitbelow splitright
 set t_Co=256
@@ -415,18 +416,7 @@ let g:vim_vue_plugin_highlight_vue_attr=1
 let g:vim_vue_plugin_highlight_vue_keyword=1
 
 " neoclide/coc.nvim
-" <TAB> navigation
-inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm() : "\<C-g>u\<CR>"
-inoremap <silent><expr> <TAB>
-  \ pumvisible() ? "\<C-n>" :
-  \ <SID>check_back_space() ? "\<TAB>" :
-  \ coc#refresh()
-
-fu! s:check_back_space() abort
-    let col = col('.') - 1
-    return !col || getline('.')[col - 1]  =~# '\s'
-endfu
-
+inoremap <expr> <cr> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
 
 " majutsushi/tagbar
 let g:SuperTabMappingForward='<s-tab>'
