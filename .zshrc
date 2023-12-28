@@ -99,7 +99,7 @@ export NVM_DIR="$HOME/.nvm"
 
 export PATH="/home/miyago/.local/bin:$PATH"
 export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
+export PATH="$PYENV_ROOT/bin:$PATH:/usr/local/go/bin"
 if command -v pyenv 1>/dev/null 2>&1; then
  eval "$(pyenv init -)"
 fi
