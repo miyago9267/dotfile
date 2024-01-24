@@ -1,8 +1,12 @@
 #!/bin/bash
 
+R='\033[0;31m'
+G='\033[0;32m'
+NC='\033[0m'
+
 # Check file path exist
 if [ -z "$1" ] || [ ! -f "$1" ]; then
-  echo "\033[0;31mError: File Missing! Check your file path correctly.\033[0m"
+  printf "${R}Error: File Missing! Check your file path correctly.${NC}\n"
   exit 1
 fi
 
@@ -27,7 +31,7 @@ else
 fi
 
 if [ $? -eq 0 ]; then
-  echo "\033[0;32mSuccess: Compile Successfully!\033[0m"
+  printf "${G}Success: Compile Successfully!${NC}\n"
 
   # Checking gdb mode
   if [ "$2" == "-d" ] || [ "$3" == "-d" ]; then
@@ -39,7 +43,7 @@ if [ $? -eq 0 ]; then
   # Remove redundant files
   rm -f "$(basename "$1")" solexec
 else
-  echo "\033[0;31mErorr: Compile Failed!\033[0m"
+  printf "${R}Erorr: Compile Failed!${NC}\n"
 fi
 
 exit 0
