@@ -12,6 +12,7 @@ alias rc='bash ~/dotfile/script/rc.sh '
 alias lnk='~/dotfile/script/lnk.sh '
 alias codegpt='~/lib/codegpt'
 alias neofetch='neofetch;printcat'
+alias rc='~/dotfile/script/coderun.sh '
 
 # enable ls color
 if [ -x /usr/bin/dircolors ]; then
