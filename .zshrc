@@ -1,7 +1,7 @@
 ######################################################
 ##																									##
 ##						ZSHRC CONFIGURE USE ZPLUG							##
-##																									##			
+##																									##
 ######################################################
 
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
@@ -97,9 +97,8 @@ export NVM_DIR="$HOME/.nvm"
 # . "/home/miyago/.acme.sh/acme.sh.env"
 
 
-export PATH="/home/miyago/.local/bin:$PATH"
 export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH:/usr/local/go/bin"
+export PATH="$HOME/.local/bin:$PYENV_ROOT/bin:$PATH:/usr/local/go/bin"
 if command -v pyenv 1>/dev/null 2>&1; then
  eval "$(pyenv init -)"
 fi
