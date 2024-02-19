@@ -25,9 +25,9 @@ fi
 
 
 if [ "$2" == "-f" ] || [ "$3" == "-f" ]; then
-  g++ -o solexec -D DEBUG "$(basename "$1")"
+  g++ -o solexec --std=c++17 -D DEBUG "$(basename "$1")"
 else
-  g++ -o solexec "$(basename "$1")"
+  g++ -o solexec --std=c++17 "$(basename "$1")"
 fi
 
 if [ $? -eq 0 ]; then
