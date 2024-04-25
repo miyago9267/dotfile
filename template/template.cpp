@@ -8,25 +8,40 @@
 #define MAXN maxn
 #define MODN modn
 
+#define DD(x) cout << #x << " = " << x << endl
+#define tt cout << "test" << endl
+#define fe(v) for(auto x : v) cout << x << " "; cout << endl
+#define pii pair<ll, ll>
+#define vi vector<ll>
+#define vvi vector<vi>
+#define cmp greater<ll>
+#define all(v) v.begin(), v.end()
+
+#define rootPath NEED_SETTING
+#define di (rootPath+"/Debug/t.in")
+#define do (rootPath+"/Debug/t.out")
+
 using namespace std;
 
-class Solution{
-    public:
+// ---------------------------------------------------------------- //
 
+class Solution {
+    public:
+        Solution() {}
+        ~Solution() {}
+        static void solve();
     private:
-    
 };
 
-signed main(){
+signed main() {
     IO;
     #ifdef DEBUG
         cin.tie(0);cout.sync_with_stdio(0);
-        string rootPath = "/";
-         freopen((rootPath+"/Debug/t.in").c_str(), "r", stdin);
-         freopen((rootPath+"/Debug/t.out").c_str(), "w", stdout);
+        freopen(di.c_str(), "r", stdin);
+        freopen(do.c_str(), "w", stdout);
     #endif
 
-    // TODO
+    Solution::solve();
 
     return EXIT_SUCCESS;
 }

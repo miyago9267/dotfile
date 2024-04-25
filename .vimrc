@@ -84,6 +84,7 @@ set shortmess+=c
 set whichwrap+=<,>,[,]
 set signcolumn=yes
 set splitbelow splitright
+set shell=/bin/zsh
 set t_Co=256
 " set paste
 let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
@@ -433,8 +434,7 @@ let g:SuperTabMappingBackward='<tab>'
 fu! CompileRunGcc()
     exec "w"
     if &filetype == 'cpp'
-        exec "!g++ % -g -Wall -std=c++17 -o %<"
-        exec "! ./%<"
+        exec "!rc %"
     endif
 endf
 
