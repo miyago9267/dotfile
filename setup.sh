@@ -14,7 +14,7 @@ printf "${Y}Installing\n${N}"
 # Install all packages you need
 ## From package manager
 if [ -x "$(command -v apt)" ]; then
-    cmd="sudo apt install"
+    cmd="sudo apt install -y"
     packages=("zsh git curl neovim gawk tmux libtool autoconf automake cmake libncurses5-dev g++ clang")
 elif [ -x "$(command -v pacman)" ]; then
     cmd="sudo pacman -S --noconfirm"
@@ -70,6 +70,7 @@ ln -sf $dir/.tmux.conf ~/.tmux.conf
 ln -sf $dir/nvim ~/.config
 ln -sf $dir/script ~/script
 ln -sf $dir/alias.sh ~/alias.sh
+sudo cp $dir/script/printcat /usr/local/bin
 
 ## setup zsh & zplug
 if [ ! -x "$(command -v zsh)" ]; then
