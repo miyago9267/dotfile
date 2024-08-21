@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Safe, plz remove belove line if u need to start install
-exit
+# exit
 
 # color
 Y='\033[1;33m'

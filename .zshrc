@@ -102,3 +102,12 @@ export PATH="$HOME/.local/bin:/usr/local/opt/gcc/bin:$PYENV_ROOT/bin:$PATH:/usr/
 if command -v pyenv 1>/dev/null 2>&1; then
  eval "$(pyenv init -)"
 fi
+
+# pnpm
+export PNPM_HOME="/home/miyago/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
+export PATH=/home/miyago/.pyenv/shims:/home/miyago/.local/bin:/usr/local/opt/gcc/bin:/home/miyago/.pyenv/bin:/home/miyago/.zplug/repos/zplug/zplug/bin:/home/miyago/.zplug/bin:/home/miyago/.vscode-server/cli/servers/Stable-eaa41d57266683296de7d118f574d0c2652e1fc4/server/bin/remote-cli:/home/miyago/.local/share/pnpm:/home/miyago/.local/bin:/usr/local/opt/gcc/bin:/home/miyago/.pyenv/bin:/home/miyago/.nvm/versions/node/v20.16.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/local/go/bin:/usr/local/go/bin:/home/miyago/go/bin
