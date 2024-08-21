@@ -13,6 +13,7 @@ alias lnk='~/dotfile/script/lnk.sh '
 alias codegpt='~/lib/codegpt'
 alias neofetch='neofetch;printcat'
 alias rc='~/dotfile/script/coderun.sh '
+alias du='du -had1'
 
 # enable ls color
 if [ -x /usr/bin/dircolors ]; then
