@@ -5,4 +5,4 @@ if ! command -v zsh >/dev/null; then
   chsh -s "$(command -v zsh)"
 fi
 
-zsh -c "source ~/.zshrc"
+echo "✅ zsh 安裝完成，請重新啟動終端或執行 'exec zsh' 套用設定"
