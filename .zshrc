@@ -4,6 +4,8 @@
 ##																									##
 ######################################################
 
+export PERL_BADLANG=0
+
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
@@ -111,3 +113,10 @@ case ":$PATH:" in
 esac
 # pnpm end
 export PATH=/home/miyago/.pyenv/shims:/home/miyago/.local/bin:/usr/local/opt/gcc/bin:/home/miyago/.pyenv/bin:/home/miyago/.zplug/repos/zplug/zplug/bin:/home/miyago/.zplug/bin:/home/miyago/.vscode-server/cli/servers/Stable-eaa41d57266683296de7d118f574d0c2652e1fc4/server/bin/remote-cli:/home/miyago/.local/share/pnpm:/home/miyago/.local/bin:/usr/local/opt/gcc/bin:/home/miyago/.pyenv/bin:/home/miyago/.nvm/versions/node/v20.16.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/local/go/bin:/usr/local/go/bin:/home/miyago/go/bin
+
+export PATH=$PATH:$(go env GOPATH)/bin
+export PATH=$HOME/development/flutter/bin:$PATH
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+
+. "$HOME/.cargo/env"
