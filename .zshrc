@@ -4,6 +4,13 @@
 ##																									##
 ######################################################
 
+# macOS Homebrew 路徑修復
+if [ -d /opt/homebrew/bin ]; then
+  export PATH="/opt/homebrew/bin:$PATH"
+elif [ -d /usr/local/bin ]; then
+  export PATH="/usr/local/bin:$PATH"
+fi
+
 export PERL_BADLANG=0
 
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
@@ -100,22 +107,19 @@ export NVM_DIR="$HOME/.nvm"
 
 
 export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$HOME/.local/bin:/usr/local/opt/gcc/bin:$PYENV_ROOT/bin:$PATH:/usr/local/go/bin"
-if command -v pyenv 1>/dev/null 2>&1; then
- eval "$(pyenv init -)"
-fi
-
-# pnpm
-export PNPM_HOME="/home/miyago/.local/share/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end
-export PATH=/home/miyago/.pyenv/shims:/home/miyago/.local/bin:/usr/local/opt/gcc/bin:/home/miyago/.pyenv/bin:/home/miyago/.zplug/repos/zplug/zplug/bin:/home/miyago/.zplug/bin:/home/miyago/.vscode-server/cli/servers/Stable-eaa41d57266683296de7d118f574d0c2652e1fc4/server/bin/remote-cli:/home/miyago/.local/share/pnpm:/home/miyago/.local/bin:/usr/local/opt/gcc/bin:/home/miyago/.pyenv/bin:/home/miyago/.nvm/versions/node/v20.16.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/local/go/bin:/usr/local/go/bin:/home/miyago/go/bin
-
-export PATH=$PATH:$(go env GOPATH)/bin
-export PATH=$HOME/development/flutter/bin:$PATH
+export PATH="$HOME/.pyenv/shims:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="/usr/local/opt/gcc/bin:$PATH"
+export PATH="$HOME/.pyenv/bin:$PATH"
+export PATH="$HOME/.zplug/repos/zplug/zplug/bin:$PATH"
+export PATH="$HOME/.zplug/bin:$PATH"
+export PATH="$HOME/.vscode-server/cli/servers/Stable-eaa41d57266683296de7d118f574d0c2652e1fc4/server/bin/remote-cli:$PATH"
+export PATH="$HOME/.local/share/pnpm:$PATH"
+export PATH="$HOME/.nvm/versions/node/v20.16.0/bin:$PATH"
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:$PATH"
+export PATH="/usr/local/go/bin:$PATH"
+export PATH="$HOME/go/bin:$PATH"
+export PATH="$HOME/development/flutter/bin:$PATH"
 export ANDROID_HOME="$HOME/Library/Android/sdk"
 export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
 
