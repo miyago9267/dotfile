@@ -322,3 +322,4 @@ dist
 
 package.json
 package-lock.json
+*.bak
