@@ -447,6 +447,7 @@ nnoremap Q :q!<CR>
 nnoremap <C-F> <ESC>/
 nnoremap <F1> :call Change_Background()<CR>
 nnoremap <F3> :set nu!<BAR>set nonu?<CR>
+nnoremap <F4> :NERDTreeToggle<CR>
 nnoremap <F7> <ESC>:w<CR>:!python %<CR>
 nnoremap <F8> <ESC>:w<CR>:!python3 %<CR>
 nnoremap <F9> <ESC>:w<CR>:call CompileRunGcc()<CR>

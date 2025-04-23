@@ -1,7 +1,12 @@
 #!/bin/sh
-git clone https://github.com/github/copilot.vim.git   ~/.config/nvim/pack/github/start/copilot.vim
 
-curl -fLo ~/.vim/autoload/plug.vim --create-dirs   https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+# 安裝 vim-plug（僅限 Vim 使用）
+echo "Installing vim-plug for Vim..."
+curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
+  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+# 執行 PlugInstall 安裝 Vim 的插件
 vim +PlugInstall +qall
-vim +Copilot +setup
-curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}/nvim/site/autoload/plug.vim" --create-dirs   https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+# 提醒用戶 Neovim 現已使用 init.lua 與 lazy.nvim 管理 plugin
+echo "✅ Vim 插件已安裝完成。Neovim 請透過 ~/.config/nvim/init.lua 自動安裝 Lazy.nvim 插件。"
