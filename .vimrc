@@ -180,7 +180,7 @@ let g:coc_disable_startup_warning = 1
 
 " NerdTree settings 
 nnoremap <silent> <F4> :NERDTree<CR>
-autocmd VimEnter * NERDTree | wincmd p " Open on startup and focus on the opened file
+autocmd VimEnter * if exists(':NERDTree') | execute 'NERDTree | wincmd p' | endif
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
 " coc setting
@@ -443,6 +443,9 @@ command Q q!
 command Wq wq
 command WQ wq
 
+"
+" 強制 Q 為強制退出，不啟動 Ex 模式
+silent! unmap QQ
 nnoremap Q :q!<CR>
 nnoremap <C-F> <ESC>/
 nnoremap <F1> :call Change_Background()<CR>
