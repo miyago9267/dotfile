@@ -32,7 +32,7 @@ zplug "plugins/composer", from:oh-my-zsh
 zplug "plugins/extract", from:oh-my-zsh
 zplug "lib/completion", from:oh-my-zsh
 zplug "plugins/sudo", from:oh-my-zsh
-zplug "b4b4r07/enhancd", use:init.sh
+# zplug "b4b4r07/enhancd", use:init.sh
 
 # Export config
 export TERM="xterm-256color"
