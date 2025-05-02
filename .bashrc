@@ -1,7 +1,7 @@
 ######################################################
-##											        ##
-##		          BASHRC by Miyago				    ##
-##													##			
+##											                            ##
+##		          BASHRC by Miyago				            ##
+##													                        ##
 ######################################################
 
 # Export config
@@ -36,6 +36,12 @@ fi
 POWERLINE_SCRIPT=/usr/share/powerline/bindings/bash/powerline.sh
 if [ -f $POWERLINE_SCRIPT ]; then
   source $POWERLINE_SCRIPT
+fi
+
+if [ -f ~/alias.sh ]; then
+  source ~/alias.sh
+elif [ -f ~/dotfile/alias.sh ]; then
+  source ~/dotfile/alias.sh
 fi
 
 export TERM=xterm-256color

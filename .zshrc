@@ -25,6 +25,14 @@ zplug 'zplug/zplug', hook-build:'zplug --self-manage'
 zplug "zsh-users/zsh-completions"
 zplug "zsh-users/zsh-history-substring-search"
 zplug "zsh-users/zsh-autosuggestions"
+zplug "zsh-users/zsh-completions"
+zplug "zsh-users/zsh-syntax-highlighting", defer:2
+zplug "zsh-users/zsh-autosuggestions", defer:3
+zplug "junegunn/fzf", from:github, as:command, hook-build:"./install --all"
+zplug "Aloxaf/fzf-tab"
+zplug "plugins/git", from:oh-my-zsh
+zplug "direnv/direnv"
+zplug "knqyf263/pet"
 zplug "zdharma/fast-syntax-highlighting"
 zplug "zpm-zsh/ls"
 zplug "plugins/docker", from:oh-my-zsh
@@ -62,12 +70,12 @@ esac
 
 # enable ls color
 if [ -x /usr/bin/dircolors ]; then
-	test -r ~/.dircolors && eval "$(dircolor -b ~/.dircolors)" || eval "$(dircolors -b)"
+	test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
 	alias ls='ls --color=auto'
 	alias dir='dir --color=auto'
 	alias grep='grep --color=auto'
 	alias fgrep='fgrep --color=auto'
-	alias egrep='egrap --color=auto'
+	alias egrep='egrep --color=auto'
 fi
 
 # Zsh
@@ -96,24 +104,15 @@ zplug load
 # Load p10k
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-
 # Fuck NVM
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-# . "/home/miyago/.acme.sh/acme.sh.env"
-
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
 
 export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$HOME/.pyenv/shims:$PATH"
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.pyenv/bin:$HOME/.pyenv/shims:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.zplug/repos/zplug/zplug/bin:$HOME/.zplug/bin:$PATH"
 export PATH="/usr/local/opt/gcc/bin:$PATH"
-export PATH="$HOME/.pyenv/bin:$PATH"
-export PATH="$HOME/.zplug/repos/zplug/zplug/bin:$PATH"
-export PATH="$HOME/.zplug/bin:$PATH"
 export PATH="$HOME/.vscode-server/cli/servers/Stable-eaa41d57266683296de7d118f574d0c2652e1fc4/server/bin/remote-cli:$PATH"
 export PATH="$HOME/.local/share/pnpm:$PATH"
 export PATH="$HOME/.nvm/versions/node/v20.16.0/bin:$PATH"

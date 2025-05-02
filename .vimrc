@@ -433,8 +433,8 @@ let g:SuperTabMappingBackward='<tab>'
 " execution/compilation utils
 fu! CompileRunGcc()
     exec "w"
-    if &filetype == 'cpp'
-        exec "!rc %"
+    if &filetype == 'cpp' || &filetype == 'c'
+        exec "!rc -s %"
     endif
 endf
 
