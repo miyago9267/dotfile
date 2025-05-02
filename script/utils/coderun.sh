@@ -31,13 +31,8 @@ mkdir -p "$workspace_dir"
 cp "$source_file" "$workspace_dir"
 cd "$workspace_dir"
 
-# Checking debug mode
 if [ "$debug_flag" -eq 1 ]; then
   sed -i '1i#define debug' "$(basename "$source_file")"
-fi
-
-
-if [ "$debug_flag" -eq 1 ]; then
   g++ -o solexec --std=c++17 -D DEBUG "$(basename "$source_file")"
 else
   g++ -o solexec --std=c++17 "$(basename "$source_file")"
@@ -54,7 +49,7 @@ if [ $? -eq 0 ]; then
   fi
 
   # Remove redundant files
-  rm -f "$(basename "$1")" solexec
+  rm -f "$(basename "$source_file")" solexec
 else
   printf "${R}Erorr: Compile Failed!${NC}\n"
 fi
