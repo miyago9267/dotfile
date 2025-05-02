@@ -15,6 +15,7 @@ alias rc='~/dotfile/script/utils/coderun.sh '
 alias cb='carbonyl '
 alias god='go '
 alias du='du -had1'
+alias ptr='poetry run '
 
 # enable ls color
 if [ -x /usr/bin/dircolors ]; then
