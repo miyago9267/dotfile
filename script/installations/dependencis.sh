@@ -15,7 +15,7 @@ elif [ "$(uname)" = "Darwin" ]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
   fi
   cmd="brew install"
-  packages="zsh curl git tmux"
+  packages="zsh curl git tmux go neovim"
 else
   echo "No supported package manager found"
   exit 1

@@ -67,7 +67,6 @@ case "$TERM" in
 		xterm-color|*-256color) color_prompt=yes;;
 esac
 
-
 # enable ls color
 if [ -x /usr/bin/dircolors ]; then
 	test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
@@ -124,3 +123,5 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
 
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
