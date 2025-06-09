@@ -4,24 +4,31 @@ R='\033[0;31m'
 G='\033[0;32m'
 NC='\033[0m'
 
-# Parameter parsing
-debug_flag=0
-gdb_flag=0
-source_file=""
+# Check if source file is provided as the first argument
+if [ $# -lt 1 ]; then
+  printf "${R}Error: Missing source file! Usage: rc <source_file> [-f debug_flag] [-d]${NC}\n"
+  exit 1
+fi
 
-while getopts "f:d:s:" opt; do
-  case $opt in
-    f) debug_flag=1 ;;
-    d) gdb_flag=1 ;;
-    s) source_file="$OPTARG" ;;
-    *) echo "Usage: $0 -s source_file [-f] [-d]"; exit 1 ;;
-  esac
-done
-
-if [ -z "$source_file" ] || [ ! -f "$source_file" ]; then
+# Check if the provided file exists
+if [ -z "$1" ] || [ ! -f "$1" ]; then
   printf "${R}Error: File Missing! Check your file path correctly.${NC}\n"
   exit 1
 fi
+
+# Parameter parsing
+debug_flag=0
+gdb_flag=0
+source_file="$1"
+shift
+
+while getopts "f:d:" opt; do
+  case $opt in
+    f) debug_flag="$OPTARG" ;;
+    d) gdb_flag=1 ;;
+    *) echo "Usage: $0 -s source_file [-f] [-d]"; exit 1 ;;
+  esac
+done
 
 # Workspace Directory
 workspace_dir="$HOME/.workspace"
@@ -31,9 +38,9 @@ mkdir -p "$workspace_dir"
 cp "$source_file" "$workspace_dir"
 cd "$workspace_dir"
 
-if [ "$debug_flag" -eq 1 ]; then
-  sed -i '1i#define debug' "$(basename "$source_file")"
-  g++ -o solexec --std=c++17 -D DEBUG "$(basename "$source_file")"
+if [ -n "$debug_flag" ]; then
+  printf "${G}Debug Mode: Enabled with flag $debug_flag${NC}\n"
+  g++ -o solexec --std=c++17 -D DEBUG=\"$debug_flag\" "$(basename "$source_file")"
 else
   g++ -o solexec --std=c++17 "$(basename "$source_file")"
 fi
