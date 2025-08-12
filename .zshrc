@@ -67,16 +67,6 @@ case "$TERM" in
 		xterm-color|*-256color) color_prompt=yes;;
 esac
 
-# enable ls color
-if [ -x /usr/bin/dircolors ]; then
-	test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-	alias ls='ls --color=auto'
-	alias dir='dir --color=auto'
-	alias grep='grep --color=auto'
-	alias fgrep='fgrep --color=auto'
-	alias egrep='egrep --color=auto'
-fi
-
 # Zsh
 ENABLE_CORRECTION="true"
 HIST_STAMPS="yyyy-mm-dd"
@@ -125,3 +115,9 @@ export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+# bun completions
+[ -s "/home/miyago/.bun/_bun" ] && source "/home/miyago/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"

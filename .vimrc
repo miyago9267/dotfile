@@ -474,10 +474,12 @@ nnoremap <C-w> :bd<CR>
 " Ctrl+f 綁定為搜尋（/）
 inoremap <C-f> <ESC>/
 nnoremap <C-f> /
-" 你可依需求安裝 fzf.vim 或 leaderf 來支援 :Files
 
 " 方向鍵支援搜尋結果移動與控制位置
-nnoremap <Down> n
-nnoremap <Up> N
-nnoremap <Left> :bprevious<CR>
-nnoremap <Right> :bnext<CR>
+cnoremap <expr> <Down> getcmdtype() =~ '[/?]' ? "\<CR>n" : "\<Down>"
+cnoremap <expr> <Up>   getcmdtype() =~ '[/?]' ? "\<CR>N" : "\<Up>"
+vnoremap <BS> "_d
+vnoremap <Del> "_d
+
+cnoremap <expr> <Left>  getcmdtype() =~ '[/?]' ? "\<CR>N" : "\<Left>"
+cnoremap <expr> <Right> getcmdtype() =~ '[/?]' ? "\<CR>n" : "\<Right>"
