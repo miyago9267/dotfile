@@ -56,6 +56,18 @@ require("lualine").setup({
 })
 
 require("nvim-tree").setup()
+
+-- 啟動自動開啟 nvim-tree
+vim.api.nvim_create_autocmd("VimEnter", {
+  callback = function()
+    require("nvim-tree.api").tree.open()
+  end
+})
+
+-- <F4> 綁定為 nvim-tree 開關，與 .vimrc NERDTreeToggle 行為一致
+vim.keymap.set('n', '<F4>', function()
+  require("nvim-tree.api").tree.toggle()
+end, { noremap = true, silent = true })
 require("gitsigns").setup()
 require("colorizer").setup()
 require("bufferline").setup()

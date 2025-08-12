@@ -1,4 +1,4 @@
-let g:ale_disable_lsp = 1
+
 
 call plug#begin('~/.vim/plugged')
 
@@ -42,8 +42,13 @@ Plug 'yunlingz/ci_dark'
 " Plug 'kjssad/quantum.vim'
 Plug 'sainnhe/edge'
 
+
+" Fuzzy Finder
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+
 " NeoVim
-Plug 'scrooloose/syntastic'
+" Plug 'scrooloose/syntastic'
 Plug 'neoclide/coc.nvim', {'branch': 'master'}
 Plug 'majutsushi/tagbar'
 Plug 'ap/vim-css-color'
@@ -62,8 +67,11 @@ set ruler cursorline
 set scrolloff=5
 set tabstop=4
 set shiftwidth=4
-set autoindent smartindent cindent
-set sw=2 sts=2 ts=2
+set softtabstop=4
+set expandtab
+set autoindent
+set smartindent
+set cindent
 set noshowmode
 set showcmd
 set encoding=utf-8
@@ -110,19 +118,18 @@ endif
 """""""""""""""""""""""""""""
 
 " Change different tabspace setting for different language
-au Filetype c,cpp setlocal ts=4 sw=4 sts=4 noexpandtab
-au Filetype php setlocal ts=4 sw=4 sts=4 expandtab
-au Filetype javascript,vue setlocal ts=2 sw=2 sts=2 expandtab
-au Filetype vim setlocal ts=4 sw=4 sts=4 expandtab
-au Filetype cs setlocal ts=4 sw=4 sts=4 expandtab
-au Filetype make setlocal ts=4 sw=4 sts=4 noexpandtab
+
+" 統一所有語言 tab 設定為 4 格
+augroup tab4
+  autocmd!
+  autocmd FileType * setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab
+augroup END
 
 " filetype alias
 au BufRead,BufNewFile *.ino set filetype=cpp
 au BufRead,BufNewFile *.sage set filetype=python
 
 " display
-let g:ale_disable_lsp = 1
 set background=dark
 let g:edge_style = 'neon'
 let g:edge_enable_italic = 1
@@ -166,16 +173,16 @@ let g:indentLine_bufNameExclude=['_.*', 'NERD_tree.*']
 
 " scrooloose/syntastic
 
-set statusline+=%#warningmsg#
-set statusline+=%{SyntasticStatuslineFlag()}
-set statusline+=%*
+" set statusline+=%#warningmsg#
+" set statusline+=%{SyntasticStatuslineFlag()}
+" set statusline+=%*
 
-let g:syntastic_always_populate_loc_list = 1
-let g:syntastic_auto_loc_list = 1
-let g:syntastic_check_on_open = 1
-let g:syntastic_check_on_wq = 0
-let g:syntastic_cpp_compiler = 'g++'
-let g:syntastic_cpp_compiler_options = ' -std=c++2a --stdlib=libc++'
+" let g:syntastic_always_populate_loc_list = 1
+" let g:syntastic_auto_loc_list = 1
+" let g:syntastic_check_on_open = 1
+" let g:syntastic_check_on_wq = 0
+" let g:syntastic_cpp_compiler = 'g++'
+" let g:syntastic_cpp_compiler_options = ' -std=c++2a --stdlib=libc++'
 let g:coc_disable_startup_warning = 1
 
 " NerdTree settings 
@@ -335,7 +342,7 @@ let g:lightline#ale#indicator_ok="✓"
 let g:lightline#trailing_whitespace#indicator = '•'
 
 " rainbow
-let g:ranbow_active=1
+let g:rainbow_active=1
 let g:rainbow_conf={
 \   'guifgs': ['lightred', 'lightgreen', 'lightcyan', 'lightmagenta'],
 \   'ctermfgs': ['lightred', 'lightyellow', 'lightcyan', 'lightmagenta'],
@@ -397,8 +404,8 @@ let g:ale_detail_to_floating_preview=1
 let g:ale_cursor_detail=1
 let g:ale_hover_cursor=1
 let g:ale_close_preview_on_insert=1
-nmap <silent> <leader>k <Plug>(ale_previous_wrap)
 nmap <silent> <leader>j <Plug>(ale_next_wrap)
+
 
 " lint only on save
 let g:ale_lint_on_text_changed = 'never'
@@ -416,8 +423,11 @@ let g:vim_vue_plugin_use_scss=1
 let g:vim_vue_plugin_highlight_vue_attr=1
 let g:vim_vue_plugin_highlight_vue_keyword=1
 
-" neoclide/coc.nvim
-inoremap <expr> <cr> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
+
+" coc.nvim 補全選單用上下鍵選擇，Enter 確認，避免與 copilot Tab 衝突
+inoremap <silent><expr> <CR> pumvisible() ? coc#_select_confirm() : "\<CR>"
+inoremap <silent><expr> <Up> pumvisible() ? "\<C-p>" : "<Up>"
+inoremap <silent><expr> <Down> pumvisible() ? "\<C-n>" : "<Down>"
 
 " majutsushi/tagbar
 let g:SuperTabMappingForward='<s-tab>'
@@ -447,7 +457,6 @@ command WQ wq
 " 強制 Q 為強制退出，不啟動 Ex 模式
 silent! unmap QQ
 nnoremap Q :q!<CR>
-nnoremap <C-F> <ESC>/
 nnoremap <F1> :call Change_Background()<CR>
 nnoremap <F3> :set nu!<BAR>set nonu?<CR>
 nnoremap <F4> :NERDTreeToggle<CR>
@@ -456,4 +465,19 @@ nnoremap <F8> <ESC>:w<CR>:!python3 %<CR>
 nnoremap <F9> <ESC>:w<CR>:call CompileRunGcc()<CR>
 nnoremap <F10> <ESC>:w<CR>:call CompileRunGcc()<CR>
 nnoremap <C-,> <ESC>:terminal<CR>
+
+" VSCode 風格快捷鍵
 inoremap <C-s> <ESC>:w<CR>
+nnoremap <C-s> :w<CR>
+nnoremap <C-p> :Files<CR>
+nnoremap <C-w> :bd<CR>
+" Ctrl+f 綁定為搜尋（/）
+inoremap <C-f> <ESC>/
+nnoremap <C-f> /
+" 你可依需求安裝 fzf.vim 或 leaderf 來支援 :Files
+
+" 方向鍵支援搜尋結果移動與控制位置
+nnoremap <Down> n
+nnoremap <Up> N
+nnoremap <Left> :bprevious<CR>
+nnoremap <Right> :bnext<CR>
