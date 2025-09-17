@@ -483,3 +483,5 @@ vnoremap <Del> "_d
 
 cnoremap <expr> <Left>  getcmdtype() =~ '[/?]' ? "\<CR>N" : "\<Left>"
 cnoremap <expr> <Right> getcmdtype() =~ '[/?]' ? "\<CR>n" : "\<Right>"
+
+command W w !sudo tee % > /dev/null
