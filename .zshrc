@@ -25,9 +25,6 @@ zplug 'zplug/zplug', hook-build:'zplug --self-manage'
 zplug "zsh-users/zsh-completions"
 zplug "zsh-users/zsh-history-substring-search"
 zplug "zsh-users/zsh-autosuggestions"
-zplug "zsh-users/zsh-completions"
-zplug "zsh-users/zsh-syntax-highlighting", defer:2
-zplug "zsh-users/zsh-autosuggestions", defer:3
 zplug "junegunn/fzf", from:github, as:command, hook-build:"./install --all"
 zplug "Aloxaf/fzf-tab"
 zplug "plugins/git", from:oh-my-zsh
@@ -40,7 +37,6 @@ zplug "plugins/composer", from:oh-my-zsh
 zplug "plugins/extract", from:oh-my-zsh
 zplug "lib/completion", from:oh-my-zsh
 zplug "plugins/sudo", from:oh-my-zsh
-# zplug "b4b4r07/enhancd", use:init.sh
 
 # Export config
 export TERM="xterm-256color"
@@ -121,3 +117,11 @@ export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/miyago/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/miyago/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/miyago/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/miyago/google-cloud-sdk/completion.zsh.inc'; fi
+export PATH="/opt/homebrew/opt/php@8.3/bin:$PATH"
+export PATH="/opt/homebrew/opt/php@8.3/sbin:$PATH"
