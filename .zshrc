@@ -89,39 +89,13 @@ zplug load
 # Load p10k
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-# Fuck NVM
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
-
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$HOME/.pyenv/bin:$HOME/.pyenv/shims:$PATH"
-export PATH="$HOME/.local/bin:$HOME/.zplug/repos/zplug/zplug/bin:$HOME/.zplug/bin:$PATH"
-export PATH="/usr/local/opt/gcc/bin:$PATH"
-export PATH="$HOME/.vscode-server/cli/servers/Stable-eaa41d57266683296de7d118f574d0c2652e1fc4/server/bin/remote-cli:$PATH"
-export PATH="$HOME/.local/share/pnpm:$PATH"
-export PATH="$HOME/.nvm/versions/node/v20.16.0/bin:$PATH"
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:$PATH"
-export PATH="/usr/local/go/bin:$PATH"
-export PATH="$HOME/go/bin:$PATH"
-export PATH="$HOME/development/flutter/bin:$PATH"
-export ANDROID_HOME="$HOME/Library/Android/sdk"
-export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
-
-[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+## Modular environment: load snippets from ~/.zshrc.d/*.zsh
+ZSHRC_D="$HOME/.zshrc.d"
+if [ -d "$ZSHRC_D" ]; then
+  for f in "$ZSHRC_D"/*.zsh; do
+    [ -e "$f" ] || continue
+    [ -r "$f" ] && . "$f"
+  done
+fi
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-# bun completions
-[ -s "/home/miyago/.bun/_bun" ] && source "/home/miyago/.bun/_bun"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/miyago/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/miyago/google-cloud-sdk/path.zsh.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/miyago/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/miyago/google-cloud-sdk/completion.zsh.inc'; fi
-export PATH="/opt/homebrew/opt/php@8.3/bin:$PATH"
-export PATH="/opt/homebrew/opt/php@8.3/sbin:$PATH"
