@@ -1,5 +1,6 @@
-
-
+" =====================
+"   Plugin Section
+" =====================
 call plug#begin('~/.vim/plugged')
 
 " Plug 'VundleVim/Vundle.vim'
@@ -42,19 +43,21 @@ Plug 'yunlingz/ci_dark'
 " Plug 'kjssad/quantum.vim'
 Plug 'sainnhe/edge'
 
-
 " Fuzzy Finder
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 
-" NeoVim
-" Plug 'scrooloose/syntastic'
-Plug 'neoclide/coc.nvim', {'branch': 'master'}
-Plug 'majutsushi/tagbar'
-Plug 'ap/vim-css-color'
+" NeoVim only plugins
+if has('nvim')
+  Plug 'neoclide/coc.nvim', {'branch': 'master'}
+
+endif
 
 call plug#end()
 
+" =====================
+"   General Settings
+" =====================
 filetype plugin indent on
 
 " global setting
@@ -113,9 +116,10 @@ else
     let s:editor_root=expand('~/.vim')
 endif
 
-"""""""""""""""""""""""""""""
-"" vim convenience setting ""
-"""""""""""""""""""""""""""""
+
+" =====================
+"   VIM AutoCmd
+" =====================
 
 " Change different tabspace setting for different language
 
@@ -162,9 +166,9 @@ fu! DefaultCode()
   endif
 endf
 
-"""""""""""""""
-"""  Plugin """
-"""""""""""""""
+" =====================
+"   Plugin Settings
+" =====================
 
 " Yggdroot/indentLine
 let g:indentLine_char_list=['|', '¦', '┆', '┊']
@@ -183,15 +187,35 @@ let g:indentLine_bufNameExclude=['_.*', 'NERD_tree.*']
 " let g:syntastic_check_on_wq = 0
 " let g:syntastic_cpp_compiler = 'g++'
 " let g:syntastic_cpp_compiler_options = ' -std=c++2a --stdlib=libc++'
-let g:coc_disable_startup_warning = 1
+
+
+" =====================
+"   CoC.nvim (Neovim only)
+" =====================
+if has('nvim')
+  if exists(':CocConfig')
+    let g:coc_disable_startup_warning = 1
+    inoremap <silent><expr> <CR> pumvisible() ? coc#_select_confirm() : "\<CR>"
+    inoremap <silent><expr> <Up> pumvisible() ? "\<C-p>" : "<Up>"
+    inoremap <silent><expr> <Down> pumvisible() ? "\<C-n>" : "<Down>"
+  endif
+  if filereadable(expand('~/.config/nvim/coc-config.vim'))
+    execute 'so ~/.config/nvim/coc-config.vim'
+  endif
+endif
 
 " NerdTree settings 
 nnoremap <silent> <F4> :NERDTree<CR>
 autocmd VimEnter * if exists(':NERDTree') | execute 'NERDTree | wincmd p' | endif
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
-" coc setting
-" so ~/.config/nvim/coc-config.vim
+
+" coc setting (nvim only)
+if has('nvim')
+  if filereadable(expand('~/.config/nvim/coc-config.vim'))
+    execute 'so ~/.config/nvim/coc-config.vim'
+  endif
+endif
 
 " UI setting
 " let NERDTreeMinimalUI=1
