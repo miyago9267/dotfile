@@ -13,6 +13,7 @@ fi
 
 export PERL_BADLANG=0
 
+
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
@@ -52,6 +53,14 @@ export SAVEHIST=10000000
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=off
 
+# Load environment variables from .env
+if [ -f ~/.env ]; then
+  source ~/.env
+elif [ -f ~/dotfile/.env ]; then
+  source ~/dotfile/.env
+fi
+
+# Load aliases
 if [ -f ~/alias.sh ]; then
   source ~/alias.sh
 elif [ -f ~/dotfile/alias.sh ]; then
@@ -66,6 +75,8 @@ esac
 # Zsh
 ENABLE_CORRECTION="true"
 HIST_STAMPS="yyyy-mm-dd"
+ZSH_DISABLE_COMPFIX=true
+skip_global_compinit=1
 
 # Configure
 # search keybind
