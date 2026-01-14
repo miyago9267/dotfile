@@ -104,6 +104,26 @@ require("lazy").setup({
     end,
   },
 
+  -- vim-tmux-navigator: Neovim 和 tmux 無縫切換
+  {
+    'christoomey/vim-tmux-navigator',
+    lazy = false,
+    cmd = {
+      "TmuxNavigateLeft",
+      "TmuxNavigateDown",
+      "TmuxNavigateUp",
+      "TmuxNavigateRight",
+      "TmuxNavigatePrevious",
+    },
+    keys = {
+      { "<c-h>", "<cmd>TmuxNavigateLeft<cr>" },
+      { "<c-j>", "<cmd>TmuxNavigateDown<cr>" },
+      { "<c-k>", "<cmd>TmuxNavigateUp<cr>" },
+      { "<c-l>", "<cmd>TmuxNavigateRight<cr>" },
+      { "<c-\\>", "<cmd>TmuxNavigatePrevious<cr>" },
+    },
+  },
+
   -- Which-key 快捷键提示
   {
     'folke/which-key.nvim',

@@ -1,10 +1,10 @@
 # Dotfile
 
-## Usage 
+## Usage
 
 1. Clone this repo.
 2. `cd` to `dotfile` folder
-3. **romove the safe in `setup.sh`** and run `setup.sh`
+3. **remove the safe in `setup.sh`** and run `setup.sh`
 
 > Warning! This script will modified your setting, please use after thinking.
 > I'm not responsible for any damage caused by this script
@@ -14,16 +14,28 @@ git clone https://github.com/miyago9267/dotfile.git && cd dotfile
 sh shell
 ```
 
-## Current
+## File Structure
 
-- `setup.sh` : for whole dotfile setup
-- `alias.sh` : for alias common command
-- `.vimrc` : for Vim and NeoVim
-- `.zshrc` : for zsh
-- `.bashrc` : for bash
-- `.tmux.conf` for tmux config
-- `nvim/` : for Neovim config
-- `script/` : some easy script for debug**(WIP)**
+```tree
+.
+├── nvim
+│   ├── coc-config.vim
+│   ├── init.lua
+│   ├── lazy-lock.json
+│   └── pack/
+├── script
+│   ├── installations
+│   └── utils
+├── template
+│   └── template.cpp
+└── tmux
+│   ├── base.conf
+│   └── nvim-extension.conf
+├── alias.sh
+├── init.vim
+├── setup.sh
+├── README.md
+```
 
 ## How it work
 
