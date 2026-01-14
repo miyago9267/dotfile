@@ -9,7 +9,7 @@ if [ -s "$NVM_DIR/nvm.sh" ]; then
 elif [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then
   . "/opt/homebrew/opt/nvm/nvm.sh"
 else
-  echo "❌ 無法載入 nvm" >&2
+  echo "Error: Cannot load nvm" >&2
   exit 1
 fi
 

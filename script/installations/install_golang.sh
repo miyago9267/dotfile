@@ -16,7 +16,7 @@ case "$OS_NAME" in
 		GO_OS="linux"
 		;;
 	*)
-		echo "❌ Unsupported OS: $OS_NAME" >&2
+		echo "Error: Unsupported OS: $OS_NAME" >&2
 		exit 1
 		;;
 esac
@@ -29,7 +29,7 @@ case "$ARCH_NAME" in
 		GO_ARCH="arm64"
 		;;
 	*)
-		echo "❌ Unsupported architecture: $ARCH_NAME" >&2
+		echo "Error: Unsupported architecture: $ARCH_NAME" >&2
 		exit 1
 		;;
 esac

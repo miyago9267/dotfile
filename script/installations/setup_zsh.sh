@@ -14,4 +14,4 @@ if [ -x "$SCRIPT_DIR/setup_env_snippets.sh" ]; then
   "$SCRIPT_DIR/setup_env_snippets.sh" zplug
 fi
 
-echo "✅ zsh 安裝完成，請重新啟動終端或執行 'exec zsh' 套用設定"
+echo "zsh setup complete. Restart terminal or run 'exec zsh' to apply changes"

@@ -29,7 +29,7 @@ if [ -x "$SDKMANAGER" ]; then
   yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses >/dev/null 2>&1 || true
   "$SDKMANAGER" --sdk_root="$ANDROID_HOME" "platform-tools" >/dev/null 2>&1 || true
 else
-  echo "⚠️ 找不到 sdkmanager，可稍後手動執行" >&2
+  echo "Warning: sdkmanager not found, can be run manually later" >&2
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -37,4 +37,4 @@ if [ -x "$SCRIPT_DIR/setup_env_snippets.sh" ]; then
   "$SCRIPT_DIR/setup_env_snippets.sh" android
 fi
 
-echo "✅ Android SDK 就緒 (ANDROID_HOME=$ANDROID_HOME)"
+echo "Android SDK ready (ANDROID_HOME=$ANDROID_HOME)"
