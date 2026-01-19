@@ -504,6 +504,29 @@ cnoremap <expr> <Right> getcmdtype() =~ '[/?]' ? "\<CR>n" : "\<Right>"
 "   VSCode Style Features
 " =====================
 
+" Ctrl/Cmd + C/X/V/Z/A (VSCode style)
+" Copy (visual mode)
+vnoremap <C-c> "+y
+vnoremap <D-c> "+y
+" Cut (visual mode)
+vnoremap <C-x> "+d
+vnoremap <D-x> "+d
+" Paste (insert/command mode)
+inoremap <C-v> <C-r>+
+inoremap <D-v> <C-r>+
+nnoremap <C-v> "+p
+nnoremap <D-v> "+p
+" Undo
+nnoremap <C-z> u
+inoremap <C-z> <C-o>u
+" Select all
+nnoremap <C-a> ggVG
+nnoremap <D-a> ggVG
+
+" Sudo save when forgot to use sudo
+" Use :W! to save with sudo
+command! W! w !sudo tee % > /dev/null
+
 " Alt+Up/Down to move lines (VSCode style)
 nnoremap <A-Up> :m .-2<CR>==
 nnoremap <A-Down> :m .+1<CR>==

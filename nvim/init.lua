@@ -225,18 +225,18 @@ require("lazy").setup({
     config = function()
       require('mason').setup()
       require('mason-lspconfig').setup({
-        -- gopls 需要 Go >= 1.23.4，暫時移除自動安裝
         ensure_installed = { 'lua_ls', 'ts_ls', 'pyright' }
       })
       
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       
-      -- 使用 lspconfig
-      local lspconfig = require('lspconfig')
-      lspconfig.lua_ls.setup({ capabilities = capabilities })
-      lspconfig.ts_ls.setup({ capabilities = capabilities })
-      lspconfig.pyright.setup({ capabilities = capabilities })
-      lspconfig.gopls.setup({ capabilities = capabilities })
+      -- Use new vim.lsp.config API (nvim 0.11+)
+      vim.lsp.config('*', {
+        capabilities = capabilities,
+      })
+      
+      -- Enable LSP servers
+      vim.lsp.enable({ 'lua_ls', 'ts_ls', 'pyright', 'gopls' })
     end,
   },
 
@@ -351,6 +351,31 @@ vim.keymap.set('n', ']b', '<cmd>bnext<CR>', { desc = 'Next buffer' })
 -- The plugin already defines <C-h/j/k/l> for seamless navigation between Neovim and tmux
 
 -- VSCode style features
+
+-- Ctrl/Cmd + C/X/V/Z/A (VSCode style)
+-- Copy (visual mode)
+vim.keymap.set('v', '<C-c>', '"+y', { desc = 'Copy (VSCode style)' })
+vim.keymap.set('v', '<D-c>', '"+y', { desc = 'Copy (Mac Cmd+C)' })
+-- Cut (visual mode)
+vim.keymap.set('v', '<C-x>', '"+d', { desc = 'Cut (VSCode style)' })
+vim.keymap.set('v', '<D-x>', '"+d', { desc = 'Cut (Mac Cmd+X)' })
+-- Paste (normal/insert mode)
+vim.keymap.set('n', '<C-v>', '"+p', { desc = 'Paste (VSCode style)' })
+vim.keymap.set('n', '<D-v>', '"+p', { desc = 'Paste (Mac Cmd+V)' })
+vim.keymap.set('i', '<C-v>', '<C-r>+', { desc = 'Paste in insert mode' })
+vim.keymap.set('i', '<D-v>', '<C-r>+', { desc = 'Paste in insert mode (Mac)' })
+-- Undo
+vim.keymap.set('n', '<C-z>', 'u', { desc = 'Undo (VSCode style)' })
+vim.keymap.set('i', '<C-z>', '<C-o>u', { desc = 'Undo in insert mode' })
+-- Select all
+vim.keymap.set('n', '<C-a>', 'ggVG', { desc = 'Select all (VSCode style)' })
+vim.keymap.set('n', '<D-a>', 'ggVG', { desc = 'Select all (Mac Cmd+A)' })
+
+-- Sudo save when forgot to use sudo
+vim.api.nvim_create_user_command('W', function()
+  vim.cmd('w !sudo tee % > /dev/null')
+end, { bang = true, desc = 'Save with sudo' })
+
 -- Alt + move lines up/down
 vim.keymap.set('n', '<A-Up>', ':m .-2<CR>==', { desc = 'Move line up (VSCode style)' })
 vim.keymap.set('n', '<A-Down>', ':m .+1<CR>==', { desc = 'Move line down (VSCode style)' })
