@@ -78,3 +78,5 @@ export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash

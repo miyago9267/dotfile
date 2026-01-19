@@ -12,6 +12,7 @@ elif [ -d /usr/local/bin ]; then
 fi
 
 export PERL_BADLANG=0
+typeset -i FUNCNEST=1000
 
 
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
@@ -49,6 +50,7 @@ export EDITOR="vim"
 export HISTFILE="$HOME/.zsh_history"
 export HISTSIZE=10000000
 export SAVEHIST=10000000
+# export FUNCNEST=100000
 
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=off
