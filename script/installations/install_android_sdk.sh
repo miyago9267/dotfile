@@ -1,13 +1,25 @@
 #!/bin/sh
 set -e
 
+# Detect OS (macOS, Ubuntu/Debian, Arch Linux)
 OS_NAME="$(uname)"
 if [ "$OS_NAME" = "Darwin" ]; then
   DEFAULT_ANDROID_HOME="$HOME/Library/Android/sdk"
   CMDLINE_URL="https://dl.google.com/android/repository/commandlinetools-mac-11076708_latest.zip"
-else
+  echo "Detected: macOS"
+elif [ "$OS_NAME" = "Linux" ]; then
   DEFAULT_ANDROID_HOME="$HOME/Android/Sdk"
   CMDLINE_URL="https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
+  if [ -f /etc/arch-release ]; then
+    echo "Detected: Arch Linux"
+  elif [ -f /etc/debian_version ]; then
+    echo "Detected: Ubuntu/Debian"
+  else
+    echo "Detected: Linux (generic)"
+  fi
+else
+  echo "Error: Unsupported OS: $OS_NAME" >&2
+  exit 1
 fi
 
 ANDROID_HOME="${ANDROID_HOME:-$DEFAULT_ANDROID_HOME}"

@@ -1,7 +1,18 @@
 #!/bin/sh
 set -e
 
-echo "🔧 安裝 pnpm..."
+# Detect OS for user info
+if [ "$(uname)" = "Darwin" ]; then
+  echo "Detected: macOS"
+elif [ -f /etc/arch-release ]; then
+  echo "Detected: Arch Linux"
+elif [ -f /etc/debian_version ]; then
+  echo "Detected: Ubuntu/Debian"
+else
+  echo "Detected: $(uname) (generic)"
+fi
+
+echo "Installing pnpm..."
 curl -fsSL https://get.pnpm.io/install.sh | sh -
 
 if command -v corepack >/dev/null 2>&1; then

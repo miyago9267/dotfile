@@ -1,7 +1,18 @@
 #!/bin/sh
 set -e
 
-echo "🔧 安裝 Google Cloud SDK..."
+# Detect OS for user info
+if [ "$(uname)" = "Darwin" ]; then
+  echo "Detected: macOS"
+elif [ -f /etc/arch-release ]; then
+  echo "Detected: Arch Linux"
+elif [ -f /etc/debian_version ]; then
+  echo "Detected: Ubuntu/Debian"
+else
+  echo "Detected: $(uname) (generic)"
+fi
+
+echo "Installing Google Cloud SDK..."
 curl -sSL https://sdk.cloud.google.com | bash -s -- --disable-prompts
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

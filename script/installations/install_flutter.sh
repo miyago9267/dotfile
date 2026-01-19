@@ -1,9 +1,20 @@
 #!/bin/sh
 set -e
 
+# Detect OS for user info
+if [ "$(uname)" = "Darwin" ]; then
+  echo "Detected: macOS"
+elif [ -f /etc/arch-release ]; then
+  echo "Detected: Arch Linux"
+elif [ -f /etc/debian_version ]; then
+  echo "Detected: Ubuntu/Debian"
+else
+  echo "Detected: $(uname) (generic)"
+fi
+
 FLUTTER_DIR="$HOME/development/flutter"
 
-echo "🔧 安裝 Flutter..."
+echo "Installing Flutter..."
 if [ -d "$FLUTTER_DIR/.git" ]; then
   git -C "$FLUTTER_DIR" fetch --tags
   git -C "$FLUTTER_DIR" checkout stable

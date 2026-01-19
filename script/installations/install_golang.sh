@@ -8,12 +8,21 @@ GO_VERSION="1.24"
 OS_NAME="$(uname -s)"
 ARCH_NAME="$(uname -m)"
 
+# Detect OS (macOS, Linux)
 case "$OS_NAME" in
 	Darwin)
 		GO_OS="darwin"
+		echo "Detected: macOS"
 		;;
 	Linux)
 		GO_OS="linux"
+		if [ -f /etc/arch-release ]; then
+			echo "Detected: Arch Linux"
+		elif [ -f /etc/debian_version ]; then
+			echo "Detected: Ubuntu/Debian"
+		else
+			echo "Detected: Linux (generic)"
+		fi
 		;;
 	*)
 		echo "Error: Unsupported OS: $OS_NAME" >&2

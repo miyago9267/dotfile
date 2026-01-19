@@ -1,6 +1,18 @@
 #!/bin/sh
 set -e
 
+# Detect OS for user info
+if [ "$(uname)" = "Darwin" ]; then
+  echo "Detected: macOS"
+elif [ -f /etc/arch-release ]; then
+  echo "Detected: Arch Linux"
+elif [ -f /etc/debian_version ]; then
+  echo "Detected: Ubuntu/Debian"
+else
+  echo "Detected: $(uname) (generic)"
+fi
+
+echo "Installing NVM (Node Version Manager)..."
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 
 NVM_DIR="$HOME/.nvm"

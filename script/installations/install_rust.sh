@@ -3,6 +3,17 @@
 #!/bin/bash
 set -e
 
+# Detect OS for user info
+if [ "$(uname)" = "Darwin" ]; then
+  echo "Detected: macOS"
+elif [ -f /etc/arch-release ]; then
+  echo "Detected: Arch Linux"
+elif [ -f /etc/debian_version ]; then
+  echo "Detected: Ubuntu/Debian"
+else
+  echo "Detected: $(uname) (generic)"
+fi
+
 echo "Installing Rust..."
 curl https://sh.rustup.rs -sSf | sh -s -- -y
 

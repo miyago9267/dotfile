@@ -1,6 +1,17 @@
 #!/bin/sh
 set -e
 
+# Detect OS for user info
+if [ "$(uname)" = "Darwin" ]; then
+  echo "Detected: macOS"
+elif [ -f /etc/arch-release ]; then
+  echo "Detected: Arch Linux"
+elif [ -f /etc/debian_version ]; then
+  echo "Detected: Ubuntu/Debian"
+else
+  echo "Detected: $(uname) (generic)"
+fi
+
 install_with_brew() {
   brew tap leoafarias/fvm >/dev/null 2>&1 || true
   brew install fvm
@@ -15,16 +26,16 @@ install_with_flutter() {
 }
 
 if command -v brew >/dev/null 2>&1; then
-  echo "🔧 透過 Homebrew 安裝 FVM..."
+  echo "Installing FVM via Homebrew..."
   install_with_brew
 elif command -v dart >/dev/null 2>&1; then
-  echo "🔧 透過 Dart 安裝 FVM..."
+  echo "Installing FVM via Dart..."
   install_with_dart
 elif command -v flutter >/dev/null 2>&1; then
-  echo "🔧 透過 Flutter 安裝 FVM..."
+  echo "Installing FVM via Flutter..."
   install_with_flutter
 else
-  echo "❌ 請先安裝 Homebrew、Dart 或 Flutter 後再執行此腳本" >&2
+  echo "Error: Please install Homebrew, Dart, or Flutter first" >&2
   exit 1
 fi
 

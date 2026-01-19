@@ -1,7 +1,18 @@
 #!/bin/sh
 set -e
 
-echo "🔧 安裝 Bun..."
+# Detect OS for user info
+if [ "$(uname)" = "Darwin" ]; then
+  echo "Detected: macOS"
+elif [ -f /etc/arch-release ]; then
+  echo "Detected: Arch Linux"
+elif [ -f /etc/debian_version ]; then
+  echo "Detected: Ubuntu/Debian"
+else
+  echo "Detected: $(uname) (generic)"
+fi
+
+echo "Installing Bun..."
 curl -fsSL https://bun.sh/install | bash
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
