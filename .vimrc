@@ -1,5 +1,6 @@
-
-
+" =====================
+"   Plugin Section
+" =====================
 call plug#begin('~/.vim/plugged')
 
 " Plug 'VundleVim/Vundle.vim'
@@ -42,19 +43,21 @@ Plug 'yunlingz/ci_dark'
 " Plug 'kjssad/quantum.vim'
 Plug 'sainnhe/edge'
 
-
 " Fuzzy Finder
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 
-" NeoVim
-" Plug 'scrooloose/syntastic'
-Plug 'neoclide/coc.nvim', {'branch': 'master'}
-Plug 'majutsushi/tagbar'
-Plug 'ap/vim-css-color'
+" NeoVim only plugins
+if has('nvim')
+  Plug 'neoclide/coc.nvim', {'branch': 'master'}
+
+endif
 
 call plug#end()
 
+" =====================
+"   General Settings
+" =====================
 filetype plugin indent on
 
 " global setting
@@ -113,9 +116,10 @@ else
     let s:editor_root=expand('~/.vim')
 endif
 
-"""""""""""""""""""""""""""""
-"" vim convenience setting ""
-"""""""""""""""""""""""""""""
+
+" =====================
+"   VIM AutoCmd
+" =====================
 
 " Change different tabspace setting for different language
 
@@ -162,9 +166,9 @@ fu! DefaultCode()
   endif
 endf
 
-"""""""""""""""
-"""  Plugin """
-"""""""""""""""
+" =====================
+"   Plugin Settings
+" =====================
 
 " Yggdroot/indentLine
 let g:indentLine_char_list=['|', '¦', '┆', '┊']
@@ -183,15 +187,27 @@ let g:indentLine_bufNameExclude=['_.*', 'NERD_tree.*']
 " let g:syntastic_check_on_wq = 0
 " let g:syntastic_cpp_compiler = 'g++'
 " let g:syntastic_cpp_compiler_options = ' -std=c++2a --stdlib=libc++'
-let g:coc_disable_startup_warning = 1
+
+
+" =====================
+"   CoC.nvim (Neovim only)
+" =====================
+if has('nvim')
+  if exists('g:did_coc_loaded')
+    let g:coc_disable_startup_warning = 1
+    inoremap <silent><expr> <CR> pumvisible() ? coc#_select_confirm() : "\<CR>"
+    inoremap <silent><expr> <Up> pumvisible() ? "\<C-p>" : "<Up>"
+    inoremap <silent><expr> <Down> pumvisible() ? "\<C-n>" : "<Down>"
+  endif
+  if filereadable(expand('~/.config/nvim/coc-config.vim'))
+    execute 'so ~/.config/nvim/coc-config.vim'
+  endif
+endif
 
 " NerdTree settings 
 nnoremap <silent> <F4> :NERDTree<CR>
 autocmd VimEnter * if exists(':NERDTree') | execute 'NERDTree | wincmd p' | endif
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
-
-" coc setting
-" so ~/.config/nvim/coc-config.vim
 
 " UI setting
 " let NERDTreeMinimalUI=1
@@ -484,4 +500,56 @@ vnoremap <Del> "_d
 cnoremap <expr> <Left>  getcmdtype() =~ '[/?]' ? "\<CR>N" : "\<Left>"
 cnoremap <expr> <Right> getcmdtype() =~ '[/?]' ? "\<CR>n" : "\<Right>"
 
-command W w !sudo tee % > /dev/null
+" =====================
+"   VSCode Style Features
+" =====================
+
+" Alt+Up/Down to move lines (VSCode style)
+nnoremap <A-Up> :m .-2<CR>==
+nnoremap <A-Down> :m .+1<CR>==
+inoremap <A-Up> <Esc>:m .-2<CR>==gi
+inoremap <A-Down> <Esc>:m .+1<CR>==gi
+vnoremap <A-Up> :m '<-2<CR>gv=gv
+vnoremap <A-Down> :m '>+1<CR>gv=gv
+
+" Ctrl+/ and Cmd+/ for commenting (VSCode style)
+" Using nerdcommenter plugin
+nmap <C-/> <Plug>NERDCommenterToggle
+nmap <D-/> <Plug>NERDCommenterToggle
+vmap <C-/> <Plug>NERDCommenterToggle
+vmap <D-/> <Plug>NERDCommenterToggle
+imap <C-/> <Esc><Plug>NERDCommenterToggle gi
+imap <D-/> <Esc><Plug>NERDCommenterToggle gi
+
+" Smart cursor movement at file boundaries (VSCode style)
+fu! SmartCursorMove(key)
+    let current_line = line('.')
+    let total_lines = line('$')
+    
+    if a:key ==# 'j' || a:key ==# 'down'
+        if current_line >= total_lines
+            normal! $
+        else
+            if a:key ==# 'j'
+                normal! j
+            else
+                normal! <Down>
+            endif
+        endif
+    elseif a:key ==# 'k' || a:key ==# 'up'
+        if current_line <= 1
+            normal! 0
+        else
+            if a:key ==# 'k'
+                normal! k
+            else
+                normal! <Up>
+            endif
+        endif
+    endif
+endfu
+
+nnoremap <silent> j :call SmartCursorMove('j')<CR>
+nnoremap <silent> k :call SmartCursorMove('k')<CR>
+nnoremap <silent> <Down> :call SmartCursorMove('down')<CR>
+nnoremap <silent> <Up> :call SmartCursorMove('up')<CR>

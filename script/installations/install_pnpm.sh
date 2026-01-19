@@ -12,15 +12,16 @@ else
   echo "Detected: $(uname) (generic)"
 fi
 
-echo "Installing Python tools (Poetry, UV, Pyenv)..."
-# Install Poetry
-curl -sSL https://install.python-poetry.org | python3 -
-# Install UV
-curl -LsSf https://astral.sh/uv/install.sh | sh
-# Install Pyenv
-git clone https://github.com/pyenv/pyenv.git ~/.pyenv || true
+echo "Installing pnpm..."
+curl -fsSL https://get.pnpm.io/install.sh | sh -
+
+if command -v corepack >/dev/null 2>&1; then
+  corepack enable pnpm || true
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 if [ -x "$SCRIPT_DIR/setup_env_snippets.sh" ]; then
-  "$SCRIPT_DIR/setup_env_snippets.sh" python
+  "$SCRIPT_DIR/setup_env_snippets.sh" pnpm
 fi
+
+echo "✅ pnpm 安裝完成，重新開啟終端即可使用"

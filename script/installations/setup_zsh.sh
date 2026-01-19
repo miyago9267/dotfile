@@ -5,4 +5,13 @@ if ! command -v zsh >/dev/null; then
   chsh -s "$(command -v zsh)"
 fi
 
-echo "✅ zsh 安裝完成，請重新啟動終端或執行 'exec zsh' 套用設定"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Ensure modular env directory exists
+mkdir -p "$HOME/.zshrc.d"
+
+if [ -x "$SCRIPT_DIR/setup_env_snippets.sh" ]; then
+  "$SCRIPT_DIR/setup_env_snippets.sh" zplug
+fi
+
+echo "zsh setup complete. Restart terminal or run 'exec zsh' to apply changes"

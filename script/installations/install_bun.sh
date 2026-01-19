@@ -12,15 +12,12 @@ else
   echo "Detected: $(uname) (generic)"
 fi
 
-echo "Installing Python tools (Poetry, UV, Pyenv)..."
-# Install Poetry
-curl -sSL https://install.python-poetry.org | python3 -
-# Install UV
-curl -LsSf https://astral.sh/uv/install.sh | sh
-# Install Pyenv
-git clone https://github.com/pyenv/pyenv.git ~/.pyenv || true
+echo "Installing Bun..."
+curl -fsSL https://bun.sh/install | bash
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 if [ -x "$SCRIPT_DIR/setup_env_snippets.sh" ]; then
-  "$SCRIPT_DIR/setup_env_snippets.sh" python
+  "$SCRIPT_DIR/setup_env_snippets.sh" bun
 fi
+
+echo "✅ Bun 安裝完成，重新開啟終端即可使用"
