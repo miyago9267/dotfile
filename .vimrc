@@ -193,7 +193,7 @@ let g:indentLine_bufNameExclude=['_.*', 'NERD_tree.*']
 "   CoC.nvim (Neovim only)
 " =====================
 if has('nvim')
-  if exists(':CocConfig')
+  if exists('g:did_coc_loaded')
     let g:coc_disable_startup_warning = 1
     inoremap <silent><expr> <CR> pumvisible() ? coc#_select_confirm() : "\<CR>"
     inoremap <silent><expr> <Up> pumvisible() ? "\<C-p>" : "<Up>"
@@ -208,14 +208,6 @@ endif
 nnoremap <silent> <F4> :NERDTree<CR>
 autocmd VimEnter * if exists(':NERDTree') | execute 'NERDTree | wincmd p' | endif
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
-
-
-" coc setting (nvim only)
-if has('nvim')
-  if filereadable(expand('~/.config/nvim/coc-config.vim'))
-    execute 'so ~/.config/nvim/coc-config.vim'
-  endif
-endif
 
 " UI setting
 " let NERDTreeMinimalUI=1

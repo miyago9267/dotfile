@@ -3,7 +3,7 @@
 #!/bin/bash
 set -e
 
-GO_VERSION="1.24"
+GO_VERSION="1.25"
 
 OS_NAME="$(uname -s)"
 ARCH_NAME="$(uname -m)"

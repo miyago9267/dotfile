@@ -231,23 +231,12 @@ require("lazy").setup({
       
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       
-      -- Temporarily disable deprecation warnings
-      local original_notify = vim.notify
-      vim.notify = function(msg, level, opts)
-        if msg and msg:match("lspconfig.*deprecated") then
-          return -- Ignore lspconfig deprecation warnings
-        end
-        original_notify(msg, level, opts)
-      end
-      
       -- 使用 lspconfig
       local lspconfig = require('lspconfig')
       lspconfig.lua_ls.setup({ capabilities = capabilities })
       lspconfig.ts_ls.setup({ capabilities = capabilities })
       lspconfig.pyright.setup({ capabilities = capabilities })
       lspconfig.gopls.setup({ capabilities = capabilities })
-      
-      vim.notify = original_notify
     end,
   },
 

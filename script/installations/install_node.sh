@@ -15,7 +15,10 @@ fi
 echo "Installing NVM (Node Version Manager)..."
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 
-NVM_DIR="$HOME/.nvm"
+NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+
+# NVM was just installed; wait briefly and retry in case the files are not yet visible
+sleep 2
 if [ -s "$NVM_DIR/nvm.sh" ]; then
   . "$NVM_DIR/nvm.sh"
 elif [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then
