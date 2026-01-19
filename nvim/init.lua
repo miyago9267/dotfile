@@ -1,15 +1,12 @@
 -- ~/.config/nvim/init.lua
--- 改进版配置 - 整合 mars.nvim 和 avante.nvim 功能
 
 -- =====================
---   基础设置
+--   Base Settings
 -- =====================
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
--- 禁用 lspconfig deprecation 警告
 vim.g.deprecation_warnings = false
-vim.lsp.set_log_level("ERROR")  -- 只顯示錯誤，隱藏警告
--- Neovim UI 设置
+vim.lsp.set_log_level("ERROR")
 vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.tabstop = 4
@@ -28,22 +25,21 @@ vim.opt.ignorecase = true
 vim.opt.smartcase = true
 vim.opt.splitbelow = true
 vim.opt.splitright = true
-vim.opt.laststatus = 3  -- 全局状态栏 (avante.nvim 推荐)
+vim.opt.laststatus = 3
 
 -- =====================
---   加载原有 .vimrc
+--   Load .vimrc
 -- =====================
 vim.api.nvim_create_autocmd("VimEnter", {
   once = true,
   callback = function()
     vim.cmd("silent! source ~/.vimrc")
     vim.cmd("runtime! plugin/**/*.vim")
-    -- 启动时不自动打开 NERDTree，改为手动 F4 触发
   end
 })
 
 -- =====================
---   Lazy.nvim 初始化
+--   Lazy.nvim Initialization
 -- =====================
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
@@ -58,20 +54,22 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 -- =====================
---   插件配置
+--   Plugin Setting
 -- =====================
 require("lazy").setup({
-  -- 原有插件保留
   { "nvim-lualine/lualine.nvim", dependencies = { "nvim-tree/nvim-web-devicons" } },
   { "nvim-tree/nvim-tree.lua", dependencies = { "nvim-tree/nvim-web-devicons" } },
   { "lewis6991/gitsigns.nvim" },
   { "norcalli/nvim-colorizer.lua" },
   { "akinsho/bufferline.nvim", version = "*", dependencies = { "nvim-tree/nvim-web-devicons" } },
   { "sainnhe/edge" },
-
-  -- === Mars.nvim 借鉴的插件 ===
   
-  -- Telescope 模糊查找（核心功能）
+  -- nerdcommenter for VSCode-style commenting
+  { "preservim/nerdcommenter" },
+
+  -- === Mars.nvim ===
+  
+  -- Telescope
   {
     'nvim-telescope/telescope.nvim',
     dependencies = { 
@@ -97,14 +95,13 @@ require("lazy").setup({
     'ggandor/leap.nvim',
     config = function()
       local leap = require('leap')
-      -- 使用新的 mapping 方式
       vim.keymap.set({'n', 'x', 'o'}, 's', '<Plug>(leap-forward)')
       vim.keymap.set({'n', 'x', 'o'}, 'S', '<Plug>(leap-backward)')
       vim.keymap.set({'n', 'x', 'o'}, 'gs', '<Plug>(leap-from-window)')
     end,
   },
 
-  -- vim-tmux-navigator: Neovim 和 tmux 無縫切換
+  -- vim-tmux-navigator
   {
     'christoomey/vim-tmux-navigator',
     lazy = false,
@@ -124,7 +121,7 @@ require("lazy").setup({
     },
   },
 
-  -- Which-key 快捷键提示
+  -- Which-key
   {
     'folke/which-key.nvim',
     event = "VeryLazy",
@@ -133,7 +130,7 @@ require("lazy").setup({
     end,
   },
 
-  -- Neogit - Git 界面
+  -- Neogit
   {
     'NeogitOrg/neogit',
     dependencies = {
@@ -146,7 +143,7 @@ require("lazy").setup({
     end,
   },
 
-  -- Todo comments 高亮
+  -- Todo comments Highlight
   {
     "folke/todo-comments.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
@@ -155,7 +152,7 @@ require("lazy").setup({
     end,
   },
 
-  -- Grug-far 查找替换
+  -- Grug-far 
   {
     'MagicDuck/grug-far.nvim',
     config = function()
@@ -163,7 +160,7 @@ require("lazy").setup({
     end,
   },
 
-  -- === Avante.nvim AI 辅助 ===
+  -- === Avante.nvim AI ===
   {
     "yetone/avante.nvim",
     event = "VeryLazy",
@@ -195,10 +192,9 @@ require("lazy").setup({
       },
     },
     opts = {
-      -- 選擇你的 AI 提供商
-      -- provider = "claude",    -- 使用 Claude (需要 AVANTE_ANTHROPIC_API_KEY)
-      -- provider = "openai",    -- 使用 OpenAI (需要 AVANTE_OPENAI_API_KEY)
-      provider = "copilot",      -- 使用 GitHub Copilot (需要 Copilot 訂閱)
+      -- provider = "claude",
+      -- provider = "openai",
+      provider = "copilot", 
       
       behaviour = {
         auto_suggestions = false,
@@ -219,7 +215,7 @@ require("lazy").setup({
     },
   },
 
-  -- LSP 支持
+  -- LSP
   {
     'neovim/nvim-lspconfig',
     dependencies = {
@@ -233,24 +229,33 @@ require("lazy").setup({
         ensure_installed = { 'lua_ls', 'ts_ls', 'pyright' }
       })
       
-      -- LSP 基礎配置
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       
-      -- 暫存 lspconfig 避免 deprecation 警告
+      -- Temporarily disable deprecation warnings
+      local original_notify = vim.notify
+      vim.notify = function(msg, level, opts)
+        if msg and msg:match("lspconfig.*deprecated") then
+          return -- Ignore lspconfig deprecation warnings
+        end
+        original_notify(msg, level, opts)
+      end
+      
+      -- 使用 lspconfig
       local lspconfig = require('lspconfig')
       lspconfig.lua_ls.setup({ capabilities = capabilities })
       lspconfig.ts_ls.setup({ capabilities = capabilities })
       lspconfig.pyright.setup({ capabilities = capabilities })
       lspconfig.gopls.setup({ capabilities = capabilities })
+      
+      vim.notify = original_notify
     end,
   },
 
-  -- Treesitter 語法高亮
+  -- Treesitter Highlighting
   {
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     config = function()
-      -- 延遲載入避免模組路徑問題
       vim.schedule(function()
         local ok, configs = pcall(require, 'nvim-treesitter.configs')
         if ok then
@@ -269,7 +274,7 @@ require("lazy").setup({
     end,
   },
 
-  -- Mini.nvim 套件
+  -- Mini.nvim
   {
     'echasnovski/mini.nvim',
     config = function()
@@ -281,7 +286,7 @@ require("lazy").setup({
 })
 
 -- =====================
---   插件配置
+--   Plugin Setting
 -- =====================
 
 -- Lualine
@@ -296,7 +301,7 @@ require("lualine").setup({
   },
 })
 
--- NvimTree (保留原有快捷键 F4)
+-- NvimTree
 require("nvim-tree").setup({
   view = {
     width = 30,
@@ -321,13 +326,13 @@ require("colorizer").setup()
 require("bufferline").setup()
 
 -- =====================
---   快捷键配置
+--   Keybindings
 -- =====================
 
--- 保留原有 F4 快捷键
+-- Nerdtree
 vim.keymap.set('n', '<F4>', '<cmd>NvimTreeToggle<CR>', { desc = 'Toggle NvimTree' })
 
--- Telescope 快捷键 (来自 mars.nvim)
+-- Telescope
 vim.keymap.set('n', '<C-p>', '<cmd>Telescope find_files<CR>', { desc = 'Find files' })
 vim.keymap.set('n', '<leader>sf', '<cmd>Telescope find_files<CR>', { desc = '[S]earch [F]iles' })
 vim.keymap.set('n', '<leader>sg', '<cmd>Telescope live_grep<CR>', { desc = '[S]earch by [G]rep' })
@@ -338,7 +343,7 @@ vim.keymap.set('n', '<leader>sw', '<cmd>Telescope grep_string<CR>', { desc = '[S
 -- Neogit
 vim.keymap.set('n', '<leader>ng', '<cmd>Neogit<CR>', { desc = '[N]eo[G]it' })
 
--- Grug-far 查找替换
+-- Grug-far
 vim.keymap.set('n', '<leader>gs', '<cmd>GrugFar<CR>', { desc = '[G]rug [S]earch and Replace' })
 
 -- LSP 快捷键
@@ -349,17 +354,56 @@ vim.keymap.set('n', 'K', vim.lsp.buf.hover, { desc = 'Hover Documentation' })
 vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, { desc = '[R]e[n]ame' })
 vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, { desc = '[C]ode [A]ction' })
 
--- Buffer 导航
+-- Buffer
 vim.keymap.set('n', '[b', '<cmd>bprevious<CR>', { desc = 'Previous buffer' })
 vim.keymap.set('n', ']b', '<cmd>bnext<CR>', { desc = 'Next buffer' })
 
--- 分屏导航 (保持与 tmux 兼容)
-vim.keymap.set('n', '<C-h>', '<C-w>h', { desc = 'Move to left split' })
-vim.keymap.set('n', '<C-j>', '<C-w>j', { desc = 'Move to bottom split' })
-vim.keymap.set('n', '<C-k>', '<C-w>k', { desc = 'Move to top split' })
-vim.keymap.set('n', '<C-l>', '<C-w>l', { desc = 'Move to right split' })
+-- Window navigation is handled by vim-tmux-navigator plugin
+-- The plugin already defines <C-h/j/k/l> for seamless navigation between Neovim and tmux
+
+-- VSCode style features
+-- Alt + move lines up/down
+vim.keymap.set('n', '<A-Up>', ':m .-2<CR>==', { desc = 'Move line up (VSCode style)' })
+vim.keymap.set('n', '<A-Down>', ':m .+1<CR>==', { desc = 'Move line down (VSCode style)' })
+vim.keymap.set('i', '<A-Up>', '<Esc>:m .-2<CR>==gi', { desc = 'Move line up in insert mode' })
+vim.keymap.set('i', '<A-Down>', '<Esc>:m .+1<CR>==gi', { desc = 'Move line down in insert mode' })
+vim.keymap.set('v', '<A-Up>', ":m '<-2<CR>gv=gv", { desc = 'Move selected lines up' })
+vim.keymap.set('v', '<A-Down>', ":m '>+1<CR>gv=gv", { desc = 'Move selected lines down' })
+
+-- Ctrl + / to toggle comments
+vim.keymap.set('n', '<C-/>', '<Plug>NERDCommenterToggle', { desc = 'Toggle comment (VSCode style)' })
+vim.keymap.set('n', '<D-/>', '<Plug>NERDCommenterToggle', { desc = 'Toggle comment (Mac Cmd+/)' })
+vim.keymap.set('v', '<C-/>', '<Plug>NERDCommenterToggle', { desc = 'Toggle comment for selection' })
+vim.keymap.set('v', '<D-/>', '<Plug>NERDCommenterToggle', { desc = 'Toggle comment for selection (Mac)' })
+vim.keymap.set('i', '<C-/>', '<Esc><Plug>NERDCommenterToggle gi', { desc = 'Toggle comment in insert mode' })
+vim.keymap.set('i', '<D-/>', '<Esc><Plug>NERDCommenterToggle gi', { desc = 'Toggle comment in insert mode (Mac)' })
+
+-- VSCode style cursor movement (smart jump at file boundaries)
+local function smart_cursor_move(key)
+  local current_line = vim.fn.line('.')
+  local total_lines = vim.fn.line('$')
+  
+  if key == 'j' or key == '<Down>' then
+    if current_line >= total_lines then
+      vim.cmd('normal! $')
+    else
+      vim.cmd('normal! ' .. key)
+    end
+  elseif key == 'k' or key == '<Up>' then
+    if current_line <= 1 then
+      vim.cmd('normal! 0')
+    else
+      vim.cmd('normal! ' .. key)
+    end
+  end
+end
+
+vim.keymap.set('n', 'j', function() smart_cursor_move('j') end, { desc = 'Smart down (VSCode style)' })
+vim.keymap.set('n', 'k', function() smart_cursor_move('k') end, { desc = 'Smart up (VSCode style)' })
+vim.keymap.set('n', '<Down>', function() smart_cursor_move('<Down>') end, { desc = 'Smart down arrow (VSCode style)' })
+vim.keymap.set('n', '<Up>', function() smart_cursor_move('<Up>') end, { desc = 'Smart up arrow (VSCode style)' })
 
 -- =====================
---   配色方案
+--   Colorscheme
 -- =====================
 vim.cmd("colorscheme edge")

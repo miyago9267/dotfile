@@ -507,3 +507,57 @@ vnoremap <Del> "_d
 
 cnoremap <expr> <Left>  getcmdtype() =~ '[/?]' ? "\<CR>N" : "\<Left>"
 cnoremap <expr> <Right> getcmdtype() =~ '[/?]' ? "\<CR>n" : "\<Right>"
+
+" =====================
+"   VSCode Style Features
+" =====================
+
+" Alt+Up/Down to move lines (VSCode style)
+nnoremap <A-Up> :m .-2<CR>==
+nnoremap <A-Down> :m .+1<CR>==
+inoremap <A-Up> <Esc>:m .-2<CR>==gi
+inoremap <A-Down> <Esc>:m .+1<CR>==gi
+vnoremap <A-Up> :m '<-2<CR>gv=gv
+vnoremap <A-Down> :m '>+1<CR>gv=gv
+
+" Ctrl+/ and Cmd+/ for commenting (VSCode style)
+" Using nerdcommenter plugin
+nmap <C-/> <Plug>NERDCommenterToggle
+nmap <D-/> <Plug>NERDCommenterToggle
+vmap <C-/> <Plug>NERDCommenterToggle
+vmap <D-/> <Plug>NERDCommenterToggle
+imap <C-/> <Esc><Plug>NERDCommenterToggle gi
+imap <D-/> <Esc><Plug>NERDCommenterToggle gi
+
+" Smart cursor movement at file boundaries (VSCode style)
+fu! SmartCursorMove(key)
+    let current_line = line('.')
+    let total_lines = line('$')
+    
+    if a:key ==# 'j' || a:key ==# 'down'
+        if current_line >= total_lines
+            normal! $
+        else
+            if a:key ==# 'j'
+                normal! j
+            else
+                normal! <Down>
+            endif
+        endif
+    elseif a:key ==# 'k' || a:key ==# 'up'
+        if current_line <= 1
+            normal! 0
+        else
+            if a:key ==# 'k'
+                normal! k
+            else
+                normal! <Up>
+            endif
+        endif
+    endif
+endfu
+
+nnoremap <silent> j :call SmartCursorMove('j')<CR>
+nnoremap <silent> k :call SmartCursorMove('k')<CR>
+nnoremap <silent> <Down> :call SmartCursorMove('down')<CR>
+nnoremap <silent> <Up> :call SmartCursorMove('up')<CR>
