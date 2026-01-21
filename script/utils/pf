@@ -1,0 +1,18 @@
+#!/bin/bash
+# 快速查找佔用端口的進程
+
+if [ -z "$1" ]; then
+  echo "Usage: portfind <port>"
+  echo "Example: portfind 3000"
+  exit 1
+fi
+
+PORT=$1
+
+echo "🔍 Searching for process on port $PORT..."
+
+if [ "$(uname)" = "Darwin" ]; then
+  lsof -i :$PORT -P -n
+else
+  sudo netstat -tulpn | grep ":$PORT "
+fi

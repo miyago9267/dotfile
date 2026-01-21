@@ -4,14 +4,21 @@
 ##													                        ##
 ######################################################
 
+# macOS Homebrew 路徑修復
+if [ -d /opt/homebrew/bin ]; then
+  export PATH="/opt/homebrew/bin:$PATH"
+elif [ -d /usr/local/bin ]; then
+  export PATH="/usr/local/bin:$PATH"
+fi
+
+export PERL_BADLANG=0
+
 # Export config
 export TERM="xterm-256color"
-export UPDATE_ZSH_DAYS=7
-export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=3"
 export LANGUAGE=en_US
 export LC_ALL=en_US.UTF-8
 export EDITOR="vim"
-export HISTFILE="$HOME/.zsh_history"
+export HISTFILE="$HOME/.bash_history"
 export HISTSIZE=10000000
 export SAVEHIST=10000000
 
@@ -20,6 +27,13 @@ if [ -f ~/alias.sh ]; then
   source ~/alias.sh
 elif [ -f ~/dotfile/alias.sh ]; then
   source ~/dotfile/alias.sh
+fi
+
+# Load environment variables from .env
+if [ -f ~/.env ]; then
+  source ~/.env
+elif [ -f ~/dotfile/.env ]; then
+  source ~/dotfile/.env
 fi
 
 # set a fancy prompt
@@ -51,32 +65,13 @@ if [ -f /etc/bashrc ]; then
 	. /etc/bashrc
 fi
 
-POWERLINE_SCRIPT=/usr/share/powerline/bindings/bash/powerline.sh
-if [ -f $POWERLINE_SCRIPT ]; then
-  source $POWERLINE_SCRIPT
+# Modular environment: load snippets from ~/.zshrc.d/*.zsh (shared with zsh)
+ZSHRC_D="$HOME/.zshrc.d"
+if [ -d "$ZSHRC_D" ]; then
+  for f in "$ZSHRC_D"/*.zsh; do
+    [ -e "$f" ] || continue
+    [ -r "$f" ] && . "$f"
+  done
 fi
-
-# Fuck NVM
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
-
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$HOME/.pyenv/bin:$HOME/.pyenv/shims:$PATH"
-export PATH="$HOME/.local/bin:$HOME/.zplug/repos/zplug/zplug/bin:$HOME/.zplug/bin:$PATH"
-export PATH="/usr/local/opt/gcc/bin:$PATH"
-export PATH="$HOME/.vscode-server/cli/servers/Stable-eaa41d57266683296de7d118f574d0c2652e1fc4/server/bin/remote-cli:$PATH"
-export PATH="$HOME/.local/share/pnpm:$PATH"
-export PATH="$HOME/.nvm/versions/node/v20.16.0/bin:$PATH"
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:$PATH"
-export PATH="/usr/local/go/bin:$PATH"
-export PATH="$HOME/go/bin:$PATH"
-export PATH="$HOME/development/flutter/bin:$PATH"
-export ANDROID_HOME="$HOME/Library/Android/sdk"
-export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
-
-[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
-
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash

@@ -78,15 +78,6 @@ else
     fi
 fi
 
-echo "Backing up existing config..."
-BACKUP_DIR="$HOME/.tmux_backup_$(date +%Y%m%d_%H%M%S)"
-mkdir -p "$BACKUP_DIR"
-
-if [ -f "$HOME/.tmux.conf.local" ]; then
-    cp "$HOME/.tmux.conf.local" "$BACKUP_DIR/"
-    echo "Backed up to $BACKUP_DIR"
-fi
-
 if [ ! -f "$HOME/.tmux.conf" ] || ! grep -q "gpakosz" "$HOME/.tmux.conf" 2>/dev/null; then
     echo "Installing gpakosz/.tmux..."
     
@@ -132,6 +123,4 @@ echo "  <prefix> |: Vertical split"
 echo "  <prefix> _: Horizontal split"
 echo "  <prefix> t: Popup terminal"
 echo "  <prefix> r: Reload config"
-echo ""
-echo "Backup location: $BACKUP_DIR"
 echo ""

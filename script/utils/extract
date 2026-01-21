@@ -1,0 +1,48 @@
+#!/bin/bash
+# 智能解壓縮工具
+
+if [ -z "$1" ]; then
+  echo "Usage: extract <file>"
+  echo "Supports: .tar.gz, .tar.bz2, .zip, .rar, .7z, .tar, .gz, .bz2"
+  exit 1
+fi
+
+FILE="$1"
+
+if [ ! -f "$FILE" ]; then
+  echo "Error: $FILE does not exist"
+  exit 1
+fi
+
+case "$FILE" in
+  *.tar.gz|*.tgz)
+    tar -xzf "$FILE"
+    ;;
+  *.tar.bz2|*.tbz2)
+    tar -xjf "$FILE"
+    ;;
+  *.tar)
+    tar -xf "$FILE"
+    ;;
+  *.gz)
+    gunzip "$FILE"
+    ;;
+  *.bz2)
+    bunzip2 "$FILE"
+    ;;
+  *.zip)
+    unzip "$FILE"
+    ;;
+  *.rar)
+    unrar x "$FILE"
+    ;;
+  *.7z)
+    7z x "$FILE"
+    ;;
+  *)
+    echo "Unsupported file format: $FILE"
+    exit 1
+    ;;
+esac
+
+echo "✅ Extracted: $FILE"

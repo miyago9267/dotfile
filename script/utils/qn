@@ -1,0 +1,50 @@
+#!/bin/bash
+# 快速筆記工具
+
+NOTES_DIR="$HOME/.quicknotes"
+mkdir -p "$NOTES_DIR"
+
+if [ -z "$1" ]; then
+  echo "📝 Quick Notes"
+  echo ""
+  echo "Usage:"
+  echo "  quicknote add <text>       - Add a note"
+  echo "  quicknote list             - List all notes"
+  echo "  quicknote search <keyword> - Search notes"
+  echo "  quicknote clear            - Clear all notes"
+  exit 0
+fi
+
+case "$1" in
+  add)
+    shift
+    if [ -z "$*" ]; then
+      echo "Please provide note content"
+      exit 1
+    fi
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >> "$NOTES_DIR/notes.txt"
+    echo "✅ Note added!"
+    ;;
+  list)
+    if [ -f "$NOTES_DIR/notes.txt" ]; then
+      cat "$NOTES_DIR/notes.txt"
+    else
+      echo "No notes yet!"
+    fi
+    ;;
+  search)
+    if [ -f "$NOTES_DIR/notes.txt" ]; then
+      grep -i "$2" "$NOTES_DIR/notes.txt" || echo "No matches found"
+    else
+      echo "No notes yet!"
+    fi
+    ;;
+  clear)
+    rm -f "$NOTES_DIR/notes.txt"
+    echo "🗑️  All notes cleared!"
+    ;;
+  *)
+    echo "Unknown command: $1"
+    exit 1
+    ;;
+esac

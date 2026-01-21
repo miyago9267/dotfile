@@ -1,0 +1,15 @@
+#!/bin/bash
+# JSON 格式化工具
+
+if [ -t 0 ]; then
+  # 從參數讀取
+  if [ -z "$1" ]; then
+    echo "Usage: jsonpretty <json-string>"
+    echo "   or: echo '{...}' | jsonpretty"
+    exit 1
+  fi
+  echo "$1" | python3 -m json.tool
+else
+  # 從 stdin 讀取
+  python3 -m json.tool
+fi

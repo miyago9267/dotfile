@@ -1,0 +1,26 @@
+#!/bin/bash
+# 快速備份文件/目錄
+
+if [ -z "$1" ]; then
+  echo "Usage: quickbackup <file-or-directory>"
+  echo "Creates a timestamped backup in the same location"
+  exit 1
+fi
+
+TARGET="$1"
+
+if [ ! -e "$TARGET" ]; then
+  echo "Error: $TARGET does not exist"
+  exit 1
+fi
+
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+BACKUP_NAME="${TARGET}.backup_${TIMESTAMP}"
+
+if [ -d "$TARGET" ]; then
+  cp -r "$TARGET" "$BACKUP_NAME"
+else
+  cp "$TARGET" "$BACKUP_NAME"
+fi
+
+echo "✅ Backup created: $BACKUP_NAME"

@@ -46,7 +46,7 @@ esac
 GO_TAR="go${GO_VERSION}.${GO_OS}-${GO_ARCH}.tar.gz"
 GO_URL="https://go.dev/dl/${GO_TAR}"
 
-echo "🔧 安裝 Go ${GO_VERSION} (${GO_OS}/${GO_ARCH})..."
+echo "🔧 Installing Go ${GO_VERSION} (${GO_OS}/${GO_ARCH})..."
 curl -LO "$GO_URL"
 sudo rm -rf /usr/local/go
 sudo tar -C /usr/local -xzf "$GO_TAR"
@@ -57,4 +57,7 @@ if [ -x "$SCRIPT_DIR/setup_env_snippets.sh" ]; then
 	"$SCRIPT_DIR/setup_env_snippets.sh" go
 fi
 
-echo "✅ Go 安裝完成，環境變數已更新，重新開啟終端即可生效"
+echo "🔧 Installing Go version manager g..."
+curl -sSL https://git.io/g-install | sh -s -- --yes
+
+echo "✅ Go and version manager installation complete, environment variables updated, reopen terminal to take effect"

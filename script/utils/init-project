@@ -1,49 +1,129 @@
 #!/usr/bin/env python3
+"""Project initialization tool"""
 
 import os
 import sys
 import subprocess
+import argparse
+from pathlib import Path
 
 class InitDevTool:
-    def __init__(self, project_name, project_type):
+    """Tool for initializing development projects"""
+    
+    TEMPLATES = {
+        'python': {
+            'dirs': ['src', 'tests'],
+            'files': {
+                'README.md': '# {name}\n\nProject description\n',
+                'src/__init__.py': '',
+                '.gitignore': '*.pyc\n__pycache__/\n.env\n*.egg-info/\ndist/\nbuild/\n.venv/\n'
+            }
+        },
+        'node': {
+            'dirs': ['src'],
+            'files': {
+                'README.md': '# {name}\n\nProject description\n',
+                '.gitignore': 'node_modules/\n.env\ndist/\nbuild/\n*.log\n'
+            }
+        },
+        'go': {
+            'dirs': ['cmd', 'pkg', 'internal'],
+            'files': {
+                'README.md': '# {name}\n\nProject description\n',
+                '.gitignore': '*.exe\n*.test\n.env\n'
+            }
+        }
+    }
+    
+    def __init__(self, project_name, project_type, with_git=True):
         self.project_name = project_name
         self.project_type = project_type
-
-    def run_script(self):
-        pass
-
-    def create_dir(self, dir_name):
-        try:
-            os.mkdir(dir_name)
-            os.chdir(dir_name)
-        except FileExistsError:
-            print(f'{dir_name} already exists, skipping...')
-            os.chdir(dir_name)
-        pass
-
-    def init_python():
-        create_directory('src')
-        subprocess.run(['poetry', 'init', '--no-interaction'])
-
-    def init_nodejs():
-        subprocess.run(['npm', 'init', '-y'])
-        subprocess.run(['npm', 'install', 'typescript', '--save-dev'])
-        create_directory('src')
-        create_file('tsconfig.json', '{"compilerOptions": {"target": "es6"}}')
-
-    def init_git():
-        subprocess.run(['git', 'init'])
-        create_file('.gitignore', "*.pyc\n__pycache__\n.env\n")
-        create_file('.env')
-        subprocess.run(['git', 'add', '.'])
-        subprocess.run(['git', 'commit', '-m', 'Initial commit'])
+        self.with_git = with_git
+        self.project_path = Path(project_name)
+    
+    def create_structure(self):
+        """Create project directory structure"""
+        if self.project_path.exists():
+            print(f"❌ Directory '{self.project_name}' already exists!")
+            return False
+        
+        print(f"📁 Creating project: {self.project_name}")
+        self.project_path.mkdir(parents=True)
+        os.chdir(self.project_path)
+        
+        template = self.TEMPLATES.get(self.project_type)
+        if not template:
+            print(f"❌ Unknown project type: {self.project_type}")
+            return False
+        
+        # Create directories
+        for dir_name in template['dirs']:
+            Path(dir_name).mkdir(parents=True, exist_ok=True)
+            print(f"  ✓ Created {dir_name}/")
+        
+        # Create files
+        for file_name, content in template['files'].items():
+            Path(file_name).parent.mkdir(parents=True, exist_ok=True)
+            Path(file_name).write_text(content.format(name=self.project_name))
+            print(f"  ✓ Created {file_name}")
+        
+        return True
+    
+    def init_tools(self):
+        """Initialize project-specific tools"""
+        print(f"\n🔧 Initializing {self.project_type} project...")
+        
+        if self.project_type == 'python':
+            if subprocess.run(['poetry', '--version'], capture_output=True).returncode == 0:
+                subprocess.run(['poetry', 'init', '-n'])
+                print("  ✓ Initialized Poetry")
+            else:
+                print("  ⚠ Poetry not found, skipping")
+        
+        elif self.project_type == 'node':
+            subprocess.run(['npm', 'init', '-y'], capture_output=True)
+            print("  ✓ Initialized npm")
+        
+        elif self.project_type == 'go':
+            subprocess.run(['go', 'mod', 'init', self.project_name])
+            print("  ✓ Initialized Go module")
+    
+    def init_git(self):
+        """Initialize git repository"""
+        if not self.with_git:
+            return
+        
+        print("\n🔧 Initializing git...")
+        subprocess.run(['git', 'init'], capture_output=True)
+        subprocess.run(['git', 'add', '.'], capture_output=True)
+        subprocess.run(['git', 'commit', '-m', 'Initial commit'], capture_output=True)
+        print("  ✓ Git initialized")
+    
+    def run(self):
+        """Run the initialization process"""
+        if not self.create_structure():
+            return False
+        
+        self.init_tools()
+        self.init_git()
+        
+        print(f"\n✅ Project '{self.project_name}' initialized successfully!")
+        print(f"\nNext steps:")
+        print(f"  cd {self.project_name}")
+        return True
 
 def main():
-    print('Project initializing...')
-    args: list = sys.argv
+    parser = argparse.ArgumentParser(description='Initialize development project')
+    parser.add_argument('name', help='Project name')
+    parser.add_argument('type', choices=['python', 'node', 'go'], help='Project type')
+    parser.add_argument('--no-git', action='store_true', help='Skip git initialization')
+    
+    args = parser.parse_args()
+    
+    tool = InitDevTool(args.name, args.type, with_git=not args.no_git)
+    success = tool.run()
+    
+    sys.exit(0 if success else 1)
 
-    print('Project initializing complete')
-    pass
-
-if __name__=='__main__':
+if __name__ == '__main__':
     main()
