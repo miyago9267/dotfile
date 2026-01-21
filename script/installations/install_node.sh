@@ -28,11 +28,12 @@ else
   exit 1
 fi
 
-nvm install 18
-nvm alias default 18
-nvm use 18
+nvm install 22
+nvm alias default 22
+nvm use 22
 npm install npm@latest -g
 npm install yarn@latest -g
+npm install pnpm@latest -g
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 if [ -x "$SCRIPT_DIR/setup_env_snippets.sh" ]; then

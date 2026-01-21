@@ -323,3 +323,54 @@ dist
 package.json
 package-lock.json
 *.bak
+
+# Compressed files and downloads
+*.tar
+*.zip
+*.tar.gz
+*.tgz
+*.gz
+*.deb
+*.rpm
+
+# Build outputs
+dist/
+build/
+release/
+
+# Environment files
+.env.local
+.env.production
+
+# Installation intermediate files
+*.ttf
+*.otf
+*.woff
+*.woff2
+
+# Vim/Neovim backup files
+*~
+*.swp
+*.swo
+*.swn
+.*.sw[a-z]
+Session.vim
+.netrwhist
+
+# External dependencies (installed by scripts)
+.tmux_gpakosz/
+.pyenv/
+.nvm/
+.cargo/
+.rustup/
+google-cloud-sdk/
+development/flutter/
+
+# Android SDK (installed by script)
+Library/Android/
+Android/
+
+# Temporary directories
+tmp/
+temp/
+*.tmp

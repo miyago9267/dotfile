@@ -193,12 +193,7 @@ let g:indentLine_bufNameExclude=['_.*', 'NERD_tree.*']
 "   CoC.nvim (Neovim only)
 " =====================
 if has('nvim')
-  if exists('g:did_coc_loaded')
-    let g:coc_disable_startup_warning = 1
-    inoremap <silent><expr> <CR> pumvisible() ? coc#_select_confirm() : "\<CR>"
-    inoremap <silent><expr> <Up> pumvisible() ? "\<C-p>" : "<Up>"
-    inoremap <silent><expr> <Down> pumvisible() ? "\<C-n>" : "<Down>"
-  endif
+  let g:coc_disable_startup_warning = 1
   if filereadable(expand('~/.config/nvim/coc-config.vim'))
     execute 'so ~/.config/nvim/coc-config.vim'
   endif
@@ -440,14 +435,27 @@ let g:vim_vue_plugin_highlight_vue_attr=1
 let g:vim_vue_plugin_highlight_vue_keyword=1
 
 
-" coc.nvim 補全選單用上下鍵選擇，Enter 確認，避免與 copilot Tab 衝突
-inoremap <silent><expr> <CR> pumvisible() ? coc#_select_confirm() : "\<CR>"
-inoremap <silent><expr> <Up> pumvisible() ? "\<C-p>" : "<Up>"
-inoremap <silent><expr> <Down> pumvisible() ? "\<C-n>" : "<Down>"
+" coc.nvim 補全選單設置
+" Enter 確認補全選項
+inoremap <silent><expr> <CR> pumvisible() ? coc#_select_confirm()
+                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
 
-" majutsushi/tagbar
-let g:SuperTabMappingForward='<s-tab>'
-let g:SuperTabMappingBackward='<tab>'
+" 上下鍵選擇補全項
+inoremap <silent><expr> <Up> pumvisible() ? "\<C-p>" : "\<Up>"
+inoremap <silent><expr> <Down> pumvisible() ? "\<C-n>" : "\<Down>"
+
+" 手動觸發補全
+inoremap <silent><expr> <c-space> coc#refresh()
+
+" Copilot 設置：Tab 和 Ctrl+J 都用於接受建議
+imap <silent><script><expr> <Tab> copilot#Accept("\<CR>")
+imap <silent><script><expr> <C-j> copilot#Accept("\<CR>")
+let g:copilot_no_tab_map = v:true
+let g:copilot_assume_mapped = v:true
+
+" majutsushi/tagbar - 已停用，避免與 Tab 衝突
+" let g:SuperTabMappingForward='<s-tab>'
+" let g:SuperTabMappingBackward='<tab>'
 
 " closetag 
 " inoremap ( ()<Esc>i

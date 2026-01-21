@@ -94,14 +94,6 @@ if ! command -v gcc >/dev/null 2>&1; then
     esac
 fi
 
-# Backup existing config
-NVIM_CONFIG="$HOME/.config/nvim/init.lua"
-if [ -f "$NVIM_CONFIG" ]; then
-    BACKUP_FILE="$NVIM_CONFIG.backup-$(date +%Y%m%d-%H%M%S)"
-    echo "Backing up config to: $BACKUP_FILE"
-    cp "$NVIM_CONFIG" "$BACKUP_FILE"
-fi
-
 echo ""
 echo "Dependencies check complete"
 echo ""
@@ -137,8 +129,4 @@ echo "   - gopls (Go)"
 echo "   - clangd (C/C++)"
 echo ""
 echo "Setup complete!"
-echo ""
-if [ -n "$BACKUP_FILE" ]; then
-    echo "Restore: mv $BACKUP_FILE $NVIM_CONFIG"
-fi
 echo ""
