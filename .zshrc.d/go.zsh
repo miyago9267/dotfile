@@ -10,7 +10,7 @@ if command -v g &>/dev/null; then
 else
   # Try brew first
   if command -v brew &>/dev/null && brew list go &>/dev/null 2>&1; then
-    export GOROOT="$(brew --prefix go)"
+    export GOROOT="$(brew --prefix go)/libexec"
     export GOPATH="$HOME/go"
   else
     # Fallback based on OS
