@@ -48,8 +48,8 @@ Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 
 " NeoVim only plugins
-if has('nvim')
-  Plug 'neoclide/coc.nvim', {'branch': 'master'}
+" if has('nvim')
+"   Plug 'neoclide/coc.nvim', {'branch': 'master'}
 
 endif
 
@@ -192,12 +192,12 @@ let g:indentLine_bufNameExclude=['_.*', 'NERD_tree.*']
 " =====================
 "   CoC.nvim (Neovim only)
 " =====================
-if has('nvim')
-  let g:coc_disable_startup_warning = 1
-  if filereadable(expand('~/.config/nvim/coc-config.vim'))
-    execute 'so ~/.config/nvim/coc-config.vim'
-  endif
-endif
+" if has('nvim')
+"  let g:coc_disable_startup_warning = 1
+"  if filereadable(expand('~/.config/nvim/coc-config.vim'))
+"    execute 'so ~/.config/nvim/coc-config.vim'
+"  endif
+"endif
 
 " NerdTree settings 
 nnoremap <silent> <F4> :NERDTree<CR>
@@ -437,15 +437,15 @@ let g:vim_vue_plugin_highlight_vue_keyword=1
 
 " coc.nvim 補全選單設置
 " Enter 確認補全選項
-inoremap <silent><expr> <CR> pumvisible() ? coc#_select_confirm()
-                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+" inoremap <silent><expr> <CR> pumvisible() ? coc#_select_confirm()
+"                              \: \<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
 
 " 上下鍵選擇補全項
 inoremap <silent><expr> <Up> pumvisible() ? "\<C-p>" : "\<Up>"
 inoremap <silent><expr> <Down> pumvisible() ? "\<C-n>" : "\<Down>"
 
 " 手動觸發補全
-inoremap <silent><expr> <c-space> coc#refresh()
+" inoremap <silent><expr> <c-space> coc#refresh()
 
 " Copilot 設置：Tab 和 Ctrl+J 都用於接受建議
 imap <silent><script><expr> <Tab> copilot#Accept("\<CR>")
