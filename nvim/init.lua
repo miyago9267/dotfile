@@ -228,15 +228,8 @@ require("lazy").setup({
         ensure_installed = { 'lua_ls', 'ts_ls', 'pyright' }
       })
       
-      local capabilities = vim.lsp.protocol.make_client_capabilities()
-      
-      -- Use new vim.lsp.config API (nvim 0.11+)
-      vim.lsp.config('*', {
-        capabilities = capabilities,
-      })
-      
-      -- Enable LSP servers
-      vim.lsp.enable({ 'lua_ls', 'ts_ls', 'pyright', 'gopls' })
+      -- 使用相容層設定 LSP,支援 Neovim 0.10 和 0.11+
+      require('compat').setup_lsp()
     end,
   },
 
