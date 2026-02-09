@@ -178,7 +178,18 @@ require("lazy").setup({
         event = "InsertEnter",
         config = function()
           require("copilot").setup({
-            suggestion = { enabled = false },
+            suggestion = { 
+              enabled = true,
+              auto_trigger = true,
+              keymap = {
+                accept = "<Tab>",
+                accept_word = false,
+                accept_line = false,
+                next = "<M-]>",
+                prev = "<M-[>",
+                dismiss = "<C-]>",
+              },
+            },
             panel = { enabled = false },
           })
         end,
@@ -385,30 +396,15 @@ vim.keymap.set('v', '<D-/>', '<Plug>NERDCommenterToggle', { desc = 'Toggle comme
 vim.keymap.set('i', '<C-/>', '<Esc><Plug>NERDCommenterToggle gi', { desc = 'Toggle comment in insert mode' })
 vim.keymap.set('i', '<D-/>', '<Esc><Plug>NERDCommenterToggle gi', { desc = 'Toggle comment in insert mode (Mac)' })
 
--- VSCode style cursor movement (smart jump at file boundaries)
-local function smart_cursor_move(key)
-  local current_line = vim.fn.line('.')
-  local total_lines = vim.fn.line('$')
-  
-  if key == 'j' or key == '<Down>' then
-    if current_line >= total_lines then
-      vim.cmd('normal! $')
-    else
-      vim.cmd('normal! ' .. key)
-    end
-  elseif key == 'k' or key == '<Up>' then
-    if current_line <= 1 then
-      vim.cmd('normal! 0')
-    else
-      vim.cmd('normal! ' .. key)
-    end
-  end
-end
+-- 保留 vim 原生的移動行為
+-- 方向鍵和 hjkl 都可以正常使用,沒有額外的智慧移動功能
 
-vim.keymap.set('n', 'j', function() smart_cursor_move('j') end, { desc = 'Smart down (VSCode style)' })
-vim.keymap.set('n', 'k', function() smart_cursor_move('k') end, { desc = 'Smart up (VSCode style)' })
-vim.keymap.set('n', '<Down>', function() smart_cursor_move('<Down>') end, { desc = 'Smart down arrow (VSCode style)' })
-vim.keymap.set('n', '<Up>', function() smart_cursor_move('<Up>') end, { desc = 'Smart up arrow (VSCode style)' })
+-- 平板友善的方向鍵替代方案 (Alt + IJKL)
+-- 適合在沒有實體方向鍵的環境使用,不會與 vim 預設快捷鍵衝突
+vim.keymap.set({'n', 'i', 'v'}, '<A-i>', '<Up>', { desc = '上移 (平板友善)' })
+vim.keymap.set({'n', 'i', 'v'}, '<A-k>', '<Down>', { desc = '下移 (平板友善)' })
+vim.keymap.set({'n', 'i', 'v'}, '<A-j>', '<Left>', { desc = '左移 (平板友善)' })
+vim.keymap.set({'n', 'i', 'v'}, '<A-l>', '<Right>', { desc = '右移 (平板友善)' })
 
 -- =====================
 --   Colorscheme
