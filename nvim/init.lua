@@ -67,6 +67,87 @@ require("lazy").setup({
   -- nerdcommenter for VSCode-style commenting
   { "preservim/nerdcommenter" },
 
+  -- Toggleterm (VSCode-style integrated terminal)
+  {
+    'akinsho/toggleterm.nvim',
+    version = "*",
+    opts = {
+      size = 15,
+      open_mapping = [[<C-`>]],
+      direction = 'horizontal',
+      shade_terminals = true,
+      shading_factor = 2,
+      start_in_insert = true,
+      persist_size = true,
+    },
+  },
+
+  -- Indent guides (VSCode-style indent lines)
+  {
+    'lukas-reineke/indent-blankline.nvim',
+    main = 'ibl',
+    opts = {
+      indent = { char = '|' },
+      scope = { enabled = true, show_start = false, show_end = false },
+    },
+  },
+
+  -- nvim-cmp autocompletion (VSCode-style autocomplete popup)
+  {
+    'hrsh7th/nvim-cmp',
+    event = 'InsertEnter',
+    dependencies = {
+      'hrsh7th/cmp-nvim-lsp',
+      'hrsh7th/cmp-buffer',
+      'hrsh7th/cmp-path',
+      'L3MON4D3/LuaSnip',
+      'saadparwaiz1/cmp_luasnip',
+    },
+    config = function()
+      local cmp = require('cmp')
+      local luasnip = require('luasnip')
+      cmp.setup({
+        snippet = {
+          expand = function(args)
+            luasnip.lsp_expand(args.body)
+          end,
+        },
+        mapping = cmp.mapping.preset.insert({
+          ['<C-Space>'] = cmp.mapping.complete(),
+          ['<CR>'] = cmp.mapping.confirm({ select = true }),
+          ['<Tab>'] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_next_item()
+            elseif luasnip.expand_or_jumpable() then
+              luasnip.expand_or_jump()
+            else
+              fallback()
+            end
+          end, { 'i', 's' }),
+          ['<S-Tab>'] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_prev_item()
+            elseif luasnip.jumpable(-1) then
+              luasnip.jump(-1)
+            else
+              fallback()
+            end
+          end, { 'i', 's' }),
+          ['<C-e>'] = cmp.mapping.abort(),
+          ['<C-u>'] = cmp.mapping.scroll_docs(-4),
+          ['<C-d>'] = cmp.mapping.scroll_docs(4),
+        }),
+        sources = cmp.config.sources({
+          { name = 'nvim_lsp' },
+          { name = 'luasnip' },
+        }, {
+          { name = 'buffer' },
+          { name = 'path' },
+        }),
+      })
+    end,
+  },
+
   -- === Mars.nvim ===
   
   -- Telescope
@@ -90,15 +171,21 @@ require("lazy").setup({
     end,
   },
 
-  -- Leap 快速跳轉
+  -- Flash.nvim 快速跳轉 + 增強搜尋 (取代 leap.nvim)
+  -- 用 / 搜尋時會在每個 match 上顯示 label，按 label 直接跳過去，不用按 n
   {
-    'ggandor/leap.nvim',
-    config = function()
-      local leap = require('leap')
-      vim.keymap.set({'n', 'x', 'o'}, 's', '<Plug>(leap-forward)')
-      vim.keymap.set({'n', 'x', 'o'}, 'S', '<Plug>(leap-backward)')
-      vim.keymap.set({'n', 'x', 'o'}, 'gs', '<Plug>(leap-from-window)')
-    end,
+    'folke/flash.nvim',
+    event = 'VeryLazy',
+    opts = {
+      modes = {
+        search = { enabled = true },  -- 增強 / 和 ? 搜尋
+        char = { enabled = true },    -- 增強 f/F/t/T
+      },
+    },
+    keys = {
+      { 's', mode = { 'n', 'x', 'o' }, function() require('flash').jump() end, desc = 'Flash jump' },
+      { 'S', mode = { 'n', 'x', 'o' }, function() require('flash').treesitter() end, desc = 'Flash treesitter select' },
+    },
   },
 
   -- vim-tmux-navigator
@@ -203,9 +290,7 @@ require("lazy").setup({
       },
     },
     opts = {
-      -- provider = "claude",
-      -- provider = "openai",
-      provider = "copilot", 
+      provider = vim.env.AVANTE_PROVIDER or "claude-code",
       
       behaviour = {
         auto_suggestions = false,
@@ -336,6 +421,12 @@ vim.keymap.set('n', '<leader>sw', '<cmd>Telescope grep_string<CR>', { desc = '[S
 -- Neogit
 vim.keymap.set('n', '<leader>ng', '<cmd>Neogit<CR>', { desc = '[N]eo[G]it' })
 
+-- Diffview (git tree / file history)
+vim.keymap.set('n', '<leader>gd', '<cmd>DiffviewOpen<CR>', { desc = '[G]it [D]iff view' })
+vim.keymap.set('n', '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', { desc = '[G]it file [H]istory' })
+vim.keymap.set('n', '<leader>gH', '<cmd>DiffviewFileHistory<CR>', { desc = '[G]it repo [H]istory' })
+vim.keymap.set('n', '<leader>gc', '<cmd>DiffviewClose<CR>', { desc = '[G]it diff [C]lose' })
+
 -- Grug-far
 vim.keymap.set('n', '<leader>gs', '<cmd>GrugFar<CR>', { desc = '[G]rug [S]earch and Replace' })
 
@@ -405,6 +496,61 @@ vim.keymap.set({'n', 'i', 'v'}, '<A-i>', '<Up>', { desc = '上移 (平板友善)
 vim.keymap.set({'n', 'i', 'v'}, '<A-k>', '<Down>', { desc = '下移 (平板友善)' })
 vim.keymap.set({'n', 'i', 'v'}, '<A-j>', '<Left>', { desc = '左移 (平板友善)' })
 vim.keymap.set({'n', 'i', 'v'}, '<A-l>', '<Right>', { desc = '右移 (平板友善)' })
+
+-- VSCode-style: Ctrl+F / Cmd+F for in-file search/replace panel
+vim.keymap.set('n', '<C-f>', function() require('vsearch').open() end, { desc = 'Search in file' })
+vim.keymap.set('n', '<D-f>', function() require('vsearch').open() end, { desc = 'Search in file (Mac)' })
+
+-- VSCode-style: Ctrl+S / Cmd+S to save
+vim.keymap.set({'n', 'i', 'v'}, '<C-s>', '<cmd>w<CR>', { desc = 'Save file' })
+vim.keymap.set({'n', 'i', 'v'}, '<D-s>', '<cmd>w<CR>', { desc = 'Save file (Mac)' })
+
+-- VSCode-style: Ctrl+B / Cmd+B to toggle sidebar
+vim.keymap.set('n', '<C-b>', '<cmd>NvimTreeToggle<CR>', { desc = 'Toggle sidebar' })
+vim.keymap.set('n', '<D-b>', '<cmd>NvimTreeToggle<CR>', { desc = 'Toggle sidebar (Mac)' })
+
+-- VSCode-style: Ctrl+Shift+F / Cmd+Shift+F for global search
+vim.keymap.set('n', '<C-S-f>', '<cmd>Telescope live_grep<CR>', { desc = 'Global search' })
+vim.keymap.set('n', '<D-S-f>', '<cmd>Telescope live_grep<CR>', { desc = 'Global search (Mac)' })
+
+-- VSCode-style: Ctrl+Shift+P / Cmd+Shift+P for command palette
+vim.keymap.set('n', '<C-S-p>', '<cmd>Telescope commands<CR>', { desc = 'Command palette' })
+vim.keymap.set('n', '<D-S-p>', '<cmd>Telescope commands<CR>', { desc = 'Command palette (Mac)' })
+
+-- VSCode-style: Ctrl+Shift+H / Cmd+Shift+H for search and replace
+vim.keymap.set('n', '<C-S-h>', '<cmd>GrugFar<CR>', { desc = 'Search and replace' })
+vim.keymap.set('n', '<D-S-h>', '<cmd>GrugFar<CR>', { desc = 'Search and replace (Mac)' })
+
+-- VSCode-style: Alt+Shift+Up/Down to duplicate line
+vim.keymap.set('n', '<A-S-Up>', '<cmd>t .-1<CR>', { desc = 'Duplicate line up' })
+vim.keymap.set('n', '<A-S-Down>', '<cmd>t .<CR>', { desc = 'Duplicate line down' })
+vim.keymap.set('i', '<A-S-Up>', '<Esc><cmd>t .-1<CR>gi', { desc = 'Duplicate line up (insert)' })
+vim.keymap.set('i', '<A-S-Down>', '<Esc><cmd>t .<CR>gi', { desc = 'Duplicate line down (insert)' })
+vim.keymap.set('v', '<A-S-Up>', ":t '<-1<CR>gv", { desc = 'Duplicate selection up' })
+vim.keymap.set('v', '<A-S-Down>', ":t '><CR>gv", { desc = 'Duplicate selection down' })
+
+-- VSCode-style: Ctrl+Shift+K to delete line
+vim.keymap.set('n', '<C-S-k>', '<cmd>d<CR>', { desc = 'Delete line' })
+vim.keymap.set('i', '<C-S-k>', '<Esc><cmd>d<CR>gi', { desc = 'Delete line (insert)' })
+
+-- VSCode-style: F2 for rename, F12 for go to definition
+vim.keymap.set('n', '<F2>', vim.lsp.buf.rename, { desc = 'Rename symbol' })
+vim.keymap.set('n', '<F12>', vim.lsp.buf.definition, { desc = 'Go to definition' })
+
+-- VSCode-style: Ctrl+Tab / Ctrl+Shift+Tab for buffer switching
+vim.keymap.set('n', '<C-Tab>', '<cmd>bnext<CR>', { desc = 'Next buffer' })
+vim.keymap.set('n', '<C-S-Tab>', '<cmd>bprevious<CR>', { desc = 'Previous buffer' })
+
+-- VSCode-style: Ctrl+Shift+[ / ] for fold/unfold
+vim.keymap.set('n', '<C-S-[>', 'zc', { desc = 'Fold' })
+vim.keymap.set('n', '<C-S-]>', 'zo', { desc = 'Unfold' })
+
+-- VSCode-style: Cmd+J to toggle bottom terminal (Ctrl+J 已被 tmux-navigator 佔用)
+vim.keymap.set({'n', 't'}, '<D-j>', '<cmd>ToggleTerm<CR>', { desc = 'Toggle terminal' })
+
+-- VSCode-style: Ctrl+Shift+I / Cmd+Shift+I to toggle AI agent sidebar (Avante)
+vim.keymap.set('n', '<C-S-i>', function() require('avante').toggle() end, { desc = 'Toggle AI sidebar' })
+vim.keymap.set('n', '<D-S-i>', function() require('avante').toggle() end, { desc = 'Toggle AI sidebar (Mac)' })
 
 -- =====================
 --   Colorscheme
