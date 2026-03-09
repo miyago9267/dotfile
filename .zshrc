@@ -5,11 +5,15 @@
 ######################################################
 
 # macOS Homebrew 路徑修復
-if [ -d /opt/homebrew/bin ]; then
-  export PATH="/opt/homebrew/bin:$PATH"
-elif [ -d /usr/local/bin ]; then
-  export PATH="/usr/local/bin:$PATH"
+HOMEBREW_BIN_DIR="/opt/homebrew/bin"
+LEGACY_HOMEBREW_BIN_DIR="/usr/local/bin"
+if [ -d "$HOMEBREW_BIN_DIR" ]; then
+  export PATH="$HOMEBREW_BIN_DIR:$PATH"
+elif [ -d "$LEGACY_HOMEBREW_BIN_DIR" ]; then
+  export PATH="$LEGACY_HOMEBREW_BIN_DIR:$PATH"
 fi
+unset HOMEBREW_BIN_DIR
+unset LEGACY_HOMEBREW_BIN_DIR
 
 export PERL_BADLANG=0
 typeset -i FUNCNEST=1000
@@ -110,23 +114,7 @@ if [ -d "$ZSHRC_D" ]; then
     [ -r "$f" ] && . "$f"
   done
 fi
+unset -f __zshrc_prepend_path 2>/dev/null
+unset -f __zshrc_prepend_path_if_dir 2>/dev/null
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
-# bun completions
-[ -s "/Users/miyago/.bun/_bun" ] && source "/Users/miyago/.bun/_bun"
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-# pnpm
-export PNPM_HOME="/Users/miyago/Library/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end
-
-# OpenClaw Completion
-source <(openclaw completion --shell zsh)

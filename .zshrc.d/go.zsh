@@ -35,11 +35,7 @@ else
 
   # Add to PATH
   for dir in "$GOROOT/bin" "$GOPATH/bin"; do
-    [ -d "$dir" ] || continue
-    case ":$PATH:" in
-      *":$dir:"*) ;;
-      *) PATH="$dir:$PATH" ;;
-    esac
+    __zshrc_prepend_path_if_dir "$dir"
   done
 fi
 

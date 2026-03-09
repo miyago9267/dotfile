@@ -24,11 +24,7 @@ ANDROID_HOME="$(__zshrc_detect_android_home)"
 unset -f __zshrc_detect_android_home
 if [ -d "$ANDROID_HOME" ]; then
   for dir in "$ANDROID_HOME/cmdline-tools/latest/bin" "$ANDROID_HOME/platform-tools"; do
-    [ -d "$dir" ] || continue
-    case ":$PATH:" in
-      *":$dir:"*) ;;
-      *) PATH="$dir:$PATH" ;;
-    esac
+    __zshrc_prepend_path_if_dir "$dir"
   done
 fi
 export ANDROID_HOME
