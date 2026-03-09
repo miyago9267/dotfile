@@ -116,7 +116,10 @@ require("lazy").setup({
           ['<C-Space>'] = cmp.mapping.complete(),
           ['<CR>'] = cmp.mapping.confirm({ select = true }),
           ['<Tab>'] = cmp.mapping(function(fallback)
-            if cmp.visible() then
+            local copilot = require('copilot.suggestion')
+            if copilot.is_visible() then
+              copilot.accept()
+            elseif cmp.visible() then
               cmp.select_next_item()
             elseif luasnip.expand_or_jumpable() then
               luasnip.expand_or_jump()
@@ -269,7 +272,7 @@ require("lazy").setup({
               enabled = true,
               auto_trigger = true,
               keymap = {
-                accept = "<Tab>",
+                accept = false,  -- 由 nvim-cmp 的 Tab 統一處理
                 accept_word = false,
                 accept_line = false,
                 next = "<M-]>",
@@ -291,7 +294,19 @@ require("lazy").setup({
     },
     opts = {
       provider = vim.env.AVANTE_PROVIDER or "claude-code",
-      
+
+      providers = {
+        ["claude-code"] = {
+          command = "npx",
+          args = { "-y", "@zed-industries/claude-agent-acp" },
+          env = {
+            NODE_NO_WARNINGS = "1",
+            ACP_PATH_TO_CLAUDE_CODE_EXECUTABLE = vim.fn.exepath("claude"),
+            ACP_PERMISSION_MODE = "bypassPermissions",
+          },
+        },
+      },
+
       behaviour = {
         auto_suggestions = false,
         auto_set_highlight_group = true,
@@ -429,6 +444,10 @@ vim.keymap.set('n', '<leader>gc', '<cmd>DiffviewClose<CR>', { desc = '[G]it diff
 
 -- Grug-far
 vim.keymap.set('n', '<leader>gs', '<cmd>GrugFar<CR>', { desc = '[G]rug [S]earch and Replace' })
+
+-- j/k 交換：j=上 k=下 (Miyago 習慣)
+vim.keymap.set({'n', 'v', 'o'}, 'j', 'k', { noremap = true })
+vim.keymap.set({'n', 'v', 'o'}, 'k', 'j', { noremap = true })
 
 -- LSP 快捷键
 vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { desc = '[G]oto [D]efinition' })

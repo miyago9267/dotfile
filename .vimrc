@@ -28,7 +28,7 @@ Plug 'Yggdroot/indentLine'
 Plug 'luochen1990/rainbow'
 Plug 'alvan/vim-closetag'
 Plug 'dense-analysis/ale'
-Plug 'jiangmiao/auto-pairs'
+" Plug 'jiangmiao/auto-pairs'  " 已改用 mini.pairs (init.lua)
 " Plug 'zxqfl/tabnine-vim'
 
 Plug 'posva/vim-vue'
@@ -447,11 +447,11 @@ inoremap <silent><expr> <Down> pumvisible() ? "\<C-n>" : "\<Down>"
 " 手動觸發補全
 " inoremap <silent><expr> <c-space> coc#refresh()
 
-" Copilot 設置：Tab 和 Ctrl+J 都用於接受建議
-imap <silent><script><expr> <Tab> copilot#Accept("\<CR>")
-imap <silent><script><expr> <C-j> copilot#Accept("\<CR>")
-let g:copilot_no_tab_map = v:true
-let g:copilot_assume_mapped = v:true
+" Copilot 設置 (舊版 copilot.vim，已改用 copilot.lua，見 init.lua)
+" imap <silent><script><expr> <Tab> copilot#Accept("\<CR>")
+" imap <silent><script><expr> <C-j> copilot#Accept("\<CR>")
+" let g:copilot_no_tab_map = v:true
+" let g:copilot_assume_mapped = v:true
 
 " majutsushi/tagbar - 已停用，避免與 Tab 衝突
 " let g:SuperTabMappingForward='<s-tab>'
@@ -552,35 +552,4 @@ vmap <D-/> <Plug>NERDCommenterToggle
 imap <C-/> <Esc><Plug>NERDCommenterToggle gi
 imap <D-/> <Esc><Plug>NERDCommenterToggle gi
 
-" Smart cursor movement at file boundaries (VSCode style)
-fu! SmartCursorMove(key)
-    let current_line = line('.')
-    let total_lines = line('$')
-    
-    if a:key ==# 'j' || a:key ==# 'down'
-        if current_line >= total_lines
-            normal! $
-        else
-            if a:key ==# 'j'
-                normal! j
-            else
-                normal! <Down>
-            endif
-        endif
-    elseif a:key ==# 'k' || a:key ==# 'up'
-        if current_line <= 1
-            normal! 0
-        else
-            if a:key ==# 'k'
-                normal! k
-            else
-                normal! <Up>
-            endif
-        endif
-    endif
-endfu
-
-nnoremap <silent> j :call SmartCursorMove('j')<CR>
-nnoremap <silent> k :call SmartCursorMove('k')<CR>
-nnoremap <silent> <Down> :call SmartCursorMove('down')<CR>
-nnoremap <silent> <Up> :call SmartCursorMove('up')<CR>
+" SmartCursorMove 已移除 -- 與 Neovim 方向鍵衝突且 normal! <Down> 不會被解析
