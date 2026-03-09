@@ -549,8 +549,8 @@ vim.keymap.set('n', '<C-S-]>', 'zo', { desc = 'Unfold' })
 vim.keymap.set({'n', 't'}, '<D-j>', '<cmd>ToggleTerm<CR>', { desc = 'Toggle terminal' })
 
 -- VSCode-style: Ctrl+Shift+I / Cmd+Shift+I to toggle AI agent sidebar (Avante)
-vim.keymap.set('n', '<C-S-i>', function() require('avante').toggle() end, { desc = 'Toggle AI sidebar' })
-vim.keymap.set('n', '<D-S-i>', function() require('avante').toggle() end, { desc = 'Toggle AI sidebar (Mac)' })
+vim.keymap.set('n', '<C-S-i>', '<cmd>AvanteToggle<CR>', { desc = 'Toggle AI sidebar' })
+vim.keymap.set('n', '<D-S-i>', '<cmd>AvanteToggle<CR>', { desc = 'Toggle AI sidebar (Mac)' })
 
 -- =====================
 --   Colorscheme
