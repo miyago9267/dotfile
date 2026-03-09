@@ -547,6 +547,9 @@ vim.keymap.set('n', '<C-S-]>', 'zo', { desc = 'Unfold' })
 
 -- VSCode-style: Cmd+J to toggle bottom terminal (Ctrl+J 已被 tmux-navigator 佔用)
 vim.keymap.set({'n', 't'}, '<D-j>', '<cmd>ToggleTerm<CR>', { desc = 'Toggle terminal' })
+vim.keymap.set('n', '<leader>tt', '<cmd>ToggleTerm<CR>', { desc = '[T]oggle [T]erminal' })
+-- Terminal mode: Esc 跳回 normal mode，再按 Space t t 就能關
+vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]], { desc = 'Exit terminal mode' })
 
 -- VSCode-style: Ctrl+Shift+I / Cmd+Shift+I to toggle AI agent sidebar (Avante)
 vim.keymap.set('n', '<C-S-i>', '<cmd>AvanteToggle<CR>', { desc = 'Toggle AI sidebar' })
