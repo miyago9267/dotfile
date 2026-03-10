@@ -250,6 +250,24 @@ require("lazy").setup({
     end,
   },
 
+  -- === Claude Code Integration ===
+  {
+    "coder/claudecode.nvim",
+    lazy = false,
+    config = function()
+      require("claudecode").setup({
+        terminal = {
+          split_side = "right",
+          split_width_percentage = 0.4,
+        },
+      })
+    end,
+    keys = {
+      { "<leader>cc", "<cmd>ClaudeCode<CR>", desc = "[C]laude [C]ode toggle" },
+      { "<leader>cs", "<cmd>ClaudeCodeSend<CR>", mode = "v", desc = "[C]laude [S]end selection" },
+    },
+  },
+
   -- === Avante.nvim AI ===
   {
     "yetone/avante.nvim",
