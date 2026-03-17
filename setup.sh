@@ -64,7 +64,7 @@ get_field() {
 }
 
 print_header() {
-  clear
+  printf "\033[H"
   printf "${C}"
   cat << 'BANNER'
   __  __ _                         ____        _    __ _ _
@@ -104,13 +104,13 @@ print_menu() {
     local cursor="  "
     [ "$i" = "$current" ] && cursor="${Y}>${N} "
 
-    printf "  %b [%b] %s\n" "$cursor" "$check" "$name"
+    printf "  %b [%b] %s\n\033[K" "$cursor" "$check" "$name"
   done
 
   echo ""
   local count=0
   for s in "${SELECTED[@]}"; do [ "$s" = "1" ] && count=$((count + 1)); done
-  printf "  已選擇 ${G}%d${N} / %d 項\n" "$count" "$TOTAL"
+  printf "  已選擇 ${G}%d${N} / %d 項\033[K\n" "$count" "$TOTAL"
 }
 
 # -- 全部安裝模式 --
@@ -126,6 +126,8 @@ else
   # 隱藏游標、設定 raw mode
   tput civis 2>/dev/null || true
   trap 'tput cnorm 2>/dev/null; stty sane 2>/dev/null' EXIT
+
+  clear
 
   while true; do
     print_header
