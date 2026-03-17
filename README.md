@@ -21,6 +21,7 @@ sh setup.sh
 - macOS (Darwin)
 - Ubuntu/Debian (APT)
 - Arch Linux (Pacman)
+- **Windows (PowerShell 7+)** -- 見 [`powershell/README.md`](powershell/README.md)
 
 ## Features
 
@@ -54,23 +55,26 @@ sh setup.sh
 
 ```tree
 .
-├── nvim
-│   ├── coc-config.vim
+├── nvim/                  # Neovim 配置（跨平台共用）
 │   ├── init.lua
-│   ├── lazy-lock.json
-│   └── pack/
-├── script
-│   ├── installations
-│   └── utils
-├── template
-│   └── template.cpp
-├── tmux
+│   ├── lua/
+│   └── lazy-lock.json
+├── powershell/            # Windows PowerShell 版
+│   ├── profile.ps1        # 主 profile
+│   ├── profile.d/         # 模組化載入
+│   ├── setup.ps1          # 互動式安裝
+│   └── setup.d/           # 安裝腳本
+├── script/
+│   ├── installations/     # macOS/Linux 安裝腳本
+│   └── utils/
+├── tmux/
 │   ├── base.conf
 │   └── nvim-extension.conf
-├── alias.sh
-├── init.vim
-├── .vimrc
-├── setup.sh
+├── .zshrc                 # Zsh 主設定
+├── .zshrc.d/              # Zsh 模組化載入
+├── alias.sh               # Shell 別名
+├── .vimrc                 # Vim 設定
+├── setup.sh               # macOS/Linux 互動式安裝
 └── README.md
 ```
 
@@ -154,7 +158,9 @@ Prefix Key: Ctrl-b (or Ctrl-a)
 - `Prefix + h/j/k/l` - Switch panes (when not in Neovim)
 - `Ctrl-h/j/k/l` - Seamless navigation between Neovim and Tmux
 
-## How it work
+## How it works
+
+### macOS / Linux
 
 1. Detect operating system (macOS/Ubuntu/Arch)
 2. Install system packages via package manager
@@ -162,6 +168,14 @@ Prefix Key: Ctrl-b (or Ctrl-a)
 4. Configure Vim, Neovim, and Tmux
 5. Link configuration files to home directory
 6. Install language runtimes (optional)
+
+### Windows
+
+1. Install PowerShell 7+ and Windows Terminal
+2. Run `pwsh powershell/setup.ps1`
+3. Select components to install (scoop, Neovim, oh-my-posh, etc.)
+4. Configuration is symlinked or copied to standard paths
+5. See [`powershell/README.md`](powershell/README.md) for details
 
 ## Installation Scripts
 
