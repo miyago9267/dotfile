@@ -137,7 +137,7 @@ else
     case "$key" in
       # 方向鍵（ESC 序列）
       $'\x1b')
-        read -rsn2 -t 0.1 seq
+        read -rsn2 -t 1 seq 2>/dev/null || true
         case "$seq" in
           '[A') # 上
             current=$(( (current - 1 + TOTAL) % TOTAL ))
