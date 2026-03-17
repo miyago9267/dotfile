@@ -64,7 +64,7 @@ get_field() {
 }
 
 print_header() {
-  printf "\033[H"
+  printf "\033[2J\033[H"
   printf "${C}"
   cat << 'BANNER'
   __  __ _                         ____        _    __ _ _
@@ -81,9 +81,37 @@ BANNER
 
 print_menu() {
   local current=$1
-  local prev_cat=""
+  local term_lines=$(tput lines 2>/dev/null || echo 24)
+  local max_items=$(( term_lines - 15 )) # 預留 Banner 和 Header 空間
+  [ "$max_items" -lt 5 ] && max_items=5
+  [ "$max_items" -gt "$TOTAL" ] && max_items=$TOTAL
 
-  for i in $(seq 0 $((TOTAL - 1))); do
+  local start_idx=0
+  local end_idx=$(( TOTAL - 1 ))
+
+  # 如果項目超過顯示高度，計算滑動視窗
+  if [ "$TOTAL" -gt "$max_items" ]; then
+    if [ "$current" -lt $(( max_items / 2 )) ]; then
+      start_idx=0
+      end_idx=$(( max_items - 1 ))
+    elif [ "$current" -ge $(( TOTAL - max_items / 2 )) ]; then
+      start_idx=$(( TOTAL - max_items ))
+      end_idx=$(( TOTAL - 1 ))
+    else
+      start_idx=$(( current - max_items / 2 ))
+      end_idx=$(( start_idx + max_items - 1 ))
+    fi
+  fi
+
+  local prev_cat=""
+  if [ "$start_idx" -gt 0 ]; then
+    prev_cat=$(get_field "$((start_idx - 1))" cat)
+    printf "  ${C}↑ (還有 %d 項隱藏)${N}\033[K\n" "$start_idx"
+  else
+    printf "\033[K\n"
+  fi
+
+  for i in $(seq $start_idx $end_idx); do
     local name
     name=$(get_field "$i" name)
     local cat
@@ -91,8 +119,8 @@ print_menu() {
 
     # 分類標題
     if [ "$cat" != "$prev_cat" ]; then
-      [ -n "$prev_cat" ] && echo ""
-      printf "  ${C}── %s ──${N}\n" "$cat"
+      [ "$i" -gt "$start_idx" ] && echo -e "\033[K"
+      printf "  ${C}── %s ──${N}\033[K\n" "$cat"
       prev_cat="$cat"
     fi
 
@@ -104,10 +132,18 @@ print_menu() {
     local cursor="  "
     [ "$i" = "$current" ] && cursor="${Y}>${N} "
 
-    printf "  %b [%b] %s\n\033[K" "$cursor" "$check" "$name"
+    printf "  %b [%b] %s\033[K\n" "$cursor" "$check" "$name"
   done
 
-  echo ""
+  if [ "$end_idx" -lt $(( TOTAL - 1 )) ]; then
+    printf "  ${C}↓ (還有 %d 項隱藏)${N}\033[K\n" $(( TOTAL - 1 - end_idx ))
+  else
+    printf "\033[K\n"
+  fi
+
+  # 清除下方殘餘行
+  printf "\033[J\n"
+
   local count=0
   for s in "${SELECTED[@]}"; do [ "$s" = "1" ] && count=$((count + 1)); done
   printf "  已選擇 ${G}%d${N} / %d 項\033[K\n" "$count" "$TOTAL"
