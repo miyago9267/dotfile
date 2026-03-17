@@ -74,6 +74,18 @@ print_header() {
            |___/       |___/
 BANNER
   printf "${N}\n"
+
+  # OS Detection
+  local os_name="Unknown OS"
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    os_name=$(sw_vers -productName 2>/dev/null || echo "macOS")
+    local os_ver=$(sw_vers -productVersion 2>/dev/null || echo "")
+    os_name="$os_name $os_ver"
+  elif [ -f /etc/os-release ]; then
+    os_name=$(grep -E '^PRETTY_NAME=' /etc/os-release | cut -d'"' -f2 2>/dev/null)
+  fi
+  printf "  ${C}OS: ${N}%s\n\n" "$os_name"
+
   printf "${B}  互動式安裝程式${N}\n"
   printf "  方向鍵上下移動 | 空白鍵切換 | ${G}a${N} 全選 | ${R}n${N} 全不選 | ${Y}Enter${N} 開始安裝 | ${R}q${N} 離開\n\n"
 }
