@@ -64,7 +64,6 @@ get_field() {
 }
 
 print_header() {
-  printf "\033[2J\033[H"
   printf "${C}"
   cat << 'BANNER'
   __  __ _                         ____        _    __ _ _
@@ -163,9 +162,13 @@ else
   tput civis 2>/dev/null || true
   trap 'tput cnorm 2>/dev/null; stty sane 2>/dev/null' EXIT
 
+  # 進入迴圈前，先完整清空一次畫面
   clear
 
   while true; do
+    # 關鍵：將游標移至畫面最左上角 (0, 0)，然後原地覆蓋舊字串
+    tput cup 0 0 2>/dev/null || printf "\033[H"
+
     print_header
     print_menu $current
 
