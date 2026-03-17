@@ -531,6 +531,31 @@ inoremap <C-z> <C-o>u
 nnoremap <C-a> ggVG
 nnoremap <D-a> ggVG
 
+" Redo
+nnoremap <C-S-z> <C-r>
+nnoremap <D-S-z> <C-r>
+nnoremap <C-y> <C-r>
+inoremap <C-S-z> <C-o><C-r>
+inoremap <D-S-z> <C-o><C-r>
+
+" Go to line
+nnoremap <C-g> :
+
+" Visual mode indent/dedent
+vnoremap <Tab> >gv
+vnoremap <S-Tab> <gv
+
+" =====================
+"   Fn 鍵替代方案
+" =====================
+" 預設 leader 鍵設為空白 (與 Nvim 一致)
+let mapleader=" "
+
+" F2 (Rename) 替代
+nnoremap <leader>rr :%s/<C-r><C-w>//g<Left><Left>
+" F12 (Go to definition) 替代 (原生 vim 跳轉)
+nnoremap <leader>gd <C-]>
+
 " Sudo save when forgot to use sudo
 " Use :W! to save with sudo
 command! W! w !sudo tee % > /dev/null

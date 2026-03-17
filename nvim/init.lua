@@ -216,7 +216,16 @@ require("lazy").setup({
     'folke/which-key.nvim',
     event = "VeryLazy",
     config = function()
-      require("which-key").setup()
+      local wk = require("which-key")
+      wk.setup()
+      wk.add({
+        { "<leader>s", group = "Search" },
+        { "<leader>g", group = "Git" },
+        { "<leader>c", group = "Code / Claude" },
+        { "<leader>n", group = "Neogit" },
+        { "<leader>r", group = "Refactor" },
+        { "<leader>t", group = "Terminal" },
+      })
     end,
   },
 
@@ -263,12 +272,46 @@ require("lazy").setup({
       })
     end,
     keys = {
-      { "<leader>cc", "<cmd>ClaudeCode<CR>", desc = "[C]laude [C]ode toggle" },
-      { "<leader>cs", "<cmd>ClaudeCodeSend<CR>", mode = "v", desc = "[C]laude [S]end selection" },
+      { "<leader>cc", "<cmd>ClaudeCode<CR>", desc = "Code > Claude toggle" },
+      { "<leader>cs", "<cmd>ClaudeCodeSend<CR>", mode = "v", desc = "Code > Claude send selection" },
     },
   },
 
-  -- === Avante.nvim AI ===
+  -- === Copilot (從 avante dependencies 獨立出來) ===
+  {
+    "zbirenbaum/copilot.lua",
+    cmd = "Copilot",
+    event = "InsertEnter",
+    config = function()
+      require("copilot").setup({
+        suggestion = {
+          enabled = true,
+          auto_trigger = true,
+          keymap = {
+            accept = false,  -- 由 nvim-cmp 的 Tab 統一處理
+            accept_word = false,
+            accept_line = false,
+            next = "<M-]>",
+            prev = "<M-[>",
+            dismiss = "<C-]>",
+          },
+        },
+        panel = { enabled = false },
+      })
+    end,
+  },
+
+  -- Render Markdown
+  {
+    'MeanderingProgrammer/render-markdown.nvim',
+    opts = {
+      file_types = { "markdown" },
+    },
+    ft = { "markdown" },
+  },
+
+  -- === Avante.nvim AI（已停用，改用嵌入式 Claude Code）===
+  --[[
   {
     "yetone/avante.nvim",
     event = "VeryLazy",
@@ -279,40 +322,9 @@ require("lazy").setup({
       "nvim-lua/plenary.nvim",
       "MunifTanjim/nui.nvim",
       "nvim-telescope/telescope.nvim",
-      -- 如果使用 copilot，需要這個依賴
-      {
-        "zbirenbaum/copilot.lua",
-        cmd = "Copilot",
-        event = "InsertEnter",
-        config = function()
-          require("copilot").setup({
-            suggestion = { 
-              enabled = true,
-              auto_trigger = true,
-              keymap = {
-                accept = false,  -- 由 nvim-cmp 的 Tab 統一處理
-                accept_word = false,
-                accept_line = false,
-                next = "<M-]>",
-                prev = "<M-[>",
-                dismiss = "<C-]>",
-              },
-            },
-            panel = { enabled = false },
-          })
-        end,
-      },
-      {
-        'MeanderingProgrammer/render-markdown.nvim',
-        opts = {
-          file_types = { "markdown", "Avante" },
-        },
-        ft = { "markdown", "Avante" },
-      },
     },
     opts = {
       provider = vim.env.AVANTE_PROVIDER or "claude-code",
-
       providers = {
         ["claude-code"] = {
           command = "npx",
@@ -324,7 +336,6 @@ require("lazy").setup({
           },
         },
       },
-
       behaviour = {
         auto_suggestions = false,
         auto_set_highlight_group = true,
@@ -343,6 +354,7 @@ require("lazy").setup({
       },
     },
   },
+  --]]
 
   -- LSP
   {
@@ -444,36 +456,36 @@ require("bufferline").setup()
 vim.keymap.set('n', '<F4>', '<cmd>NvimTreeToggle<CR>', { desc = 'Toggle NvimTree' })
 
 -- Telescope
-vim.keymap.set('n', '<C-p>', '<cmd>Telescope find_files<CR>', { desc = 'Find files' })
-vim.keymap.set('n', '<leader>sf', '<cmd>Telescope find_files<CR>', { desc = '[S]earch [F]iles' })
-vim.keymap.set('n', '<leader>sg', '<cmd>Telescope live_grep<CR>', { desc = '[S]earch by [G]rep' })
-vim.keymap.set('n', '<leader>sb', '<cmd>Telescope buffers<CR>', { desc = '[S]earch [B]uffers' })
-vim.keymap.set('n', '<leader>sh', '<cmd>Telescope help_tags<CR>', { desc = '[S]earch [H]elp' })
-vim.keymap.set('n', '<leader>sw', '<cmd>Telescope grep_string<CR>', { desc = '[S]earch current [W]ord' })
+vim.keymap.set('n', '<C-p>', '<cmd>Telescope find_files<CR>', { desc = 'Search > Find files' })
+vim.keymap.set('n', '<leader>sf', '<cmd>Telescope find_files<CR>', { desc = 'Search > Find files' })
+vim.keymap.set('n', '<leader>sg', '<cmd>Telescope live_grep<CR>', { desc = 'Search > Grep' })
+vim.keymap.set('n', '<leader>sb', '<cmd>Telescope buffers<CR>', { desc = 'Search > Buffers' })
+vim.keymap.set('n', '<leader>sh', '<cmd>Telescope help_tags<CR>', { desc = 'Search > Help tags' })
+vim.keymap.set('n', '<leader>sw', '<cmd>Telescope grep_string<CR>', { desc = 'Search > Current word' })
 
 -- Neogit
-vim.keymap.set('n', '<leader>ng', '<cmd>Neogit<CR>', { desc = '[N]eo[G]it' })
+vim.keymap.set('n', '<leader>ng', '<cmd>Neogit<CR>', { desc = 'Neogit > Open' })
 
 -- Diffview (git tree / file history)
-vim.keymap.set('n', '<leader>gd', '<cmd>DiffviewOpen<CR>', { desc = '[G]it [D]iff view' })
-vim.keymap.set('n', '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', { desc = '[G]it file [H]istory' })
-vim.keymap.set('n', '<leader>gH', '<cmd>DiffviewFileHistory<CR>', { desc = '[G]it repo [H]istory' })
-vim.keymap.set('n', '<leader>gc', '<cmd>DiffviewClose<CR>', { desc = '[G]it diff [C]lose' })
+vim.keymap.set('n', '<leader>gd', '<cmd>DiffviewOpen<CR>', { desc = 'Git > Diff view' })
+vim.keymap.set('n', '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', { desc = 'Git > File history' })
+vim.keymap.set('n', '<leader>gH', '<cmd>DiffviewFileHistory<CR>', { desc = 'Git > Repo history' })
+vim.keymap.set('n', '<leader>gc', '<cmd>DiffviewClose<CR>', { desc = 'Git > Diff close' })
 
--- Grug-far
-vim.keymap.set('n', '<leader>gs', '<cmd>GrugFar<CR>', { desc = '[G]rug [S]earch and Replace' })
+-- Grug-far (Search 分組)
+vim.keymap.set('n', '<leader>sr', '<cmd>GrugFar<CR>', { desc = 'Search > Replace (Grug-far)' })
 
 -- j/k 交換：j=上 k=下 (Miyago 習慣)
 vim.keymap.set({'n', 'v', 'o'}, 'j', 'k', { noremap = true })
 vim.keymap.set({'n', 'v', 'o'}, 'k', 'j', { noremap = true })
 
--- LSP 快捷键
-vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { desc = '[G]oto [D]efinition' })
-vim.keymap.set('n', 'gr', vim.lsp.buf.references, { desc = '[G]oto [R]eferences' })
-vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, { desc = '[G]oto [I]mplementation' })
-vim.keymap.set('n', 'K', vim.lsp.buf.hover, { desc = 'Hover Documentation' })
-vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, { desc = '[R]e[n]ame' })
-vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, { desc = '[C]ode [A]ction' })
+-- LSP 快捷鍵
+vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { desc = 'LSP > Go to definition' })
+vim.keymap.set('n', 'gr', vim.lsp.buf.references, { desc = 'LSP > References' })
+vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, { desc = 'LSP > Implementation' })
+vim.keymap.set('n', 'K', vim.lsp.buf.hover, { desc = 'LSP > Hover documentation' })
+vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, { desc = 'Refactor > Rename' })
+vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, { desc = 'Code > Action' })
 
 -- Buffer
 vim.keymap.set('n', '[b', '<cmd>bprevious<CR>', { desc = 'Previous buffer' })
@@ -555,8 +567,8 @@ vim.keymap.set('n', '<C-S-p>', '<cmd>Telescope commands<CR>', { desc = 'Command 
 vim.keymap.set('n', '<D-S-p>', '<cmd>Telescope commands<CR>', { desc = 'Command palette (Mac)' })
 
 -- VSCode-style: Ctrl+Shift+H / Cmd+Shift+H for search and replace
-vim.keymap.set('n', '<C-S-h>', '<cmd>GrugFar<CR>', { desc = 'Search and replace' })
-vim.keymap.set('n', '<D-S-h>', '<cmd>GrugFar<CR>', { desc = 'Search and replace (Mac)' })
+vim.keymap.set('n', '<C-S-h>', '<cmd>GrugFar<CR>', { desc = 'Search > Replace (Grug-far)' })
+vim.keymap.set('n', '<D-S-h>', '<cmd>GrugFar<CR>', { desc = 'Search > Replace (Grug-far, Mac)' })
 
 -- VSCode-style: Alt+Shift+Up/Down to duplicate line
 vim.keymap.set('n', '<A-S-Up>', '<cmd>t .-1<CR>', { desc = 'Duplicate line up' })
@@ -574,6 +586,12 @@ vim.keymap.set('i', '<C-S-k>', '<Esc><cmd>d<CR>gi', { desc = 'Delete line (inser
 vim.keymap.set('n', '<F2>', vim.lsp.buf.rename, { desc = 'Rename symbol' })
 vim.keymap.set('n', '<F12>', vim.lsp.buf.definition, { desc = 'Go to definition' })
 
+-- Fn 鍵替代方案（MacBook / iPad 沒有實體 Fn 鍵）
+-- F2 (Rename)  -> Space r n 或 Space r r
+-- F4 (NvimTree) -> Ctrl+B / Cmd+B
+-- F12 (Definition) -> gd
+vim.keymap.set('n', '<leader>rr', vim.lsp.buf.rename, { desc = 'Refactor > Rename (F2 替代)' })
+
 -- VSCode-style: Ctrl+Tab / Ctrl+Shift+Tab for buffer switching
 vim.keymap.set('n', '<C-Tab>', '<cmd>bnext<CR>', { desc = 'Next buffer' })
 vim.keymap.set('n', '<C-S-Tab>', '<cmd>bprevious<CR>', { desc = 'Previous buffer' })
@@ -583,16 +601,36 @@ vim.keymap.set('n', '<C-S-[>', 'zc', { desc = 'Fold' })
 vim.keymap.set('n', '<C-S-]>', 'zo', { desc = 'Unfold' })
 
 -- VSCode-style: Cmd+J to toggle bottom terminal (Ctrl+J 已被 tmux-navigator 佔用)
-vim.keymap.set({'n', 't'}, '<D-j>', '<cmd>ToggleTerm<CR>', { desc = 'Toggle terminal' })
-vim.keymap.set('n', '<leader>tt', '<cmd>ToggleTerm<CR>', { desc = '[T]oggle [T]erminal' })
+vim.keymap.set({'n', 't'}, '<D-j>', '<cmd>ToggleTerm<CR>', { desc = 'Terminal > Toggle' })
+vim.keymap.set('n', '<leader>tt', '<cmd>ToggleTerm<CR>', { desc = 'Terminal > Toggle' })
 -- Terminal mode: Esc 跳回 normal mode，再按 Space t t 就能關
-vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]], { desc = 'Exit terminal mode' })
+vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]], { desc = 'Terminal > Exit to normal' })
 
 -- VSCode-style: Ctrl+Shift+I / Cmd+Shift+I to toggle AI agent sidebar (Avante)
-vim.keymap.set('n', '<C-S-i>', '<cmd>AvanteToggle<CR>', { desc = 'Toggle AI sidebar' })
-vim.keymap.set('n', '<D-S-i>', '<cmd>AvanteToggle<CR>', { desc = 'Toggle AI sidebar (Mac)' })
+-- 已停用 Avante，改用嵌入式 Claude Code
+-- vim.keymap.set('n', '<C-S-i>', '<cmd>AvanteToggle<CR>', { desc = 'Toggle AI sidebar' })
+-- vim.keymap.set('n', '<D-S-i>', '<cmd>AvanteToggle<CR>', { desc = 'Toggle AI sidebar (Mac)' })
+
+-- VSCode-style: Ctrl+W / Cmd+W to close current buffer (tab)
+vim.keymap.set('n', '<C-w>', '<cmd>bdelete<CR>', { desc = 'Close tab' })
+vim.keymap.set('n', '<D-w>', '<cmd>bdelete<CR>', { desc = 'Close tab (Mac)' })
+
+-- VSCode-style: Redo
+vim.keymap.set('n', '<C-S-z>', '<C-r>', { desc = 'Redo' })
+vim.keymap.set('n', '<D-S-z>', '<C-r>', { desc = 'Redo (Mac)' })
+vim.keymap.set('n', '<C-y>', '<C-r>', { desc = 'Redo (Windows style)' })
+vim.keymap.set('i', '<C-S-z>', '<C-o><C-r>', { desc = 'Redo in insert mode' })
+vim.keymap.set('i', '<D-S-z>', '<C-o><C-r>', { desc = 'Redo in insert mode (Mac)' })
+
+-- VSCode-style: Ctrl+G to go to line
+vim.keymap.set('n', '<C-g>', ':', { desc = 'Go to line (輸入行號)' })
+
+-- VSCode-style: Tab / Shift+Tab for indent in visual mode
+vim.keymap.set('v', '<Tab>', '>gv', { desc = 'Indent selection' })
+vim.keymap.set('v', '<S-Tab>', '<gv', { desc = 'Dedent selection' })
 
 -- =====================
 --   Colorscheme
 -- =====================
 vim.cmd("colorscheme edge")
+
