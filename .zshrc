@@ -118,3 +118,10 @@ unset -f __zshrc_prepend_path 2>/dev/null
 unset -f __zshrc_prepend_path_if_dir 2>/dev/null
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+# agent-skills updater
+alias agent-update='bash /Users/miyago/Project/Code/ITRD/General/agent-skills/update.sh'
+
+# skill-run shorthand
+alias ask='skill-run'
+export PATH="${HOME}/.local/bin:${PATH}"
