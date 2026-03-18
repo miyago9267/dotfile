@@ -81,7 +81,7 @@ if (-not (Test-Path $profileDir)) {
         New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
     }
 }
-Link-File "script\powershell\profile.ps1" $PROFILE
+Link-File "script\windows\profile.ps1" $PROFILE
 
 # Windows Terminal
 Link-File "windows-terminal\settings.json" "$WTLocalState\settings.json"

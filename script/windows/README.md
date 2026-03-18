@@ -18,7 +18,7 @@ cd ~/dotfile
 pwsh install.ps1
 
 # 3. 安裝軟體（互動式選單）
-pwsh script/powershell/setup.ps1
+pwsh script/windows/setup.ps1
 
 # 4. 重啟終端
 ```
@@ -26,14 +26,14 @@ pwsh script/powershell/setup.ps1
 全部安裝（跳過選單）：
 
 ```powershell
-pwsh script/powershell/setup.ps1 --all
+pwsh script/windows/setup.ps1 --all
 ```
 
 ## 目錄結構
 
 ```text
 install.ps1                        # Windows symlink installer（根目錄）
-script/powershell/
+script/windows/
   profile.ps1                      # 主 profile（對應 .zshrc）
   profile.d/                       # 模組化載入（對應 .zshrc.d/）
     00_path_helpers.ps1            #   PATH 工具函式

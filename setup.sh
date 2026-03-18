@@ -14,7 +14,8 @@ B='\033[1m'
 N='\033[0m'
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCRIPT_DIR="$DIR/script/installations"
+SCRIPT_DIR="$DIR/script/common"
+LINUX_DIR="$DIR/script/linux"
 
 # -- 安裝項目定義 --
 # 格式：腳本檔名|顯示名稱|分類|預設勾選(1/0)
@@ -252,6 +253,7 @@ for i in $(seq 0 $((TOTAL - 1))); do
   local_script=$(get_field "$i" script)
   local_name=$(get_field "$i" name)
   script_path="$SCRIPT_DIR/$local_script"
+  [ ! -f "$script_path" ] && script_path="$LINUX_DIR/$local_script"
 
   if [ "${SELECTED[$i]}" != "1" ]; then
     skipped=$((skipped + 1))
