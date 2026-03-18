@@ -1,0 +1,94 @@
+{
+    "$help": "https://aka.ms/terminal-documentation",
+    "$schema": "https://aka.ms/terminal-profiles-schema",
+    "actions": [],
+    "copyFormatting": "none",
+    "copyOnSelect": false,
+    "defaultProfile": "{61c54bbd-c2c6-5271-96e7-009a87ff44bf}",
+    "keybindings": 
+    [
+        {
+            "id": "Terminal.CopyToClipboard",
+            "keys": "ctrl+c"
+        },
+        {
+            "id": "Terminal.PasteFromClipboard",
+            "keys": "ctrl+v"
+        },
+        {
+            "id": "Terminal.FindText",
+            "keys": "ctrl+shift+f"
+        },
+        {
+            "id": "Terminal.DuplicatePaneAuto",
+            "keys": "alt+shift+d"
+        }
+    ],
+    "newTabMenu": 
+    [
+        {
+            "type": "remainingProfiles"
+        }
+    ],
+    "profiles": 
+    {
+        "defaults": {},
+        "list": 
+        [
+            {
+                "backgroundImage": "C:\\Users\\miyago\\OneDrive\\\u5716\u7247\\pic\\waifu.png",
+                "backgroundImageOpacity": 0.25,
+                "colorScheme": "One Half Dark",
+                "commandline": "%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                "font": 
+                {
+                    "face": "MesloLGS NF"
+                },
+                "guid": "{61c54bbd-c2c6-5271-96e7-009a87ff44bf}",
+                "hidden": false,
+                "name": "Windows PowerShell",
+                "opacity": 97
+            },
+            {
+                "commandline": "%SystemRoot%\\System32\\cmd.exe",
+                "guid": "{0caa0dad-35be-5f56-a8ff-afceeeaa6101}",
+                "hidden": false,
+                "name": "\u547d\u4ee4\u63d0\u793a\u5b57\u5143"
+            },
+            {
+                "backgroundImage": "C:\\Users\\miyago\\OneDrive\\\u5716\u7247\\pic\\waifu.png",
+                "backgroundImageOpacity": 0.1,
+                "colorScheme": "One Half Dark",
+                "commandline": "C:\\WINDOWS\\system32\\wsl.exe --distribution-id {43f7c85b-89ab-4fb8-b965-584e7a6fae27} --cd ~",
+                "cursorShape": "bar",
+                "font": 
+                {
+                    "face": "MesloLGS NF",
+                    "size": 13
+                },
+                "guid": "{3c27d24a-1a16-4bc5-a98c-36a1a5976df7}",
+                "hidden": false,
+                "icon": "C:\\Users\\miyago\\AppData\\Local\\wsl\\{43f7c85b-89ab-4fb8-b965-584e7a6fae27}\\shortcut.ico",
+                "name": "Ubuntu",
+                "opacity": 96,
+                "pathTranslationStyle": "wsl",
+                "suppressApplicationTitle": true,
+                "useAcrylic": true
+            },
+            {
+                "guid": "{3f6695e3-8882-5a55-a3ea-9d73c6e41beb}",
+                "hidden": false,
+                "name": "Developer Command Prompt for VS 2022",
+                "source": "Windows.Terminal.VisualStudio"
+            },
+            {
+                "guid": "{de131f42-013e-5eea-bbd0-1b8d3a6d0637}",
+                "hidden": false,
+                "name": "Developer PowerShell for VS 2022",
+                "source": "Windows.Terminal.VisualStudio"
+            }
+        ]
+    },
+    "schemes": [],
+    "themes": []
+}

@@ -1,0 +1,387 @@
+{
+    "editor.inlineSuggest.enabled": true,
+    "kite.showWelcomeNotificationOnStartup": false,
+    "editor.fontSize": 16,
+    "C_Cpp.default.compilerPath": "/usr/bin/g++",
+    "C_Cpp.default.browse.path": [
+        "/usr/bin/"
+    ],
+    "workbench.startupEditor": "none",
+    "editor.fontFamily": "'MesloLGS NF', Consolas, Menlo, Monaco, monospace",
+    "terminal.integrated.profiles.windows": {
+        "PowerShell": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell"
+        },
+        "Command Prompt": {
+            "path": [
+                "${env:windir}\\Sysnative\\cmd.exe",
+                "${env:windir}\\System32\\cmd.exe"
+            ],
+            "args": [],
+            "icon": "terminal-cmd"
+        },
+        "Git Bash": {
+            "source": "Git Bash"
+        },
+        "CMD": {
+            "path": [
+                "${env:windir}\\Sysnative\\cmd.exe",
+                "${env:windir}\\System32\\cmd.exe"
+            ],
+            "args": [],
+            "icon": "terminal-cmd"
+        },
+        "Ubuntu-22.04 (WSL)": {
+            "path": "C:\\WINDOWS\\System32\\wsl.exe",
+            "args": [
+                "-d",
+                "Ubuntu-22.04"
+            ]
+        },
+        "Ubuntu (WSL)": {
+            "path": "C:\\WINDOWS\\System32\\wsl.exe",
+            "args": [
+                "-d",
+                "Ubuntu"
+            ]
+        }
+    },
+    "terminal.integrated.defaultProfile.windows": "Ubuntu (WSL)",
+    "[cpp]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    "remote.SSH.remotePlatform": {
+        "aluo.work": "linux",
+        "kikidesi.com": "linux",
+        "207.148.99.216": "linux",
+        "miyago9267.com": "linux",
+        "MongoDB": "linux",
+        "Docker": "linux",
+        "192.168.1.101": "linux",
+        "220.133.37.219": "linux",
+        "192.168.50.204": "linux",
+        "HDServer": "linux",
+        "home.aluo.work": "linux"
+    },
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": true,
+        "markdown": true,
+        "scminput": false,
+        "yaml": true,
+        "html": true
+    },
+    "[css]": {
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    },
+    "[html]": {
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    },
+    "[javascript]": {
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true,
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    },
+    "git.autofetch": true,
+    "gitlens.advanced.messages": {
+        "suppressFileNotUnderSourceControlWarning": true
+    },
+    "security.workspace.trust.untrustedFiles": "open",
+    "git.enableSmartCommit": true,
+    "explorer.confirmDragAndDrop": false,
+    "git.confirmSync": false,
+    "terminal.integrated.enableMultiLinePasteWarning": false,
+    "explorer.confirmDelete": false,
+    "githubPullRequests.createOnPublishBranch": "never",
+    "git.openRepositoryInParentFolders": "always",
+    "liveServer.settings.donotShowInfoMsg": true,
+    "redhat.telemetry.enabled": true,
+    "CodeGPT.model": "gpt-4",
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "files.autoSave": "onFocusChange",
+    "terminal.integrated.fontFamily": "'MesloLGS NF'",
+    "[typescript]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
+        "typescript.preferences.quoteStyle": "single",
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    },
+    "go.toolsManagement.autoUpdate": true,
+    "remote.extensionKind": {
+        "ms-vscode.vscode-serial-monitor": [
+            "workspace"
+        ],
+        "pub.name": [
+            "ui"
+        ]
+    },
+    "arduino.path": "/opt/homebrew/bin/",
+    "arduino.useArduinoCli": true,
+    "arduino.commandPath": "arduino-cli",
+    "background.windowBackgrounds": [
+        "/Users/miyago/Pictures/Picture/Wife/Monika/waifu.png",
+        "https://drive.miyago9267.com/d/home/miyago/Local/pictures/waifu/waifu.png"
+    ],
+    "background.backgroundOpacity": [
+        0.95,
+        0.9,
+        0.9,
+        0.9
+    ],
+    "background.backgroundBlur": [
+        "20",
+        "0",
+        "0",
+        "0"
+    ],
+    "github.copilot.editor.enableAutoCompletions": true,
+    "gohome.hour": 17,
+    "gohome.minute": 30,
+    "grunt.autoDetect": "on",
+    "gulp.autoDetect": "on",
+    "gitlens.views.remotes.branches.layout": "list",
+    "background.useInvertedOpacity": true,
+    "fittencode.languagePreference.displayPreference": "zh-cn",
+    "fittencode.languagePreference.commentPreference": "zh-cn",
+    "[vue]": {
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true
+    },
+    "explorer.confirmPasteNative": false,
+    "dart.flutterSdkPath": "/Users/miyago/develop/flutter",
+    "workbench.editor.empty.hint": "hidden",
+    "workbench.activityBar.location": "top",
+    "aide.openaiKey": "<!-- REDACTED: set via environment variable or VS Code secrets -->",
+    "python.analysis.typeCheckingMode": "standard",
+    "background.enabled": false,
+    "background.editor": {
+        "useFront": true,
+        "style": {
+            "background-position": "100% 100%",
+            "background-size": "auto",
+            "opacity": 0.6
+        },
+        "styles": [
+            {},
+            {},
+            {}
+        ],
+        "images": [],
+        "interval": 0,
+        "random": false
+    },
+    "background.autoInstall": false,
+    "explorer.fileNesting.patterns": {
+        "*.ts": "${capture}.js",
+        "*.js": "${capture}.js.map, ${capture}.min.js, ${capture}.d.ts",
+        "*.jsx": "${capture}.js",
+        "*.tsx": "${capture}.ts",
+        "tsconfig.json": "tsconfig.*.json",
+        "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb, bun.lock",
+        "pubspec.yaml": "pubspec.lock,pubspec_overrides.yaml,.packages,.flutter-plugins,.flutter-plugins-dependencies,.metadata",
+        "*.dart": "${capture}.g.dart",
+        "Cargo.toml": "Cargo.lock",
+        "*.sqlite": "${capture}.${extname}-*",
+        "*.db": "${capture}.${extname}-*",
+        "*.sqlite3": "${capture}.${extname}-*",
+        "*.db3": "${capture}.${extname}-*",
+        "*.sdb": "${capture}.${extname}-*",
+        "*.s3db": "${capture}.${extname}-*"
+    },
+    "docker.extension.enableComposeLanguageServer": false,
+    "docker.extension.dockerEngineAvailabilityPrompt": false,
+    "vs-kubernetes": {
+        "vscode-kubernetes.helm-path-windows": "C:\\Users\\miyago\\.vs-kubernetes\\tools\\helm\\windows-amd64\\helm.exe",
+        "vscode-kubernetes.kubectl-path-windows": "C:\\Users\\miyago\\.vs-kubernetes\\tools\\kubectl\\kubectl.exe",
+        "vscode-kubernetes.minikube-path-windows": "C:\\Users\\miyago\\.vs-kubernetes\\tools\\minikube\\windows-amd64\\minikube.exe",
+        "vscode-kubernetes.minikube-path-mac": "/Users/miyago/.vs-kubernetes/tools/minikube/darwin-arm64/minikube",
+        "vs-kubernetes.crd-code-completion": "enabled",
+        "vs-kubernetes.minikube-show-information-expiration": "2026-08-24T05:03:35.639Z"
+    },
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "workbench.colorTheme": "Atom One Dark",
+    "code-runner.runInTerminal": true,
+    "code-runner.saveFileBeforeRun": true,
+    "code-runner.executorMapByFileExtension": {
+        ".py": "uv run python",
+        ".cpp": "powershell -Command \"g++ -std=c++17 -Wall \\\"${file}\\\" -o \\\"${fileDirname}\\\\${fileBasenameNoExtension}.exe\\\" ; if ($?) { & \\\"${fileDirname}\\\\${fileBasenameNoExtension}.exe\\\" }\""
+    },
+    "code-runner.showExecutionMessage": false,
+    "code-runner.preserveFocus": false,
+    "terminal.integrated.env.windows": {
+        "Path": "${env:Path};C:\\MinGW\\bin"
+    },
+    "workbench.iconTheme": "material-icon-theme",
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "git.ignoreRebaseWarning": true,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "never"
+    },
+    "eslint.format.enable": true,
+    "eslint.validate": [
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact",
+        "vue",
+        "html",
+        "css"
+    ],
+    "fittencode.selection.showCodeLens": false,
+    "chat.agentSessionsViewLocation": "view",
+    "[dockercompose]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2,
+        "editor.autoIndent": "advanced",
+        "editor.quickSuggestions": {
+            "other": true,
+            "comments": false,
+            "strings": true
+        },
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "[github-actions-workflow]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "chatgpt.cliExecutable": "",
+    "gitlens.ai.model": "vscode",
+    "gitlens.ai.vscode.model": "copilot:gpt-4.1",
+    "mssql.connectionGroups": [
+        {
+            "name": "ROOT",
+            "id": "9222F0D5-A30B-444E-859C-26A3F41ECDFD"
+        }
+    ],
+    "dbcode.connections": [],
+    "chat.viewSessions.orientation": "stacked",
+    "gitlens.graph.minimap.enabled": false,
+    "go.alternateTools": {
+
+
+    },
+    "go.formatTool": "gofmt",
+    "go.toolsEnvVars": {
+        "GOROOT": "/opt/homebrew/opt/go/libexec"
+    },
+    "chat.customAgentInSubagent.enabled": true,
+    "chat.tools.terminal.blockDetectedFileWrites": "all",
+    "chat.tools.terminal.autoApprove": {
+
+        "cd": true,
+        "echo": true,
+        "ls": true,
+        "pwd": true,
+        "cat": true,
+        "head": true,
+        "tail": true,
+        "findstr": true,
+        "wc": true,
+        "tr": true,
+        "cut": true,
+        "cmp": true,
+        "which": true,
+        "basename": true,
+        "dirname": true,
+        "realpath": true,
+        "readlink": true,
+        "stat": true,
+        "file": true,
+        "du": true,
+        "df": true,
+        "sleep": true,
+        "nl": true,
+        "grep": true,
+        "/^git(\\s+(-C\\s+\\S+|--no-pager))*\\s+status\\b/": true,
+        "/^git(\\s+(-C\\s+\\S+|--no-pager))*\\s+log\\b/": true,
+        "/^git(\\s+(-C\\s+\\S+|--no-pager))*\\s+show\\b/": true,
+        "/^git(\\s+(-C\\s+\\S+|--no-pager))*\\s+diff\\b/": true,
+        "/^git(\\s+(-C\\s+\\S+|--no-pager))*\\s+ls-files\\b/": true,
+        "/^git(\\s+(-C\\s+\\S+|--no-pager))*\\s+grep\\b/": true,
+        "/^git(\\s+(-C\\s+\\S+|--no-pager))*\\s+branch\\b/": true,
+        "/^git(\\s+(-C\\s+\\S+|--no-pager))*\\s+branch\\b.*-(d|D|m|M|-delete|-force)\\b/": false,
+        "Get-ChildItem": true,
+        "Get-Content": true,
+        "Get-Date": true,
+        "Get-Random": true,
+        "Get-Location": true,
+        "Write-Host": true,
+        "Write-Output": true,
+        "Out-String": true,
+        "Split-Path": true,
+        "Join-Path": true,
+        "Start-Sleep": true,
+        "Where-Object": true,
+        "/^Select-[a-z0-9]/i": true,
+        "/^Measure-[a-z0-9]/i": true,
+        "/^Compare-[a-z0-9]/i": true,
+        "/^Format-[a-z0-9]/i": true,
+        "/^Sort-[a-z0-9]/i": true,
+        "column": true,
+        "/^column\\b.*-c\\s+[0-9]{4,}/": false,
+        "date": true,
+        "/^date\\b.*(-s|--set)\\b/": false,
+        "find": true,
+        "/^find\\b.*-(delete|exec|execdir|fprint|fprintf|fls|ok|okdir)\\b/": false,
+        "rg": true,
+        "/^rg\\b.*(--pre|--hostname-bin)\\b/": false,
+        "sed": true,
+        "/^sed\\b.*(-[a-zA-Z]*(e|i|I|f)[a-zA-Z]*|--expression|--file|--in-place)\\b/": false,
+        "/^sed\\b.*(/e|/w|;W)/": false,
+        "sort": true,
+        "/^sort\\b.*-(o|S)\\b/": false,
+        "tree": true,
+        "/^tree\\b.*-o\\b/": false,
+        "rm": false,
+        "rmdir": false,
+        "del": false,
+        "Remove-Item": false,
+        "ri": false,
+        "rd": false,
+        "erase": false,
+        "dd": false,
+        "kill": false,
+        "ps": false,
+        "top": false,
+        "Stop-Process": false,
+        "spps": false,
+        "taskkill": false,
+        "taskkill.exe": false,
+        "curl": false,
+        "wget": false,
+        "Invoke-RestMethod": false,
+        "Invoke-WebRequest": false,
+        "irm": false,
+        "iwr": false,
+        "chmod": false,
+        "chown": false,
+        "Set-ItemProperty": false,
+        "sp": false,
+        "Set-Acl": false,
+        "jq": false,
+        "xargs": false,
+        "eval": false,
+        "Invoke-Expression": false,
+        "iex": false
+    },
+    "chat.tools.global.autoApprove": true,
+    "chat.mcp.gallery.enabled": true,
+    "chat.mcp.assisted.nuget.enabled": true,
+    "chat.edits2.enabled": true,
+    "yaml.schemas": {
+        "file:///Users/miyago/.vscode/extensions/continue.continue-1.2.14-darwin-arm64/config-yaml-schema.json": [
+            ".continue/**/*.yaml"
+        ]
+    },
+    "claudeCode.preferredLocation": "panel",
+    "claudeCode.selectedModel": "claude-opus-4-6",
+    "git.ignoreMissingGitWarning": true,
+    "chatgpt.localeOverride": "zh-TW",
+    "[markdown]": {
+        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+    }
+}

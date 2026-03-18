@@ -1,0 +1,14 @@
+Host GPU WSL
+  HostName io.aluo.work
+  User miyago
+  Port 8022
+
+Host IO-Ubuntu
+  HostName io.aluo.work
+  User miyago
+  Port 2222
+
+Host miyago9267.com
+  HostName miyago9267.com
+  User miyago
+  Port 4096

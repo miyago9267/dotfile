@@ -1,6 +1,6 @@
 # Dotfiles Symlink 設定（對應 setup_dotfiles.sh）
 
-$DotfileRoot = Split-Path -Parent $PSScriptRoot | Split-Path -Parent
+$DotfileRoot = Split-Path -Parent $PSScriptRoot | Split-Path -Parent | Split-Path -Parent
 
 Write-Host "  Dotfile root: $DotfileRoot" -ForegroundColor Cyan
 
@@ -10,7 +10,7 @@ if (-not (Test-Path $profileDir)) {
     New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
 }
 
-$sourcePsProfile = Join-Path $DotfileRoot 'powershell' 'profile.ps1'
+$sourcePsProfile = Join-Path $DotfileRoot 'script' 'powershell' 'profile.ps1'
 
 # 檢查是否有管理員權限（symlink 需要）
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
@@ -53,7 +53,7 @@ if ($canSymlink) {
 
     # profile.d/
     $profileDDir = Join-Path (Split-Path $PROFILE) 'profile.d'
-    $sourceProfileD = Join-Path $DotfileRoot 'powershell' 'profile.d'
+    $sourceProfileD = Join-Path $DotfileRoot 'script' 'powershell' 'profile.d'
     if (Test-Path $sourceProfileD) {
         if (-not (Test-Path $profileDDir)) {
             New-Item -ItemType Directory -Path $profileDDir -Force | Out-Null

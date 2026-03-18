@@ -48,6 +48,11 @@ function duf {
     }
 }
 
+# -- grep（PowerShell 版） --
+function grep {
+    $input | Out-String -Stream | Select-String -Pattern $args
+}
+
 # -- Windows 專屬 --
 function flushdns { ipconfig /flushdns }
 

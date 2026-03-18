@@ -1,6 +1,6 @@
 # Neovim 配置 Symlink（對應 setup_dotfiles.sh 中的 nvim 部分）
 
-$DotfileRoot = Split-Path -Parent $PSScriptRoot | Split-Path -Parent
+$DotfileRoot = Split-Path -Parent $PSScriptRoot | Split-Path -Parent | Split-Path -Parent
 $nvimSource = Join-Path $DotfileRoot 'nvim'
 $nvimTarget = Join-Path $env:LOCALAPPDATA 'nvim'
 

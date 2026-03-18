@@ -12,7 +12,7 @@ $env:LANGUAGE = 'en_US'
 $MaximumHistoryCount = 10000
 
 # -- Dotfile 根目錄 --
-$DotfileRoot = Split-Path -Parent $PSScriptRoot
+$DotfileRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 if (-not $DotfileRoot) {
     $DotfileRoot = Join-Path $HOME 'dotfile'
 }
