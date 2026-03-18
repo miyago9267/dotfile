@@ -1,23 +1,15 @@
 # Dotfiles Symlink 設定（對應 setup_dotfiles.sh）
+# 處理所有 Windows 端的配置連結：PS profile, VS Code, Windows Terminal, Git, SSH, WSL, Claude
 
 $DotfileRoot = Split-Path -Parent $PSScriptRoot | Split-Path -Parent | Split-Path -Parent
 
 Write-Host "  Dotfile root: $DotfileRoot" -ForegroundColor Cyan
 
-# PowerShell profile symlink
-$profileDir = Split-Path -Parent $PROFILE
-if (-not (Test-Path $profileDir)) {
-    New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
-}
-
-$sourcePsProfile = Join-Path $DotfileRoot 'script' 'windows' 'profile.ps1'
-
-# 檢查是否有管理員權限（symlink 需要）
+# -- 權限檢測 --
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
     [Security.Principal.WindowsBuiltInRole]::Administrator
 )
 
-# 在 Windows 開發者模式下不需要管理員權限建 symlink
 $devMode = $false
 try {
     $regPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
@@ -28,30 +20,48 @@ try {
 
 $canSymlink = $isAdmin -or $devMode
 
+# -- Link helper --
+function Link-DotFile {
+    param([string]$Source, [string]$Target)
+
+    if (-not (Test-Path $Source)) {
+        Write-Host "  [SKIP] 來源不存在: $Source" -ForegroundColor DarkGray
+        return
+    }
+
+    $targetDir = Split-Path $Target -Parent
+    if (-not (Test-Path $targetDir)) {
+        New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+    }
+
+    if ($canSymlink) {
+        if (Test-Path $Target) { Remove-Item $Target -Force }
+        New-Item -ItemType SymbolicLink -Path $Target -Value $Source -Force | Out-Null
+        Write-Host "  [LINK] $Target" -ForegroundColor Green
+    } else {
+        if (Test-Path $Source -PathType Container) {
+            if (Test-Path $Target) { Remove-Item $Target -Recurse -Force }
+            Copy-Item -Path $Source -Destination $Target -Recurse -Force
+        } else {
+            Copy-Item -Path $Source -Destination $Target -Force
+        }
+        Write-Host "  [COPY] $Target" -ForegroundColor Yellow
+    }
+}
+
 if ($canSymlink) {
     Write-Host '  使用 symlink 模式' -ForegroundColor Green
-
-    # Profile
-    if (Test-Path $PROFILE) { Remove-Item $PROFILE -Force }
-    New-Item -ItemType SymbolicLink -Path $PROFILE -Target $sourcePsProfile -Force | Out-Null
-    Write-Host "  已連結: $PROFILE -> $sourcePsProfile"
-
-    # .vimrc
-    $vimrcTarget = Join-Path $DotfileRoot '.vimrc'
-    $vimrcLink = Join-Path $HOME '.vimrc'
-    if (Test-Path $vimrcTarget) {
-        if (Test-Path $vimrcLink) { Remove-Item $vimrcLink -Force }
-        New-Item -ItemType SymbolicLink -Path $vimrcLink -Target $vimrcTarget -Force | Out-Null
-        Write-Host "  已連結: $vimrcLink -> $vimrcTarget"
-    }
 } else {
-    Write-Host '  無 symlink 權限，使用複製模式（請開啟「開發人員模式」以使用 symlink）' -ForegroundColor Yellow
+    Write-Host '  無 symlink 權限，使用複製模式（建議開啟「開發人員模式」）' -ForegroundColor Yellow
+}
 
-    # Profile
-    Copy-Item -Path $sourcePsProfile -Destination $PROFILE -Force
-    Write-Host "  已複製: $sourcePsProfile -> $PROFILE"
+$UserHome = $env:USERPROFILE
 
-    # profile.d/
+# -- PowerShell profile --
+Link-DotFile (Join-Path $DotfileRoot 'script' 'windows' 'profile.ps1') $PROFILE
+
+# -- PowerShell profile.d/（複製模式需要） --
+if (-not $canSymlink) {
     $profileDDir = Join-Path (Split-Path $PROFILE) 'profile.d'
     $sourceProfileD = Join-Path $DotfileRoot 'script' 'windows' 'profile.d'
     if (Test-Path $sourceProfileD) {
@@ -59,15 +69,44 @@ if ($canSymlink) {
             New-Item -ItemType Directory -Path $profileDDir -Force | Out-Null
         }
         Copy-Item -Path (Join-Path $sourceProfileD '*') -Destination $profileDDir -Force -Recurse
-        Write-Host "  已複製: profile.d/ -> $profileDDir"
-    }
-
-    # .vimrc
-    $vimrcTarget = Join-Path $DotfileRoot '.vimrc'
-    if (Test-Path $vimrcTarget) {
-        Copy-Item -Path $vimrcTarget -Destination (Join-Path $HOME '.vimrc') -Force
-        Write-Host "  已複製: .vimrc"
+        Write-Host "  [COPY] profile.d/" -ForegroundColor Yellow
     }
 }
+
+# -- .vimrc --
+Link-DotFile (Join-Path $DotfileRoot '.vimrc') (Join-Path $UserHome '.vimrc')
+
+# -- Git --
+Link-DotFile (Join-Path $DotfileRoot 'git' '.gitconfig') (Join-Path $UserHome '.gitconfig')
+
+# -- SSH --
+Link-DotFile (Join-Path $DotfileRoot 'ssh' 'config') (Join-Path $UserHome '.ssh' 'config')
+
+# -- VS Code --
+$VSCodeUser = Join-Path $UserHome 'AppData' 'Roaming' 'Code' 'User'
+Link-DotFile (Join-Path $DotfileRoot 'vscode' 'settings.json')    (Join-Path $VSCodeUser 'settings.json')
+Link-DotFile (Join-Path $DotfileRoot 'vscode' 'keybindings.json') (Join-Path $VSCodeUser 'keybindings.json')
+Link-DotFile (Join-Path $DotfileRoot 'vscode' 'mcp.json')         (Join-Path $VSCodeUser 'mcp.json')
+
+# -- Windows Terminal --
+$WTLocalState = Join-Path $UserHome 'AppData' 'Local' 'Packages' 'Microsoft.WindowsTerminal_8wekyb3d8bbwe' 'LocalState'
+if (Test-Path (Split-Path $WTLocalState)) {
+    Link-DotFile (Join-Path $DotfileRoot 'windows-terminal' 'settings.json') (Join-Path $WTLocalState 'settings.json')
+}
+
+# -- WSL --
+Link-DotFile (Join-Path $DotfileRoot 'wsl' '.wslconfig') (Join-Path $UserHome '.wslconfig')
+
+# -- Claude Code --
+$ClaudeDst = Join-Path $UserHome '.claude'
+Link-DotFile (Join-Path $DotfileRoot 'claude' 'CLAUDE.md')        (Join-Path $ClaudeDst 'CLAUDE.md')
+Link-DotFile (Join-Path $DotfileRoot 'claude' 'settings.json')    (Join-Path $ClaudeDst 'settings.json')
+Link-DotFile (Join-Path $DotfileRoot 'claude' 'hooks')            (Join-Path $ClaudeDst 'hooks')
+Link-DotFile (Join-Path $DotfileRoot 'claude' 'commands')         (Join-Path $ClaudeDst 'commands')
+Link-DotFile (Join-Path $DotfileRoot 'claude' 'scripts')          (Join-Path $ClaudeDst 'scripts')
+Link-DotFile (Join-Path $DotfileRoot 'claude' 'agents')           (Join-Path $ClaudeDst 'agents')
+Link-DotFile (Join-Path $DotfileRoot 'claude' 'rules')            (Join-Path $ClaudeDst 'rules')
+Link-DotFile (Join-Path $DotfileRoot 'claude' 'skills')           (Join-Path $ClaudeDst 'skills')
+Link-DotFile (Join-Path $DotfileRoot 'claude' 'templates')        (Join-Path $ClaudeDst 'templates')
 
 Write-Host '  Dotfiles 連結完成' -ForegroundColor Green

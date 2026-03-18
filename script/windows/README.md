@@ -13,26 +13,26 @@ macOS/Linux 版 dotfile 的 Windows 移植版，使用 PowerShell 7+ 。
 # 1. Clone dotfile
 git clone https://github.com/user/dotfile.git ~/dotfile
 
-# 2. 建立 symlinks（以管理員身分執行）
+# 2. 執行安裝（symlinks + 軟體，統一入口）
 cd ~/dotfile
-pwsh install.ps1
+pwsh setup.ps1
 
-# 3. 安裝軟體（互動式選單）
-pwsh script/windows/setup.ps1
-
-# 4. 重啟終端
+# 3. 重啟終端
 ```
+
+或雙擊 `setup.bat`（自動偵測 PowerShell 7+）。
 
 全部安裝（跳過選單）：
 
 ```powershell
-pwsh script/windows/setup.ps1 --all
+pwsh setup.ps1 --all
 ```
 
 ## 目錄結構
 
 ```text
-install.ps1                        # Windows symlink installer（根目錄）
+setup.ps1                          # 統一入口（根目錄）
+setup.bat                          # 薄 wrapper（雙擊用）
 script/windows/
   profile.ps1                      # 主 profile（對應 .zshrc）
   profile.d/                       # 模組化載入（對應 .zshrc.d/）
@@ -47,8 +47,7 @@ script/windows/
     13_rust.ps1                    #   Rust
     14_bun.ps1                     #   Bun
     15_pnpm.ps1                    #   pnpm
-  setup.ps1                        # 互動式軟體安裝入口
-  setup.d/                         # 模組化安裝腳本
+  setup.d/                         # 模組化安裝腳本（symlink + 軟體安裝）
 vscode/                            # VS Code 設定
 windows-terminal/                  # Windows Terminal 設定
 wsl/                               # WSL 配置

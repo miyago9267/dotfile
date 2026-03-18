@@ -11,7 +11,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $ScriptRoot = $PSScriptRoot
-$SetupDir = Join-Path $ScriptRoot 'setup.d'
+$SetupDir = Join-Path $ScriptRoot 'script' 'windows' 'setup.d'
 
 # -- 色彩輔助 --
 function Write-Color {
@@ -183,5 +183,43 @@ if ($failed -gt 0) {
     Write-Host "  失敗: " -NoNewline; Write-ColorLine "$failed" Red
 }
 Write-Host "  略過: $skipped"
+
+# -- 軟體檢查 --
+Write-Host ""
+Write-ColorLine "=== 軟體狀態 ===" Yellow
+
+$software = @(
+    @{ Name = "git";         Cmd = "git --version" },
+    @{ Name = "oh-my-posh";  Cmd = "oh-my-posh --version" },
+    @{ Name = "node";        Cmd = "node --version" },
+    @{ Name = "bun";         Cmd = "bun --version" },
+    @{ Name = "python/uv";   Cmd = "uv --version" },
+    @{ Name = "go";          Cmd = "go version" },
+    @{ Name = "docker";      Cmd = "docker --version" },
+    @{ Name = "claude";      Cmd = "claude --version" }
+)
+
+foreach ($sw in $software) {
+    try {
+        $null = Invoke-Expression $sw.Cmd 2>$null
+        Write-Host "  [OK] $($sw.Name)" -ForegroundColor Green
+    } catch {
+        Write-Host "  [--] $($sw.Name)" -ForegroundColor DarkGray
+    }
+}
+
+# -- 模組檢查 --
+Write-Host ""
+Write-ColorLine "=== PowerShell 模組 ===" Yellow
+
+$modules = @("oh-my-posh", "posh-git", "DirColors", "Terminal-Icons")
+foreach ($mod in $modules) {
+    if (Get-Module -ListAvailable -Name $mod -ErrorAction SilentlyContinue) {
+        Write-Host "  [OK] $mod" -ForegroundColor Green
+    } else {
+        Write-Host "  [--] $mod (Install-Module $mod)" -ForegroundColor Yellow
+    }
+}
+
 Write-Host ""
 Write-ColorLine "請重新啟動終端以套用所有變更" Yellow
