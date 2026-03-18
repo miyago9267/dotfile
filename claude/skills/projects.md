@@ -45,6 +45,22 @@
 - **人格定義**: `personality/SOUL.md`, `personality/MEMORY.md`, `personality/USER.md`
 - **LLM**: GitHub Copilot (Claude Opus) 預設, 支援 Gemini / OpenAI / Anthropic
 
+### Lovely Office
+
+- **路徑**: `/Users/miyago/Project/AI/Lovely-Office/`
+- **GitHub**: `github.com/miyago9267/Lovely-Office` (private)
+- **類型**: Multi-Agent R&D Department — 自主 AI 團隊辦公室
+- **技術棧**: Bun / TypeScript / Claude Agent SDK (forked) / BullMQ / Redis / Discord.js
+- **子套件** (packages/):
+  - `sdk/` — Forked Claude Agent SDK v0.2.77，含 V2 persistent session patch
+  - `lobster-core/` — Agent 核心（session 管理、heartbeat、memory）
+  - `lobster-discord/` — Discord 整合層（bot + webhook + message routing）
+  - `lobster-tools/` — 共用工具集
+  - `dashboard-api/` — 辦公室 API
+  - `dashboard-ui/` — 2D 辦公室 UI
+- **Agents**: Yari (PM), Karl (HR), Reef (Backend), Tide (Frontend), Pearl (Design), Shell (QA/DevOps), Otter (Ops)
+- **特點**: 每個 agent 是獨立 long-running process，共享 Discord webhook 但各有身份
+
 ### Literature Club / Monika Web UI
 
 - **路徑**: `/Users/miyago/Project/AI/monika/packages/web/`（monorepo 內）
