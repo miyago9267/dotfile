@@ -267,7 +267,7 @@ require("lazy").setup({
       require("claudecode").setup({
         terminal = {
           split_side = "right",
-          split_width_percentage = 0.4,
+          split_width_percentage = 0.3,
         },
       })
     end,
@@ -614,6 +614,12 @@ vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]], { desc = 'Terminal > Exit to normal
 -- VSCode-style: Ctrl+W / Cmd+W to close current buffer (tab)
 vim.keymap.set('n', '<C-w>', '<cmd>bdelete<CR>', { desc = 'Close tab' })
 vim.keymap.set('n', '<D-w>', '<cmd>bdelete<CR>', { desc = 'Close tab (Mac)' })
+
+-- Window resize: Ctrl+方向鍵，每次 ±3
+vim.keymap.set('n', '<C-Left>',  '<cmd>vertical resize -3<CR>', { desc = 'Window > Shrink width' })
+vim.keymap.set('n', '<C-Right>', '<cmd>vertical resize +3<CR>', { desc = 'Window > Grow width' })
+vim.keymap.set('n', '<C-Up>',    '<cmd>resize +3<CR>',          { desc = 'Window > Grow height' })
+vim.keymap.set('n', '<C-Down>',  '<cmd>resize -3<CR>',          { desc = 'Window > Shrink height' })
 
 -- VSCode-style: Redo
 vim.keymap.set('n', '<C-S-z>', '<C-r>', { desc = 'Redo' })

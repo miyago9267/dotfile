@@ -32,7 +32,6 @@
       "Bash(kill *)"
     ]
   },
-  "model": "opus",
   "hooks": {
     "PostToolUse": [
       {
