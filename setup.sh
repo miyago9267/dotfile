@@ -40,6 +40,8 @@ ITEMS=(
   "install_android_sdk.sh|Android SDK|行動端|0"
   "install_gcloud.sh|Google Cloud SDK|雲端|0"
   "install_kubectl.sh|kubectl|雲端|0"
+  "install_argocd.sh|Argo CD CLI|雲端|0"
+  "install_gh.sh|GitHub CLI (gh)|工具|0"
   "install_locale.sh|Locale 設定|基礎|0"
 )
 

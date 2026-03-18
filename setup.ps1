@@ -38,6 +38,10 @@ $Items = @(
     @{ Script = 'install_go.ps1';       Name = 'Go';                           Category = '語言'; Default = $false }
     @{ Script = 'install_rust.ps1';     Name = 'Rust (rustup)';               Category = '語言'; Default = $false }
     @{ Script = 'install_bun.ps1';      Name = 'Bun';                          Category = '語言'; Default = $false }
+    @{ Script = 'install_gcloud.ps1';   Name = 'Google Cloud SDK';             Category = '雲端'; Default = $false }
+    @{ Script = 'install_kubectl.ps1';  Name = 'kubectl';                      Category = '雲端'; Default = $false }
+    @{ Script = 'install_argocd.ps1';   Name = 'Argo CD CLI';                 Category = '雲端'; Default = $false }
+    @{ Script = 'install_gh.ps1';       Name = 'GitHub CLI (gh)';             Category = '工具'; Default = $false }
 )
 
 $Selected = @{}

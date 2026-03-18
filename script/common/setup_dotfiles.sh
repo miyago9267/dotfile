@@ -13,6 +13,5 @@ ln -sf "$dir/.tmux.conf" ~/.tmux.conf
 ln -sf "$dir/nvim" ~/.config
 ln -sf "$dir/script" ~/
 ln -sf "$dir/alias.sh" ~/alias.sh
-sudo cp "$dir/script/printcat" /usr/local/bin
 sudo git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
 

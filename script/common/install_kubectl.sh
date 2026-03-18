@@ -13,12 +13,19 @@ if [ "$(uname)" = "Darwin" ]; then
     echo "Homebrew not found. Please install Homebrew first."
     exit 1
   fi
-elif command -v apt >/dev/null; then
-  curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-  chmod +x kubectl
-  sudo mv kubectl /usr/local/bin/
 elif command -v pacman >/dev/null; then
   sudo pacman -S --noconfirm kubectl
+elif command -v apt >/dev/null; then
+  ARCH="$(uname -m)"
+  case "$ARCH" in
+    x86_64|amd64) K8S_ARCH="amd64" ;;
+    aarch64|arm64) K8S_ARCH="arm64" ;;
+    *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
+  esac
+  STABLE="$(curl -L -s https://dl.k8s.io/release/stable.txt)"
+  curl -LO "https://dl.k8s.io/release/${STABLE}/bin/linux/${K8S_ARCH}/kubectl"
+  chmod +x kubectl
+  sudo mv kubectl /usr/local/bin/
 else
   echo "kubectl installation not supported on this OS"
   exit 1
