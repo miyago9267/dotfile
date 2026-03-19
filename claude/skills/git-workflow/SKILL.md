@@ -39,6 +39,8 @@ alwaysApply: true
 - `git add` 必須指定明確路徑，禁止 `git add .` 或 `git add -A`
 - commit 前先 `git diff --staged` 確認內容
 - 大量修改分多次 commit，每次 commit 有明確主題
+- **commit 後禁止再修改或新增檔案**，所有文件更新必須在 commit 前完成
+- **`docs/ai/` 不納入版控**，若 repo 尚未排除，主動加入 `.gitignore`
 
 ## Branch 命名
 

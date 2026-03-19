@@ -41,32 +41,6 @@ bash ~/.claude/scripts/bootstrap.sh --compact
 6. 收工前跑 `end-session.sh`
 7. 若 repo 的 `.gitignore` 尚未排除 `docs/ai/`，主動加入
 
-## Git Commit Hard Rule
-
-- git commit message 禁止加入 `Co-Authored-By` 或任何 AI 署名行。
-- AI 協作資訊只能記錄在文檔 summary（如 session summary、changelog），不得出現在 commit message 中。
-- **commit 後禁止再修改或新增檔案**。所有文件更新（changelog、lesson、session summary）必須在 commit 之前完成，或等下一次 commit 再處理。
-- **`docs/ai/` 不納入版控**。這是 AI 專用的工作記錄（changelog、lessons、sessions、snapshots），不應該被 `git add`。若 repo 尚未排除，主動將 `docs/ai/` 加入 `.gitignore`。
-- `git add` 時使用明確的檔案路徑或 `git add -p`，禁止無腦 `git add .` 或 `git add -A`，避免把不該上版的檔案帶進去。
-
-## SDD Hard Rule
-
-- 一律採用 SDD（Spec-Driven Development）作為預設工作模式。
-- 只要任務不是明顯 trivial fix，或使用者提到 spec、progress、phase、task、milestone、continue、繼續、上次做到哪，就必須先找 active spec。
-- 若 repo 已採用 `docs/specs/<slug>/SPEC.md` 工作流，實作前先讀相關 spec；若沒有合適 spec，先建立或更新 spec，再開始實作。
-- 不得重問已在 spec 記錄的決策，不得跳過 spec 直接進入中大型實作。
-- **Spec 只負責設計文件**（需求、ADR、架構決策、風險），不放任務 checkbox。
-- **任務追蹤一律在 `PROGRESS.md`**，用 checkbox + Phase 管理進度。
-- 實作完成後更新 `PROGRESS.md` 的 checkbox；Spec 只在設計變更時更新 `updated` 日期。
-- 同步 `docs/ai/changelog.md`、session summary（若 repo 有使用）。
-
-## TDD Preference
-
-- TDD（Test-Driven Development）不是像 SDD 一樣的硬規則，但可行時優先採用。
-- 新增功能、修 bug、重構核心邏輯時，優先先寫或先補測試，再實作。
-- 若不適合完整 TDD，至少補最小有價值的測試，或明確說明這次未補測試的原因。
-- 回報時交代測試是否新增、是否執行、哪些範圍尚未驗證。
-
 ## 文件結構（自動維護）
 
 ```text
@@ -94,18 +68,6 @@ PROGRESS.md        # 任務追蹤：checkbox + Phase + 當前狀態
 - 長對話中段存 snapshot，compact 後用 restore 恢復而非重讀所有文件
 - changelog/lessons 只讀最近 20 行，不要全讀
 - 不重複寫同一條 log -- script 自動去重
-
-## Markdown Lint Hard Rule
-
-- 所有輸出的 Markdown 檔案必須符合 markdownlint 規範，寫入前主動修正。
-- 重點規則：
-  - MD022: heading 前後必須有空行
-  - MD031: fenced code block 前後必須有空行
-  - MD032: list 前後必須有空行
-  - MD036: 禁止用粗體替代 heading（用 `###` 而非 `**標題**`）
-  - MD040: fenced code block 必須指定語言（如 `yaml`、`bash`、`text`）
-  - MD047: 檔案結尾必須有空行
-- 編輯既有 Markdown 時，順手修正觸及範圍內的 lint 問題，但不要大規模重寫未修改的區塊。
 
 ## 偏好
 

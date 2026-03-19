@@ -30,6 +30,9 @@
       "Bash(git clean *)",
       "Bash(pkill *)",
       "Bash(kill *)"
+    ],
+    "additionalDirectories": [
+      "/Users/miyago/.claude"
     ]
   },
   "hooks": {
@@ -54,12 +57,12 @@
     ]
   },
   "enabledPlugins": {
-    "everything-claude-code@everything-claude-code": true,
+    "everything-claude-code@everything-claude-code": false,
     "gitlab@claude-plugins-official": true,
     "sentry@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": true,
     "pr-review-toolkit@claude-plugins-official": true,
-    "learning-output-style@claude-plugins-official": true,
+    "learning-output-style@claude-plugins-official": false,
     "plugin-dev@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
@@ -70,5 +73,8 @@
       }
     }
   },
-  "effortLevel": "high"
+  "effortLevel": "high",
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "70"
+  }
 }

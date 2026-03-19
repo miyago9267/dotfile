@@ -33,6 +33,7 @@ $Items = @(
     @{ Script = 'install_ohmyposh.ps1'; Name = 'oh-my-posh 提示字元';          Category = 'Shell'; Default = $true }
     @{ Script = 'install_neovim.ps1';   Name = 'Neovim + 依賴';               Category = '編輯器'; Default = $true }
     @{ Script = 'setup_neovim.ps1';     Name = 'Neovim 配置連結';              Category = '編輯器'; Default = $true }
+    @{ Script = 'setup_claude.ps1';     Name = 'Claude Code 設定 (symlink)';   Category = '工具'; Default = $true }
     @{ Script = 'install_node.ps1';     Name = 'Node.js (fnm)';               Category = '語言'; Default = $false }
     @{ Script = 'install_python.ps1';   Name = 'Python (uv + pyenv-win)';     Category = '語言'; Default = $false }
     @{ Script = 'install_go.ps1';       Name = 'Go';                           Category = '語言'; Default = $false }
