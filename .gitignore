@@ -9,6 +9,7 @@ known_hosts
 known_hosts.old
 .credentials.json
 .claude.json
+secrets/*.dec.*
 
 # OS
 Thumbs.db
