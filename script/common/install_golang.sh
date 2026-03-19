@@ -3,6 +3,12 @@
 #!/bin/bash
 set -e
 
+# Skip if already installed
+if command -v go >/dev/null 2>&1; then
+  echo "已安裝 go, 跳過"
+  exit 0
+fi
+
 GO_VERSION="1.25"
 
 OS_NAME="$(uname -s)"
@@ -25,8 +31,8 @@ case "$OS_NAME" in
 		fi
 		;;
 	*)
-		echo "Error: Unsupported OS: $OS_NAME" >&2
-		exit 1
+		echo "[WARN] Go 不支援當前 OS ($OS_NAME)，跳過"
+		exit 0
 		;;
 esac
 
@@ -38,8 +44,8 @@ case "$ARCH_NAME" in
 		GO_ARCH="arm64"
 		;;
 	*)
-		echo "Error: Unsupported architecture: $ARCH_NAME" >&2
-		exit 1
+		echo "[WARN] Go 不支援當前架構 ($ARCH_NAME)，跳過"
+		exit 0
 		;;
 esac
 

@@ -9,6 +9,12 @@
 
 set -e  # Exit on error
 
+# Skip if already installed
+if command -v claude >/dev/null 2>&1; then
+  echo "已安裝 claude, 跳過"
+  exit 0
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'

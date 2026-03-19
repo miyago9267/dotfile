@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# Skip if already installed
+if command -v gh >/dev/null 2>&1; then
+  echo "已安裝 gh, 跳過"
+  exit 0
+fi
+
 Y="\033[1;33m"
 N="\033[0m"
 
@@ -27,8 +33,8 @@ elif command -v apt >/dev/null; then
     && sudo apt install -y gh
   rm -f "$out"
 else
-  echo "gh installation not supported on this OS"
-  exit 1
+  echo "[WARN] GitHub CLI (gh) 不支援當前 OS ($(uname))，跳過"
+  exit 0
 fi
 
 echo "${Y}GitHub CLI installed successfully!${N}"

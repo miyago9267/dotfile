@@ -1,6 +1,12 @@
 #!/bin/sh
 set -e
 
+# Skip if already installed
+if command -v php >/dev/null 2>&1; then
+  echo "已安裝 php, 跳過"
+  exit 0
+fi
+
 install_with_brew() {
   brew update
   brew install php@8.3

@@ -1,6 +1,12 @@
 #!/bin/sh
 set -e
 
+# Skip if already installed
+if [ -d "$HOME/Library/Android/sdk" ] || [ -d "$HOME/Android/Sdk" ]; then
+  echo "已安裝 Android SDK, 跳過"
+  exit 0
+fi
+
 # Detect OS (macOS, Ubuntu/Debian, Arch Linux)
 OS_NAME="$(uname)"
 if [ "$OS_NAME" = "Darwin" ]; then
@@ -18,8 +24,8 @@ elif [ "$OS_NAME" = "Linux" ]; then
     echo "Detected: Linux (generic)"
   fi
 else
-  echo "Error: Unsupported OS: $OS_NAME" >&2
-  exit 1
+  echo "[WARN] Android SDK 不支援當前 OS ($OS_NAME)，跳過"
+  exit 0
 fi
 
 ANDROID_HOME="${ANDROID_HOME:-$DEFAULT_ANDROID_HOME}"

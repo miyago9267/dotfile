@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# Skip if already installed
+if command -v argocd >/dev/null 2>&1; then
+  echo "已安裝 argocd, 跳過"
+  exit 0
+fi
+
 Y="\033[1;33m"
 N="\033[0m"
 
@@ -23,7 +29,7 @@ elif command -v pacman >/dev/null; then
     case "$ARCH" in
       x86_64|amd64) ARGOCD_ARCH="amd64" ;;
       aarch64|arm64) ARGOCD_ARCH="arm64" ;;
-      *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
+      *) echo "[WARN] Argo CD CLI 不支援當前架構 ($ARCH)，跳過"; exit 0 ;;
     esac
     VERSION="$(curl -s https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep tag_name | cut -d '"' -f4)"
     curl -sSL -o argocd "https://github.com/argoproj/argo-cd/releases/download/${VERSION}/argocd-linux-${ARGOCD_ARCH}"
@@ -36,7 +42,7 @@ else
   case "$ARCH" in
     x86_64|amd64) ARGOCD_ARCH="amd64" ;;
     aarch64|arm64) ARGOCD_ARCH="arm64" ;;
-    *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
+    *) echo "[WARN] Argo CD CLI 不支援當前架構 ($ARCH)，跳過"; exit 0 ;;
   esac
   VERSION="$(curl -s https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep tag_name | cut -d '"' -f4)"
   curl -sSL -o argocd "https://github.com/argoproj/argo-cd/releases/download/${VERSION}/argocd-linux-${ARGOCD_ARCH}"

@@ -1,6 +1,12 @@
 #!/bin/sh
 set -e
 
+# Skip if already installed
+if command -v nvm >/dev/null 2>&1 || [ -d "$HOME/.nvm" ]; then
+  echo "已安裝 nvm, 跳過"
+  exit 0
+fi
+
 # Detect OS for user info
 if [ "$(uname)" = "Darwin" ]; then
   echo "Detected: macOS"

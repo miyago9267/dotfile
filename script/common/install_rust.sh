@@ -3,6 +3,12 @@
 #!/bin/bash
 set -e
 
+# Skip if already installed
+if command -v rustup >/dev/null 2>&1 || command -v cargo >/dev/null 2>&1; then
+  echo "已安裝 rust, 跳過"
+  exit 0
+fi
+
 # Detect OS for user info
 if [ "$(uname)" = "Darwin" ]; then
   echo "Detected: macOS"

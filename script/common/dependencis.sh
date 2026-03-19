@@ -17,8 +17,8 @@ elif [ "$(uname)" = "Darwin" ]; then
   cmd="brew install"
   packages="zsh curl git tmux neovim gawk cmake gnu-sed coreutils gdu"
 else
-  echo "No supported package manager found"
-  exit 1
+  echo "[WARN] 基礎依賴套件不支援當前 OS ($(uname))，跳過"
+  exit 0
 fi
 
 for pkg in $packages; do

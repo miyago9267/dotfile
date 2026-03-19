@@ -18,8 +18,8 @@ run_as_root() {
 }
 
 if ! require_cmd apt-get; then
-  echo "[ERROR] This script currently supports Debian/Ubuntu (apt-get)." >&2
-  exit 1
+  echo "[WARN] Locale 設定不支援當前 OS ($(uname))，跳過"
+  exit 0
 fi
 
 echo "[INFO] Installing locales package..."

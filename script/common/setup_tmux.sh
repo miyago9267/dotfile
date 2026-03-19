@@ -39,8 +39,8 @@ install_package() {
             sudo pacman -S --noconfirm "$package" || true
             ;;
         *)
-            echo "Error: Unsupported OS"
-            exit 1
+            echo "[WARN] Tmux 設定不支援當前 OS ($(uname))，跳過"
+            exit 0
             ;;
     esac
 }

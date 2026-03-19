@@ -1,6 +1,12 @@
 #!/bin/sh
 set -e
 
+# Skip if already installed
+if command -v flutter >/dev/null 2>&1 || [ -d "$HOME/development/flutter" ]; then
+  echo "已安裝 flutter, 跳過"
+  exit 0
+fi
+
 # Detect OS for user info
 if [ "$(uname)" = "Darwin" ]; then
   echo "Detected: macOS"

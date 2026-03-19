@@ -137,9 +137,8 @@ install_neovim() {
                 sudo apt-get install -y neovim
                 ;;
             *)
-                print_error "Cannot install older version automatically on this OS"
-                print_info "Please install Neovim 0.9 or 0.10 manually"
-                exit 1
+                echo "[WARN] Neovim 不支援當前 OS ($OS)，跳過"
+                exit 0
                 ;;
         esac
     fi
