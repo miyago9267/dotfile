@@ -3,35 +3,48 @@
 
 DOTFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 ENC_FILE="$DOTFILE_DIR/secrets/tokens.enc.yaml"
+SOPS_CFG="$DOTFILE_DIR/secrets/.sops.yaml"
 AGE_KEY="$HOME/.age/key.txt"
 CACHE_FILE="$HOME/.env.secrets"
 
 export SOPS_AGE_KEY_FILE="$AGE_KEY"
 
+Y='\033[1;33m'
+G='\033[1;32m'
+C='\033[1;36m'
+R='\033[1;31m'
+N='\033[0m'
+
 usage() {
   cat <<EOF
 Usage: sec <command>
 
-Commands:
-  init      初始化 age key pair + .sops.yaml
-  edit      編輯加密的 secrets（自動加解密）
-  show      顯示目前所有 secret（解密後輸出）
-  list      列出 secret key 名稱（不顯示 value）
-  reload    清除快取並重新解密
-  status    檢查 age/sops 安裝狀態和 key 狀態
+  ${C}管理${N}
+    init          初始化 age key pair + .sops.yaml
+    edit          編輯 secrets（vim 開啟 yaml，存檔自動加密）
+    show          顯示所有 secret（解密 yaml 輸出）
+    list          只列 key 名稱（不顯示 value）
+    status        檢查 age/sops/key 狀態
+
+  ${C}同步${N}
+    push          加密檔 commit + push 到 remote
+    export <file> 匯出解密後的 secret 到指定檔案
+    import <file> 從明文 yaml 檔匯入並加密
+    reload        清快取，重新解密
+
 EOF
 }
 
 check_age_key() {
   if [ ! -f "$AGE_KEY" ]; then
-    echo "age key 不存在，請先執行: sec init"
+    printf "${R}age key 不存在，請先執行: sec init${N}\n"
     exit 1
   fi
 }
 
 check_sops() {
   if ! command -v sops >/dev/null 2>&1; then
-    echo "sops 未安裝，請執行: bash $DOTFILE_DIR/script/common/install_sops.sh"
+    printf "${R}sops 未安裝，請執行: bash %s/script/common/install_sops.sh${N}\n" "$DOTFILE_DIR"
     exit 1
   fi
 }
@@ -40,91 +53,209 @@ cmd_init() {
   # 產生 age key pair
   if [ ! -f "$AGE_KEY" ]; then
     if ! command -v age-keygen >/dev/null 2>&1; then
-      echo "age 未安裝，請先安裝: brew install age"
+      printf "${R}age 未安裝，請先安裝: brew install age${N}\n"
       exit 1
     fi
     mkdir -p "$HOME/.age"
     age-keygen -o "$AGE_KEY" 2>&1
     chmod 600 "$AGE_KEY"
-    echo "age key 已產生: $AGE_KEY"
+    printf "${G}age key 已產生: %s${N}\n" "$AGE_KEY"
   else
-    echo "age key 已存在: $AGE_KEY"
+    printf "age key 已存在: %s\n" "$AGE_KEY"
   fi
 
   # 取得 public key
   pubkey="$(grep -o 'age1[a-z0-9]*' "$AGE_KEY" | head -1)"
   if [ -z "$pubkey" ]; then
-    echo "錯誤: 無法取得 public key"
+    printf "${R}錯誤: 無法取得 public key${N}\n"
     exit 1
   fi
   echo "Public key: $pubkey"
 
   # 更新 .sops.yaml
-  cat > "$DOTFILE_DIR/secrets/.sops.yaml" <<EOF
+  cat > "$SOPS_CFG" <<EOF
 creation_rules:
   - age: "${pubkey}"
 EOF
-  echo ".sops.yaml 已更新"
+  printf "${G}.sops.yaml 已更新${N}\n"
 
-  # 首次加密
+  # 如果加密檔還是明文模板，進行首次加密
   if [ -f "$ENC_FILE" ] && ! grep -q "sops:" "$ENC_FILE"; then
     check_sops
     sops -e -i --age "$pubkey" "$ENC_FILE" 2>/dev/null && \
-      echo "tokens.enc.yaml 已加密" || \
-      echo "提示: 請手動執行 sec edit 編輯並加密"
+      printf "${G}tokens.enc.yaml 已加密${N}\n" || \
+      printf "${Y}提示: 請手動執行 sec edit 編輯並加密${N}\n"
   fi
 }
 
 cmd_edit() {
   check_age_key
   check_sops
-  sops "$ENC_FILE"
+  # 用 yaml filetype 開啟 temp file
+  EDITOR="${EDITOR:-vim}"
+  if [[ "$EDITOR" == *vim* ]]; then
+    SOPS_EDITOR="$EDITOR -c 'set ft=yaml'" sops "$ENC_FILE"
+  else
+    sops "$ENC_FILE"
+  fi
 }
 
 cmd_show() {
   check_age_key
   check_sops
-  sops -d "$ENC_FILE"
+  sops -d "$ENC_FILE" | _yaml_highlight
+}
+
+# 簡易 yaml 上色（有 bat 就用 bat，沒有就原樣輸出）
+_yaml_highlight() {
+  if command -v bat >/dev/null 2>&1; then
+    bat --language yaml --style plain --paging never
+  else
+    cat
+  fi
 }
 
 cmd_list() {
   check_age_key
   check_sops
   sops -d "$ENC_FILE" 2>/dev/null | awk '
+    /^#/ { next }
     /^[a-zA-Z_][a-zA-Z0-9_]*:/ {
       gsub(/:.*/, "")
       section = $0
       next
     }
-    /^    [a-zA-Z_][a-zA-Z0-9_]*:/ {
+    /^  +[a-zA-Z_][a-zA-Z0-9_]*:/ {
       gsub(/^[[:space:]]+/, "")
-      gsub(/:.*/, "")
-      if ($0 != "{}" && $0 != "[]") {
-        printf "  %s.%s\n", section, $0
+      key = $0
+      gsub(/:.*/, "", key)
+      if (key != "{}" && key != "[]") {
+        printf "  %s.%s\n", section, key
       }
     }
   '
+}
+
+cmd_push() {
+  check_age_key
+  check_sops
+
+  cd "$DOTFILE_DIR"
+
+  # 確認加密檔有變更
+  if git diff --quiet "$ENC_FILE" && git diff --quiet "$SOPS_CFG" && \
+     ! git ls-files --others --exclude-standard | grep -q "^secrets/"; then
+    printf "${Y}secrets 沒有變更，不需要 push${N}\n"
+    exit 0
+  fi
+
+  git add secrets/.sops.yaml secrets/tokens.enc.yaml
+  git commit -m "chore(secrets): 更新加密 token"
+  git push
+  printf "${G}secrets 已 push 到 remote${N}\n"
+}
+
+cmd_export() {
+  check_age_key
+  check_sops
+
+  local target="${1:-}"
+  if [ -z "$target" ]; then
+    printf "${R}Usage: sec export <file>${N}\n"
+    printf "  sec export secrets.yaml      匯出 yaml\n"
+    printf "  sec export .env              匯出 KEY=VALUE 格式\n"
+    exit 1
+  fi
+
+  # 依副檔名決定格式
+  case "$target" in
+    *.yaml|*.yml)
+      sops -d "$ENC_FILE" > "$target"
+      ;;
+    *)
+      # .env 格式: KEY=VALUE
+      sops -d "$ENC_FILE" 2>/dev/null | awk '
+        /^#/ { next }
+        /^[a-zA-Z_][a-zA-Z0-9_]*:/ {
+          gsub(/:.*/, "")
+          prefix = toupper($0)
+          next
+        }
+        /^  +[a-zA-Z_][a-zA-Z0-9_]*:/ {
+          gsub(/^[[:space:]]+/, "")
+          split($0, kv, ": ")
+          key = toupper(kv[1])
+          gsub(/:$/, "", key)
+          val = kv[2]
+          gsub(/^["'"'"']|["'"'"']$/, "", val)
+          if (val != "" && val != "{}" && val != "[]") {
+            printf "%s_%s=%s\n", prefix, key, val
+          }
+        }
+      ' > "$target"
+      ;;
+  esac
+
+  chmod 600 "$target"
+  printf "${G}已匯出到 %s${N}\n" "$target"
+}
+
+cmd_import() {
+  check_age_key
+  check_sops
+
+  local source="${1:-}"
+  if [ -z "$source" ]; then
+    printf "${R}Usage: sec import <file>${N}\n"
+    printf "  sec import secrets.yaml      從 yaml 匯入\n"
+    exit 1
+  fi
+
+  if [ ! -f "$source" ]; then
+    printf "${R}檔案不存在: %s${N}\n" "$source"
+    exit 1
+  fi
+
+  # 取得 public key
+  pubkey="$(grep -o 'age1[a-z0-9]*' "$AGE_KEY" | head -1)"
+  if [ -z "$pubkey" ]; then
+    printf "${R}錯誤: 無法取得 public key${N}\n"
+    exit 1
+  fi
+
+  # 備份現有加密檔
+  if [ -f "$ENC_FILE" ]; then
+    cp "$ENC_FILE" "${ENC_FILE}.bak"
+    printf "已備份: %s.bak\n" "$(basename "$ENC_FILE")"
+  fi
+
+  # 加密匯入檔並覆蓋
+  sops -e --age "$pubkey" "$source" > "$ENC_FILE"
+  printf "${G}已從 %s 匯入並加密${N}\n" "$source"
+
+  # 清快取
+  rm -f "$CACHE_FILE"
+  printf "快取已清除，重開 terminal 套用\n"
 }
 
 cmd_reload() {
   check_age_key
   check_sops
   rm -f "$CACHE_FILE"
-  echo "快取已清除"
 
-  # 重新產生快取
   raw="$(sops -d "$ENC_FILE" 2>/dev/null)" || {
-    echo "解密失敗"
+    printf "${R}解密失敗${N}\n"
     exit 1
   }
 
   printf '%s\n' "$raw" | awk '
+    /^#/ { next }
     /^[a-zA-Z_][a-zA-Z0-9_]*:/ {
       gsub(/:.*/, "")
       prefix = toupper($0)
       next
     }
-    /^    [a-zA-Z_][a-zA-Z0-9_]*:/ {
+    /^  +[a-zA-Z_][a-zA-Z0-9_]*:/ {
       gsub(/^[[:space:]]+/, "")
       split($0, kv, ": ")
       key = toupper(kv[1])
@@ -138,32 +269,45 @@ cmd_reload() {
   ' > "$CACHE_FILE"
 
   chmod 600 "$CACHE_FILE"
-  echo "已重新解密，重開 terminal 或執行 source ~/.env.secrets 套用"
+  printf "${G}已重新解密，重開 terminal 或執行 source ~/.env.secrets 套用${N}\n"
 }
 
 cmd_status() {
   printf "age:   "
-  command -v age >/dev/null 2>&1 && echo "$(age --version 2>&1 | head -1)" || echo "未安裝"
+  command -v age >/dev/null 2>&1 && age --version 2>&1 | head -1 || echo "未安裝"
 
   printf "sops:  "
-  command -v sops >/dev/null 2>&1 && echo "$(sops --version 2>&1 | head -1)" || echo "未安裝"
+  command -v sops >/dev/null 2>&1 && sops --version 2>&1 | head -1 || echo "未安裝"
 
   printf "key:   "
-  [ -f "$AGE_KEY" ] && echo "$AGE_KEY (存在)" || echo "不存在"
+  if [ -f "$AGE_KEY" ]; then
+    pubkey="$(grep -o 'age1[a-z0-9]*' "$AGE_KEY" | head -1)"
+    printf "%s (%s)\n" "$AGE_KEY" "$pubkey"
+  else
+    echo "不存在"
+  fi
 
   printf "cache: "
-  [ -f "$CACHE_FILE" ] && echo "$CACHE_FILE ($(wc -l < "$CACHE_FILE" | tr -d ' ') 筆)" || echo "不存在"
+  if [ -f "$CACHE_FILE" ]; then
+    count="$(grep -c '^export ' "$CACHE_FILE" 2>/dev/null || echo 0)"
+    printf "%s (%s 筆)\n" "$CACHE_FILE" "$count"
+  else
+    echo "不存在"
+  fi
 
   printf "enc:   "
   [ -f "$ENC_FILE" ] && echo "$(basename "$ENC_FILE") (存在)" || echo "不存在"
 }
 
 case "${1:-}" in
-  init)   cmd_init ;;
-  edit)   cmd_edit ;;
-  show)   cmd_show ;;
-  list)   cmd_list ;;
-  reload) cmd_reload ;;
-  status) cmd_status ;;
-  *)      usage ;;
+  init)    cmd_init ;;
+  edit)    cmd_edit ;;
+  show)    cmd_show ;;
+  list)    cmd_list ;;
+  push)    cmd_push ;;
+  export)  cmd_export "$2" ;;
+  import)  cmd_import "$2" ;;
+  reload)  cmd_reload ;;
+  status)  cmd_status ;;
+  *)       usage ;;
 esac
