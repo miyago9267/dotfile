@@ -10,23 +10,13 @@ case "$OS_NAME" in
     elif [ -f /etc/debian_version ]; then echo "Detected: Ubuntu/Debian"
     else echo "Detected: Linux (generic)"
     fi ;;
-  *) echo "[WARN] pyenv 不支援當前 OS ($OS_NAME)，跳過"; exit 0 ;;
+  *) echo "[WARN] uv 不支援當前 OS ($OS_NAME)，跳過"; exit 0 ;;
 esac
 
 # -- 已安裝檢查 --
-if command -v pyenv >/dev/null 2>&1; then
+if command -v uv >/dev/null 2>&1; then
   exit 0
 fi
 
-echo "Installing Python tools (Poetry, UV, Pyenv)..."
-# Install Poetry
-curl -sSL https://install.python-poetry.org | python3 -
-# Install UV
+echo "Installing uv..."
 curl -LsSf https://astral.sh/uv/install.sh | sh
-# Install Pyenv
-git clone https://github.com/pyenv/pyenv.git ~/.pyenv || true
-
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-if [ -x "$SCRIPT_DIR/setup_env_snippets.sh" ]; then
-  "$SCRIPT_DIR/setup_env_snippets.sh" python
-fi
