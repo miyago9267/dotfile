@@ -6,9 +6,20 @@ Y="\033[1;33m"
 G="\033[1;32m"
 N="\033[0m"
 
-# -- 檢查是否已安裝 --
+# -- OS 檢查 --
+OS_NAME="$(uname -s)"
+case "$OS_NAME" in
+  Darwin) echo "Detected: macOS" ;;
+  Linux)
+    if [ -f /etc/arch-release ]; then echo "Detected: Arch Linux"
+    elif [ -f /etc/debian_version ]; then echo "Detected: Ubuntu/Debian"
+    else echo "Detected: Linux (generic)"
+    fi ;;
+  *) echo "[WARN] sops 不支援當前 OS ($OS_NAME)，跳過"; exit 0 ;;
+esac
+
+# -- 已安裝檢查 --
 if command -v age >/dev/null 2>&1 && command -v sops >/dev/null 2>&1; then
-  echo "${G}age 和 sops 已安裝，跳過${N}"
   exit 0
 fi
 

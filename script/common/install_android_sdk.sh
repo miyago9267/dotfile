@@ -1,30 +1,30 @@
 #!/bin/sh
 set -e
 
-# Skip if already installed
-if [ -d "$HOME/Library/Android/sdk" ] || [ -d "$HOME/Android/Sdk" ]; then
-  echo "已安裝 Android SDK, 跳過"
-  exit 0
-fi
+# -- OS 檢查 --
+OS_NAME="$(uname -s)"
+case "$OS_NAME" in
+  Darwin)
+    DEFAULT_ANDROID_HOME="$HOME/Library/Android/sdk"
+    CMDLINE_URL="https://dl.google.com/android/repository/commandlinetools-mac-11076708_latest.zip"
+    echo "Detected: macOS"
+    ;;
+  Linux)
+    DEFAULT_ANDROID_HOME="$HOME/Android/Sdk"
+    CMDLINE_URL="https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
+    if [ -f /etc/arch-release ]; then echo "Detected: Arch Linux"
+    elif [ -f /etc/debian_version ]; then echo "Detected: Ubuntu/Debian"
+    else echo "Detected: Linux (generic)"
+    fi
+    ;;
+  *)
+    echo "[WARN] Android SDK 不支援當前 OS ($OS_NAME)，跳過"
+    exit 0
+    ;;
+esac
 
-# Detect OS (macOS, Ubuntu/Debian, Arch Linux)
-OS_NAME="$(uname)"
-if [ "$OS_NAME" = "Darwin" ]; then
-  DEFAULT_ANDROID_HOME="$HOME/Library/Android/sdk"
-  CMDLINE_URL="https://dl.google.com/android/repository/commandlinetools-mac-11076708_latest.zip"
-  echo "Detected: macOS"
-elif [ "$OS_NAME" = "Linux" ]; then
-  DEFAULT_ANDROID_HOME="$HOME/Android/Sdk"
-  CMDLINE_URL="https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
-  if [ -f /etc/arch-release ]; then
-    echo "Detected: Arch Linux"
-  elif [ -f /etc/debian_version ]; then
-    echo "Detected: Ubuntu/Debian"
-  else
-    echo "Detected: Linux (generic)"
-  fi
-else
-  echo "[WARN] Android SDK 不支援當前 OS ($OS_NAME)，跳過"
+# -- 已安裝檢查 --
+if [ -d "$HOME/Library/Android/sdk" ] || [ -d "$HOME/Android/Sdk" ]; then
   exit 0
 fi
 

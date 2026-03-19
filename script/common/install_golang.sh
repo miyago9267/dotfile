@@ -1,20 +1,12 @@
-
-
 #!/bin/bash
 set -e
-
-# Skip if already installed
-if command -v go >/dev/null 2>&1; then
-  echo "已安裝 go, 跳過"
-  exit 0
-fi
 
 GO_VERSION="1.25"
 
 OS_NAME="$(uname -s)"
 ARCH_NAME="$(uname -m)"
 
-# Detect OS (macOS, Linux)
+# -- OS 檢查 --
 case "$OS_NAME" in
 	Darwin)
 		GO_OS="darwin"
@@ -35,6 +27,11 @@ case "$OS_NAME" in
 		exit 0
 		;;
 esac
+
+# -- 已安裝檢查 --
+if command -v go >/dev/null 2>&1; then
+  exit 0
+fi
 
 case "$ARCH_NAME" in
 	x86_64|amd64)
