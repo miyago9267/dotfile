@@ -1,0 +1,169 @@
+#!/bin/bash
+# Secret 管理快捷指令（age + sops）
+
+DOTFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ENC_FILE="$DOTFILE_DIR/secrets/tokens.enc.yaml"
+AGE_KEY="$HOME/.age/key.txt"
+CACHE_FILE="$HOME/.env.secrets"
+
+export SOPS_AGE_KEY_FILE="$AGE_KEY"
+
+usage() {
+  cat <<EOF
+Usage: sec <command>
+
+Commands:
+  init      初始化 age key pair + .sops.yaml
+  edit      編輯加密的 secrets（自動加解密）
+  show      顯示目前所有 secret（解密後輸出）
+  list      列出 secret key 名稱（不顯示 value）
+  reload    清除快取並重新解密
+  status    檢查 age/sops 安裝狀態和 key 狀態
+EOF
+}
+
+check_age_key() {
+  if [ ! -f "$AGE_KEY" ]; then
+    echo "age key 不存在，請先執行: sec init"
+    exit 1
+  fi
+}
+
+check_sops() {
+  if ! command -v sops >/dev/null 2>&1; then
+    echo "sops 未安裝，請執行: bash $DOTFILE_DIR/script/common/install_sops.sh"
+    exit 1
+  fi
+}
+
+cmd_init() {
+  # 產生 age key pair
+  if [ ! -f "$AGE_KEY" ]; then
+    if ! command -v age-keygen >/dev/null 2>&1; then
+      echo "age 未安裝，請先安裝: brew install age"
+      exit 1
+    fi
+    mkdir -p "$HOME/.age"
+    age-keygen -o "$AGE_KEY" 2>&1
+    chmod 600 "$AGE_KEY"
+    echo "age key 已產生: $AGE_KEY"
+  else
+    echo "age key 已存在: $AGE_KEY"
+  fi
+
+  # 取得 public key
+  pubkey="$(grep -o 'age1[a-z0-9]*' "$AGE_KEY" | head -1)"
+  if [ -z "$pubkey" ]; then
+    echo "錯誤: 無法取得 public key"
+    exit 1
+  fi
+  echo "Public key: $pubkey"
+
+  # 更新 .sops.yaml
+  cat > "$DOTFILE_DIR/secrets/.sops.yaml" <<EOF
+creation_rules:
+  - age: "${pubkey}"
+EOF
+  echo ".sops.yaml 已更新"
+
+  # 首次加密
+  if [ -f "$ENC_FILE" ] && ! grep -q "sops:" "$ENC_FILE"; then
+    check_sops
+    sops -e -i --age "$pubkey" "$ENC_FILE" 2>/dev/null && \
+      echo "tokens.enc.yaml 已加密" || \
+      echo "提示: 請手動執行 sec edit 編輯並加密"
+  fi
+}
+
+cmd_edit() {
+  check_age_key
+  check_sops
+  sops "$ENC_FILE"
+}
+
+cmd_show() {
+  check_age_key
+  check_sops
+  sops -d "$ENC_FILE"
+}
+
+cmd_list() {
+  check_age_key
+  check_sops
+  sops -d "$ENC_FILE" 2>/dev/null | awk '
+    /^[a-zA-Z_][a-zA-Z0-9_]*:/ {
+      gsub(/:.*/, "")
+      section = $0
+      next
+    }
+    /^    [a-zA-Z_][a-zA-Z0-9_]*:/ {
+      gsub(/^[[:space:]]+/, "")
+      gsub(/:.*/, "")
+      if ($0 != "{}" && $0 != "[]") {
+        printf "  %s.%s\n", section, $0
+      }
+    }
+  '
+}
+
+cmd_reload() {
+  check_age_key
+  check_sops
+  rm -f "$CACHE_FILE"
+  echo "快取已清除"
+
+  # 重新產生快取
+  raw="$(sops -d "$ENC_FILE" 2>/dev/null)" || {
+    echo "解密失敗"
+    exit 1
+  }
+
+  printf '%s\n' "$raw" | awk '
+    /^[a-zA-Z_][a-zA-Z0-9_]*:/ {
+      gsub(/:.*/, "")
+      prefix = toupper($0)
+      next
+    }
+    /^    [a-zA-Z_][a-zA-Z0-9_]*:/ {
+      gsub(/^[[:space:]]+/, "")
+      split($0, kv, ": ")
+      key = toupper(kv[1])
+      gsub(/:$/, "", key)
+      val = kv[2]
+      gsub(/^["'"'"']|["'"'"']$/, "", val)
+      if (val != "" && val != "{}" && val != "[]") {
+        printf "export %s_%s=%s\n", prefix, key, "\"" val "\""
+      }
+    }
+  ' > "$CACHE_FILE"
+
+  chmod 600 "$CACHE_FILE"
+  echo "已重新解密，重開 terminal 或執行 source ~/.env.secrets 套用"
+}
+
+cmd_status() {
+  printf "age:   "
+  command -v age >/dev/null 2>&1 && echo "$(age --version 2>&1 | head -1)" || echo "未安裝"
+
+  printf "sops:  "
+  command -v sops >/dev/null 2>&1 && echo "$(sops --version 2>&1 | head -1)" || echo "未安裝"
+
+  printf "key:   "
+  [ -f "$AGE_KEY" ] && echo "$AGE_KEY (存在)" || echo "不存在"
+
+  printf "cache: "
+  [ -f "$CACHE_FILE" ] && echo "$CACHE_FILE ($(wc -l < "$CACHE_FILE" | tr -d ' ') 筆)" || echo "不存在"
+
+  printf "enc:   "
+  [ -f "$ENC_FILE" ] && echo "$(basename "$ENC_FILE") (存在)" || echo "不存在"
+}
+
+case "${1:-}" in
+  init)   cmd_init ;;
+  edit)   cmd_edit ;;
+  show)   cmd_show ;;
+  list)   cmd_list ;;
+  reload) cmd_reload ;;
+  status) cmd_status ;;
+  *)      usage ;;
+esac

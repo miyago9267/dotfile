@@ -21,6 +21,7 @@ get_desc() {
     qb)           echo "快速備份（加時間戳）" ;;
     qn)           echo "快速筆記" ;;
     runcpp.sh)    echo "C++ 編譯執行（支援 GDB）" ;;
+    sec)          echo "Secret 管理快捷指令（age + sops）" ;;
     si)           echo "系統資訊（OS, CPU, RAM, Disk, Network）" ;;
     *)            sed -n '2,3s/^#\s*//p' "$SCRIPT_DIR/$1" 2>/dev/null | head -1 ;;
   esac
@@ -39,6 +40,7 @@ get_usage() {
     qb)           echo "qb <file-or-dir>" ;;
     qn)           echo "qn add \"text\" | qn list | qn search <keyword>" ;;
     runcpp.sh)    echo "runcpp.sh <file.cpp>" ;;
+    sec)          echo "sec <init|edit|show|list|reload|status>" ;;
     si)           echo "si" ;;
     *)            echo "$1" ;;
   esac
