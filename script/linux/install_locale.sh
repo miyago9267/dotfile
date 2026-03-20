@@ -1,26 +1,20 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
+. "$(dirname "$0")/../common/_platform.sh"
 
-require_cmd() {
-  command -v "$1" >/dev/null 2>&1
-}
+platform_guard "Locale" linux:apt
 
 run_as_root() {
   if [[ ${EUID:-$(id -u)} -eq 0 ]]; then
     "$@"
-  elif require_cmd sudo; then
+  elif command -v sudo >/dev/null 2>&1; then
     sudo "$@"
   else
     echo "[ERROR] Need root privileges (run as root or install sudo)." >&2
     exit 1
   fi
 }
-
-if ! require_cmd apt-get; then
-  echo "[WARN] Locale 設定不支援當前 OS ($(uname))，跳過"
-  exit 0
-fi
 
 echo "[INFO] Installing locales package..."
 run_as_root apt-get update -y

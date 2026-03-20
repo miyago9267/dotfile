@@ -1,22 +1,9 @@
 #!/bin/bash
 set -e
+. "$(dirname "$0")/_platform.sh"
 
-# -- OS 檢查 --
-OS_NAME="$(uname -s)"
-case "$OS_NAME" in
-  Darwin) echo "Detected: macOS" ;;
-  Linux)
-    if [ -f /etc/arch-release ]; then echo "Detected: Arch Linux"
-    elif [ -f /etc/debian_version ]; then echo "Detected: Ubuntu/Debian"
-    else echo "Detected: Linux (generic)"
-    fi ;;
-  *) echo "[WARN] gh 不支援當前 OS ($OS_NAME)，跳過"; exit 0 ;;
-esac
-
-# -- 已安裝檢查 --
-if command -v gh >/dev/null 2>&1; then
-  exit 0
-fi
+platform_guard "GitHub CLI" darwin linux:apt linux:pacman
+is_installed gh && skip_installed "GitHub CLI"
 
 Y="\033[1;33m"
 N="\033[0m"

@@ -1,27 +1,14 @@
 #!/bin/bash
 # 安裝 age 和 sops -- Secret 管理工具
 set -e
+. "$(dirname "$0")/_platform.sh"
 
 Y="\033[1;33m"
 G="\033[1;32m"
 N="\033[0m"
 
-# -- OS 檢查 --
-OS_NAME="$(uname -s)"
-case "$OS_NAME" in
-  Darwin) echo "Detected: macOS" ;;
-  Linux)
-    if [ -f /etc/arch-release ]; then echo "Detected: Arch Linux"
-    elif [ -f /etc/debian_version ]; then echo "Detected: Ubuntu/Debian"
-    else echo "Detected: Linux (generic)"
-    fi ;;
-  *) echo "[WARN] sops 不支援當前 OS ($OS_NAME)，跳過"; exit 0 ;;
-esac
-
-# -- 已安裝檢查 --
-if command -v age >/dev/null 2>&1 && command -v sops >/dev/null 2>&1; then
-  exit 0
-fi
+platform_guard "age + sops" darwin linux:apt linux:pacman
+{ is_installed age && is_installed sops; } && skip_installed "age + sops"
 
 echo "${Y}Installing age + sops...${N}"
 

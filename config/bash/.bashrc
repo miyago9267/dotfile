@@ -25,8 +25,8 @@ export SAVEHIST=10000000
 # Enable alias
 if [ -f ~/alias.sh ]; then
   source ~/alias.sh
-elif [ -f ~/dotfile/alias.sh ]; then
-  source ~/dotfile/alias.sh
+elif [ -f ~/dotfile/config/zsh/alias.sh ]; then
+  source ~/dotfile/config/zsh/alias.sh
 fi
 
 # Load environment variables from .env
@@ -76,3 +76,5 @@ fi
 
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 . "$HOME/.cargo/env"
+
+. "$HOME/.local/bin/env"

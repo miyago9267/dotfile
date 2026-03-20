@@ -69,8 +69,8 @@ fi
 # Load aliases
 if [ -f ~/alias.sh ]; then
   source ~/alias.sh
-elif [ -f ~/dotfile/alias.sh ]; then
-  source ~/dotfile/alias.sh
+elif [ -f ~/dotfile/config/zsh/alias.sh ]; then
+  source ~/dotfile/config/zsh/alias.sh
 fi
 
 # Set a fancy prompt
@@ -125,3 +125,12 @@ alias agent-update='bash /Users/miyago/Project/Code/ITRD/General/agent-skills/up
 # skill-run shorthand
 alias ask='skill-run'
 export PATH="${HOME}/.local/bin:${PATH}"
+
+# bun completions
+[ -s "/Users/miyago/.bun/_bun" ] && source "/Users/miyago/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+. "$HOME/.local/bin/env"

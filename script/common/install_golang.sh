@@ -1,37 +1,17 @@
 #!/bin/bash
 set -e
+. "$(dirname "$0")/_platform.sh"
 
 GO_VERSION="1.25"
 
-OS_NAME="$(uname -s)"
+platform_guard "Go" darwin linux
+is_installed go && skip_installed "Go"
+
 ARCH_NAME="$(uname -m)"
-
-# -- OS 檢查 --
-case "$OS_NAME" in
-	Darwin)
-		GO_OS="darwin"
-		echo "Detected: macOS"
-		;;
-	Linux)
-		GO_OS="linux"
-		if [ -f /etc/arch-release ]; then
-			echo "Detected: Arch Linux"
-		elif [ -f /etc/debian_version ]; then
-			echo "Detected: Ubuntu/Debian"
-		else
-			echo "Detected: Linux (generic)"
-		fi
-		;;
-	*)
-		echo "[WARN] Go 不支援當前 OS ($OS_NAME)，跳過"
-		exit 0
-		;;
+case "$_PLATFORM_OS" in
+	Darwin) GO_OS="darwin" ;;
+	Linux)  GO_OS="linux" ;;
 esac
-
-# -- 已安裝檢查 --
-if command -v go >/dev/null 2>&1; then
-  exit 0
-fi
 
 case "$ARCH_NAME" in
 	x86_64|amd64)

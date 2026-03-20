@@ -74,28 +74,28 @@ if (-not $canSymlink) {
 }
 
 # -- .vimrc --
-Link-DotFile (Join-Path $DotfileRoot '.vimrc') (Join-Path $UserHome '.vimrc')
+Link-DotFile (Join-Path $DotfileRoot 'config' 'vim' '.vimrc') (Join-Path $UserHome '.vimrc')
 
 # -- Git --
-Link-DotFile (Join-Path $DotfileRoot 'git' '.gitconfig') (Join-Path $UserHome '.gitconfig')
+Link-DotFile (Join-Path $DotfileRoot 'config' 'git' '.gitconfig') (Join-Path $UserHome '.gitconfig')
 
 # -- SSH --
-Link-DotFile (Join-Path $DotfileRoot 'ssh' 'config') (Join-Path $UserHome '.ssh' 'config')
+Link-DotFile (Join-Path $DotfileRoot 'config' 'ssh' 'config') (Join-Path $UserHome '.ssh' 'config')
 
 # -- VS Code --
 $VSCodeUser = Join-Path $UserHome 'AppData' 'Roaming' 'Code' 'User'
-Link-DotFile (Join-Path $DotfileRoot 'vscode' 'settings.json')    (Join-Path $VSCodeUser 'settings.json')
-Link-DotFile (Join-Path $DotfileRoot 'vscode' 'keybindings.json') (Join-Path $VSCodeUser 'keybindings.json')
-Link-DotFile (Join-Path $DotfileRoot 'vscode' 'mcp.json')         (Join-Path $VSCodeUser 'mcp.json')
+Link-DotFile (Join-Path $DotfileRoot 'config' 'vscode' 'settings.json')    (Join-Path $VSCodeUser 'settings.json')
+Link-DotFile (Join-Path $DotfileRoot 'config' 'vscode' 'keybindings.json') (Join-Path $VSCodeUser 'keybindings.json')
+Link-DotFile (Join-Path $DotfileRoot 'config' 'vscode' 'mcp.json')         (Join-Path $VSCodeUser 'mcp.json')
 
 # -- Windows Terminal --
 $WTLocalState = Join-Path $UserHome 'AppData' 'Local' 'Packages' 'Microsoft.WindowsTerminal_8wekyb3d8bbwe' 'LocalState'
 if (Test-Path (Split-Path $WTLocalState)) {
-    Link-DotFile (Join-Path $DotfileRoot 'windows-terminal' 'settings.json') (Join-Path $WTLocalState 'settings.json')
+    Link-DotFile (Join-Path $DotfileRoot 'config' 'windows-terminal' 'settings.json') (Join-Path $WTLocalState 'settings.json')
 }
 
 # -- WSL --
-Link-DotFile (Join-Path $DotfileRoot 'wsl' '.wslconfig') (Join-Path $UserHome '.wslconfig')
+Link-DotFile (Join-Path $DotfileRoot 'config' 'wsl' '.wslconfig') (Join-Path $UserHome '.wslconfig')
 
 # -- Claude Code --
 $ClaudeDst = Join-Path $UserHome '.claude'

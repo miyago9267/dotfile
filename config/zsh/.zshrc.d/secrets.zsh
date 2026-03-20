@@ -10,7 +10,7 @@ command -v sops >/dev/null 2>&1 || return 0
 
 # -- 路徑設定 --
 # 找到 dotfile repo 下的加密檔
-_secrets_dotfile="${0:a:h:h}"
+_secrets_dotfile="$HOME/dotfile"
 _secrets_enc="${_secrets_dotfile}/secrets/tokens.enc.yaml"
 _secrets_cache="$HOME/.env.secrets"
 
@@ -64,7 +64,7 @@ unset _secrets_dotfile _secrets_enc _secrets_cache
 
 # 編輯加密的 secrets 檔案
 secrets-edit() {
-  local _dotfile="${0:a:h:h}"
+  local _dotfile="$HOME/dotfile"
   local _enc="${_dotfile}/secrets/tokens.enc.yaml"
   export SOPS_AGE_KEY_FILE="$HOME/.age/key.txt"
   sops "$_enc"
@@ -78,7 +78,7 @@ secrets-reload() {
 
 # 初始化 age key pair + 更新 .sops.yaml
 secrets-init() {
-  local _dotfile="${0:a:h:h}"
+  local _dotfile="$HOME/dotfile"
 
   # 產生 age key pair（如果不存在）
   if [ ! -f "$HOME/.age/key.txt" ]; then

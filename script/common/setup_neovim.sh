@@ -240,7 +240,7 @@ configure_neovim() {
         print_warning "Neovim version < 0.11 detected, creating compatibility config..."
         
         # 建立相容性設定檔
-        compat_file="$HOME/dotfile/nvim/lua/compat.lua"
+        compat_file="$HOME/dotfile/config/nvim/lua/compat.lua"
         mkdir -p "$(dirname "$compat_file")"
         
         cat > "$compat_file" <<'EOF'
@@ -282,7 +282,7 @@ return M
 EOF
         
         # 修改 init.lua 以使用相容層
-        init_file="$HOME/dotfile/nvim/init.lua"
+        init_file="$HOME/dotfile/config/nvim/init.lua"
         if [ -f "$init_file" ]; then
             # 備份原始檔案
             cp "$init_file" "$init_file.backup.$(date +%Y%m%d_%H%M%S)"
@@ -346,7 +346,7 @@ main() {
     if [ "$major_version" -lt 11 ]; then
         echo ""
         print_warning "IMPORTANT: Neovim < 0.11 detected"
-        print_info "Compatibility layer created at: ~/dotfile/nvim/lua/compat.lua"
+        print_info "Compatibility layer created at: ~/dotfile/config/nvim/lua/compat.lua"
         print_info "Update your LSP config to use: require('compat').setup_lsp()"
     fi
     

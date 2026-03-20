@@ -17,52 +17,66 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT_DIR="$DIR/script/common"
 LINUX_DIR="$DIR/script/linux"
 
+# -- 平台偵測 --
+. "$SCRIPT_DIR/_platform.sh"
+
 # -- 安裝項目定義 --
-# 格式：腳本檔名|顯示名稱|分類|預設勾選(1/0)
-ITEMS=(
-  "dependencis.sh|基礎依賴套件 (Homebrew 等)|基礎|1"
-  "setup_dotfiles.sh|Dotfiles 連結 (symlink)|基礎|1"
-  "setup_zsh.sh|Zsh 設定|Shell|1"
-  "setup_vim.sh|Vim 設定|編輯器|1"
-  "setup_neovim.sh|Neovim 設定|編輯器|1"
-  "setup_tmux.sh|Tmux 設定|終端|1"
-  "setup_fonts.sh|字型安裝|基礎|1"
-  "setup_claude.sh|Claude Code 設定 (symlink)|工具|1"
-  "install_node.sh|Node.js 生態 (nvm + v24 + npm/yarn/pnpm)|語言|0"
-  "install_bun.sh|Bun|語言|0"
-  "install_golang.sh|Go (g 版本管理)|語言|0"
-  "install_python.sh|Python (pyenv + uv)|語言|0"
-  "install_rust.sh|Rust|語言|0"
-  "install_php.sh|PHP 8.3|語言|0"
-  "install_flutter.sh|Flutter|行動端|0"
-  "install_fvm.sh|FVM (Flutter 版本管理)|行動端|0"
-  "install_android_sdk.sh|Android SDK|行動端|0"
-  "install_gcloud.sh|Google Cloud SDK|雲端|0"
-  "install_kubectl.sh|kubectl|雲端|0"
-  "install_argocd.sh|Argo CD CLI|雲端|0"
-  "install_sops.sh|age + sops (Secret 管理)|安全|0"
-  "install_gh.sh|GitHub CLI (gh)|工具|0"
-  "install_locale.sh|Locale 設定|基礎|0"
+# 格式：腳本檔名|顯示名稱|分類|預設勾選(1/0)|平台標籤
+_ALL_ITEMS=(
+  "dependencis.sh|基礎依賴套件 (Homebrew 等)|基礎|1|all"
+  "setup_dotfiles.sh|Dotfiles 連結 (symlink)|基礎|1|all"
+  "setup_zsh.sh|Zsh 設定|Shell|1|darwin linux"
+  "setup_vim.sh|Vim 設定|編輯器|1|all"
+  "setup_neovim.sh|Neovim 設定|編輯器|1|darwin linux:apt linux:pacman"
+  "setup_tmux.sh|Tmux 設定|終端|1|darwin linux:apt linux:pacman"
+  "setup_fonts.sh|字型安裝|基礎|1|all"
+  "setup_claude.sh|Claude Code 設定 (symlink)|工具|1|all"
+  "install_node.sh|Node.js 生態 (nvm + v24 + npm/yarn/pnpm)|語言|0|all"
+  "install_bun.sh|Bun|語言|0|all"
+  "install_golang.sh|Go (g 版本管理)|語言|0|all"
+  "install_python.sh|Python (uv)|語言|0|all"
+  "install_rust.sh|Rust|語言|0|all"
+  "install_php.sh|PHP 8.3|語言|0|darwin linux:apt linux:pacman"
+  "install_flutter.sh|Flutter|行動端|0|all"
+  "install_fvm.sh|FVM (Flutter 版本管理)|行動端|0|all"
+  "install_android_sdk.sh|Android SDK|行動端|0|darwin linux"
+  "install_gcloud.sh|Google Cloud SDK|雲端|0|all"
+  "install_kubectl.sh|kubectl|雲端|0|darwin linux:apt linux:pacman"
+  "install_argocd.sh|Argo CD CLI|雲端|0|all"
+  "install_sops.sh|age + sops (Secret 管理)|安全|0|darwin linux:apt linux:pacman"
+  "install_gh.sh|GitHub CLI (gh)|工具|0|darwin linux:apt linux:pacman"
+  "install_locale.sh|Locale 設定|基礎|0|linux"
 )
+
+# -- 依平台過濾 --
+ITEMS=()
+for _item in "${_ALL_ITEMS[@]}"; do
+  IFS='|' read -r _ _ _ _ _platforms <<< "$_item"
+  if platform_supported $_platforms; then
+    ITEMS+=("$_item")
+  fi
+done
+unset _item _platforms
 
 TOTAL=${#ITEMS[@]}
 
 # -- 勾選狀態陣列 --
 declare -a SELECTED
 for i in $(seq 0 $((TOTAL - 1))); do
-  IFS='|' read -r _ _ _ default <<< "${ITEMS[$i]}"
+  IFS='|' read -r _ _ _ default _ <<< "${ITEMS[$i]}"
   SELECTED[$i]=$default
 done
 
 # -- 工具函式 --
 get_field() {
   local idx=$1 field=$2
-  IFS='|' read -r f1 f2 f3 f4 <<< "${ITEMS[$idx]}"
+  IFS='|' read -r f1 f2 f3 f4 f5 <<< "${ITEMS[$idx]}"
   case $field in
     script) echo "$f1" ;;
     name)   echo "$f2" ;;
     cat)    echo "$f3" ;;
     default) echo "$f4" ;;
+    platform) echo "$f5" ;;
   esac
 }
 

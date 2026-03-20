@@ -92,11 +92,11 @@ else
 fi
 
 echo "Creating symlinks..."
-if [ -f "$DOTFILE_DIR/tmux/base.conf" ] && [ -f "$DOTFILE_DIR/tmux/nvim-extension.conf" ]; then
-    ln -sf "$DOTFILE_DIR/tmux/base.conf" "$HOME/.tmux.conf"
-    ln -sf "$DOTFILE_DIR/tmux/nvim-extension.conf" "$HOME/.tmux.conf.local"
-    echo "  ~/.tmux.conf -> ~/dotfile/tmux/base.conf"
-    echo "  ~/.tmux.conf.local -> ~/dotfile/tmux/nvim-extension.conf"
+if [ -f "$DOTFILE_DIR/config/tmux/base.conf" ] && [ -f "$DOTFILE_DIR/config/tmux/nvim-extension.conf" ]; then
+    ln -sf "$DOTFILE_DIR/config/tmux/base.conf" "$HOME/.tmux.conf"
+    ln -sf "$DOTFILE_DIR/config/tmux/nvim-extension.conf" "$HOME/.tmux.conf.local"
+    echo "  ~/.tmux.conf -> ~/dotfile/config/tmux/base.conf"
+    echo "  ~/.tmux.conf.local -> ~/dotfile/config/tmux/nvim-extension.conf"
 else
     echo "Error: Config files not found"
     exit 1

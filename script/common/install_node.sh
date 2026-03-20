@@ -1,22 +1,9 @@
 #!/bin/bash
 set -e
+. "$(dirname "$0")/_platform.sh"
 
-# -- OS 檢查 --
-OS_NAME="$(uname -s)"
-case "$OS_NAME" in
-  Darwin) echo "Detected: macOS" ;;
-  Linux)
-    if [ -f /etc/arch-release ]; then echo "Detected: Arch Linux"
-    elif [ -f /etc/debian_version ]; then echo "Detected: Ubuntu/Debian"
-    else echo "Detected: Linux (generic)"
-    fi ;;
-  *) echo "[WARN] Node.js 不支援當前 OS ($OS_NAME)，跳過"; exit 0 ;;
-esac
-
-# -- 已安裝檢查 --
-if command -v nvm >/dev/null 2>&1 || [ -d "$HOME/.nvm" ]; then
-  exit 0
-fi
+platform_guard "Node.js" darwin linux
+{ is_installed nvm || [ -d "$HOME/.nvm" ]; } && skip_installed "Node.js (nvm)"
 
 # -- 安裝 nvm --
 echo "安裝 nvm..."
