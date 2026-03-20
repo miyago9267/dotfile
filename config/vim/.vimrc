@@ -50,8 +50,7 @@ Plug 'junegunn/fzf.vim'
 " NeoVim only plugins
 " if has('nvim')
 "   Plug 'neoclide/coc.nvim', {'branch': 'master'}
-
-endif
+" endif
 
 call plug#end()
 
@@ -558,7 +557,7 @@ nnoremap <leader>gd <C-]>
 
 " Sudo save when forgot to use sudo
 " Use :W! to save with sudo
-command! W! w !sudo tee % > /dev/null
+command! W w !sudo tee % > /dev/null
 
 " Alt+Up/Down to move lines (VSCode style)
 nnoremap <A-Up> :m .-2<CR>==
