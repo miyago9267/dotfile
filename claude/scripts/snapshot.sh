@@ -4,11 +4,25 @@
 #   bash ~/.claude/scripts/snapshot.sh save [--decisions "d1;d2"] [--facts "f1;f2"]
 #   bash ~/.claude/scripts/snapshot.sh restore
 #   bash ~/.claude/scripts/snapshot.sh list
+#   bash ~/.claude/scripts/snapshot.sh --help
 
 set -e
 
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+  echo "Usage: bash ~/.claude/scripts/snapshot.sh <save|restore|list>"
+  echo ""
+  echo "Context checkpoint 管理"
+  echo ""
+  echo "Commands:"
+  echo "  save [--decisions \"d1;d2\"] [--facts \"f1;f2\"]  儲存 checkpoint"
+  echo "  restore                                        恢復最近 checkpoint"
+  echo "  list                                           列出可用 snapshots"
+  exit 0
+fi
+
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-AI_DIR="$PROJECT_ROOT/docs/ai"
+AI_DIR="$PROJECT_ROOT/.ai"
+LEGACY_AI_DIR="$PROJECT_ROOT/docs/ai"
 SNAPSHOT_DIR="$AI_DIR/snapshots"
 ACTION="${1:-list}"
 shift 2>/dev/null || true
@@ -32,10 +46,12 @@ do_save() {
   TIMESTAMP=$(date '+%Y-%m-%dT%H:%M:%S')
   FILENAME="snapshot-$(date '+%Y%m%d-%H%M%S').json"
 
-  # Gather recent changelog
+  # Gather recent changelog (check both .ai/ and legacy)
   RECENT_LOG=""
   if [ -f "$AI_DIR/changelog.md" ]; then
     RECENT_LOG=$(tail -20 "$AI_DIR/changelog.md" | sed 's/"/\\"/g' | tr '\n' '\t')
+  elif [ -f "$LEGACY_AI_DIR/changelog.md" ]; then
+    RECENT_LOG=$(tail -20 "$LEGACY_AI_DIR/changelog.md" | sed 's/"/\\"/g' | tr '\n' '\t')
   fi
 
   # Git status summary
@@ -49,6 +65,7 @@ do_save() {
       [ -f "$spec" ] || continue
       SLUG=$(basename "$(dirname "$spec")")
       [ "$SLUG" = "archive" ] && continue
+      [ "$SLUG" = "_templates" ] && continue
       STATUS=$(grep -m1 '^status:' "$spec" 2>/dev/null | sed 's/status: *//')
       SPECS_SUMMARY="${SPECS_SUMMARY}${SLUG}:${STATUS};"
     done
@@ -132,6 +149,13 @@ do_restore() {
     printf '%s' "$CHANGELOG" | tr '\t' '\n' | while read -r c; do
       [ -n "$c" ] && echo "  $c"
     done
+  fi
+
+  # 也讀 HANDOFF
+  if [ -f "$AI_DIR/HANDOFF.md" ]; then
+    echo ""
+    echo "--- Handoff ---"
+    cat "$AI_DIR/HANDOFF.md"
   fi
 
   echo ""

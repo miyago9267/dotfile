@@ -1,9 +1,19 @@
 #!/bin/bash
 # Global Lesson — 追加經驗教訓
 # 用法: bash ~/.claude/scripts/lesson.sh <category> <key> <desc>
+#       bash ~/.claude/scripts/lesson.sh --help
 # 範例: bash ~/.claude/scripts/lesson.sh typescript import "ESM requires .js extension even for .ts files"
 
 set -e
+
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+  echo "Usage: bash ~/.claude/scripts/lesson.sh <category> <key> <desc>"
+  echo ""
+  echo "追加經驗教訓到 .ai/lessons.md（分類 + key 去重）"
+  echo ""
+  echo "Example: bash ~/.claude/scripts/lesson.sh typescript import \"ESM requires .js extension\""
+  exit 0
+fi
 
 CAT="$1"
 KEY="$2"
@@ -15,7 +25,7 @@ if [ -z "$CAT" ] || [ -z "$KEY" ] || [ -z "$DESC" ]; then
 fi
 
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-AI_DIR="$PROJECT_ROOT/docs/ai"
+AI_DIR="$PROJECT_ROOT/.ai"
 LESSONS="$AI_DIR/lessons.md"
 
 mkdir -p "$AI_DIR"
@@ -48,7 +58,13 @@ if [ -n "$CAT_LINE" ]; then
   NEXT_CAT=$(tail -n +"$((CAT_LINE + 1))" "$LESSONS" | grep -n "^## " | head -1 | cut -d: -f1)
   if [ -n "$NEXT_CAT" ]; then
     INSERT_AT=$((CAT_LINE + NEXT_CAT - 1))
-    sed -i "${INSERT_AT}i\\${ENTRY}" "$LESSONS"
+    # macOS/Linux sed -i 相容
+    if [[ "$OSTYPE" == darwin* ]]; then
+      sed -i '' "${INSERT_AT}i\\
+${ENTRY}" "$LESSONS"
+    else
+      sed -i "${INSERT_AT}i\\${ENTRY}" "$LESSONS"
+    fi
   else
     echo "$ENTRY" >> "$LESSONS"
   fi

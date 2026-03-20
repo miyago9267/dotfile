@@ -21,14 +21,16 @@ bash ~/.claude/scripts/bootstrap.sh --compact
 
 | 指令 | 說明 |
 | --- | --- |
-| `bootstrap.sh [--compact]` | 新 session 自舉，讀取 changelog/lessons/specs/snapshot |
-| `check.sh [--init]` | 健康檢查。`--init` 初始化 docs/ai/ 結構 |
-| `log.sh <type> <scope> <path> <desc>` | 追加 changelog (feat/fix/refactor/docs/test/chore) |
-| `lesson.sh <cat> <key> <desc>` | 追加經驗教訓（分類、key 去重） |
-| `end-session.sh [--model X] [--pending "..."] [--decisions "..."]` | 收工 pipeline: session summary + auto-archive |
+| `bootstrap.sh [--compact]` | 新 session 自舉，讀取 handoff/changelog/lessons/specs/snapshot |
+| `check.sh [--init]` | 健康檢查。`--init` 初始化 .ai/ 結構 |
+| `log.sh <type> <scope> <path> <desc>` | 追加 changelog 到 .ai/ (feat/fix/refactor/docs/test/chore) |
+| `lesson.sh <cat> <key> <desc>` | 追加經驗教訓到 .ai/（分類、key 去重） |
+| `end-session.sh [--model X] [--pending "..."] [--decisions "..."]` | 收工: CURRENT->HANDOFF + session summary + auto-archive |
 | `snapshot.sh save [--decisions "d1;d2"] [--facts "f1;f2"]` | 儲存 mid-session checkpoint |
 | `snapshot.sh restore` | 恢復最近 checkpoint（compact 後用） |
 | `snapshot.sh list` | 列出可用 snapshots |
+| `ai-export.sh [--all]` | 匯出 .ai/ 精選到 docs/ai/（手動 commit） |
+| `spec-archive.sh <tasks|phase> <slug>` | 封存完成的 batch/phase |
 | `skill-create.sh <name> <desc> [--always-apply] [--project]` | 建立新 skill |
 
 ## 行為規則
@@ -39,28 +41,44 @@ bash ~/.claude/scripts/bootstrap.sh --compact
 4. 完成操作後先跑 `log.sh`，再 commit -- commit 是最後一步，之後不再改任何檔案
 5. 長對話中段存 `snapshot.sh save`，compact 後用 `restore` 恢復
 6. 收工前跑 `end-session.sh`
-7. 若 repo 的 `.gitignore` 尚未排除 `docs/ai/`，主動加入
+7. 若 repo 的 `.gitignore` 尚未排除 `.ai/`，主動加入
+8. `.ai/` 的改動永遠不進 git commit
+9. `docs/specs/` 的改動才進 git commit
 
-## 文件結構（自動維護）
+## 文件結構（兩層分離）
 
 ```text
-docs/ai/
-  changelog.md     # 變更記錄（每操作一條）
-  lessons.md       # 經驗教訓（分類 + key 去重）
-  sessions/        # 每日 session 摘要
-  snapshots/       # Context checkpoints
-docs/specs/        # 設計文件：需求 + ADR + 架構（不放 checkbox）
-PROGRESS.md        # 任務追蹤：checkbox + Phase + 當前狀態
+規格層（永遠 commit）：
+docs/specs/<slug>/
+  SPEC.md          # What + Why + ADR + Alternatives + Rabbit Holes
+  TASKS.md         # 當前 batch 的實作步驟（checkbox）
+  TESTS.md         # 測試案例 + EARS 語法驗收條件
+  PROGRESS.md      # Phase 級追蹤
+  archive/         # 完成的 phase/batch 封存
+docs/specs/_templates/  # 模板檔
+
+工作記憶層（永遠 gitignore）：
+.ai/
+  CURRENT.md       # 這個 session 在幹嘛
+  HANDOFF.md       # 給下一個 session 的交接
+  changelog.md     # 操作紀錄
+  lessons.md       # 踩坑紀錄
+  sessions/        # session 摘要
+  snapshots/       # mid-session checkpoint
 ```
 
 ### 職責分離原則
 
-| 文件 | 職責 | 更新時機 |
-| --- | --- | --- |
-| `SPEC.md` | 設計決策、需求、ADR、架構 | 設計變更時 |
-| `PROGRESS.md` | 任務 checkbox、Phase、Step | 每次實作完成 |
-| `lessons.md` | 踩坑記錄、最佳實踐 | 發現新教訓時 |
-| `changelog.md` | 每次操作的變更記錄 | 每次操作後 |
+| 檔案 | 層 | 職責 | 更新時機 |
+| --- | --- | --- | --- |
+| `SPEC.md` | 規格 | 設計決策、需求、ADR | 設計變更時 |
+| `TASKS.md` | 規格 | 當前 batch checkbox | 每步完成時 |
+| `TESTS.md` | 規格 | 驗收條件 (EARS) | 設計變更時 |
+| `PROGRESS.md` | 規格 | Phase 追蹤 | Phase 完成時 |
+| `CURRENT.md` | 工作記憶 | 當前 session 狀態 | 開工/執行中 |
+| `HANDOFF.md` | 工作記憶 | 跨 session 交接 | end-session 時 |
+| `changelog.md` | 工作記憶 | 操作記錄 | 每次操作後 |
+| `lessons.md` | 工作記憶 | 踩坑記錄 | 發現教訓時 |
 
 ## Token 節省原則
 

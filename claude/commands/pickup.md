@@ -10,9 +10,12 @@ command: /pickup
 
 ### 1. 讀取 handoff
 
-用 Read 工具讀取 `~/.claude/handoffs/current.md`。
+依序嘗試讀取 handoff：
 
-若檔案不存在，告知使用者「沒有可繼承的 handoff」並停止。
+1. `.ai/HANDOFF.md`（SDD v2 標準位置）
+2. `~/.claude/handoffs/current.md`（legacy fallback）
+
+若兩者都不存在，告知使用者「沒有可繼承的 handoff」並停止。
 
 ### 2. 讀取當前目錄的 PROJECT.md
 
@@ -20,14 +23,13 @@ command: /pickup
 
 - `.ai/PROJECT.md`
 - `.claude/PROJECT.md`
-- `docs/ai/PROJECT.md`
 
 ### 3. 輸出繼承摘要
 
 用以下格式回報：
 
 ```text
-已繼承 handoff from: {來源目錄}
+已繼承 handoff from: {來源路徑}
 建立時間: {時間}
 
 繼承的任務：{任務描述}
@@ -40,11 +42,6 @@ command: /pickup
 準備好繼續工作。下一步：{handoff 中的下一步}
 ```
 
-### 4. 歸檔（選擇性）
+### 4. 清除 handoff（選擇性）
 
-詢問使用者是否要把 current.md 歸檔：
-
-```bash
-mv ~/.claude/handoffs/current.md \
-   ~/.claude/handoffs/$(date +%Y%m%d-%H%M)-archived.md
-```
+詢問使用者是否要清除已讀取的 handoff（避免下次重複載入）。

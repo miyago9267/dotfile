@@ -1,10 +1,21 @@
 #!/bin/bash
 # Global Log — 追加 changelog 條目
 # 用法: bash ~/.claude/scripts/log.sh <type> <scope> <path> <desc>
+#       bash ~/.claude/scripts/log.sh --help
 # type: feat/fix/refactor/docs/test/chore
 # 範例: bash ~/.claude/scripts/log.sh feat auth src/auth.ts "add JWT validation"
 
 set -e
+
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+  echo "Usage: bash ~/.claude/scripts/log.sh <type> <scope> <path> <desc>"
+  echo ""
+  echo "追加 changelog 條目到 .ai/changelog.md"
+  echo ""
+  echo "Types: feat fix refactor docs test chore"
+  echo "Example: bash ~/.claude/scripts/log.sh feat auth src/auth.ts \"add JWT validation\""
+  exit 0
+fi
 
 TYPE="$1"
 SCOPE="$2"
@@ -18,7 +29,7 @@ if [ -z "$TYPE" ] || [ -z "$SCOPE" ] || [ -z "$FILEPATH" ] || [ -z "$DESC" ]; th
 fi
 
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-AI_DIR="$PROJECT_ROOT/docs/ai"
+AI_DIR="$PROJECT_ROOT/.ai"
 CHANGELOG="$AI_DIR/changelog.md"
 
 mkdir -p "$AI_DIR"
