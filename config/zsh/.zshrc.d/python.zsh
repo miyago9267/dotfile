@@ -8,5 +8,4 @@ if [ -d "$PYENV_ROOT" ]; then
     eval "$($PYENV_ROOT/bin/pyenv init -)"
   fi
 fi
-__zshrc_prepend_path_if_dir "$HOME/.local/bin"
 export PATH
