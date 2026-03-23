@@ -33,6 +33,9 @@ else
     esac
   fi
 
+  # GOPATH/bin 可能尚未建立（第一次 go install 才會產生），主動建立確保 PATH 生效
+  [ -n "$GOPATH" ] && mkdir -p "$GOPATH/bin" 2>/dev/null
+
   # Add to PATH
   for dir in "$GOROOT/bin" "$GOPATH/bin"; do
     __zshrc_prepend_path_if_dir "$dir"

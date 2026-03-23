@@ -45,11 +45,6 @@ sudo tar -C /usr/local -xzf "$GO_TAR"
 # Cleanup is handled by trap
 cd "$OLDPWD"
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-if [ -x "$SCRIPT_DIR/setup_env_snippets.sh" ]; then
-	"$SCRIPT_DIR/setup_env_snippets.sh" go
-fi
-
 echo "🔧 Installing Go version manager g..."
 curl -sSL https://git.io/g-install | sh -s -- --yes
 
