@@ -11,7 +11,8 @@ _editor_mode_newline() {
   LBUFFER+=$'\n'
 }
 zle -N _editor_mode_newline
-bindkey '^J' _editor_mode_newline  # Ctrl+J = 換行
+# Warp 的 Enter 送 ^J 而非 ^M，綁 ^J 會讓 Enter 無法執行指令
+[[ "$TERM_PROGRAM" != "WarpTerminal" ]] && bindkey '^J' _editor_mode_newline  # Ctrl+J = 換行
 
 # ── 多行時游標上下移動（不觸發 history）──────
 _editor_mode_up() {
