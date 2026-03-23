@@ -109,6 +109,7 @@ zplug load
 ## Modular environment: load snippets from ~/.zshrc.d/*.zsh
 ZSHRC_D="$HOME/.zshrc.d"
 if [ -d "$ZSHRC_D" ]; then
+  setopt local_options no_nomatch
   for f in "$ZSHRC_D"/*.zsh; do
     [ -e "$f" ] || continue
     [ -r "$f" ] && . "$f"
@@ -134,3 +135,8 @@ export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
 . "$HOME/.local/bin/env"
+export PATH="$HOME/.local/bin:$PATH"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"

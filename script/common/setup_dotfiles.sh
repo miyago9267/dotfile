@@ -13,5 +13,10 @@ ln -sf "$dir/config/vim/.vimrc" ~/.vimrc
 ln -sf "$dir/config/nvim" ~/.config/nvim
 ln -sf "$dir/config/tmux/base.conf" ~/.tmux.conf
 ln -sf "$dir/script" ~/
-sudo git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
+P10K_DIR="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
+if [ -d "$P10K_DIR" ]; then
+  echo "Removing existing powerlevel10k directory..."
+  sudo rm -rf "$P10K_DIR"
+fi
+sudo git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$P10K_DIR"
 

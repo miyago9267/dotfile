@@ -4,6 +4,7 @@ set -e
 
 platform_guard "Google Cloud SDK" darwin linux
 is_installed gcloud && skip_installed "Google Cloud SDK"
+[ -d "$HOME/google-cloud-sdk" ] && skip_installed "Google Cloud SDK (目錄已存在)"
 
 echo "Installing Google Cloud SDK..."
 curl -sSL https://sdk.cloud.google.com | bash -s -- --disable-prompts

@@ -5,6 +5,7 @@ set -e
 GO_VERSION="1.25"
 
 platform_guard "Go" darwin linux
+is_installed g && skip_installed "Go (g 版本管理)"
 is_installed go && skip_installed "Go"
 
 ARCH_NAME="$(uname -m)"
