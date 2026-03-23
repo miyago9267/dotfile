@@ -1,9 +1,9 @@
 ---
 id: spec-secrets-management
 title: Dotfile Secret 管理（age + sops）
-status: draft
+status: in-progress
 created: 2026-03-19
-updated: 2026-03-19
+updated: 2026-03-24
 author: Miyago
 approved_by:
 tags: [secrets, age, sops, security, cross-platform]
