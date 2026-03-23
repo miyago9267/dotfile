@@ -14,6 +14,10 @@ zle -N _editor_mode_newline
 # Warp 的 Enter 送 ^J 而非 ^M，綁 ^J 會讓 Enter 無法執行指令
 [[ "$TERM_PROGRAM" != "WarpTerminal" ]] && bindkey '^J' _editor_mode_newline  # Ctrl+J = 換行
 
+# tmux 透過 extended-keys 送出的 CSI u 序列
+bindkey '\e[13;2u' _editor_mode_newline  # Shift+Enter (tmux S-Enter)
+bindkey '\e[13;5u' _editor_mode_newline  # Ctrl+Enter  (tmux C-Enter)
+
 # ── 多行時游標上下移動（不觸發 history）──────
 _editor_mode_up() {
   if [[ "$BUFFER" == *$'\n'* ]] && [[ "$LBUFFER" == *$'\n'* ]]; then
