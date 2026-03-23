@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "70"
+  },
   "permissions": {
     "allow": [
       "Bash(*)",
@@ -9,7 +12,10 @@
       "Grep(*)",
       "mcp__*",
       "WebSearch(*)",
-      "WebFetch(*)"
+      "WebFetch(*)",
+      "mcp__claude_ai_Canva__generate-design",
+      "mcp__claude_ai_Canva__create-design-from-candidate",
+      "mcp__claude_ai_Canva__export-design"
     ],
     "deny": [
       "Bash(mkfs *)",
@@ -36,6 +42,18 @@
     ]
   },
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /Users/miyago/Project/AI/ask-tty/hooks/tty-respond.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
@@ -63,7 +81,8 @@
     "commit-commands@claude-plugins-official": true,
     "pr-review-toolkit@claude-plugins-official": true,
     "learning-output-style@claude-plugins-official": false,
-    "plugin-dev@claude-plugins-official": true
+    "plugin-dev@claude-plugins-official": true,
+    "dev-discipline@dev-discipline": true
   },
   "extraKnownMarketplaces": {
     "everything-claude-code": {
@@ -71,10 +90,13 @@
         "source": "github",
         "repo": "affaan-m/everything-claude-code"
       }
+    },
+    "dev-discipline": {
+      "source": {
+        "source": "github",
+        "repo": "miyago9267/dev-discipline"
+      }
     }
   },
-  "effortLevel": "high",
-  "env": {
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "70"
-  }
+  "effortLevel": "high"
 }

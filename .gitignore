@@ -24,6 +24,9 @@ docs/ai/
 .ai/
 PROGRESS.md
 
+# Plugin (independent repo)
+claude-plugin/
+
 # VSCode
 tempCodeRunnerFile.py
 
