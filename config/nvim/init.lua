@@ -26,6 +26,12 @@ vim.opt.smartcase = true
 vim.opt.splitbelow = true
 vim.opt.splitright = true
 vim.opt.laststatus = 3
+vim.opt.autoread = true
+
+-- Auto-reload: 切回 Neovim 或切換 buffer 時自動檢查檔案變更
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold" }, {
+  command = "silent! checktime",
+})
 
 -- =====================
 --   Load .vimrc
