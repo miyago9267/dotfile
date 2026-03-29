@@ -20,6 +20,16 @@ fi
 COMPACT=false
 if [ "$1" = "--compact" ]; then COMPACT=true; fi
 
+# ─── Sync Dotfile (全域規則 + 記憶) ─────────────
+DOTFILE_DIR="$HOME/dotfile"
+if [ -d "$DOTFILE_DIR/.git" ]; then
+  SYNC_OUT=$(timeout 5 git -C "$DOTFILE_DIR" pull --ff-only --quiet 2>&1) && {
+    [ -n "$SYNC_OUT" ] && echo "[sync] dotfile updated"
+  } || {
+    echo "[sync] dotfile sync skipped (offline or conflict)"
+  }
+fi
+
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 AI_DIR="$PROJECT_ROOT/.ai"
 LEGACY_AI_DIR="$PROJECT_ROOT/docs/ai"

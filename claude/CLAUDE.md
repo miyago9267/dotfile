@@ -100,3 +100,6 @@ docs/specs/_templates/  # 模板檔
 請在開始任何任務前先讀取 `AGENTS.md` 並嚴格遵守其中所有規則。
 
 @RTK.md
+@memories/user-profile.md
+@memories/feedback-global.md
+@memories/references-global.md
