@@ -37,6 +37,15 @@ case "$OS_NAME" in
     ;;
 esac
 
+# yazi: 退出後 cd 到最後所在目錄
+function y() {
+  local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+  command yazi "$@" --cwd-file="$tmp"
+  IFS= read -r -d '' cwd < "$tmp"
+  [ "$cwd" != "$PWD" ] && [ -d "$cwd" ] && builtin cd -- "$cwd"
+  rm -f -- "$tmp"
+}
+
 # enable ls color (GNU dircolors)
 if [ -x /usr/bin/dircolors ]; then
 	if [ -r ~/.dircolors ]; then

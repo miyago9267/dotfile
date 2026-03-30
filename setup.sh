@@ -46,6 +46,7 @@ _ALL_ITEMS=(
   "install_argocd.sh|Argo CD CLI|雲端|0|all"
   "install_sops.sh|age + sops (Secret 管理)|安全|0|darwin linux:apt linux:pacman"
   "install_gh.sh|GitHub CLI (gh)|工具|0|darwin linux:apt linux:pacman"
+  "install_yazi.sh|Yazi 檔案管理器 (+ zoxide, bat)|工具|0|darwin linux:apt linux:pacman"
   "install_locale.sh|Locale 設定|基礎|0|linux"
 )
 
