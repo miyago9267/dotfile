@@ -1,4 +1,5 @@
 ---
+name: e2e
 description: 端對端測試（Playwright）-- 生成測試、執行、擷取 artifacts，識別不穩定測試。
 ---
 

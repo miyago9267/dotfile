@@ -1,4 +1,5 @@
 ---
+name: test-coverage
 description: 分析並補足測試覆蓋率 -- 找出低覆蓋率的檔案，自動補齊測試到 80%+。
 ---
 

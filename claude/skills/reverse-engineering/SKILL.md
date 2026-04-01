@@ -1,4 +1,5 @@
 ---
+name: reverse-engineering
 description: "逆向工程工作模式 -- 分析 minified/obfuscated/closed-source 程式碼時的方法論與產出規範。觸發：使用者提到逆向、reverse、decompile、minified、obfuscated，或分析 SDK 內部行為。"
 alwaysApply: false
 ---

@@ -1,4 +1,5 @@
 ---
+name: build-fix
 description: 漸進式修復建置錯誤 -- 逐一修復 TypeScript / build 錯誤，每次修完重新建置確認。
 ---
 

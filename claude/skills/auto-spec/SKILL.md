@@ -1,6 +1,6 @@
 ---
 name: auto-spec
-description: 規格與進度追蹤（全域版，模型無關）
+description: "規格與進度自動追蹤 -- 背景持續運作，自動判斷任務是否需要 spec、追蹤 TASKS.md checkbox、連動 commit。不需手動觸發；手動啟動完整 SDD 流程請用 /sdd。"
 alwaysApply: true
 ---
 

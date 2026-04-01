@@ -1,4 +1,5 @@
 ---
+name: refactor-clean
 description: 安全清除 dead code -- 分析未使用的程式碼和依賴，在測試保護下安全刪除。
 ---
 

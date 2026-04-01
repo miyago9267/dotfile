@@ -1,4 +1,5 @@
 ---
+name: eval
 description: 評估驅動開發 -- 定義、執行、回報功能的通過標準（pass@N）。
 ---
 

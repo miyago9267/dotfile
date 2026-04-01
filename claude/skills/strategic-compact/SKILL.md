@@ -1,6 +1,7 @@
 ---
 name: strategic-compact
-description: 在邏輯斷點建議手動 /compact，避免 auto-compaction 在任務中段丟失 context。
+description: "在邏輯斷點建議手動 /compact，避免 auto-compaction 在任務中段丟失 context。由 PreToolUse hook 自動觸發，不需手動。"
+alwaysApply: false
 ---
 
 # Strategic Compact Skill

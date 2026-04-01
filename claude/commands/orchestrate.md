@@ -1,4 +1,5 @@
 ---
+name: orchestrate
 description: 多 Agent 串接工作流 -- 依任務類型串接多個 agent，依序完成複雜任務。
 ---
 

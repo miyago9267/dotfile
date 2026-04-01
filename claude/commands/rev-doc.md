@@ -1,4 +1,5 @@
 ---
+name: rev-doc
 description: 逆向工程文檔產生器 -- 分析 minified/closed-source 程式碼，輸出結構化的技術調查報告。
 ---
 
