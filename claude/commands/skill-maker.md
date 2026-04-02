@@ -1,126 +1,97 @@
 ---
 name: skill-maker
-description: "建立新 skill -- 引導式流程，內建品質檢查，確保 frontmatter 完整、description 可觸發、內容自足。"
+description: "建立新 skill -- 兩階段流程（草稿 -> 審核），確保 frontmatter 完整、流程有進出、skill 間不斷鏈。"
 ---
 
 # /skill-maker [name] [description]
 
-引導建立符合品質標準的 skill。提供 name 和 description 可跳過互動步驟。
+## Phase 1：草擬（不寫檔）
 
-## 建立流程
+1. **查重名**：`ls ~/dotfile/claude/skills/ | grep -i {name}` + plugin 目錄
+2. **定 scope**：全域 `~/dotfile/claude/skills/` 或專案 `.claude/skills/`
+3. **定觸發**：alwaysApply: true（規則）/ user-invocable: true（工具）/ alwaysApply: false（情境觸發）
+4. **寫 frontmatter + content**（見下方原則）
+5. **使用者確認方向** -- 唯一能改內容方向的時間點
 
-### 1. 決定 scope
+## Phase 2：品質審核 + 寫入
 
-```text
-這個 skill 的作用範圍？
-  |- 所有專案都適用 -> 全域 skill（~/dotfile/claude/skills/<name>/SKILL.md）
-  +- 只在特定專案用 -> 專案 skill（<project>/.claude/skills/<name>/SKILL.md）
-```
+6. **Reviewer agent 審核**（結構 + 模擬執行 + 銜接測試，見下方）
+7. **處理結果**：APPROVE -> 寫入 / REVISE -> 只修品質不改方向（最多 2 輪）
+8. **寫入** `~/dotfile/claude/skills/<name>/SKILL.md`
+9. **更新相關 skill 的銜接段落**（雙向同步）
 
-### 2. 決定觸發類型
+## 編寫原則
 
-```text
-這個 skill 什麼時候生效？
-  |- 任何時候都要遵守（規則、規範）    -> alwaysApply: true
-  |- 使用者打 /name 才啟動（工具、流程）-> user-invocable: true
-  +- 特定條件自動觸發（情境感知）      -> alwaysApply: false
-       -> description 必須寫清楚觸發條件
-```
-
-### 3. 撰寫 frontmatter
-
-必填欄位，缺一不可：
+### Frontmatter
 
 ```yaml
 ---
-name: kebab-case-name          # routing 用，只能英文 + 連字號
-description: "中文描述"         # 選單顯示文字，決定 Claude 何時觸發
-alwaysApply: true/false        # 或 user-invocable: true（二擇一）
+name: kebab-case              # 必填，routing 用
+description: "動詞 + 做什麼 -- 何時/如何"  # 必填，< 120 字
+alwaysApply: true/false       # 或 user-invocable: true（二擇一）
 ---
 ```
 
-### 4. 撰寫 description
+### Description 關鍵字設計
 
-description 是 skill 最重要的欄位 -- Claude 靠它決定何時載入。
+description 是 Claude 匹配「使用者問題 -> skill」的唯一依據（SKILL.md 全文觸發後才載入）。
 
-**格式：** `動詞開頭 + 做什麼 -- 補充說明何時/如何`
+- 放使用者的問題語言（「502」「連不上」「OOM」），不是能力名稱（「健康度檢查」）
+- 相近 skill 必須標註邊界（「日常追蹤由 auto-spec 處理；手動啟動用 /sdd」）
+- 不需要列 CLI 工具名 -- CLI 是實作細節
 
-**好的 description：**
+### Content 必要段落
 
-- `"規格與進度自動追蹤 -- 背景持續運作，自動判斷任務是否需要 spec。不需手動觸發；手動啟動完整 SDD 流程請用 /sdd。"`
-- `"CI/CD 監控 -- 追蹤最新 pipeline 狀態，失敗時自動修復再 push。"`
+| 段落 | 必填？ |
+|------|--------|
+| 目的（一句話） | 必填 |
+| 觸發條件 | alwaysApply: false 必填 |
+| 流程/規則 | 必填 |
+| 與其他 skill 的銜接 | 有相關 skill 時必填 |
+| 規則 | 必填 |
 
-**壞的 description：**
+### 流程結構要求
 
-- `"效率紀律"` -- 太短，Claude 不知道何時觸發
-- `"Test-Driven Development"` -- 只有名詞，沒說做什麼
-- `"分析 minified/obfuscated/closed-source 程式碼時的方法論與產出規範。觸發：..."` -- 把觸發條件塞在 description 裡，應該放在 content 的觸發條件段落
-
-**邊界釐清：** 如果有功能相近的 skill 存在，description 必須說明分工。例如：
-
-- auto-spec: `"...不需手動觸發；手動啟動完整 SDD 流程請用 /sdd。"`
-- sdd: `"...用 /sdd 明確進入 SDD 模式；日常 spec 追蹤由 auto-spec skill 自動處理。"`
-
-### 5. 撰寫 content
-
-**必要段落：**
-
-- **目的** -- 一句話說明這個 skill 解決什麼問題
-- **規則/流程** -- 具體的行為指引，用編號清單
-- **範例** -- 至少一個具體使用情境或指令範例
-
-**選填段落：**
-
-- **觸發條件** -- `alwaysApply: false` 的 skill 必填
-- **反模式** -- 常見錯誤，避免重蹈覆轍
-- **與其他 skill 的關係** -- 有相近 skill 時說明互動方式
-
-### 6. 品質檢查
-
-建立完成後，逐項確認：
+每步三部分：動作 -> 輸出變數 -> OK/FAIL 判定分流
 
 ```text
-[ ] frontmatter 三欄位都有（name, description, alwaysApply/user-invocable）
-[ ] description 以動詞開頭，夠具體讓 Claude 判斷觸發時機
-[ ] 有相近 skill 時，description 已釐清邊界
-[ ] content 自足 -- 不引用可能不存在的外部檔案（如 AGENTS.md）
-[ ] content 無 placeholder（不出現「規則一」「步驟一」等佔位文字）
-[ ] 具體的指令/範例至少一個
-[ ] 繁體中文為主，技術詞保留英文
-[ ] 同名 skill 不存在於其他 plugin（避免雙載浪費 token）
+### Step N. 動作 -> 輸出 VAR
+{指令}
+判定：OK -> 帶 VAR 進 Step N+1 / FAIL -> 分流到 {skill}，帶入 {已確認變數}
 ```
 
-### 7. 寫入檔案
+最後一步必須有出口。銜接段落標明：從哪來（跳到哪步 + 已確定變數）、到哪去。
 
-全域 skill：
+### CLI 處理
 
-```bash
-mkdir -p ~/dotfile/claude/skills/<name>
-# 寫入 SKILL.md
-```
+假設工具存在，直接跑，失敗才處理。不預先 `which`。
 
-專案 skill：
+### 自足性
 
-```bash
-mkdir -p .claude/skills/<name>
-# 寫入 SKILL.md
-```
+內容自足，不引用外部檔案。無 placeholder。繁體中文 + 英文技術詞。
 
-或用 script：
+## Reviewer Agent 審核
 
-```bash
-bash ~/.claude/scripts/skill-create.sh <name> "<description>" [--always-apply] [--project]
-```
+啟動 general-purpose agent，傳入草稿全文，做三項審核：
 
-注意：script 產出的模板需要填充實際內容，不要留 placeholder。
+1. **結構檢查**（13 項 PASS/FAIL）：frontmatter 完整、description 有問題關鍵字、流程有輸出變數和分流、銜接段落雙向對得上
+2. **模擬執行**：場景 A 正常路徑 / 場景 B 中途 FAIL -- 能不能走完不斷鏈
+3. **銜接測試**：讀取相關 skill 的 SKILL.md，確認變數名和步驟號對得上
+
+輸出：APPROVE / REVISE（附具體修改建議）
+
+## 從 /learn 升級
+
+confidence >= 0.9 的 pattern -> 提取 trigger + action -> 走 Phase 1 Step 3-5 -> Phase 2
 
 ## 反模式
 
-| 問題 | 原因 | 正確做法 |
-|------|------|----------|
-| 只寫 description 沒寫 name | routing 失敗 | name 是必填 |
-| alwaysApply 和 user-invocable 同時設 | 語意矛盾 | 二擇一 |
-| content 寫「請參考 AGENTS.md」 | 外部檔案可能不存在 | 內容自足 |
-| description 超過 120 字 | 選單顯示截斷 | 精簡，補充放 content |
-| 跟現有 skill 重名 | plugin + local 雙載 | 建立前先 grep 確認 |
-| trigger-based 但沒寫觸發條件 | Claude 不知何時載入 | description 或 content 明確列出 |
+| 問題 | 正確做法 |
+|------|----------|
+| description 用能力名稱 | 放使用者問題關鍵字 |
+| 步驟沒有判定 | 每步 OK/FAIL + 輸出變數 |
+| 分流不帶變數 | 列出帶入的已確認變數 |
+| 預先檢查 CLI 安裝 | 直接跑，失敗才處理 |
+| 引用外部檔案 | 內容自足 |
+| Phase 1 就寫檔 | 使用者確認後才寫 |
+| 重名 | Step 1 先查 |
