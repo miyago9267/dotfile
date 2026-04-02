@@ -162,9 +162,10 @@ echo | openssl s_client -connect {host}:443 -servername {host} 2>/dev/null | ope
 
 ## 與其他 SRE skill 的銜接
 
-- 排查過程中需要分析日誌 -> 切換到 `log-analysis` 的方法論（先統計 pattern，不要 dump 全部）
-- 問題定位並修復後 -> 建議使用者用 `/post-mortem` 產出事後分析報告
-- 回報格式沿用 `log-analysis` 的結構：`[Health Check] {service} | {症狀} -> {根因} -> {修復}`
+- 從 `issue-ops` Stage 1 進來時：`service name` 已確定（從 issue 描述提取），從 Step 1 開始
+- 排查過程中需要分析日誌 -> 切 `log-analysis`（帶 service + 時間範圍 -> log-analysis Step 2）
+- 問題定位並修復後 -> 建議 `/post-mortem`
+- 回報格式：`[Health Check] {service} | {症狀} -> {根因} -> {修復}`
 
 ## 規則
 

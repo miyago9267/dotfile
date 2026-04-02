@@ -144,6 +144,7 @@ Top Pattern：{TOP_PATTERNS[0]}
 
 - 從 `health-check` 進來時：`TIME_RANGE` + `SOURCE` 已確定，跳到 Step 2
 - 從 `docker-k8s` 進來時：`NS` + `POD` 已確定，轉為 `SOURCE`，跳到 Step 2
+- 從 `issue-ops` Stage 4a 進來時：`BRANCH` + run ID + failed job 已確定，`TIME_RANGE` = CI run 時間，跳到 Step 2
 - 分流到 `health-check` 時：帶入從 log 中提取的目標 host:port
 - 結束後到 `/post-mortem`：帶入 ROOT_CAUSE + CAUSAL_CHAIN + TIME_RANGE
 

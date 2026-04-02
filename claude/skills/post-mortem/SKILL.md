@@ -95,9 +95,10 @@ user-invocable: true
 
 ## 與其他 SRE skill 的銜接
 
-- 從 `health-check` 或 `log-analysis` 完成後進來時，從當前 session 的排查記錄自動提取 timeline 和根因
-- 報告中的 timeline 和根因應引用 `health-check` 排查過程中實際跑過的指令和結果
-- 報告完成後，用 `learn` 提取值得記錄的 pattern（如果這次事故揭示了新的排查技巧）
+- 從 `health-check` 或 `log-analysis` 完成後進來時，從當前 session 排查記錄自動提取 timeline 和根因
+- 從 `issue-ops` Stage 4c 進來時：`ISSUE` + 修復 timeline 已確定，用於報告的概述和 timeline 段落
+- 報告中的 timeline 和根因應引用排查過程中實際跑過的指令和結果
+- 報告完成後，用 `learn` 提取值得記錄的 pattern
 
 ## 規則
 
