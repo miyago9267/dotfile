@@ -123,9 +123,5 @@
       }
     }
   },
-  "effortLevel": "max",
-  "statusLine": {
-    "type": "command",
-    "command": "bash ~/dotfile/claude/scripts/statusline.sh"
-  }
+  "effortLevel": "max"
 }
