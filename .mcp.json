@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "pty-bridge": {
+      "command": "/Users/miyago/.bun/bin/bun",
+      "args": ["run", "/Users/miyago/dotfile/claude/mcp/pty-bridge/index.ts"],
+      "env": {}
+    }
+  }
+}
