@@ -50,6 +50,11 @@
             "type": "command",
             "command": "/Users/miyago/.claude/hooks/rtk-rewrite.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/claude/hooks/auto-yes.sh",
+            "timeout": 5
           }
         ]
       }
@@ -118,5 +123,5 @@
       }
     }
   },
-  "effortLevel": "high"
+  "effortLevel": "max"
 }
