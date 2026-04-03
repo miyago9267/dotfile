@@ -35,6 +35,13 @@ function Link-DotFile {
     }
 
     if ($canSymlink) {
+        # Idempotency: skip if symlink already points to correct target
+        if ((Test-Path $Target) -and
+            ((Get-Item $Target -Force).LinkType -eq 'SymbolicLink') -and
+            ((Get-Item $Target -Force).Target -eq $Source)) {
+            Write-Host "  [OK]   $Target" -ForegroundColor DarkGreen
+            return
+        }
         if (Test-Path $Target) { Remove-Item $Target -Force }
         New-Item -ItemType SymbolicLink -Path $Target -Value $Source -Force | Out-Null
         Write-Host "  [LINK] $Target" -ForegroundColor Green
