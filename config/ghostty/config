@@ -76,8 +76,8 @@ keybind = super+r=activate_key_table:resize
 
 # -- Tabs (tmux: Ctrl-b c/n/p/,/1-9) --
 keybind = super+t=new_tab
-keybind = super+shift+bracketleft=previous_tab
-keybind = super+shift+bracketright=next_tab
+keybind = super+shift+left_bracket=previous_tab
+keybind = super+shift+right_bracket=next_tab
 keybind = super+comma=prompt_tab_title
 keybind = super+one=goto_tab:1
 keybind = super+two=goto_tab:2
@@ -90,7 +90,7 @@ keybind = super+eight=goto_tab:8
 keybind = super+nine=goto_tab:9
 
 # -- Copy mode (tmux: Ctrl-b [) --
-keybind = super+bracketleft=activate_key_table:copy
+keybind = super+left_bracket=activate_key_table:copy
 
 # -- Reload config (tmux: Ctrl-b r) --
 keybind = super+shift+comma=reload_config

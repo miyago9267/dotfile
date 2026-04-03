@@ -12,8 +12,7 @@ type: user
 
 ## 技術棧
 
-- 主力: TypeScript, Bun, Vue 3, Hono
-- 次要: Go (swaggo)
+- 主力: TypeScript, Bun, Vue 3, Hono, Go
 - 前端框架: Nuxt 4, Vue 3
 - 部署: Docker, GitHub Actions self-hosted runner, SSH deploy
 - 資料庫: MongoDB, ChromaDB (向量搜尋)

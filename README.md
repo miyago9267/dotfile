@@ -65,7 +65,8 @@ sh setup.sh
 │   ├── setup.ps1          # 互動式安裝
 │   └── setup.d/           # 安裝腳本
 ├── script/
-│   ├── installations/     # macOS/Linux 安裝腳本
+│   ├── common/            # 跨平台安裝腳本
+│   ├── linux/             # Linux 專用腳本
 │   └── utils/
 ├── tmux/
 │   ├── base.conf
@@ -179,19 +180,53 @@ Prefix Key: Ctrl-b (or Ctrl-a)
 
 ## Installation Scripts
 
-Available installation scripts in `script/installations/`:
+Available installation scripts in `script/common/`:
 
-- `install_android_sdk.sh` - Android SDK
+### Language Runtimes
+
 - `install_bun.sh` - Bun runtime
-- `install_flutter.sh` - Flutter SDK
-- `install_fvm.sh` - Flutter Version Manager
-- `install_gcloud.sh` - Google Cloud SDK
 - `install_golang.sh` - Go language
 - `install_node.sh` - Node.js via NVM
 - `install_php.sh` - PHP
-- `install_pnpm.sh` - pnpm package manager
 - `install_python.sh` - Python with Poetry/UV/Pyenv
 - `install_rust.sh` - Rust via rustup
+
+### Development Tools
+
+- `install_gh.sh` - GitHub CLI
+- `install_claude.sh` - Claude Code CLI
+- `install_yazi.sh` - Yazi file manager + zoxide + bat
+- `install_argocd.sh` - ArgoCD CLI
+- `install_kubectl.sh` - Kubernetes CLI
+- `install_sops.sh` - Mozilla SOPS (secrets management)
+- `install_gcloud.sh` - Google Cloud SDK
+
+### Mobile / SDK
+
+- `install_android_sdk.sh` - Android SDK
+- `install_flutter.sh` - Flutter SDK
+- `install_fvm.sh` - Flutter Version Manager
+
+### TUI Tools
+
+- `install_tui_tools.sh` - Terminal UI tools (batch install)
+
+Included tools:
+
+| Tool | Command | Description |
+|------|---------|-------------|
+| lazygit | `lazygit` | Git TUI client |
+| lazydocker | `lazydocker` | Docker management TUI |
+| k9s | `k9s` | Kubernetes management TUI |
+| btop | `btop` | System monitor (htop replacement) |
+| VHS | `vhs` | Terminal session recorder (GIF/MP4) |
+| superfile | `spf` | Modern file manager TUI |
+| Glow | `glow` | Terminal markdown renderer |
+| slides | `slides` | Terminal presentation tool |
+| presenterm | `presenterm` | Markdown-to-slides with code execution |
+| lazysql | `lazysql` | Database TUI (MySQL/PostgreSQL/SQLite) |
+| posting | `posting` | API client TUI (Postman alternative) |
+| harlequin | `harlequin` | SQL IDE TUI (DuckDB/SQLite) |
 
 All scripts support macOS, Ubuntu, and Arch Linux.
 
