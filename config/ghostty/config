@@ -1,0 +1,122 @@
+# Monika Theme (Nord-based)
+background = #252933
+foreground = #e5e9f0
+
+# Normal colors
+palette = 0=#2e3440
+palette = 1=#bf616a
+palette = 2=#a3be8c
+palette = 3=#ebcb8b
+palette = 4=#81a1c1
+palette = 5=#b48ead
+palette = 6=#88c0d0
+palette = 7=#e5e9f0
+
+# Bright colors
+palette = 8=#4c566a
+palette = 9=#d08770
+palette = 10=#3b4252
+palette = 11=#434c5e
+palette = 12=#d8dee9
+palette = 13=#eceff4
+palette = 14=#5e81ac
+palette = 15=#8fbcbb
+
+# Background image (Monika)
+background-image = /Users/miyago/.warp/themes/Monika.png
+background-image-opacity = 0.25
+background-image-position = center
+background-image-fit = cover
+
+# Acrylic blur
+background-opacity = 0.96
+background-blur = true
+
+# Font
+font-size = 14
+
+# IME: let Shift+Space pass through to OS for input method switching
+keybind = shift+space=ignore
+
+# Session restore on restart
+window-save-state = always
+
+# Quick terminal (global hotkey, needs Accessibility permission)
+keybind = global:ctrl+grave_accent=toggle_quick_terminal
+quick-terminal-position = top
+quick-terminal-animation-duration = 0.15
+
+# ============================================================
+# Cmd-based keybindings (mirrors tmux logic, no collision)
+# ============================================================
+# Cmd never reaches shell/tmux, so Ghostty splits + remote tmux coexist.
+#
+# tmux: Ctrl+b then <key>
+# here: Cmd+<key>
+
+# -- Splits (visual: - horizontal line, | vertical line) --
+keybind = super+minus=new_split:down
+keybind = super+shift+backslash=new_split:right
+keybind = super+x=close_surface
+
+# -- Pane navigation (vim hjkl, same as tmux) --
+keybind = super+h=goto_split:left
+keybind = super+j=goto_split:bottom
+keybind = super+k=goto_split:top
+keybind = super+l=goto_split:right
+
+# -- Pane zoom (tmux: Ctrl-b z) --
+keybind = super+z=toggle_split_zoom
+
+# -- Equalize panes --
+keybind = super+e=equalize_splits
+
+# -- Resize mode (tmux: Ctrl-b H/J/K/L) --
+keybind = super+r=activate_key_table:resize
+
+# -- Tabs (tmux: Ctrl-b c/n/p/,/1-9) --
+keybind = super+t=new_tab
+keybind = super+shift+bracketleft=previous_tab
+keybind = super+shift+bracketright=next_tab
+keybind = super+comma=prompt_tab_title
+keybind = super+one=goto_tab:1
+keybind = super+two=goto_tab:2
+keybind = super+three=goto_tab:3
+keybind = super+four=goto_tab:4
+keybind = super+five=goto_tab:5
+keybind = super+six=goto_tab:6
+keybind = super+seven=goto_tab:7
+keybind = super+eight=goto_tab:8
+keybind = super+nine=goto_tab:9
+
+# -- Copy mode (tmux: Ctrl-b [) --
+keybind = super+bracketleft=activate_key_table:copy
+
+# -- Reload config (tmux: Ctrl-b r) --
+keybind = super+shift+comma=reload_config
+
+# ============================================================
+# Resize key table (hjkl to resize, Esc to exit)
+# ============================================================
+keybind = resize/h=resize_split:left,20
+keybind = resize/j=resize_split:down,20
+keybind = resize/k=resize_split:up,20
+keybind = resize/l=resize_split:right,20
+keybind = resize/equal=equalize_splits
+keybind = resize/escape=deactivate_key_table
+keybind = resize/catch_all=ignore
+
+# ============================================================
+# Copy key table (vim-like scroll, Esc/q to exit)
+# ============================================================
+keybind = copy/k=scroll_page_lines:-1
+keybind = copy/j=scroll_page_lines:1
+keybind = copy/ctrl+u=scroll_page_fractional:-0.5
+keybind = copy/ctrl+d=scroll_page_fractional:0.5
+keybind = copy/g=scroll_to_top
+keybind = copy/shift+g=scroll_to_bottom
+keybind = copy/slash=start_search
+keybind = copy/y=copy_to_clipboard
+keybind = copy/q=deactivate_key_table
+keybind = copy/escape=deactivate_key_table
+keybind = copy/catch_all=ignore
