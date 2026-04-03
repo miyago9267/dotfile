@@ -1,6 +1,7 @@
 ---
 name: efficiency
-description: "效率紀律 -- 檢查目前 session 是否違反效率規則。"
+description: "效率紀律 -- 檢查目前 session 是否違反效率規則。永遠生效。"
+alwaysApply: true
 user-invocable: true
 ---
 
