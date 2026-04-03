@@ -8,9 +8,12 @@ fi
 if command -v g &>/dev/null; then
   eval "$(g env)"
 else
-  # Try brew first
-  if command -v brew &>/dev/null && brew list go &>/dev/null 2>&1; then
-    export GOROOT="$(brew --prefix go)/libexec"
+  # Try brew first (check path directly instead of slow `brew list`)
+  if [ -d "/opt/homebrew/opt/go/libexec" ]; then
+    export GOROOT="/opt/homebrew/opt/go/libexec"
+    export GOPATH="$HOME/go"
+  elif [ -d "/usr/local/opt/go/libexec" ]; then
+    export GOROOT="/usr/local/opt/go/libexec"
     export GOPATH="$HOME/go"
   else
     # Fallback based on OS

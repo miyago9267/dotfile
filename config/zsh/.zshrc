@@ -57,7 +57,6 @@ export SAVEHIST=10000000
 # export FUNCNEST=100000
 
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
-typeset -g POWERLEVEL9K_INSTANT_PROMPT=off
 
 # Load environment variables from .env
 if [ -f ~/.env ]; then
@@ -92,15 +91,7 @@ if zplug check zsh-users/zsh-history-substring-search; then
 fi
 # ...
 
-# Check plugin
-if ! zplug check --verbose; then
-    printf "Install? [y/N]: "
-    if read -q; then
-        echo; zplug install
-    else
-        echo
-    fi
-fi
+# Load plugins (run `zplug install` manually when adding new plugins)
 zplug load
 
 # Load p10k
@@ -135,8 +126,3 @@ export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
 . "$HOME/.local/bin/env"
-export PATH="$HOME/.local/bin:$PATH"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"

@@ -78,17 +78,12 @@ else
     fi
 fi
 
-if [ ! -f "$HOME/.tmux.conf" ] || ! grep -q "gpakosz" "$HOME/.tmux.conf" 2>/dev/null; then
-    echo "Installing gpakosz/.tmux..."
-    
-    cd "$HOME"
-    git clone https://github.com/gpakosz/.tmux.git "$HOME/.tmux_gpakosz" 2>/dev/null || \
-        (cd "$HOME/.tmux_gpakosz" && git pull)
-    
-    ln -sf "$HOME/.tmux_gpakosz/.tmux.conf" "$HOME/.tmux.conf"
-    echo "gpakosz/.tmux installed"
+if [ ! -d "$HOME/.tmux_gpakosz" ]; then
+    echo "Installing gpakosz/.tmux (base framework)..."
+    git clone https://github.com/gpakosz/.tmux.git "$HOME/.tmux_gpakosz" 2>/dev/null
 else
-    echo "gpakosz/.tmux already exists"
+    echo "gpakosz/.tmux already exists, pulling latest..."
+    (cd "$HOME/.tmux_gpakosz" && git pull --quiet)
 fi
 
 echo "Creating symlinks..."

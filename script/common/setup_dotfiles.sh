@@ -1,22 +1,26 @@
 #!/bin/sh
 Y="\033[1;33m"
+G="\033[1;32m"
 N="\033[0m"
 echo "${Y}Building link to dotfiles${N}"
 mkdir -p ~/.config
 dir="$HOME/dotfile"
-ln -sf "$dir/config/bash/.bashrc" ~/.bashrc
-ln -sf "$dir/config/zsh/.zshrc" ~/.zshrc
-ln -sf "$dir/config/zsh/.zshrc.d" ~/.zshrc.d
-ln -sf "$dir/config/zsh/.p10k.zsh" ~/.p10k.zsh
-ln -sf "$dir/config/zsh/alias.sh" ~/alias.sh
-ln -sf "$dir/config/vim/.vimrc" ~/.vimrc
-ln -sf "$dir/config/nvim" ~/.config/nvim
-ln -sf "$dir/config/tmux/base.conf" ~/.tmux.conf
-ln -sf "$dir/script" ~/
-P10K_DIR="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
-if [ -d "$P10K_DIR" ]; then
-  echo "Removing existing powerlevel10k directory..."
-  sudo rm -rf "$P10K_DIR"
-fi
-sudo git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$P10K_DIR"
+
+link() {
+  src="$1"; dst="$2"
+  if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then
+    echo "  ${G}[OK]${N} $dst"
+  else
+    ln -sf "$src" "$dst"
+    echo "  ${Y}[LINK]${N} $dst -> $src"
+  fi
+}
+
+link "$dir/config/bash/.bashrc"      ~/.bashrc
+link "$dir/config/zsh/.zshrc"        ~/.zshrc
+link "$dir/config/zsh/.zshrc.d"      ~/.zshrc.d
+link "$dir/config/zsh/.p10k.zsh"     ~/.p10k.zsh
+link "$dir/config/zsh/alias.sh"      ~/alias.sh
+link "$dir/config/vim/.vimrc"        ~/.vimrc
+link "$dir/config/nvim"              ~/.config/nvim
 
