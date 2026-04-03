@@ -55,6 +55,8 @@ quick-terminal-animation-duration = 0.15
 # here: Cmd+<key>
 
 # -- Splits (visual: - horizontal line, | vertical line) --
+# unbind default font-size keybind (Ghostty uses "super+-" internally)
+keybind = super+-=unbind
 keybind = super+minus=new_split:down
 keybind = super+shift+backslash=new_split:right
 keybind = super+x=close_surface
@@ -78,6 +80,8 @@ keybind = super+r=activate_key_table:resize
 keybind = super+t=new_tab
 keybind = super+shift+left_bracket=previous_tab
 keybind = super+shift+right_bracket=next_tab
+# unbind default open_config (super+, vs super+comma collision)
+keybind = super+,=unbind
 keybind = super+comma=prompt_tab_title
 keybind = super+one=goto_tab:1
 keybind = super+two=goto_tab:2
@@ -90,6 +94,8 @@ keybind = super+eight=goto_tab:8
 keybind = super+nine=goto_tab:9
 
 # -- Copy mode (tmux: Ctrl-b [) --
+# unbind default goto_split:previous (super+[ vs super+bracket_left collision)
+keybind = super+[=unbind
 keybind = super+left_bracket=activate_key_table:copy
 
 # -- Reload config (tmux: Ctrl-b r) --
