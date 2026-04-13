@@ -31,6 +31,8 @@ _ALL_ITEMS=(
   "setup_tmux.sh|Tmux 設定|終端|1|darwin linux:apt linux:pacman"
   "setup_fonts.sh|字型安裝|基礎|1|all"
   "setup_claude.sh|Claude Code 設定 (symlink)|工具|1|all"
+  "setup_codex.sh|Codex CLI 設定 (symlink)|工具|1|all"
+  "setup_gemini.sh|Gemini CLI 設定 (symlink)|工具|1|all"
   "install_claude.sh|Claude Code CLI|工具|0|all"
   "install_node.sh|Node.js 生態 (nvm + v24 + npm/yarn/pnpm)|語言|0|all"
   "install_bun.sh|Bun|語言|0|all"
