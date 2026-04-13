@@ -1,11 +1,11 @@
 #!/bin/bash
 # Claude Code 全域設定 symlink 建立腳本
-# 將 dotfile/claude/ 下的設定 symlink 回 ~/.claude/
+# 將 dotfile/config/ai/claude/ 下的設定 symlink 回 ~/.claude/
 
 set -euo pipefail
 
 DOTFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-CLAUDE_SRC="$DOTFILE_DIR/claude"
+CLAUDE_SRC="$DOTFILE_DIR/config/ai/claude"
 CLAUDE_DST="$HOME/.claude"
 
 Y='\033[1;33m'
@@ -24,6 +24,7 @@ ITEMS=(
   "rules"
   "skills"
   "templates"
+  "memories"
 )
 
 link_item() {

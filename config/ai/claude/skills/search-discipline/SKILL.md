@@ -41,7 +41,7 @@ tty-respond 相關的檔案，讀取它們的完整內容。
 ### 好的 prompt（10 tool calls 內完成）
 
 ```text
-在 /Users/miyago/dotfile/claude/ 下：
+在 /Users/miyago/dotfile/config/ai/claude/ 下：
 1. grep "ask-tty" 找到相關檔案路徑
 2. 讀取 skills/ask-tty/SKILL.md 和 hooks/tty-respond.sh
 回報路徑和關鍵段落，不需要完整內容。

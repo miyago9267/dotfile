@@ -7,8 +7,8 @@ description: "建立新 skill -- 兩階段流程（草稿 -> 審核），確保 
 
 ## Phase 1：草擬（不寫檔）
 
-1. **查重名**：`ls ~/dotfile/claude/skills/ | grep -i {name}` + plugin 目錄
-2. **定 scope**：全域 `~/dotfile/claude/skills/` 或專案 `.claude/skills/`
+1. **查重名**：`ls ~/dotfile/config/ai/claude/skills/ | grep -i {name}` + plugin 目錄
+2. **定 scope**：全域 `~/dotfile/config/ai/claude/skills/` 或專案 `.claude/skills/`
 3. **定觸發**：alwaysApply: true（規則）/ user-invocable: true（工具）/ alwaysApply: false（情境觸發）
 4. **寫 frontmatter + content**（見下方原則）
 5. **使用者確認方向** -- 唯一能改內容方向的時間點
@@ -17,7 +17,7 @@ description: "建立新 skill -- 兩階段流程（草稿 -> 審核），確保 
 
 6. **Reviewer agent 審核**（結構 + 模擬執行 + 銜接測試，見下方）
 7. **處理結果**：APPROVE -> 寫入 / REVISE -> 只修品質不改方向（最多 2 輪）
-8. **寫入** `~/dotfile/claude/skills/<name>/SKILL.md`
+8. **寫入** `~/dotfile/config/ai/claude/skills/<name>/SKILL.md`
 9. **更新相關 skill 的銜接段落**（雙向同步）
 
 ## 編寫原則

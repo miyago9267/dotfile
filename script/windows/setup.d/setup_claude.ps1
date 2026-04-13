@@ -1,10 +1,10 @@
 # Claude Code 全域設定 symlink 建立腳本 (Windows)
-# 將 dotfile/claude/ 下的設定 symlink 回 ~/.claude/
+# 將 dotfile/config/ai/claude/ 下的設定 symlink 回 ~/.claude/
 
 $ErrorActionPreference = 'Stop'
 
 $DotfileRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..\..') | Select-Object -ExpandProperty Path
-$ClaudeSrc = Join-Path $DotfileRoot 'claude'
+$ClaudeSrc = Join-Path $DotfileRoot 'config' 'ai' 'claude'
 $ClaudeDst = Join-Path $env:USERPROFILE '.claude'
 
 $Items = @(

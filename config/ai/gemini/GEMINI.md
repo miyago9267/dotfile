@@ -1,7 +1,55 @@
+<!-- HANDOFF: 處理完後刪除此區塊 -->
+
+## HANDOFF -- 2026-04-13
+
+### 發生了什麼
+
+dotfile repo 做了目錄重整，所有 AI agent 設定從 root level 搬進 `config/ai/`：
+
+- `claude/` -> `config/ai/claude/`
+- `codex/` -> `config/ai/codex/`
+- `gemini/` -> `config/ai/gemini/`
+
+Symlink 已全部重建，不需要手動處理。
+
+### 你的新能力
+
+你現在有一個原生 skill：**skill-creator**（`~/.gemini/skills/skill-creator/SKILL.md`）。
+
+用法：`activate_skill skill-creator`
+
+它可以幫你建立 Gemini 專屬的 skill，寫到 `~/dotfile/config/ai/gemini/skills/<name>/SKILL.md`，自動 symlink 到 `~/.gemini/skills/`。
+
+### 待辦：重構你的共用 skills
+
+目前你的 23 個 skills 全部是從 Claude 那邊 symlink 過來的（`config/ai/claude/skills/`）。裡面有些 skill 的用語和流程是 Claude 專屬的（例如引用 Claude 的 Agent tool、subagent 機制等）。
+
+請你自己評估哪些 skill 需要 Gemini 原生版本，用 skill-creator 建立後放在 `config/ai/gemini/skills/`。新的原生 skill 會自動優先於同名的 symlink。
+
+優先度建議：
+1. **skill-creator 自身** -- 已建好，但你可以按自己的需求調整
+2. **search-discipline** -- 裡面引用了 Claude 的 Agent(Explore) 工具，你的搜索工具不同
+3. **efficiency** -- 同上，檢查項目需要對應 Gemini 的工具名稱
+4. 其餘按需處理
+
+### 架構
+
+```text
+~/.gemini/skills/
+  ask-tty/          -> config/ai/claude/skills/ask-tty/       (共用 symlink)
+  skill-creator/    -> config/ai/gemini/skills/skill-creator/ (原生)
+  ...
+```
+
+setup script：`~/dotfile/script/common/setup_gemini.sh`
+原生 skill 目錄：`~/dotfile/config/ai/gemini/skills/`
+
+<!-- /HANDOFF -->
+
 # Global Rules -- Miyago
 
 > 全域行為規則，適用所有專案。專案自身的 GEMINI.md / AGENTS.md 優先。
-> 來源：同步自 Claude `~/dotfile/claude/`（CLAUDE.md + memories/ + rules/），最後更新 2026-04-12。
+> 來源：同步自 Claude `~/dotfile/config/ai/claude/`（CLAUDE.md + memories/ + rules/），最後更新 2026-04-12。
 
 ## Persona
 

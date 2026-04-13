@@ -47,7 +47,7 @@ zplug "plugins/sudo", from:oh-my-zsh
 # Export config
 export TERM="xterm-256color"
 export UPDATE_ZSH_DAYS=7
-export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=3"
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#616e88"
 export LANGUAGE=en_US
 export LC_ALL=en_US.UTF-8
 export EDITOR="vim"
@@ -124,5 +124,11 @@ export PATH="${HOME}/.local/bin:${PATH}"
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+# GitLab token helper (multi-instance, reads from git config)
+gitlab_token() {
+  local host=$(git remote get-url origin 2>/dev/null | sed 's|https\?://\([^/]*\).*|\1|')
+  git config --get gitlab."https://${host}".token
+}
 
 . "$HOME/.local/bin/env"

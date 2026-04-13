@@ -186,7 +186,7 @@ c. 沒有出現任何未被明確提及的人名、數字、事件或假設。
 
 ## 全域 Skills
 
-Claude 全域 skills 已 symlink 至 `~/.codex/skills/`，與 Codex 原生 skill 並列，由 Codex 原生 skill 系統自動 discover。來源：`~/dotfile/claude/skills/`（23 個，含 ask-tty / sdd / tdd / git-workflow / safe-ops / path-aware 等）。
+Claude 全域 skills 已 symlink 至 `~/.codex/skills/`，與 Codex 原生 skill 並列，由 Codex 原生 skill 系統自動 discover。來源：`~/dotfile/config/ai/claude/skills/`（23 個，含 ask-tty / sdd / tdd / git-workflow / safe-ops / path-aware 等）。
 
 ## AGENTS.md（專案開發準則）
 

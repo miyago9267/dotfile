@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__pty-bridge__exec",
+      "mcp__pty-bridge__result",
+      "Bash(ln -s /Users/miyago/dotfile/config/ai/claude/memories /Users/miyago/.claude/memories)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "pty-bridge"
+  ]
+}
