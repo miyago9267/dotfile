@@ -1,0 +1,7 @@
+# Miyago's Custom Policy - Allow common commands and redirection
+[[rule]]
+toolName = "run_shell_command"
+commandPrefix = ["ls", "pwd", "date", "cat", "echo", "mv", "find", "head", "grep", "rm"]
+allowRedirection = true
+decision = "allow"
+priority = 100
