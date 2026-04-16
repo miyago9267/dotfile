@@ -13,4 +13,5 @@ if (Test-Path $ompTheme) {
 }
 
 # 啟用 transient prompt（對應 p10k 的 instant prompt 概念）
-Enable-PoshTransientPrompt
+# 注意：transient prompt 現在要在 theme JSON 裡設定 "transient_prompt" 欄位，
+# 不再透過 cmdlet 啟用。詳見 https://ohmyposh.dev/docs/configuration/transient

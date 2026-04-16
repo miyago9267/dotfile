@@ -11,8 +11,8 @@ function ll { Get-ChildItem -Force @args }
 
 # -- 編輯器 --
 if (Get-Command nvim -ErrorAction SilentlyContinue) {
-    Set-Alias -Name nv -Value nvim
-    Set-Alias -Name vim -Value nvim
+    Set-Alias -Name nv -Value nvim -Force -Option AllScope
+    Set-Alias -Name vim -Value nvim -Force -Option AllScope
 }
 
 # -- 清除畫面 --
