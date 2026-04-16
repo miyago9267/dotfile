@@ -6,6 +6,7 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 vim.g.deprecation_warnings = false
+vim.g.NERDCreateDefaultMappings = 0
 vim.lsp.set_log_level("ERROR")
 vim.opt.number = true
 vim.opt.relativenumber = true
@@ -79,7 +80,7 @@ require("lazy").setup({
     version = "*",
     opts = {
       size = 15,
-      open_mapping = [[<C-`>]],
+      open_mapping = false,  -- Cmd+J 處理，避免 Ctrl+` 與輸入法衝突
       direction = 'horizontal',
       shade_terminals = true,
       shading_factor = 2,
@@ -225,12 +226,11 @@ require("lazy").setup({
       local wk = require("which-key")
       wk.setup()
       wk.add({
+        { "<leader>b", group = "Buffer (tmux)" },
         { "<leader>s", group = "Search" },
         { "<leader>g", group = "Git" },
         { "<leader>c", group = "Code / Claude" },
         { "<leader>n", group = "Neogit" },
-        { "<leader>r", group = "Refactor" },
-        { "<leader>t", group = "Terminal" },
       })
     end,
   },
@@ -433,7 +433,10 @@ require("lualine").setup({
 -- NvimTree
 require("nvim-tree").setup({
   view = {
-    width = 30,
+    width = {
+      min = 20,
+      max = 60,
+    },
   },
 })
 
@@ -452,19 +455,27 @@ require("gitsigns").setup({
 require("colorizer").setup()
 
 -- Bufferline
-require("bufferline").setup()
+require("bufferline").setup({
+  options = {
+    mode = "buffers",
+    numbers = "none",
+    close_command = "bdelete! %d",
+    right_mouse_command = "bdelete! %d",
+    middle_mouse_command = "bdelete! %d",
+    show_buffer_close_icons = true,
+    show_close_icon = false,
+    separator_style = "thin",
+  },
+})
 
 -- =====================
 --   Keybindings
 -- =====================
 
--- Nerdtree
-vim.keymap.set('n', '<F4>', '<cmd>NvimTreeToggle<CR>', { desc = 'Toggle NvimTree' })
+-- NvimTree: 由 Ctrl+B / Cmd+B 處理
 
--- Telescope
+-- Telescope (find_files / live_grep / replace 由 VSCode-style 快捷鍵處理)
 vim.keymap.set('n', '<C-p>', '<cmd>Telescope find_files<CR>', { desc = 'Search > Find files' })
-vim.keymap.set('n', '<leader>sf', '<cmd>Telescope find_files<CR>', { desc = 'Search > Find files' })
-vim.keymap.set('n', '<leader>sg', '<cmd>Telescope live_grep<CR>', { desc = 'Search > Grep' })
 vim.keymap.set('n', '<leader>sb', '<cmd>Telescope buffers<CR>', { desc = 'Search > Buffers' })
 vim.keymap.set('n', '<leader>sh', '<cmd>Telescope help_tags<CR>', { desc = 'Search > Help tags' })
 vim.keymap.set('n', '<leader>sw', '<cmd>Telescope grep_string<CR>', { desc = 'Search > Current word' })
@@ -478,8 +489,7 @@ vim.keymap.set('n', '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', { desc = 'Gi
 vim.keymap.set('n', '<leader>gH', '<cmd>DiffviewFileHistory<CR>', { desc = 'Git > Repo history' })
 vim.keymap.set('n', '<leader>gc', '<cmd>DiffviewClose<CR>', { desc = 'Git > Diff close' })
 
--- Grug-far (Search 分組)
-vim.keymap.set('n', '<leader>sr', '<cmd>GrugFar<CR>', { desc = 'Search > Replace (Grug-far)' })
+-- Grug-far: 由 <C-S-h> / <D-S-h> 處理
 
 -- j/k 交換：j=上 k=下 (Miyago 習慣)
 vim.keymap.set({'n', 'v', 'o'}, 'j', 'k', { noremap = true })
@@ -490,12 +500,20 @@ vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { desc = 'LSP > Go to definiti
 vim.keymap.set('n', 'gr', vim.lsp.buf.references, { desc = 'LSP > References' })
 vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, { desc = 'LSP > Implementation' })
 vim.keymap.set('n', 'K', vim.lsp.buf.hover, { desc = 'LSP > Hover documentation' })
-vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, { desc = 'Refactor > Rename' })
 vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, { desc = 'Code > Action' })
 
--- Buffer
-vim.keymap.set('n', '[b', '<cmd>bprevious<CR>', { desc = 'Previous buffer' })
-vim.keymap.set('n', ']b', '<cmd>bnext<CR>', { desc = 'Next buffer' })
+-- Buffer (tmux-style: Space b = prefix)
+-- 對應 tmux: n=next, p=prev, c=new, x=close, %=vsplit, "=hsplit, 1-9=跳到第N個
+vim.keymap.set('n', '<leader>b<Right>', '<cmd>BufferLineCycleNext<CR>', { desc = 'Buffer > Next' })
+vim.keymap.set('n', '<leader>b<Left>', '<cmd>BufferLineCyclePrev<CR>', { desc = 'Buffer > Prev' })
+vim.keymap.set('n', '<leader>b<Down>', '<cmd>BufferLineCycleNext<CR>', { desc = 'Buffer > Next' })
+vim.keymap.set('n', '<leader>b<Up>', '<cmd>BufferLineCyclePrev<CR>', { desc = 'Buffer > Prev' })
+vim.keymap.set('n', '<leader>b.', '<cmd>BufferLineMoveNext<CR>', { desc = 'Buffer > Move right (>)' })
+vim.keymap.set('n', '<leader>b,', '<cmd>BufferLineMovePrev<CR>', { desc = 'Buffer > Move left (<)' })
+vim.keymap.set('n', '<leader>bc', '<cmd>enew<CR>', { desc = 'Buffer > New (tmux c)' })
+vim.keymap.set('n', '<leader>bx', '<cmd>bdelete<CR>', { desc = 'Buffer > Close (tmux x)' })
+vim.keymap.set('n', '<leader>b|', '<cmd>vsplit<CR>', { desc = 'Buffer > Vertical split |' })
+vim.keymap.set('n', '<leader>b-', '<cmd>split<CR>', { desc = 'Buffer > Horizontal split -' })
 
 -- Window navigation is handled by vim-tmux-navigator plugin
 -- The plugin already defines <C-h/j/k/l> for seamless navigation between Neovim and tmux
@@ -560,8 +578,8 @@ vim.keymap.set('n', '<D-f>', function() require('vsearch').open() end, { desc = 
 vim.keymap.set({'n', 'i', 'v'}, '<C-s>', '<cmd>w<CR>', { desc = 'Save file' })
 vim.keymap.set({'n', 'i', 'v'}, '<D-s>', '<cmd>w<CR>', { desc = 'Save file (Mac)' })
 
--- VSCode-style: Ctrl+B / Cmd+B to toggle sidebar
-vim.keymap.set('n', '<C-b>', '<cmd>NvimTreeToggle<CR>', { desc = 'Toggle sidebar' })
+-- Sidebar: Ctrl+E (Ctrl+B 被 tmux prefix 佔用) / Cmd+B
+vim.keymap.set('n', '<C-e>', '<cmd>NvimTreeToggle<CR>', { desc = 'Toggle sidebar' })
 vim.keymap.set('n', '<D-b>', '<cmd>NvimTreeToggle<CR>', { desc = 'Toggle sidebar (Mac)' })
 
 -- VSCode-style: Ctrl+Shift+F / Cmd+Shift+F for global search
@@ -593,14 +611,11 @@ vim.keymap.set('n', '<F2>', vim.lsp.buf.rename, { desc = 'Rename symbol' })
 vim.keymap.set('n', '<F12>', vim.lsp.buf.definition, { desc = 'Go to definition' })
 
 -- Fn 鍵替代方案（MacBook / iPad 沒有實體 Fn 鍵）
--- F2 (Rename)  -> Space r n 或 Space r r
+-- F2 (Rename)  -> 直接用 F2
 -- F4 (NvimTree) -> Ctrl+B / Cmd+B
 -- F12 (Definition) -> gd
-vim.keymap.set('n', '<leader>rr', vim.lsp.buf.rename, { desc = 'Refactor > Rename (F2 替代)' })
 
--- VSCode-style: Ctrl+Tab / Ctrl+Shift+Tab for buffer switching
-vim.keymap.set('n', '<C-Tab>', '<cmd>bnext<CR>', { desc = 'Next buffer' })
-vim.keymap.set('n', '<C-S-Tab>', '<cmd>bprevious<CR>', { desc = 'Previous buffer' })
+-- Buffer switching: 由 tmux-style Space b n/p 處理
 
 -- VSCode-style: Ctrl+Shift+[ / ] for fold/unfold
 vim.keymap.set('n', '<C-S-[>', 'zc', { desc = 'Fold' })
@@ -608,14 +623,12 @@ vim.keymap.set('n', '<C-S-]>', 'zo', { desc = 'Unfold' })
 
 -- VSCode-style: Cmd+J to toggle bottom terminal (Ctrl+J 已被 tmux-navigator 佔用)
 vim.keymap.set({'n', 't'}, '<D-j>', '<cmd>ToggleTerm<CR>', { desc = 'Terminal > Toggle' })
-vim.keymap.set('n', '<leader>tt', '<cmd>ToggleTerm<CR>', { desc = 'Terminal > Toggle' })
 -- Terminal mode: Esc 跳回 normal mode，再按 Space t t 就能關
 vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]], { desc = 'Terminal > Exit to normal' })
 
--- VSCode-style: Ctrl+Shift+I / Cmd+Shift+I to toggle AI agent sidebar (Avante)
--- 已停用 Avante，改用嵌入式 Claude Code
--- vim.keymap.set('n', '<C-S-i>', '<cmd>AvanteToggle<CR>', { desc = 'Toggle AI sidebar' })
--- vim.keymap.set('n', '<D-S-i>', '<cmd>AvanteToggle<CR>', { desc = 'Toggle AI sidebar (Mac)' })
+-- VSCode-style: Ctrl+Shift+I / Cmd+Shift+I to toggle AI agent sidebar
+vim.keymap.set('n', '<C-S-i>', '<cmd>ClaudeCode<CR>', { desc = 'Toggle AI agent' })
+vim.keymap.set('n', '<D-S-i>', '<cmd>ClaudeCode<CR>', { desc = 'Toggle AI agent (Mac)' })
 
 -- VSCode-style: Ctrl+W / Cmd+W to close current buffer (tab)
 vim.keymap.set('n', '<C-w>', '<cmd>bdelete<CR>', { desc = 'Close tab' })
