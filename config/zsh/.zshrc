@@ -116,7 +116,6 @@ alias agent-update='bash /Users/miyago/Project/Code/ITRD/General/agent-skills/up
 
 # skill-run shorthand
 alias ask='skill-run'
-export PATH="${HOME}/.local/bin:${PATH}"
 
 # bun completions
 [ -s "/Users/miyago/.bun/_bun" ] && source "/Users/miyago/.bun/_bun"
