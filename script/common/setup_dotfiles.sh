@@ -24,4 +24,5 @@ link "$dir/config/zsh/alias.sh"      ~/alias.sh
 link "$dir/config/vim/.vimrc"        ~/.vimrc
 link "$dir/config/nvim"              ~/.config/nvim
 link "$dir/config/ghostty/config"    ~/.config/ghostty/config
+link "$dir/config/fastfetch"         ~/.config/fastfetch
 
