@@ -12,21 +12,39 @@
     "separator": " -> "
   },
   "modules": [
+    "break",
     "title",
     "separator",
     "os",
     "host",
     "kernel",
     "uptime",
+    "loadavg",
+    "processes",
     "packages",
     "shell",
     "terminal",
+    "terminalfont",
+    {
+      "type": "display",
+      "compactType": "original-with-refresh-rate"
+    },
     "cpu",
+    "cpuusage",
     "gpu",
     "memory",
+    "swap",
     "disk",
-    "localip",
+    {
+      "type": "localip",
+      "showType": true,
+      "compact": true
+    },
+    "wifi",
     "battery",
+    "poweradapter",
+    "locale",
+    "datetime",
     "break",
     "colors"
   ]
