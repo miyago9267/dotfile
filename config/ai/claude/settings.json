@@ -1,7 +1,6 @@
 {
   "env": {
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "70",
-    "CLAUDE_CODE_EFFORT_LEVEL": "max"
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "70"
   },
   "permissions": {
     "allow": [
@@ -16,7 +15,12 @@
       "WebFetch(*)",
       "mcp__claude_ai_Canva__generate-design",
       "mcp__claude_ai_Canva__create-design-from-candidate",
-      "mcp__claude_ai_Canva__export-design"
+      "mcp__claude_ai_Canva__export-design",
+      "Bash(rtk git *)",
+      "Bash(echo \"deleted: $?\")",
+      "Bash(/bin/ls /Users/miyago/Project/Code/Web/RiceCall/RiceCallAdminPanel/app/components/ui/UuidCell.vue)",
+      "Bash(/bin/ls -1)",
+      "Bash(/bin/ls -1 line_bot_updated/)"
     ],
     "deny": [
       "Bash(mkfs *)",
@@ -39,7 +43,8 @@
       "Bash(kill *)"
     ],
     "additionalDirectories": [
-      "/Users/miyago/.claude"
+      "/Users/miyago/.claude",
+      "/Users/miyago/Project/Code/ITRD/pms/.claude"
     ]
   },
   "hooks": {
@@ -90,6 +95,18 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/persona-reminder.sh",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
@@ -129,5 +146,7 @@
         "repo": "jarrodwatts/claude-hud"
       }
     }
-  }
+  },
+  "effortLevel": "medium",
+  "theme": "dark-ansi"
 }
