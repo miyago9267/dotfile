@@ -52,6 +52,14 @@
 - 長範例、查表資料、CLI 參考、重複模板、腳本實作，應移到 supporting files 或 scripts。
 - supporting files 的存在是為了降低重複與維持可讀性；主檔必須能指出何時該讀哪個 supporting file。
 
+## Cross-Runtime Compatibility
+
+- 共用的是能力與意圖，不是強求所有 runtime 使用完全相同的檔案格式。
+- 若 `Claude`、`Gemini`、`Codex` 的 skill/規則入口不同，應將相同意圖複製為各自可用的格式。
+- `Claude` 可落在 `SKILL.md`、`commands/`、`hooks/`；`Gemini` 可落在 `skills/` 或 `policies/`；`Codex` 則依目前可用入口落在 `AGENTS.md` 或對應技能結構。
+- 修改共用 skill 規則時，應主動檢查其他 runtime 是否需要同步 adapter，而不是只改單一平台版本。
+- 若某平台無法一比一對應，至少要保留核心規則、觸發條件與邊界，不可讓語義漂移。
+
 ## Communication
 
 1. 回應開頭先交代結果或當前進度，例如：已完成、進行中、卡住原因。

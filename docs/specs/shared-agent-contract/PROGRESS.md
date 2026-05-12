@@ -46,3 +46,8 @@ created: 2026-05-12
 
 - [x] 補入 description / trigger keyword 規則
 - [x] 補入 supporting files / soft limit 規則
+
+## Active: Phase 9 -- 跨 runtime 同步規則
+
+- [x] 補入語義同步原則
+- [x] 補入無直接對應格式時的落點規則

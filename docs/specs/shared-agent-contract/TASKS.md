@@ -79,6 +79,12 @@ created: 2026-05-12
 - [x] 補入主檔與 supporting files 的分工規則
 - [x] 修正 `skill-maker` 與 `skill-creator` 的舊自足性假設
 
+### Phase 10: 跨 runtime 同步規則
+
+- [x] 補入 Claude / Gemini / Codex 格式差異下的同步原則
+- [x] 明確規定同步的是語義與邊界，不是字面格式
+- [x] 規定修改共用 skill 時要主動檢查其他 runtime adapter
+
 ## 驗證
 
 - [x] `config/ai/AGENTS.md` 存在且內容為 LLM-agnostic
@@ -91,3 +97,4 @@ created: 2026-05-12
 - [x] 註解與 shell/tool 輸出規則已貼近人類工程師習慣
 - [x] skill 聚焦與 delegation 邊界已被制度化
 - [x] skill authoring 規則已制度化並同步到建立工具
+- [x] 跨 runtime skill 同步原則已制度化

@@ -24,6 +24,7 @@ user-invocable: true
 8. **寫入** `~/dotfile/config/ai/gemini/skills/<name>/SKILL.md`
 9. **建立 symlink**：`ln -s ~/dotfile/config/ai/gemini/skills/<name> ~/.gemini/skills/<name>`
 10. **驗證**：`ls -la ~/.gemini/skills/<name>/SKILL.md` 確認可存取
+11. **檢查跨 runtime 是否需要 adapter**：若這是共用規則/能力，確認 Claude 或 Codex 是否也需要各自格式的同步版本
 
 ## 編寫原則
 
@@ -79,6 +80,12 @@ description 是 Gemini 匹配「使用者問題 -> skill」的依據。
 - 主檔若接近 500 行，優先拆 supporting files，而不是把所有內容硬塞在一起
 - 可以引用 supporting files，但要明確說明「何時讀哪個檔」
 - 無 placeholder。繁體中文 + 英文技術詞。
+
+### 跨 runtime 同步
+
+- 如果 skill 的能力屬於共用規則，而非 Gemini 專屬工具細節，建立或修改後要檢查 Claude / Codex 是否需要同步
+- 同步時以能力、觸發、邊界、核心流程對齊，不要求字面格式相同
+- 若對方 runtime 沒有同類 skill 入口，改落到它的原生規則入口
 
 ## 與共用 skill 的關係
 

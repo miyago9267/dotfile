@@ -114,6 +114,14 @@ created: 2026-05-12
 
 - [x] **When** using supporting files, **the system shall** keep the main `SKILL.md` focused on the core flow and clearly point to the appropriate support files
 
+### R25: 跨 runtime 保持語義
+
+- [x] **When** shared skill logic spans multiple runtimes, **the system shall** preserve intent across Claude, Gemini, and Codex even when their file formats differ
+
+### R26: 無直接對應格式時的落點
+
+- [x] **When** a runtime lacks a direct equivalent format, **the system shall** copy the core trigger, boundary, and behavior into the nearest native entrypoint
+
 ### Claude Adapter
 
 - [x] **When** `config/ai/claude/CLAUDE.md` remains in use, **the system shall** reference `config/ai/AGENTS.md` near the start of the file
