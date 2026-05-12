@@ -62,6 +62,14 @@ created: 2026-05-12
 
 - [x] **When** executing multi-step work, **the system shall** require brief success criteria and `step -> verify` style planning
 
+### R12: 高資訊密度輸出
+
+- [x] **When** producing user-facing responses, **the system shall** prefer brevity and information density over filler or ceremonial phrasing
+
+### R13: Claude 反 verbosity
+
+- [x] **When** adapting Claude-specific behavior, **the system shall** explicitly counter Claude verbosity without requiring caveman-style speech
+
 ### Claude Adapter
 
 - [x] **When** `config/ai/claude/CLAUDE.md` remains in use, **the system shall** reference `config/ai/AGENTS.md` near the start of the file

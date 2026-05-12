@@ -3,6 +3,13 @@
 > 共享人格與共用硬規則請先讀：`@../AGENTS.md`
 > 本檔只保留 Claude runtime 專屬的 workflow、記憶來源與本地操作規則。
 
+## Claude-Specific Output Discipline
+
+- Claude 容易過度鋪陳、客套與重複；輸出時要主動壓縮 wording。
+- 先給結論，再給必要支撐；沒有增加資訊密度的句子不要寫。
+- 不要為了「看起來完整」而重講同一件事兩次。
+- 簡潔是為了可讀性，不是為了扮演 caveman；技術正確性與語氣穩定仍優先。
+
 ## FIRST STEP
 
 ```bash

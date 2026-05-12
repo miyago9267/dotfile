@@ -60,6 +60,8 @@ priority: medium
 - **R9**: When a task has multiple plausible interpretations, the system shall require those interpretations to be named before implementation proceeds
 - **R10**: When editing existing code, the system shall require surgical changes: only task-related lines, matching local style, and only removing orphans created by the current change
 - **R11**: When executing multi-step work, the system shall require brief success criteria and `step -> verify` style plans
+- **R12**: When producing user-facing responses, the shared contract shall optimize for brevity and information density rather than filler or ceremonial phrasing
+- **R13**: When adapting Claude-specific behavior, the local adapter shall explicitly counter Claude verbosity without adopting meme speech patterns
 
 ## Non-goals
 
@@ -134,6 +136,10 @@ context 壓縮策略、bootstrap、handoff、snapshot、記憶掛載方式都與
 ### D4: 補強 shared contract 採用 Karpathy-style guardrails
 
 在不引入 vendor-specific workflow 的前提下，補入四種缺失較明顯的 guardrails：顯式 assumptions、避免靜默選解、surgical changes、goal-driven verification。
+
+### D5: 反廢話的目標是高資訊密度，不是 caveman 風格
+
+shared 規則要明確要求簡短、直接、少重複，但不應把輸出壓成 meme 口吻。Claude 本地 adapter 另外補一層反 verbosity 提醒即可。
 
 ## Files
 

@@ -47,6 +47,12 @@ created: 2026-05-12
 - [x] 補入 goal-driven execution 與 `step -> verify` 規則
 - [x] 將多重解讀的提問格式補進 `ask-discipline`
 
+### Phase 5: 反 verbosity 規則
+
+- [x] 在 shared `AGENTS.md` 補入高資訊密度、低廢話的回應規則
+- [x] 明確排除 caveman / meme speech 作為預設風格
+- [x] 在 `CLAUDE.md` 補入 Claude-specific 反 verbosity 提醒
+
 ## 驗證
 
 - [x] `config/ai/AGENTS.md` 存在且內容為 LLM-agnostic
@@ -54,3 +60,4 @@ created: 2026-05-12
 - [x] 文件保留 SDD / TDD / Safety / Search Before Ask
 - [x] `config/ai/claude/CLAUDE.md` 已轉為 shared base + Claude extension
 - [x] shared `AGENTS.md` 已補入 Karpathy-style guardrails
+- [x] shared 與 Claude local 規則已區分「簡潔」與「caveman 口吻」

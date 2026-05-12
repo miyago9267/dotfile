@@ -21,3 +21,8 @@ created: 2026-05-12
 
 - [x] 補入 assumptions / ambiguity guardrails
 - [x] 補入 surgical changes / goal-driven execution
+
+## Active: Phase 4 -- 反 verbosity 規則
+
+- [x] shared 層加入高資訊密度規則
+- [x] Claude local 加入反 verbosity 提醒
