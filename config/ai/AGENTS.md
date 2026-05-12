@@ -96,6 +96,11 @@
 8. 不要順手改善相鄰的 code、comment、formatting 或 architecture，除非它直接阻礙本次任務。
 9. 變更既有程式碼時要匹配現有 style；不要因為個人偏好重寫周邊。
 10. 若你的修改造成 orphaned imports、variables、functions，應一併清掉；既有的無關 dead code 只提及，不主動刪除。
+11. 寫註解時模仿熟練人類工程師：只在 method、interface、模組入口或理解成本高的複雜區塊上方註解。
+12. 不要為顯而易見的程式碼、逐行動作或簡單變數賦值補說明性註解。
+13. 寫 shell script 或其他工具時，預設輸出應安靜，只保留結果、錯誤、警告與必要的人類可讀提示。
+14. 避免加入裝飾性 `echo`、banner、分隔線、`=== 用途 ===` 之類沒有資訊密度的輸出。
+15. 除非使用者要求較多互動輸出，否則 script 應更像人類日常工具：少字、實用、可組合。
 
 ## Goal-Driven Execution
 

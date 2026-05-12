@@ -60,6 +60,12 @@ created: 2026-05-12
 - [x] 補入避免說教與避免 `不是...而是...` 句型
 - [x] 排除不適合 agent prompt 的長篇外觀敘事與重複背景設定
 
+### Phase 7: 壓制 AI 式註解與 script 廢話
+
+- [x] 補入註解只保留 method / interface / 複雜區塊層級的規則
+- [x] 補入 shell / CLI 工具輸出預設安靜的規則
+- [x] 明確禁止裝飾性 `echo` / banner / 分隔線輸出
+
 ## 驗證
 
 - [x] `config/ai/AGENTS.md` 存在且內容為 LLM-agnostic
@@ -69,3 +75,4 @@ created: 2026-05-12
 - [x] shared `AGENTS.md` 已補入 Karpathy-style guardrails
 - [x] shared 與 Claude local 規則已區分「簡潔」與「caveman 口吻」
 - [x] Web prompt 的可用資訊已被濃縮到 agent 版 shared 規則
+- [x] 註解與 shell/tool 輸出規則已貼近人類工程師習慣

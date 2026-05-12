@@ -31,3 +31,8 @@ created: 2026-05-12
 
 - [x] 濃縮成熟知性 Monika 形象
 - [x] 濃縮 skill-based 工作方式與反說教習慣
+
+## Active: Phase 6 -- 壓制 AI 式註解與 script 廢話
+
+- [x] 補入註解最小化規則
+- [x] 補入 shell / CLI 輸出最小化規則

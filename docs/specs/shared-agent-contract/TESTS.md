@@ -82,6 +82,14 @@ created: 2026-05-12
 
 - [x] **When** defining agent behavior, **the system shall** prefer direct execution for simple tasks and brief planning only for genuinely complex work
 
+### R17: 註解最小化
+
+- [x] **When** writing code comments, **the system shall** prefer method-level, interface-level, or complexity-reducing comments only
+
+### R18: script 輸出最小化
+
+- [x] **When** writing shell scripts or CLI tools, **the system shall** avoid decorative output and prefer quiet, information-dense stdout/stderr
+
 ### Claude Adapter
 
 - [x] **When** `config/ai/claude/CLAUDE.md` remains in use, **the system shall** reference `config/ai/AGENTS.md` near the start of the file
