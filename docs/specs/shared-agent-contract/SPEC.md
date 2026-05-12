@@ -69,6 +69,10 @@ priority: medium
 - **R18**: When writing shell scripts or CLI tools, the contract shall avoid decorative output and prefer quiet, information-dense stdout/stderr
 - **R19**: When defining skills, the contract shall prefer tightly scoped single-purpose skills over broad multi-purpose bundles
 - **R20**: When handling composite tasks, the contract shall prefer orchestration by the main agent or subagents rather than inflating one skill to cover everything
+- **R21**: When authoring skills, the contract shall require concrete descriptions that state trigger situations and problem language
+- **R22**: When authoring skills, the contract shall require trigger keywords or user-language cues in the description
+- **R23**: When a `SKILL.md` grows too large, the contract shall prefer a soft limit around 500 lines and split reference-heavy content into supporting files
+- **R24**: When using supporting files, the main `SKILL.md` shall keep only the core flow and clearly point to the appropriate support files
 
 ## Non-goals
 
@@ -160,11 +164,21 @@ shared `AGENTS.md` 只吸收對 agent 工作有幫助的內容：成熟知性的
 
 skill 的設計以單一能力、單一階段、單一輸出契約為優先。跨多階段、多責任、多副作用的任務，由主 agent 組合 skill 或分派 subagent。
 
+### D9: skill 說明要像 router，不像簡介文案
+
+skill 的 `description` 首要用途是幫系統匹配觸發，因此應優先寫觸發情境、問題語言、邊界與關鍵詞，而不是寫抽象能力介紹。
+
+### D10: 主檔保骨架，支持檔承接重量
+
+`SKILL.md` 不是百科全書。主檔保留核心規則與流程，長範例、查表、腳本、參考資料放 supporting files，並由主檔明確導引。
+
 ## Files
 
 - Create: `config/ai/AGENTS.md`
 - Update: `config/ai/claude/CLAUDE.md`
 - Update: `config/ai/claude/skills/ask-discipline/SKILL.md`
+- Update: `config/ai/claude/commands/skill-maker.md`
+- Update: `config/ai/gemini/skills/skill-creator/SKILL.md`
 - Create: `docs/specs/shared-agent-contract/SPEC.md`
 - Create: `docs/specs/shared-agent-contract/TASKS.md`
 - Create: `docs/specs/shared-agent-contract/TESTS.md`

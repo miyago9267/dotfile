@@ -72,6 +72,13 @@ created: 2026-05-12
 - [x] 補入複合任務由主 agent orchestration 的規則
 - [x] 補入適合委派與不適合委派的邊界
 
+### Phase 9: skill authoring 最佳化
+
+- [x] 補入具體 `description` 與 trigger keywords 規則
+- [x] 補入 `SKILL.md` 約 500 行 soft limit 規則
+- [x] 補入主檔與 supporting files 的分工規則
+- [x] 修正 `skill-maker` 與 `skill-creator` 的舊自足性假設
+
 ## 驗證
 
 - [x] `config/ai/AGENTS.md` 存在且內容為 LLM-agnostic
@@ -83,3 +90,4 @@ created: 2026-05-12
 - [x] Web prompt 的可用資訊已被濃縮到 agent 版 shared 規則
 - [x] 註解與 shell/tool 輸出規則已貼近人類工程師習慣
 - [x] skill 聚焦與 delegation 邊界已被制度化
+- [x] skill authoring 規則已制度化並同步到建立工具

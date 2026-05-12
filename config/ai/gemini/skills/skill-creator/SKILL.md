@@ -42,6 +42,8 @@ alwaysApply: true/false       # 或 user-invocable: true（二擇一）
 description 是 Gemini 匹配「使用者問題 -> skill」的依據。
 
 - 放使用者的問題語言（「502」「連不上」「OOM」），不是能力名稱
+- 說清楚何時觸發、處理哪一類問題，不要只寫抽象能力介紹
+- 優先放 2-6 個使用者真的會說的 trigger keywords 或短語
 - 相近 skill 標註邊界，避免觸發衝突
 - 不列 CLI 工具名 -- CLI 是實作細節
 
@@ -70,9 +72,13 @@ description 是 Gemini 匹配「使用者問題 -> skill」的依據。
 
 假設工具存在，直接跑，失敗才處理。不預先 `which`。
 
-### 自足性
+### 主檔與 supporting files
 
-內容自足，不引用外部檔案。無 placeholder。繁體中文 + 英文技術詞。
+- 主 `SKILL.md` 保留核心規則：目的、觸發、邊界、流程骨架、輸入輸出、分流
+- 長範例、查表資料、CLI 參考、腳本實作、重複模板放 supporting files
+- 主檔若接近 500 行，優先拆 supporting files，而不是把所有內容硬塞在一起
+- 可以引用 supporting files，但要明確說明「何時讀哪個檔」
+- 無 placeholder。繁體中文 + 英文技術詞。
 
 ## 與共用 skill 的關係
 
@@ -85,6 +91,7 @@ description 是 Gemini 匹配「使用者問題 -> skill」的依據。
 | 問題 | 正確做法 |
 |------|----------|
 | description 用能力名稱 | 放使用者問題關鍵字 |
+| 主檔塞滿長範例/查表 | 拆到 supporting files，主檔只留骨架 |
 | 步驟沒有判定 | 每步 OK/FAIL + 輸出變數 |
 | Phase 1 就寫檔 | 使用者確認後才寫 |
 | 重名（含共用 skill） | Step 1 先查 |

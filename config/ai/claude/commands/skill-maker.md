@@ -37,6 +37,8 @@ alwaysApply: true/false       # 或 user-invocable: true（二擇一）
 description 是 Claude 匹配「使用者問題 -> skill」的唯一依據（SKILL.md 全文觸發後才載入）。
 
 - 放使用者的問題語言（「502」「連不上」「OOM」），不是能力名稱（「健康度檢查」）
+- 說清楚何時觸發、處理哪一類問題，不要只寫抽象能力介紹
+- 優先放 2-6 個使用者真的會說的 trigger keywords 或短語
 - 相近 skill 必須標註邊界（「日常追蹤由 auto-spec 處理；手動啟動用 /sdd」）
 - 不需要列 CLI 工具名 -- CLI 是實作細節
 
@@ -66,9 +68,13 @@ description 是 Claude 匹配「使用者問題 -> skill」的唯一依據（SKI
 
 假設工具存在，直接跑，失敗才處理。不預先 `which`。
 
-### 自足性
+### 主檔與 supporting files
 
-內容自足，不引用外部檔案。無 placeholder。繁體中文 + 英文技術詞。
+- 主 `SKILL.md` 保留核心規則：目的、觸發、邊界、流程骨架、輸入輸出、分流
+- 長範例、查表資料、CLI 參考、腳本實作、重複模板放 supporting files
+- 主檔若接近 500 行，優先拆 supporting files，而不是把所有內容硬塞在一起
+- 可以引用 supporting files，但要明確說明「何時讀哪個檔」
+- 無 placeholder。繁體中文 + 英文技術詞。
 
 ## Reviewer Agent 審核
 
@@ -92,6 +98,7 @@ confidence >= 0.9 的 pattern -> 提取 trigger + action -> 走 Phase 1 Step 3-5
 | 步驟沒有判定 | 每步 OK/FAIL + 輸出變數 |
 | 分流不帶變數 | 列出帶入的已確認變數 |
 | 預先檢查 CLI 安裝 | 直接跑，失敗才處理 |
-| 引用外部檔案 | 內容自足 |
+| 主檔塞滿長範例/查表 | 拆到 supporting files，主檔只留骨架 |
+| description 只有能力名 | 改成觸發情境 + 問題語言 + 關鍵詞 |
 | Phase 1 就寫檔 | 使用者確認後才寫 |
 | 重名 | Step 1 先查 |

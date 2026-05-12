@@ -98,6 +98,22 @@ created: 2026-05-12
 
 - [x] **When** handling composite tasks, **the system shall** prefer orchestration by the main agent or subagents rather than inflating one skill to cover everything
 
+### R21: description 具體
+
+- [x] **When** authoring skills, **the system shall** require concrete descriptions that state trigger situations and problem language
+
+### R22: trigger keywords
+
+- [x] **When** authoring skills, **the system shall** require trigger keywords or user-language cues in the description
+
+### R23: `SKILL.md` soft limit
+
+- [x] **When** a `SKILL.md` grows too large, **the system shall** prefer a soft limit around 500 lines and split reference-heavy content into supporting files
+
+### R24: supporting files 分工
+
+- [x] **When** using supporting files, **the system shall** keep the main `SKILL.md` focused on the core flow and clearly point to the appropriate support files
+
 ### Claude Adapter
 
 - [x] **When** `config/ai/claude/CLAUDE.md` remains in use, **the system shall** reference `config/ai/AGENTS.md` near the start of the file

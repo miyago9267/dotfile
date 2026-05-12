@@ -41,3 +41,8 @@ created: 2026-05-12
 
 - [x] 補入 skill 單一職責規則
 - [x] 補入 orchestration / delegation 邊界
+
+## Active: Phase 8 -- skill authoring 最佳化
+
+- [x] 補入 description / trigger keyword 規則
+- [x] 補入 supporting files / soft limit 規則
