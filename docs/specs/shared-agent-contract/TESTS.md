@@ -90,6 +90,14 @@ created: 2026-05-12
 
 - [x] **When** writing shell scripts or CLI tools, **the system shall** avoid decorative output and prefer quiet, information-dense stdout/stderr
 
+### R19: skill 聚焦
+
+- [x] **When** defining skills, **the system shall** prefer tightly scoped single-purpose skills over broad multi-purpose bundles
+
+### R20: orchestration 優先
+
+- [x] **When** handling composite tasks, **the system shall** prefer orchestration by the main agent or subagents rather than inflating one skill to cover everything
+
 ### Claude Adapter
 
 - [x] **When** `config/ai/claude/CLAUDE.md` remains in use, **the system shall** reference `config/ai/AGENTS.md` near the start of the file

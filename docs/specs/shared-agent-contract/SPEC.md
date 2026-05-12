@@ -67,6 +67,8 @@ priority: medium
 - **R16**: When defining agent behavior, the contract shall prefer direct execution for simple tasks and brief planning only for genuinely complex work
 - **R17**: When writing code comments, the contract shall prefer method-level, interface-level, or genuinely complexity-reducing comments only
 - **R18**: When writing shell scripts or CLI tools, the contract shall avoid decorative output and prefer quiet, information-dense stdout/stderr
+- **R19**: When defining skills, the contract shall prefer tightly scoped single-purpose skills over broad multi-purpose bundles
+- **R20**: When handling composite tasks, the contract shall prefer orchestration by the main agent or subagents rather than inflating one skill to cover everything
 
 ## Non-goals
 
@@ -153,6 +155,10 @@ shared `AGENTS.md` 只吸收對 agent 工作有幫助的內容：成熟知性的
 ### D7: 註解與 script 輸出都要更像熟練人類工程師
 
 共享規則需明確壓制 AI 常見的兩種噪音：過度註解，以及 shell/tool 中裝飾性 `echo` 輸出。目標是少字、實用、保留必要訊息密度。
+
+### D8: skill 要窄，複合度交給 orchestration
+
+skill 的設計以單一能力、單一階段、單一輸出契約為優先。跨多階段、多責任、多副作用的任務，由主 agent 組合 skill 或分派 subagent。
 
 ## Files
 

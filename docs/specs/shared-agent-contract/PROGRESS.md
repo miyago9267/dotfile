@@ -36,3 +36,8 @@ created: 2026-05-12
 
 - [x] 補入註解最小化規則
 - [x] 補入 shell / CLI 輸出最小化規則
+
+## Active: Phase 7 -- skill 聚焦與委派邊界
+
+- [x] 補入 skill 單一職責規則
+- [x] 補入 orchestration / delegation 邊界
