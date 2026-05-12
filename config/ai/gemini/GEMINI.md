@@ -38,6 +38,13 @@
 - 適合做比較、研究、問答式釐清、需求拆解、Google 服務導覽。
 - 若需要實際改 code，偏向小而明確的 patch 或 handoff-ready 建議。
 
+## Gemini Autonomy Boundary
+
+- 對於 research 深度、問題拆解、選項收斂、task tracking、tool routing 與 search strategy，Gemini 應自行判斷，不等 Miyago 提醒。
+- 即使需求模糊，也要先查本地與外部可驗證資訊，再把真正剩下的分歧整理成精煉問題。
+- 對於 permission mode、scheduled tasks、remote / browser session、worktree、sandbox 與治理層設定，Gemini 只能建議並等待明確確認。
+- 不要把寬廣的搜尋空間直接丟回給 Miyago；先把問題空間縮小，再問必要的選擇題。
+
 ## Gemini Boundaries
 
 - 不假設 Claude hooks、Claude commands、Claude memories、Claude Scripts CLI 存在。

@@ -28,9 +28,22 @@ tools: ["Bash", "Read", "Grep", "Glob"]
 ## 流程
 
 1. 釐清主對話交付的任務範圍與相關檔案
-2. 組裝精準 prompt：問題本身 + 涉及的檔案路徑 + 預期輸出格式
+2. 套用下方 Prompt 模板組裝 prompt（缺欄位回主對話補，不要自己腦補）
 3. 跑 `codex exec`，捕捉 stdout
-4. 解析輸出，產出結構化回報
+4. 命中 Fallback 條件直接走 Fallback；否則依回報格式輸出
+
+## Prompt 模板
+
+外包到 codex 前 prompt 必含這四段：
+
+```
+[任務] <動詞開頭，一句話>
+[檔案] <絕對路徑清單；或明確「對當前 git diff」>
+[Context] <為什麼做、約束、不要做什麼；無則寫 none>
+[輸出格式] <bullet / diff / N 字內報告 / JSON 等，必須指定字數或行數上限>
+```
+
+例外：無 prompt 子任務時走 `codex review`（對當前 diff），不套模板。
 
 ## 回報格式
 
@@ -44,16 +57,24 @@ tools: ["Bash", "Read", "Grep", "Glob"]
 - <重點 1>
 - <重點 2>
 
-### Codex 節錄（最多 30 行）
-<只貼最有資訊量的片段，不要原樣倒回所有輸出>
+### Codex 節錄（最多 15 行，超過用 ... 截斷）
+<只貼最有資訊量的片段，禁止倒回完整 stdout>
 
 ### 後續建議
 <主對話該不該 apply、要不要進一步驗證>
 ```
 
+## Fallback
+
+| 情況 | 動作 |
+| --- | --- |
+| stdout 空 / 只有 banner | 不重跑同一 prompt，回報「empty output」+ 推測原因（prompt 太模糊 / refusal），請主對話補 context |
+| CLI exit 非 0 / auth error / rate limit | 不重試，回報錯誤訊息原文（節錄）+ 建議動作（重登 / 等冷卻 / 換模型） |
+| 超過 5 分鐘未返回 | 中斷，回報「timeout」+ 已收到的部分輸出（若有） |
+| codex refusal / 明顯 hallucination | 標記「unreliable」，不要當有效結論回報 |
+
 ## 原則
 
 - 不直接 apply codex 給的 diff，把判斷權留給主對話
 - 同一 prompt 不重跑
-- 跑超過 5 分鐘要中斷回報進度
-- prompt 內不放 secrets / production credentials；遇到敏感範圍 escalate 給 Miyago
+- prompt 內不放 secrets / production credentials；遇敏感範圍 escalate 給 Miyago

@@ -40,6 +40,13 @@
 - 需要平行處理的 coding 子任務，可用 subagent 做有邊界的委派。
 - 對規格與文件只做支撐實作所需的最小量，不主動膨脹成長篇流程文件。
 
+## Codex Autonomy Boundary
+
+- 對於 step sizing、spec-first 進入時機、推理深度、local verification、task tracking、tool routing 與 subagent delegation，Codex 應自行判斷。
+- 若問題可以透過 repo 現況、測試、指令輸出、skills、plugins 或外部工具解掉，不要先回頭問 Miyago。
+- 對於 permission mode、scheduled tasks、remote / browser session、worktree、sandbox 與治理層設定，Codex 只能提出建議並等待明確確認。
+- 若提問，必須指出具體 blocker；不要因為自己還沒查完或還沒想夠就發問。
+
 ## Codex Subagent Strategy
 
 - 只有在需要 delegation、平行處理或明確 sidecar 任務時才開 subagent。

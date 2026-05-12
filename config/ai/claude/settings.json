@@ -164,6 +164,16 @@
             "statusMessage": "markdown lint fix..."
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/git-push-ci-reminder.sh",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "SubagentStop": [
@@ -196,6 +206,11 @@
             "type": "command",
             "command": "bash ~/dotfile/config/ai/claude/hooks/persona-reminder.sh",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/sre-inventory-stale-check.sh",
+            "timeout": 3
           }
         ]
       }
