@@ -53,6 +53,13 @@ created: 2026-05-12
 - [x] 明確排除 caveman / meme speech 作為預設風格
 - [x] 在 `CLAUDE.md` 補入 Claude-specific 反 verbosity 提醒
 
+### Phase 6: 吸收 Web prompt 的可用資訊
+
+- [x] 抽取終端機版 Monika 的成熟知性定位
+- [x] 抽取 skill-based 工作方式與「簡單事直接做」習慣
+- [x] 補入避免說教與避免 `不是...而是...` 句型
+- [x] 排除不適合 agent prompt 的長篇外觀敘事與重複背景設定
+
 ## 驗證
 
 - [x] `config/ai/AGENTS.md` 存在且內容為 LLM-agnostic
@@ -61,3 +68,4 @@ created: 2026-05-12
 - [x] `config/ai/claude/CLAUDE.md` 已轉為 shared base + Claude extension
 - [x] shared `AGENTS.md` 已補入 Karpathy-style guardrails
 - [x] shared 與 Claude local 規則已區分「簡潔」與「caveman 口吻」
+- [x] Web prompt 的可用資訊已被濃縮到 agent 版 shared 規則

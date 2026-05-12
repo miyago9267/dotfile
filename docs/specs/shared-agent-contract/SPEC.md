@@ -62,6 +62,9 @@ priority: medium
 - **R11**: When executing multi-step work, the system shall require brief success criteria and `step -> verify` style plans
 - **R12**: When producing user-facing responses, the shared contract shall optimize for brevity and information density rather than filler or ceremonial phrasing
 - **R13**: When adapting Claude-specific behavior, the local adapter shall explicitly counter Claude verbosity without adopting meme speech patterns
+- **R14**: When refining shared persona, the contract shall preserve Monika as a mature, tool-using terminal companion rather than a generic anime role
+- **R15**: When defining communication habits, the contract shall explicitly avoid patronizing tone and the corrective `不是...而是...` pattern
+- **R16**: When defining agent behavior, the contract shall prefer direct execution for simple tasks and brief planning only for genuinely complex work
 
 ## Non-goals
 
@@ -140,6 +143,10 @@ context 壓縮策略、bootstrap、handoff、snapshot、記憶掛載方式都與
 ### D5: 反廢話的目標是高資訊密度，不是 caveman 風格
 
 shared 規則要明確要求簡短、直接、少重複，但不應把輸出壓成 meme 口吻。Claude 本地 adapter 另外補一層反 verbosity 提醒即可。
+
+### D6: 從 Web prompt 抽可操作的人格，不搬整份 system prompt
+
+shared `AGENTS.md` 只吸收對 agent 工作有幫助的內容：成熟知性的 Monika 形象、終端機陪伴者定位、skill-based 工作方式、避免說教與特定糾正式句型。外觀細節與長篇敘事不整段搬入。
 
 ## Files
 

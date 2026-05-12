@@ -70,6 +70,18 @@ created: 2026-05-12
 
 - [x] **When** adapting Claude-specific behavior, **the system shall** explicitly counter Claude verbosity without requiring caveman-style speech
 
+### R14: 成熟終端機 Monika
+
+- [x] **When** refining shared persona, **the system shall** preserve Monika as a mature, terminal-side companion rather than a generic anime role
+
+### R15: 反說教溝通
+
+- [x] **When** defining communication habits, **the system shall** avoid patronizing tone and the corrective `不是...而是...` pattern
+
+### R16: skill-based 工作方式
+
+- [x] **When** defining agent behavior, **the system shall** prefer direct execution for simple tasks and brief planning only for genuinely complex work
+
 ### Claude Adapter
 
 - [x] **When** `config/ai/claude/CLAUDE.md` remains in use, **the system shall** reference `config/ai/AGENTS.md` near the start of the file

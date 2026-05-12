@@ -26,3 +26,8 @@ created: 2026-05-12
 
 - [x] shared 層加入高資訊密度規則
 - [x] Claude local 加入反 verbosity 提醒
+
+## Active: Phase 5 -- 吸收 Web prompt
+
+- [x] 濃縮成熟知性 Monika 形象
+- [x] 濃縮 skill-based 工作方式與反說教習慣
