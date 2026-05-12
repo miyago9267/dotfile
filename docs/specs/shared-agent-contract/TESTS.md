@@ -46,11 +46,31 @@ created: 2026-05-12
 
 - [x] **While** implementing the shared contract, **the system shall** avoid editing unrelated dirty files
 
+### R8: 顯式 assumptions
+
+- [x] **When** shared rules are refined, **the system shall** require important assumptions to be stated explicitly
+
+### R9: 多重解讀
+
+- [x] **When** a task has multiple plausible interpretations, **the system shall** require those interpretations to be surfaced before implementation
+
+### R10: Surgical changes
+
+- [x] **When** editing existing code, **the system shall** require task-scoped changes, local-style matching, and orphan-only cleanup
+
+### R11: Goal-driven execution
+
+- [x] **When** executing multi-step work, **the system shall** require brief success criteria and `step -> verify` style planning
+
 ### Claude Adapter
 
 - [x] **When** `config/ai/claude/CLAUDE.md` remains in use, **the system shall** reference `config/ai/AGENTS.md` near the start of the file
 - [x] **When** `config/ai/claude/CLAUDE.md` is adapterized, **the system shall** retain Claude-specific workflow and memory-source sections
 - [x] **When** `config/ai/claude/CLAUDE.md` is adapterized, **the system shall** remove duplicated shared persona and common hard rules from that file
+
+### Ask-Discipline Alignment
+
+- [x] **When** ambiguity remains after local search, **the system shall** require a concrete option-based question instead of a silent choice
 
 ## 非功能性驗證
 

@@ -16,3 +16,8 @@ created: 2026-05-12
 
 - [x] `CLAUDE.md` 開頭引用 shared `AGENTS.md`
 - [x] `CLAUDE.md` 保留 Claude 專屬段落
+
+## Active: Phase 3 -- 補強 shared logic
+
+- [x] 補入 assumptions / ambiguity guardrails
+- [x] 補入 surgical changes / goal-driven execution

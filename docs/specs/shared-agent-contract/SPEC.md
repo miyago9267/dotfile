@@ -56,6 +56,10 @@ priority: medium
 - **R5**: When the shared contract is written, the document shall exclude runtime-specific workflow rules such as context compaction, bootstrap/handoff/snapshot flow, and vendor-specific memory loading
 - **R6**: When agent-specific entry files remain in use, the shared contract shall state that local `CLAUDE.md` / `GEMINI.md` / `AGENTS.md` files may extend or override the shared rules for their own runtime needs
 - **R7**: While implementing the shared contract, the change shall avoid editing files that already contain unrelated user changes unless the edit is necessary and can be merged safely
+- **R8**: When shared rules are refined, the document shall explicitly require assumptions to be surfaced, not silently chosen
+- **R9**: When a task has multiple plausible interpretations, the system shall require those interpretations to be named before implementation proceeds
+- **R10**: When editing existing code, the system shall require surgical changes: only task-related lines, matching local style, and only removing orphans created by the current change
+- **R11**: When executing multi-step work, the system shall require brief success criteria and `step -> verify` style plans
 
 ## Non-goals
 
@@ -127,10 +131,15 @@ context 壓縮策略、bootstrap、handoff、snapshot、記憶掛載方式都與
 
 `config/ai/claude/CLAUDE.md` 在開頭引用 `config/ai/AGENTS.md`，並只保留 Claude 專屬 workflow、script、文件結構與記憶來源。
 
+### D4: 補強 shared contract 採用 Karpathy-style guardrails
+
+在不引入 vendor-specific workflow 的前提下，補入四種缺失較明顯的 guardrails：顯式 assumptions、避免靜默選解、surgical changes、goal-driven verification。
+
 ## Files
 
 - Create: `config/ai/AGENTS.md`
 - Update: `config/ai/claude/CLAUDE.md`
+- Update: `config/ai/claude/skills/ask-discipline/SKILL.md`
 - Create: `docs/specs/shared-agent-contract/SPEC.md`
 - Create: `docs/specs/shared-agent-contract/TASKS.md`
 - Create: `docs/specs/shared-agent-contract/TESTS.md`
