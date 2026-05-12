@@ -2,6 +2,11 @@
 name: auto-spec
 description: "規格與進度自動追蹤 -- 背景持續運作，自動判斷任務是否需要 spec、追蹤 TASKS.md checkbox、連動 commit。不需手動觸發；手動啟動完整 SDD 流程請用 /sdd。"
 alwaysApply: true
+when_to_use: "任務不是 trivial fix，或進入中大型實作、功能修改、跨檔變更，需要 spec/TASKS/PROGRESS 同步時。"
+tags: [spec, sdd, progress, tasks, planning, tracking]
+effort: medium
+shell: preferred
+runtime-scope: shared-core
 ---
 
 # 自動規格追蹤

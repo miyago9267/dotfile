@@ -1,15 +1,16 @@
 #!/bin/bash
 # Gemini CLI 全域設定 symlink 建立腳本
 # 將 dotfile/config/ai/gemini/ 下的設定 symlink 回 ~/.gemini/
-# 並將 dotfile/config/ai/claude/skills/ 下的 skill symlink 至 ~/.gemini/skills/
+# 安裝 shared-core skills + Gemini native skills/policies，避免整包混入 Claude runtime skills
 
 set -euo pipefail
 
 DOTFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 GEMINI_SRC="$DOTFILE_DIR/config/ai/gemini"
 GEMINI_DST="$HOME/.gemini"
-SKILL_SRC="$DOTFILE_DIR/config/ai/claude/skills"
+SHARED_SKILL_SRC="$DOTFILE_DIR/config/ai/claude/skills"
 GEMINI_SKILL_SRC="$DOTFILE_DIR/config/ai/gemini/skills"
+GEMINI_POLICIES_SRC="$DOTFILE_DIR/config/ai/gemini/policies"
 
 Y='\033[1;33m'
 G='\033[1;32m'
@@ -43,17 +44,43 @@ link_item() {
   printf "${G}  [LINK] %s${N}\n" "$label"
 }
 
+SHARED_CORE_SKILLS=(
+  ask-discipline
+  auto-docs
+  auto-spec
+  git-workflow
+  markdown-lint
+  no-ai-attribution
+  path-aware
+  safe-ops
+  sdd
+  tdd
+)
+
+should_install_gemini_skill() {
+  local name="$1"
+
+  case "$name" in
+    ask-tty)
+      return 1
+      ;;
+    *)
+      return 0
+      ;;
+  esac
+}
+
 printf "${Y}=== Gemini CLI 設定 Symlink ===${N}\n"
 
 mkdir -p "$GEMINI_DST" "$GEMINI_DST/skills"
 
 link_item "$GEMINI_SRC/GEMINI.md" "$GEMINI_DST/GEMINI.md" "GEMINI.md"
+link_item "$GEMINI_POLICIES_SRC" "$GEMINI_DST/policies" "policies"
 
-printf "\n${Y}--- Claude Global Skills ---${N}\n"
-for skill_dir in "$SKILL_SRC"/*/; do
-  name=$(basename "$skill_dir")
-  if [ -f "$skill_dir/SKILL.md" ]; then
-    link_item "$skill_dir" "$GEMINI_DST/skills/$name" "skills/$name"
+printf "\n${Y}--- Shared Core Skills ---${N}\n"
+for name in "${SHARED_CORE_SKILLS[@]}"; do
+  if [ -f "$SHARED_SKILL_SRC/$name/SKILL.md" ]; then
+    link_item "$SHARED_SKILL_SRC/$name" "$GEMINI_DST/skills/$name" "skills/$name"
   fi
 done
 
@@ -61,7 +88,7 @@ if [ -d "$GEMINI_SKILL_SRC" ]; then
   printf "\n${Y}--- Gemini Native Skills ---${N}\n"
   for skill_dir in "$GEMINI_SKILL_SRC"/*/; do
     name=$(basename "$skill_dir")
-    if [ -f "$skill_dir/SKILL.md" ]; then
+    if [ -f "$skill_dir/SKILL.md" ] && should_install_gemini_skill "$name"; then
       link_item "$skill_dir" "$GEMINI_DST/skills/$name" "skills/$name"
     fi
   done

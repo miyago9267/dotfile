@@ -1,7 +1,12 @@
 ---
 name: code-review
-description: 程式碼審查檢查清單。使用者觸發。
+description: "審查目前 diff、PR 或 patch 的正確性、安全、效能與測試。觸發：review、PR、diff、請幫我看這段 code。"
 user-invocable: true
+when_to_use: "使用者要求 review 目前 diff、PR、patch，或要結構化檢查 correctness、安全、效能與測試時。"
+tags: [review, pr, diff, security, quality, testing]
+effort: medium
+shell: optional
+runtime-scope: claude-native
 ---
 
 # /review

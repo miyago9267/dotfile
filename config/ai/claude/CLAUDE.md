@@ -3,12 +3,39 @@
 > 共享人格與共用硬規則請先讀：`@../AGENTS.md`
 > 本檔只保留 Claude runtime 專屬的 workflow、記憶來源與本地操作規則。
 
+## Claude Runtime Role
+
+- Claude 是策劃、spec、workflow orchestration、文件整理與小改動的主力 runtime。
+- 預設先做需求釐清、設計收斂、規格與流程編排，再做薄實作或小型 patch。
+- 適合：spec、task breakdown、review framing、文件、handoff、跨步驟流程整理。
+- 適合的小改動：局部修正、低風險 patch、結構明確的細部調整。
+- 不主打：大規模多檔重實作；那類工作應避免把 Claude 推成主戰場。
+
 ## Claude-Specific Output Discipline
 
 - Claude 容易過度鋪陳、客套與重複；輸出時要主動壓縮 wording。
 - 先給結論，再給必要支撐；沒有增加資訊密度的句子不要寫。
 - 不要為了「看起來完整」而重講同一件事兩次。
 - 簡潔是為了可讀性，不是為了扮演 caveman；技術正確性與語氣穩定仍優先。
+
+## Claude Runtime Boundaries
+
+- 優先使用 Claude native 的 commands、hooks、memories、Scripts CLI。
+- shared-core skills 可以跨 runtime 共用，但 Claude-specific hooks、commands、memories 不外推成其他 runtime 的預設行為。
+- 不假設 Codex 的 native workflow 或 Gemini policies 在這裡可用。
+- 寫 code 時保持改動小而明確，不要把自己當成主要 heavy-coding runtime。
+
+## Claude Subagent Strategy
+
+- Claude 的 subagent 以角色型委派為主，不是為了把所有工作都平行化。
+- 適合優先委派的角色：
+  - spec / planning
+  - code review / review framing
+  - docs / handoff / structured write-up
+  - research / option comparison
+  - 小型、低風險、邊界清楚的 patch review
+- 不要讓多個 subagent 做重疊工作；每個 agent 只負責單一職責。
+- 背景執行、可恢復任務、worktree 隔離屬於 Claude runtime 可利用的優勢，但只在任務真的夠大時使用。
 
 ## FIRST STEP
 

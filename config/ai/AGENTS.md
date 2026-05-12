@@ -47,10 +47,24 @@
 - `description` 必須具體說明這個 skill 在什麼情況下觸發，以及它解決什麼問題。
 - `description` 優先使用使用者真的會說的問題語言與關鍵詞，不要只寫抽象能力名稱。
 - 相近 skill 必須在主描述或正文早段寫清楚邊界，避免誤觸發。
+- 高頻 skill 應補齊 routing metadata：`when_to_use`、`tags`、`effort`、`shell`、`runtime-scope`。
+- `when_to_use` 用一句話寫明典型任務與進入條件，不要重複 `description` 的字面內容。
+- `tags` 使用 3-8 個短關鍵詞，方便跨 runtime 做能力映射與 inventory。
+- `effort` 使用固定集合：`low` / `medium` / `high`。
+- `shell` 使用固定集合：`none` / `optional` / `preferred` / `required`。
+- `runtime-scope` 使用固定集合：`shared-core` / `claude-native` / `codex-native` / `gemini-native`。
 - 一個 `SKILL.md` 盡量控制在約 500 行內；若內容持續膨脹，優先拆 supporting files。
 - 主 `SKILL.md` 只保留核心規則：目的、觸發、邊界、流程骨架、輸入輸出、分流方式。
 - 長範例、查表資料、CLI 參考、重複模板、腳本實作，應移到 supporting files 或 scripts。
 - supporting files 的存在是為了降低重複與維持可讀性；主檔必須能指出何時該讀哪個 supporting file。
+
+## Automation Routing
+
+1. 能由明確事件、短邏輯、低副作用決定的事情，優先做成 hook。
+2. 需要上下文理解、流程分流或 domain workflow 的事情，優先做成 skill。
+3. 需要即時外部狀態、第三方平台、雲端服務或資料查詢的事情，優先走 MCP 或等價外部工具。
+4. 角色 specialization 是預設偏向，不是能力刪除；跨 runtime 能共用的能力保留在 `shared-core`。
+5. 只有在 hook、skill、MCP 都不足以安全決定時，才向 Miyago 提問。
 
 ## Cross-Runtime Compatibility
 

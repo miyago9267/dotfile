@@ -2,6 +2,11 @@
 name: issue-ops
 description: "管理 Issue 到 PR 的全流程 -- 觸發：issue、PR、MR、要做什麼、找 bug、開 PR、review 回了什麼、CI 過了沒。任意階段進入，進入後往下接。平台偵測依賴 repo-status，CI 深入分析切 cicd-watch。"
 alwaysApply: false
+when_to_use: "任務牽涉 issue、PR、MR、review、CI 狀態，或要從 discovery 一路走到 submit/track 時。"
+tags: [issue, pr, mr, review, ci, workflow]
+effort: high
+shell: required
+runtime-scope: claude-native
 ---
 
 # Issue-to-PR 全流程

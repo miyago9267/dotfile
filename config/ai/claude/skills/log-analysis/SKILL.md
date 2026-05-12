@@ -2,6 +2,11 @@
 name: log-analysis
 description: "日誌分析方法論 -- 觸發：使用者分享 log、提到錯誤日誌、debug production、查 log。系統性從日誌中抓 pattern，區分 signal 和 noise。"
 alwaysApply: false
+when_to_use: "需要分析錯誤日誌、production log、stack trace，或要從 log 中定位 root cause 時。"
+tags: [logs, incident, production, root-cause, debugging, sre]
+effort: medium
+shell: required
+runtime-scope: claude-native
 ---
 
 # 日誌分析方法論

@@ -2,6 +2,11 @@
 name: repo-status
 description: 主動偵測 Git remote 平台（GitHub/GitLab），檢查 repo 與 pipeline 狀態，缺少認證時提醒使用者。永遠生效。
 alwaysApply: true
+when_to_use: "進入有 git remote 的 repo、git push 之後，或使用者問到 PR、MR、pipeline、CI 狀態時。"
+tags: [git, github, gitlab, ci, pr, repo]
+effort: low
+shell: required
+runtime-scope: claude-native
 ---
 
 # repo-status -- Git Remote 感知與 CI/CD 狀態偵測

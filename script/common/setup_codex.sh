@@ -1,14 +1,14 @@
 #!/bin/bash
 # Codex CLI 全域設定 symlink 建立腳本
 # 將 dotfile/config/ai/codex/ 下的設定 symlink 回 ~/.codex/
-# 並將 dotfile/config/ai/claude/skills/ 下的 skill symlink 至 ~/.codex/skills/
+# 安裝 shared-core skills + Codex native skills，避免整包混入 Claude runtime skills
 
 set -euo pipefail
 
 DOTFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CODEX_SRC="$DOTFILE_DIR/config/ai/codex"
 CODEX_DST="$HOME/.codex"
-SKILL_SRC="$DOTFILE_DIR/config/ai/claude/skills"
+SHARED_SKILL_SRC="$DOTFILE_DIR/config/ai/claude/skills"
 CODEX_SKILL_SRC="$DOTFILE_DIR/config/ai/codex/skills"
 
 Y='\033[1;33m'
@@ -43,17 +43,31 @@ link_item() {
   printf "${G}  [LINK] %s${N}\n" "$label"
 }
 
+SHARED_CORE_SKILLS=(
+  ask-discipline
+  auto-docs
+  auto-spec
+  efficiency
+  git-workflow
+  markdown-lint
+  no-ai-attribution
+  path-aware
+  safe-ops
+  sdd
+  search-discipline
+  tdd
+)
+
 printf "${Y}=== Codex CLI 設定 Symlink ===${N}\n"
 
 mkdir -p "$CODEX_DST" "$CODEX_DST/skills"
 
 link_item "$CODEX_SRC/AGENTS.md" "$CODEX_DST/AGENTS.md" "AGENTS.md"
 
-printf "\n${Y}--- Claude Global Skills ---${N}\n"
-for skill_dir in "$SKILL_SRC"/*/; do
-  name=$(basename "$skill_dir")
-  if [ -f "$skill_dir/SKILL.md" ]; then
-    link_item "$skill_dir" "$CODEX_DST/skills/$name" "skills/$name"
+printf "\n${Y}--- Shared Core Skills ---${N}\n"
+for name in "${SHARED_CORE_SKILLS[@]}"; do
+  if [ -f "$SHARED_SKILL_SRC/$name/SKILL.md" ]; then
+    link_item "$SHARED_SKILL_SRC/$name" "$CODEX_DST/skills/$name" "skills/$name"
   fi
 done
 

@@ -34,6 +34,11 @@ user-invocable: true
 ---
 name: kebab-case              # 必填，routing 用
 description: "動詞 + 做什麼 -- 何時/如何"  # 必填，< 120 字
+when_to_use: "典型任務與進入條件"          # 必填，1 句
+tags: [tag1, tag2, tag3]                  # 必填，3-8 個
+effort: low|medium|high                   # 必填
+shell: none|optional|preferred|required   # 必填
+runtime-scope: shared-core|claude-native|codex-native|gemini-native
 alwaysApply: true/false       # 或 user-invocable: true（二擇一）
 ---
 ```
@@ -47,6 +52,10 @@ description 是 Gemini 匹配「使用者問題 -> skill」的依據。
 - 優先放 2-6 個使用者真的會說的 trigger keywords 或短語
 - 相近 skill 標註邊界，避免觸發衝突
 - 不列 CLI 工具名 -- CLI 是實作細節
+- `when_to_use` 用一句話說明典型任務與進入條件
+- `tags` 只放短關鍵詞，不要塞整句
+- `effort` 表示典型推理/流程成本，不是 token 配額
+- `shell` 表示此 skill 對 shell/tooling 的依賴強度
 
 ### Content 必要段落
 
@@ -98,6 +107,7 @@ description 是 Gemini 匹配「使用者問題 -> skill」的依據。
 | 問題 | 正確做法 |
 |------|----------|
 | description 用能力名稱 | 放使用者問題關鍵字 |
+| 沒補 metadata | 補 `when_to_use` / `tags` / `effort` / `shell` / `runtime-scope` |
 | 主檔塞滿長範例/查表 | 拆到 supporting files，主檔只留骨架 |
 | 步驟沒有判定 | 每步 OK/FAIL + 輸出變數 |
 | Phase 1 就寫檔 | 使用者確認後才寫 |

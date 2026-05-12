@@ -48,6 +48,18 @@
     ]
   },
   "hooks": {
+    "InstructionsLoaded": [
+      {
+        "matcher": "session_start|include|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/instructions-loaded-reminder.sh",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
@@ -61,6 +73,42 @@
             "type": "command",
             "command": "bash ~/dotfile/config/ai/claude/hooks/auto-yes.sh",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/git-add-guard.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/commit-attribution-guard.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/ops-write-guard.sh",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/skills/strategic-compact/suggest-compact.sh",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "CwdChanged": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/cwd-context.sh",
+            "timeout": 3
           }
         ]
       }
@@ -73,6 +121,28 @@
             "type": "command",
             "command": "bash ~/dotfile/config/ai/claude/hooks/tty-respond.sh",
             "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/pre-compact-instructions.sh",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/post-compact-reminder.sh",
+            "timeout": 3
           }
         ]
       }
@@ -92,6 +162,28 @@
             "command": "bash ~/dotfile/config/ai/claude/hooks/markdown-lint-fix.sh",
             "timeout": 15,
             "statusMessage": "markdown lint fix..."
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/subagent-stop-reminder.sh",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/task-completed-reminder.sh",
+            "timeout": 3
           }
         ]
       }
