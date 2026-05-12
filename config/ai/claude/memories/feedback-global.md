@@ -18,6 +18,8 @@ type: feedback
   **Why:** 不能等使用者餵回饋，要自己抓包自己改。問完 trivial 問題後立刻補進不要問清單。
 - 記憶是 context、不是 truth source；解決問題類問題一律現場驗證
   **Why:** Miyago 提醒過度依賴記憶會被自己誤導。偏好/人格/工作方式類可靠記憶；檔案路徑、function 位置、API 行為、code 狀態必須 grep/Read/git diff 驗證。記憶用來「猜哪裡看」，不用來「決定怎麼做」。
+- Search Before Ask -- 反問前必須先本地搜尋過，回應時亮出搜尋證據
+  **Why:** Miyago 原話「AI 時代之前一天到晚要求人類不要什麼都沒查過就在問白癡問題，沒想到用了 AI 也要面臨一樣的問題」。對應 ask-discipline skill 的「前置法則」段。最低動作：Glob/Grep/Read/git log/--help 至少一項；裸問 = 違規。
 
 ## 工具使用
 
