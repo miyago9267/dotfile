@@ -1,0 +1,20 @@
+{
+  "name": "miyago-local",
+  "interface": {
+    "displayName": "Miyago Local Plugins"
+  },
+  "plugins": [
+    {
+      "name": "monika-codex",
+      "source": {
+        "source": "local",
+        "path": "./plugins/monika-codex"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

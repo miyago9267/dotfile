@@ -1,0 +1,17 @@
+ask-discipline
+auto-docs
+auto-spec
+cicd-watch
+code-review
+docker-k8s
+efficiency
+git-workflow
+markdown-lint
+no-ai-attribution
+path-aware
+project-map
+safe-ops
+sdd
+search-discipline
+strategic-compact
+tdd

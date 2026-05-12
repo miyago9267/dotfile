@@ -1,0 +1,40 @@
+{
+  "name": "monika-codex",
+  "version": "0.1.0",
+  "description": "Monika Codex toolkit with shared agent rules, Codex adapter, project templates, and curated workflow skills.",
+  "author": {
+    "name": "Miyago",
+    "url": "https://github.com/miyago9267"
+  },
+  "homepage": "https://github.com/miyago9267/dotfile",
+  "repository": "https://github.com/miyago9267/dotfile",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "agents",
+    "plugin",
+    "sdd",
+    "tdd",
+    "workflow",
+    "skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Monika for Codex",
+    "shortDescription": "Codex agent rules, templates, and workflow skills.",
+    "longDescription": "Packages Miyago's shared agent contract, Codex runtime adapter, curated workflow skills, and project bootstrap templates for Codex.",
+    "developerName": "Miyago",
+    "category": "Productivity",
+    "capabilities": [
+      "Write",
+      "Interactive"
+    ],
+    "websiteURL": "https://github.com/miyago9267/dotfile",
+    "brandColor": "#2E6F95",
+    "defaultPrompt": [
+      "Bootstrap this repo with Monika Codex project rules.",
+      "Continue the active spec and implement the next task.",
+      "Review the current diff with Miyago's workflow rules."
+    ]
+  }
+}

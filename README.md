@@ -195,6 +195,7 @@ Available installation scripts in `script/common/`:
 
 - `install_gh.sh` - GitHub CLI
 - `install_claude.sh` - Claude Code CLI
+- `install_codex.sh` - Codex CLI + Monika Codex plugin
 - `install_yazi.sh` - Yazi file manager + zoxide + bat
 - `install_argocd.sh` - ArgoCD CLI
 - `install_kubectl.sh` - Kubernetes CLI

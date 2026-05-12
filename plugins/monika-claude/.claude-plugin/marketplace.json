@@ -1,0 +1,49 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "monika-claude",
+  "description": "Monika workflow toolkit for disciplined Claude Code development",
+  "owner": {
+    "name": "Miyago",
+    "email": "miyago9267@gmail.com"
+  },
+  "metadata": {
+    "description": "SDD/TDD workflows, agents, session management, commands, hooks, and production-hardened rules"
+  },
+  "plugins": [
+    {
+      "name": "monika-claude",
+      "source": "./",
+      "description": "Claude-first Monika toolkit with skills, commands, hooks, project templates, and session scripts",
+      "version": "1.0.0",
+      "author": {
+        "name": "Miyago",
+        "email": "miyago9267@gmail.com"
+      },
+      "homepage": "https://github.com/miyago9267/dotfile",
+      "repository": "https://github.com/miyago9267/dotfile",
+      "license": "MIT",
+      "keywords": [
+        "claude",
+        "sdd",
+        "tdd",
+        "agents",
+        "skills",
+        "commands",
+        "session-management",
+        "workflow"
+      ],
+      "category": "workflow",
+      "tags": [
+        "claude",
+        "sdd",
+        "tdd",
+        "agents",
+        "skills",
+        "commands",
+        "hooks",
+        "project-templates"
+      ],
+      "strict": false
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+- [x] 建立 Claude packaging spec
+- [x] 新增 Claude artifact build / validate 腳本
+- [x] 將 artifact build/install 接到 `install_claude.sh`
+- [x] 產出 `plugins/monika-claude/`
+- [x] 驗證 artifact manifest、README、install flow

@@ -1,0 +1,22 @@
+{
+  "name": "monika-claude",
+  "version": "1.0.0",
+  "description": "Monika Claude toolkit with SDD/TDD workflows, commands, agents, skills, hooks, and project bootstrap scripts.",
+  "author": {
+    "name": "Miyago",
+    "url": "https://github.com/miyago9267"
+  },
+  "homepage": "https://github.com/miyago9267/dotfile",
+  "repository": "https://github.com/miyago9267/dotfile",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "agents",
+    "plugin",
+    "sdd",
+    "tdd",
+    "workflow",
+    "hooks",
+    "commands"
+  ]
+}

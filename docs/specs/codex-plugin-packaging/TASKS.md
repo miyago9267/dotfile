@@ -1,0 +1,7 @@
+- [x] 建立 Codex plugin packaging spec
+- [x] 建立 `config/ai/codex-plugin` source 結構
+- [x] 新增 build / validate / export / project-init 腳本
+- [x] 新增 local plugin install 腳本並接到 `install_codex.sh`
+- [x] 建立 `plugins/monika-codex` artifact 與 `.agents/plugins/marketplace.json`
+- [x] 更新 README 說明與 Codex 安裝入口
+- [x] 執行 build 與驗證

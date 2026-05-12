@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/post-tool-use-format.sh",
+            "timeout": 30,
+            "statusMessage": "Auto format & lint..."
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/markdown-lint-fix.sh",
+            "timeout": 15,
+            "statusMessage": "Markdown lint fix..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/skills/strategic-compact/suggest-compact.sh",
+            "timeout": 5,
+            "statusMessage": "Checking compact threshold..."
+          }
+        ]
+      }
+    ]
+  }
+}
