@@ -7,18 +7,20 @@ Usage:
   yt [options] URL [yt-dlp options...]
 
 Modes:
-  yt URL              Download highest-quality video
-  yt -v URL           Download highest-quality video
-  yt -a URL           Download highest-quality audio
+  yt URL              Download Premiere-friendly mp4 video
+  yt -v URL           Download Premiere-friendly mp4 video
+  yt -a URL           Download m4a audio
   yt --mp3 URL        Download audio and convert to mp3
   yt --m4a URL        Download audio and convert to m4a
+  yt --webm URL       Download raw highest-quality video
 
 All other arguments are passed through to yt-dlp.
 EOF
 }
 
 mode="video"
-audio_format="best"
+audio_format="m4a"
+video_format="premiere"
 args=()
 
 while (($#)); do
@@ -29,6 +31,11 @@ while (($#)); do
       ;;
     -v|--video)
       mode="video"
+      shift
+      ;;
+    --webm|--raw)
+      mode="video"
+      video_format="raw"
       shift
       ;;
     --mp3)
@@ -82,8 +89,17 @@ case "$mode" in
       "${args[@]}"
     ;;
   video)
+    if [ "$video_format" = "raw" ]; then
+      exec yt-dlp \
+        -f 'bestvideo*+bestaudio/best' \
+        "${common_args[@]}" \
+        "${args[@]}"
+    fi
+
     exec yt-dlp \
-      -f 'bestvideo*+bestaudio/best' \
+      -f 'bv*[ext=mp4][vcodec^=avc1]+ba[ext=m4a]/b[ext=mp4][vcodec^=avc1]/bv*+ba/b' \
+      --merge-output-format mp4 \
+      --recode-video mp4 \
       "${common_args[@]}" \
       "${args[@]}"
     ;;

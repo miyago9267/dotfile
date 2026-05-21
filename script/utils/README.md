@@ -11,7 +11,7 @@
 | `qb` | 快速備份（加時間戳） | `qb myfile.conf` |
 | `qn` | 快速筆記 | `qn add "todo"`、`qn list`、`qn search keyword` |
 | `si` | 系統資訊（OS, CPU, RAM, Disk, Network） | `si` |
-| `yt` | yt-dlp wrapper，預設最高畫質影片，可切音源 | `yt URL`、`yt -a URL`、`yt --mp3 URL` |
+| `yt` | yt-dlp wrapper，預設 Premiere 友善 MP4，可切音源 | `yt URL`、`yt -a URL`、`yt --mp3 URL`、`yt --webm URL` |
 | `extract` | 智能解壓縮（tar/zip/rar/7z/bz2...） | `extract archive.tar.gz` |
 | `runcpp.sh` | C++ 編譯執行（支援 GDB, 最佳化旗標） | `runcpp.sh main.cpp` |
 | `cfupdate.py` | CloudFlare DNS 動態更新 | 需設定 API token |
