@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage:
+  yt [options] URL [yt-dlp options...]
+
+Modes:
+  yt URL              Download highest-quality video
+  yt -v URL           Download highest-quality video
+  yt -a URL           Download highest-quality audio
+  yt --mp3 URL        Download audio and convert to mp3
+  yt --m4a URL        Download audio and convert to m4a
+
+All other arguments are passed through to yt-dlp.
+EOF
+}
+
+mode="video"
+audio_format="best"
+args=()
+
+while (($#)); do
+  case "$1" in
+    -a|--audio)
+      mode="audio"
+      shift
+      ;;
+    -v|--video)
+      mode="video"
+      shift
+      ;;
+    --mp3)
+      mode="audio"
+      audio_format="mp3"
+      shift
+      ;;
+    --m4a)
+      mode="audio"
+      audio_format="m4a"
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      args+=("$@")
+      break
+      ;;
+    *)
+      args+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if ! command -v yt-dlp >/dev/null 2>&1; then
+  printf 'yt: yt-dlp not found in PATH\n' >&2
+  exit 127
+fi
+
+if ((${#args[@]} == 0)); then
+  usage >&2
+  exit 2
+fi
+
+common_args=(
+  --no-mtime
+  -o '%(title).200s [%(id)s].%(ext)s'
+)
+
+case "$mode" in
+  audio)
+    exec yt-dlp \
+      -f 'bestaudio/best' \
+      -x \
+      --audio-format "$audio_format" \
+      "${common_args[@]}" \
+      "${args[@]}"
+    ;;
+  video)
+    exec yt-dlp \
+      -f 'bestvideo*+bestaudio/best' \
+      "${common_args[@]}" \
+      "${args[@]}"
+    ;;
+esac
