@@ -16,7 +16,6 @@
       "mcp__claude_ai_Canva__generate-design",
       "mcp__claude_ai_Canva__create-design-from-candidate",
       "mcp__claude_ai_Canva__export-design",
-      "Bash(rtk git *)",
       "Bash(echo \"deleted: $?\")",
       "Bash(/bin/ls /Users/miyago/Project/Code/Web/RiceCall/RiceCallAdminPanel/app/components/ui/UuidCell.vue)",
       "Bash(/bin/ls -1)",
@@ -64,11 +63,6 @@
       {
         "matcher": "Bash",
         "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/miyago/.claude/hooks/rtk-rewrite.sh",
-            "timeout": 10
-          },
           {
             "type": "command",
             "command": "bash ~/dotfile/config/ai/claude/hooks/auto-yes.sh",

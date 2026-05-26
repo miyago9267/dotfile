@@ -134,7 +134,6 @@ docs/specs/_templates/  # 模板檔
 
 ## Claude Memory Sources
 
-@RTK.md
 @memories/user-profile.md
 @memories/feedback-global.md
 @memories/references-global.md
