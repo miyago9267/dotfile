@@ -2,6 +2,8 @@
 background = #252933
 foreground = #e5e9f0
 
+term = "xterm-256color"
+
 # Normal colors
 palette = 0=#2e3440
 palette = 1=#bf616a
