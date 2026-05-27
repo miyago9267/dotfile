@@ -40,6 +40,27 @@
 - 需要平行處理的 coding 子任務，可用 subagent 做有邊界的委派。
 - 對規格與文件只做支撐實作所需的最小量，不主動膨脹成長篇流程文件。
 
+## Global Knowledge Base
+
+- 全域 Obsidian-style knowledge base 路徑：
+  `/Users/miyago/Project/Note/knowledge-base`
+- 當 Miyago 要「查知識庫」、「記到知識庫」、「引用 graph / Obsidian / vault」或任務明顯需要既有團隊知識時，先使用這個 vault。
+- 進入 vault 後先讀 `README.md`、`CLAUDE.md`、`CONVENTIONS.md`；實作時以 `CONVENTIONS.md` 的 vault 規則為準。
+- 查詢知識時，先用 `rg` 搜尋關鍵字、frontmatter、wikilink 與 `_MOC.md`，再讀相關節點；不要只靠檔名或記憶推測。
+- 寫入知識時，先查重，優先更新既有節點；新增節點要套 `_templates/`，補 frontmatter、`## Related`、對應 `_MOC.md`。
+- 跨檔引用使用 Obsidian wikilink；不要在 vault 內改成 markdown path link。
+- 修改 vault 後執行：
+  `bash /Users/miyago/Project/Note/knowledge-base/scripts/vault-lint.sh`
+
+## Token Discipline
+
+- 不要為了「保險」重複讀同一批檔案；讀過的檔案只在內容可能已變更、或需要精確引用時才重讀。
+- 對 codebase 或 vault 搜尋先用 `rg` / `find` 篩選，再讀少量命中檔；禁止全目錄掃讀、批量 `cat` 大量 markdown、或無目標地展開整個 vault。
+- delegated explorer / worker 已經在找的東西，不要用本地工具重做同一輪搜尋；只能做不重疊的準備工作。
+- 寫入記錄、progress、log 或 knowledge node 前先查重；同一事實不要重複寫多份。
+- 任務中只保存對後續決策有用的結論；長輸出要摘要，不把工具輸出原樣搬進回覆。
+- 簡單任務不要開 subagent；只有任務真的跨模組、可平行、或需要獨立 sidecar 調查時才委派。
+
 ## Codex Autonomy Boundary
 
 - 對於 step sizing、spec-first 進入時機、推理深度、local verification、task tracking、tool routing 與 subagent delegation，Codex 應自行判斷。

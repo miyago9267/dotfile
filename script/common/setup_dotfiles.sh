@@ -25,4 +25,5 @@ link "$dir/config/vim/.vimrc"        ~/.vimrc
 link "$dir/config/nvim"              ~/.config/nvim
 link "$dir/config/ghostty/config"    ~/.config/ghostty/config
 link "$dir/config/fastfetch"         ~/.config/fastfetch
-
+link "$dir/config/opencode"          ~/.config/opencode
+link "$dir/config/opencode-harness"  ~/.config/opencode-harness
