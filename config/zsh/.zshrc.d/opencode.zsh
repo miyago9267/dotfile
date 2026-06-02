@@ -20,6 +20,16 @@ och() {
   opencode-harness "$@"
 }
 
+opencode-studio() {
+  OPENCODE_CONFIG="$HOME/.config/opencode-studio/opencode.json" \
+    OPENCODE_CONFIG_DIR="$HOME/.config/opencode-studio" \
+    opencode "$@"
+}
+
+ocstudio() {
+  opencode-studio "$@"
+}
+
 ulw() {
   opencode-harness run --agent "Sisyphus - ultraworker" --command ulw-loop "$@"
 }

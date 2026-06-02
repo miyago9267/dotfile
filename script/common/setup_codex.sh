@@ -64,6 +64,10 @@ mkdir -p "$CODEX_DST" "$CODEX_DST/skills"
 
 link_item "$CODEX_SRC/AGENTS.md" "$CODEX_DST/AGENTS.md" "AGENTS.md"
 
+for profile in fast code heavy; do
+  link_item "$CODEX_SRC/$profile.config.toml" "$CODEX_DST/$profile.config.toml" "$profile.config.toml"
+done
+
 printf "\n${Y}--- Shared Core Skills ---${N}\n"
 for name in "${SHARED_CORE_SKILLS[@]}"; do
   if [ -f "$SHARED_SKILL_SRC/$name/SKILL.md" ]; then

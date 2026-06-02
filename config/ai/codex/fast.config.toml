@@ -1,0 +1,26 @@
+model = "gpt-5.4"
+model_reasoning_effort = "low"
+plan_mode_reasoning_effort = "medium"
+sandbox_mode = "workspace-write"
+approval_policy = "never"
+
+[features]
+js_repl = false
+
+[plugins."github@openai-curated"]
+enabled = false
+
+[plugins."computer-use@openai-bundled"]
+enabled = false
+
+[plugins."browser@openai-bundled"]
+enabled = false
+
+[plugins."documents@openai-primary-runtime"]
+enabled = false
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = false
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = false

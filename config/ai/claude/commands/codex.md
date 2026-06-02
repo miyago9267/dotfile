@@ -16,13 +16,13 @@ description: "互動式呼叫 OpenAI Codex CLI 跑非互動 prompt（second opin
 ## 預設
 
 - 工作目錄：當前 pwd
-- 非互動：一律走 `codex exec`，不開 TUI
+- 非互動：一律走 `codex exec --ignore-user-config -p fast`，不開 TUI
 - 沒帶 prompt：dispatch 為 `codex review`
 
 ## 流程
 
 1. 解析使用者帶入的 prompt（空 = `codex review`）
-2. 透過 codex sub-agent 呼叫 `codex exec`
+2. 透過 codex sub-agent 呼叫 exact command：`codex exec --ignore-user-config -p fast --cd <pwd> "<prompt>"`
 3. 回報結構化結果（依 codex agent 的回報格式）
 4. 主對話決定是否 apply codex 的建議
 

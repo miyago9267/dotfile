@@ -22,6 +22,7 @@ Desktop.ini
 # AI workspace (not versioned)
 docs/ai/
 .ai/
+.omo/
 # PROGRESS.md 在 docs/specs/ 底下需要 commit，只排除根目錄的
 /PROGRESS.md
 

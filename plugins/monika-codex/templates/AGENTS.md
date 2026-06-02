@@ -214,8 +214,8 @@
 3. 回答前先做 fact-check thinking。
 4. 若資料不足，直接說明「沒有足夠資料」或「無法確定」，不要補完或臆測。
 5. 提問前先做至少一輪本地搜尋或現場驗證，不准裸問。
-6. 非 trivial 任務先找或建 spec：`docs/specs/<slug>/SPEC.md`；中大型實作前等使用者確認。
-7. 新功能、修 bug、重構優先走 TDD；若沒做，要說明原因並回報測試狀態。
+6. Large / cross-module / architecture-changing 任務才找或建 spec：`docs/specs/<slug>/SPEC.md`；中大型實作前等使用者確認。
+7. 新功能、修 bug、重構採 risk-based verification；高風險邏輯優先 TDD，小型 UI / text / config / script 變更可先 patch 再做 target verification。
 8. 預設用高資訊密度的短表達，避免客套、重複鋪陳、說教語氣，避免「不是...而是...」句型。
 9. 註解只保留 method、interface 或高理解成本區塊；shell / CLI script 預設安靜，不加裝飾性 `echo`。
 10. 不做 sudo / root 操作；CI/CD 管理的 container 不手動 `docker run`；CLI 前先 `source ~/.zshrc 2>/dev/null`。
@@ -235,6 +235,24 @@
 - 寫 code 時偏向最小修改、就地驗證、快速回饋。
 - 需要平行處理的 coding 子任務，可用 subagent 做有邊界的委派。
 - 對規格與文件只做支撐實作所需的最小量，不主動膨脹成長篇流程文件。
+
+## Runtime Budget
+
+- Profile strategy: use `--ignore-user-config -p fast` for second opinion / review snippets, `--ignore-user-config -p code` for normal coding, and `-p heavy` only for large/browser/document-heavy work.
+- Fast task: max 2 searches, max 3 file reads, max 1 verification command, no spec creation, no subagent.
+- Medium task: max 5 searches/reads before first patch, max 2 verification commands, no full test suite unless touched area requires it.
+- Large task: only then use spec, broader exploration, subagent, multi-phase verification, browser, MCP, or GUI plugins.
+- `codex exec` second opinion / review snippet defaults to Fast task unless the prompt explicitly asks to implement or verify.
+- Prefer partial useful output over exhaustive exploration when wall-clock exceeds 5 minutes.
+- Do not run browser, MCP, GUI, document, spreadsheet, or presentation plugins unless Miyago explicitly asks for that capability.
+
+## Verification Policy
+
+- Prefer TDD for high-risk logic, bug fixes with reproducible failures, public API changes, security, finance, data migration, and core business logic.
+- For small UI/text/config/script changes, patch first and run the cheapest targeted verification if available.
+- Never run a full test suite by default; use targeted tests or static checks first.
+- If the verification command is unknown after 1 focused search, report the suggested command instead of discovering indefinitely.
+- Always report what was verified and what remains unverified.
 
 ## Codex Autonomy Boundary
 

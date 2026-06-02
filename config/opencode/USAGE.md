@@ -71,6 +71,20 @@ Harness path:
 
 Use this for large engineering, browser research, multi-agent exploration, and `ulw` / `ultrawork`.
 
+Harness dry-run prompts for subagent validation:
+
+```text
+@repo-explorer Scope: config/opencode only. Read the daily OpenCode config and monika agent. Return scope, files read, findings, confidence, and uncertainty. Do not edit files.
+```
+
+```text
+@browser-crawler Question: Read one official OpenCode configuration documentation page. Max pages 1, max depth 0. Return URLs read, findings, source-backed evidence, and what was not verified. Do not edit files.
+```
+
+```text
+@reviewer Review the current diff for config safety and regression risk. Return findings, open questions, test gaps, and suggested fix order. Do not edit files.
+```
+
 Team Mode bounds:
 
 - enabled only in `opencode-harness`

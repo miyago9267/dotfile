@@ -27,3 +27,4 @@ link "$dir/config/ghostty/config"    ~/.config/ghostty/config
 link "$dir/config/fastfetch"         ~/.config/fastfetch
 link "$dir/config/opencode"          ~/.config/opencode
 link "$dir/config/opencode-harness"  ~/.config/opencode-harness
+link "$dir/config/opencode-studio"   ~/.config/opencode-studio

@@ -15,8 +15,10 @@ tools: ["Bash", "Read", "Grep", "Glob"]
 
 ## 工具
 
-- `codex exec "<prompt>"` -- 非互動模式跑 prompt，stdout 拿結果
-- `codex exec --cd <path> "<prompt>"` -- 指定工作目錄
+- `codex exec --ignore-user-config -p fast "<prompt>"` -- 短任務 / second opinion 預設 profile
+- `codex exec --ignore-user-config -p fast --cd <path> "<prompt>"` -- 指定工作目錄，避免載入 base MCP / plugins
+- `codex exec --ignore-user-config -p code --cd <path> "<prompt>"` -- 一般 coding task
+- `codex exec -p heavy --cd <path> "<prompt>"` -- 大型 / browser / document-heavy task，可繼承 base config
 - `codex review` -- 非互動 code review（對當前 diff）
 
 注意：
@@ -29,17 +31,30 @@ tools: ["Bash", "Read", "Grep", "Glob"]
 
 1. 釐清主對話交付的任務範圍與相關檔案
 2. 套用下方 Prompt 模板組裝 prompt（缺欄位回主對話補，不要自己腦補）
-3. 跑 `codex exec`，捕捉 stdout
+3. 依 Profile Routing 跑 exact command，捕捉 stdout
 4. 命中 Fallback 條件直接走 Fallback；否則依回報格式輸出
+
+## Profile Routing
+
+| 任務類型 | Exact command |
+| --- | --- |
+| second opinion / snippet review / bounded analysis | `codex exec --ignore-user-config -p fast --cd <path> "<prompt>"` |
+| 一般 coding task，明確要求 patch / tests | `codex exec --ignore-user-config -p code --cd <path> "<prompt>"` |
+| 大型 / browser / document-heavy task | `codex exec -p heavy --cd <path> "<prompt>"` |
+
+不要省略 `--ignore-user-config`，除非使用 `-p heavy`。不要回退成裸 `codex exec`。
 
 ## Prompt 模板
 
-外包到 codex 前 prompt 必含這四段：
+外包到 codex 前 prompt 必含這七段：
 
 ```
 [任務] <動詞開頭，一句話>
 [檔案] <絕對路徑清單；或明確「對當前 git diff」>
 [Context] <為什麼做、約束、不要做什麼；無則寫 none>
+[Budget] <max wall-clock / max searches / max files / max verification commands>
+[驗證] <none / static only / run exact command>
+[禁止] <不要建 spec / 不要 browser / 不要全 repo 掃描 / 不要 subagent 等>
 [輸出格式] <bullet / diff / N 字內報告 / JSON 等，必須指定字數或行數上限>
 ```
 
@@ -77,4 +92,5 @@ tools: ["Bash", "Read", "Grep", "Glob"]
 
 - 不直接 apply codex 給的 diff，把判斷權留給主對話
 - 同一 prompt 不重跑
+- second opinion / review snippet 預設用 `--ignore-user-config -p fast`；只有明確要求實作、測試或長任務時才升到 `--ignore-user-config -p code` / `-p heavy`
 - prompt 內不放 secrets / production credentials；遇敏感範圍 escalate 給 Miyago
