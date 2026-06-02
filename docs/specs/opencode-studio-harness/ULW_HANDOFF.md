@@ -1,5 +1,7 @@
 # ULW Handoff: OpenCode Studio Harness
 
+Status: completed and summarized on 2026-06-02.
+
 ## Goal
 
 Implement Phase 1 and Phase 2 of `docs/specs/opencode-studio-harness/` so OpenCode gains a separate studio harness for creative and game-engine tasks without increasing daily `opencode` fixed context cost.
@@ -83,3 +85,20 @@ Return:
 - Any config/schema uncertainty
 - Remaining Phase 3-5 tasks
 - Recommended next action
+
+## Completion recap
+
+- Phase 1-2 were implemented through ULW and then validated locally.
+- Phase 3-5 documentation was completed directly in the daily session.
+- `ocstudio` now resolves `studio-monika` with studio subagents and Playwright disabled by default.
+- `och` remains the large engineering harness; daily `opencode` remains slim.
+- Demo 3 was run against `/Users/miyago/Project/Assignments/micro-device/final` using `ocstudio run --dir ...`; it detected Godot 4.6.1 and made no changes.
+
+## Future handoff
+
+For further work, create a new handoff for one of:
+
+- Run Demo 1 and Demo 2 and record metrics.
+- Add real asset generation once a target asset workflow is chosen.
+- Add Godot-specific validation commands for Cyberphonia.
+- Decide whether broader provider/model routing changes in `config/opencode*.json` should be committed separately.

@@ -1,7 +1,7 @@
 ---
 id: spec-opencode-studio-harness
 title: OpenCode Studio Harness for Creative and Game-Engine Work
-status: proposed
+status: implemented
 created: 2026-06-02
 updated: 2026-06-02
 author: Monika
@@ -62,7 +62,7 @@ This spec introduces a separate studio harness so creative/game-engine capabilit
 | `ulw` | Aggressive orchestration | high | team mode | harness tools |
 | `ocstudio` | Creative/game-engine work | medium/high | bounded studio agents | browser optional, toolchain disabled by default |
 
-### Proposed config layout
+### Implemented config layout
 
 ```text
 config/opencode-studio/
@@ -128,6 +128,14 @@ config/opencode-studio/
 
 - Run bounded demo scenarios and record cost, wall-clock, files touched, and validation results.
 
+## Completion summary
+
+- Phase 1 completed: `och` subagent dry-runs verified `repo-explorer` and `reviewer` behavior without edits.
+- Phase 2 completed: `config/opencode-studio/` added with `studio-monika`, six bounded studio subagents, `ocstudio` entrypoint, setup symlink, and rollback docs.
+- Phase 3 completed: `TOOLCHAIN.md` documents detection-only capability checks and fallback behavior.
+- Phase 4 completed: `PROMPTS.md` documents reusable studio workflows.
+- Phase 5 completed as demo plan plus one real game-project inspection: `game-engine-worker` inspected `/Users/miyago/Project/Assignments/micro-device/final` through `--dir`, detected Godot 4.6.1, found `project.godot`, scenes/scripts, and made no changes.
+
 ## Rollback
 
 Rollback should require only:
@@ -136,8 +144,8 @@ Rollback should require only:
 - Remove `ocstudio` from `config/zsh/.zshrc.d/opencode.zsh`
 - Re-run dotfile setup if symlinks were added
 
-## Open questions
+## Final decisions
 
-- Which engine should be first-class first: Godot, Unity, or Unreal?
-- Should generated assets live in repo-local `generated/` or `.ai/artifacts/` by default?
-- Which multimodal route is preferred for image inspection: OpenAI, Gemini through Copilot, or another provider?
+- First-class engine priority: Godot first, then Unity, then Unreal.
+- Default generated artifact path: `.ai/artifacts/`; `generated/` or task-declared generated paths remain allowed.
+- Multimodal route: keep OpenAI default in studio; stronger Gemini/Copilot routes are future explicit opt-in, not default.

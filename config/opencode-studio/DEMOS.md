@@ -38,6 +38,12 @@ Prompt:
 Use `game-engine-worker`. Inspect <project path> for Godot/Unity/Unreal markers. Do not edit files. Report detected engine, key config files, available CLI command, fallback plan, and risks.
 ```
 
+Recommended command form for repo-external projects:
+
+```sh
+ocstudio run --dir "<project path>" 'Use `game-engine-worker`. Inspect the current directory for Godot/Unity/Unreal markers. Do not edit files. Do not inspect parent directories. Report detected engine, key config files, available CLI command, fallback plan, and risks. Keep output under 20 bullets.'
+```
+
 Expected:
 
 - No files changed.
@@ -57,4 +63,6 @@ Expected:
 ## Current status
 
 - Phase 1-2 validation is complete.
-- Phase 5 demo prompts are ready but not executed in this repo by default, because demo 2 intentionally writes `.ai/artifacts/` and demo 3 needs a target game project path.
+- Phase 3-5 docs are complete.
+- Demo 3 passed on `/Users/miyago/Project/Assignments/micro-device/final` with `ocstudio run --dir ...`: `game-engine-worker` detected Godot 4.6.1, found `godot/project.godot`, scenes/scripts, CLI `/opt/homebrew/bin/godot`, and reported `Changes made: none`.
+- Demo 1 and Demo 2 remain optional manual demos; Demo 2 intentionally writes `.ai/artifacts/studio-demo/`.
