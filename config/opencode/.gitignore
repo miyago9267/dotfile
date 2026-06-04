@@ -5,3 +5,4 @@ bun.lock
 .gitignore
 oh-my-openagent.json.bak.*
 oh-my-openagent.json.migrations.json
+secrets/

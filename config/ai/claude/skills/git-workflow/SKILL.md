@@ -9,17 +9,23 @@ alwaysApply: true
 ## Commit Message 格式
 
 ```text
-<type>(<scope>): <簡短描述>
+<type>: <中文簡短說明>
+
+[可選] <type>(<scope>): <中文簡短說明>
 
 [可選] 詳細說明
 ```
+
+- 預設使用無 scope 格式，例如 `feat: 新增登入頁`、`fix: 修正快取失效判斷`、`chore: 更新 Codex 規則`。
+- 只有 scope 能提升辨識度時才使用 `<type>(<scope>): <中文簡短說明>`；不要把 scope 當必填。
+- 描述使用中文短句，不加句號，不加 AI 署名。
 
 ### Type 列表
 
 | Type | 用途 |
 | --- | --- |
 | `feat` | 新功能 |
-| `fix` | 修 bug |
+| `fix` | 修改 / 修 bug |
 | `refactor` | 重構（不改功能、不修 bug） |
 | `docs` | 文件變更 |
 | `test` | 測試相關 |

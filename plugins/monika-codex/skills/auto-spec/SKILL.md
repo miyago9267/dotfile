@@ -39,7 +39,7 @@ runtime-scope: shared-core
 
 - 修改了對應 spec 的功能 -> 更新 `TASKS.md` 的 checkbox
 - 新增功能但沒有 spec -> 先建 spec 和 TASKS.md 再 commit
-- Commit message 格式：`<type>(<scope>): <desc>`，不加 AI 署名
+- Commit message 格式預設為 `<type>: <中文簡短說明>`；scope 只有能提升辨識度時才加成 `<type>(<scope>): <中文簡短說明>`，不加 AI 署名
 - `.ai/` 不加入 commit（changelog、lessons 等是 AI 工作記錄，不上版控）
 - commit 後不再修改任何檔案
 
