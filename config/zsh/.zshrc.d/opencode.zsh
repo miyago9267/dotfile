@@ -10,6 +10,25 @@ if [ -n "${AVANTE_GEMINI_API_KEY:-}" ] && [ -z "${GEMINI_API_KEY:-}" ]; then
   export GEMINI_API_KEY="$AVANTE_GEMINI_API_KEY"
 fi
 
+opencode-secrets-sync() {
+  local _dir="${OPENCODE_SECRET_DIR:-$HOME/.config/opencode/secrets}"
+  [ -d "$HOME/.config/opencode" ] || return 0
+  mkdir -p "$_dir" 2>/dev/null || return 0
+  chmod 700 "$_dir" 2>/dev/null || true
+
+  if [ -n "${GEMINI_API_KEY:-}" ] && { [ ! -s "$_dir/gemini-api-key" ] || grep -q '^replace-with-' "$_dir/gemini-api-key" 2>/dev/null; }; then
+    printf '%s' "$GEMINI_API_KEY" > "$_dir/gemini-api-key"
+    chmod 600 "$_dir/gemini-api-key" 2>/dev/null || true
+  fi
+
+  if [ -n "${ALUO_API_KEY:-${OPENCODE_ALUO_API_KEY:-}}" ] && { [ ! -s "$_dir/aluo-api-key" ] || grep -q '^replace-with-' "$_dir/aluo-api-key" 2>/dev/null; }; then
+    printf '%s' "${ALUO_API_KEY:-$OPENCODE_ALUO_API_KEY}" > "$_dir/aluo-api-key"
+    chmod 600 "$_dir/aluo-api-key" 2>/dev/null || true
+  fi
+}
+
+opencode-secrets-sync
+
 opencode-harness() {
   OPENCODE_CONFIG="${OPENCODE_CONFIG:-$HOME/.config/opencode-harness/opencode.json}" \
     OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode-harness}" \

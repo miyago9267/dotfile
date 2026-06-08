@@ -29,6 +29,9 @@ fi
 echo -e "${Y}[SETUP] Linking OpenCode config${N}"
 bash "$DOTFILE_DIR/script/common/setup_dotfiles.sh"
 
+echo -e "${Y}[SETUP] Preparing OpenCode secret placeholders${N}"
+bash "$DOTFILE_DIR/script/common/setup_opencode_secrets.sh"
+
 echo -e "${Y}[CHECK] Daily OpenCode config${N}"
 opencode debug config >/dev/null
 

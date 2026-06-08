@@ -20,6 +20,43 @@ Daily path:
 
 Use this for small edits, questions, quick checks, and low-token work.
 
+## Fresh Machine Setup
+
+The dotfile repo tracks the full OpenCode runtime config. Real secrets are not
+tracked. After cloning, run:
+
+```sh
+bash script/common/install_opencode.sh
+```
+
+The installer links these config dirs:
+
+- `~/.config/opencode`
+- `~/.config/opencode-harness`
+- `~/.config/opencode-studio`
+
+It also creates ignored placeholder files under:
+
+```text
+~/.config/opencode/secrets/
+```
+
+Fill only the secret values:
+
+```sh
+$EDITOR ~/.config/opencode/secrets/gemini-api-key
+$EDITOR ~/.config/opencode/secrets/aluo-api-key
+chmod 600 ~/.config/opencode/secrets/*
+```
+
+Each file should contain only the raw key value, with no quotes or YAML syntax.
+
+If the values already exist in the age/sops env loader, opening a new shell will
+auto-sync these file secrets when these env vars are present:
+
+- `GEMINI_API_KEY` or `AVANTE_GEMINI_API_KEY` -> `gemini-api-key`
+- `ALUO_API_KEY` or `OPENCODE_ALUO_API_KEY` -> `aluo-api-key`
+
 ## Model Shortcuts
 
 Stable daily:
