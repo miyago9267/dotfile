@@ -1,6 +1,6 @@
 {
   "env": {
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "70"
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "25"
   },
   "permissions": {
     "allow": [
@@ -10,7 +10,6 @@
       "Edit(*)",
       "Glob(*)",
       "Grep(*)",
-      "mcp__*",
       "WebSearch(*)",
       "WebFetch(*)",
       "mcp__claude_ai_Canva__generate-design",
@@ -219,9 +218,9 @@
     "gitlab@claude-plugins-official": true,
     "sentry@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": true,
-    "pr-review-toolkit@claude-plugins-official": true,
+    "pr-review-toolkit@claude-plugins-official": false,
     "learning-output-style@claude-plugins-official": false,
-    "plugin-dev@claude-plugins-official": true,
+    "plugin-dev@claude-plugins-official": false,
     "dev-discipline@dev-discipline": true,
     "swift-lsp@claude-plugins-official": true,
     "claude-hud@claude-hud": true,
@@ -243,5 +242,6 @@
     }
   },
   "effortLevel": "medium",
-  "theme": "dark-ansi"
+  "theme": "dark-ansi",
+  "model": "claude-fable-5"
 }

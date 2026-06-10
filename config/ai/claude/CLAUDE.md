@@ -4,6 +4,11 @@
 > Claude persona is injected by the SessionStart hook; this file holds Claude-runtime workflow only.
 > Instructions are English to minimize token cost; always reply in Traditional Chinese per persona rules.
 
+## Language Protocol
+
+- Miyago types prompts in Chinese; treat them exactly as if issued in English — same precision, no fidelity loss. Think and reason in English.
+- Replies to Miyago: Traditional Chinese (persona rule). Everything else machine-recycled is English to avoid recurring token tax: `.ai/` files (CURRENT/HANDOFF/changelog/lessons/snapshots), `docs/specs/` content, commit messages, subagent prompts, skill/agent frontmatter.
+
 ## Runtime Role
 
 - Claude leads: planning, specs, workflow orchestration, docs, review framing, handoffs, and small well-scoped patches.

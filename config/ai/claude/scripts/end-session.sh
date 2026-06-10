@@ -54,12 +54,12 @@ if [ -f "$CURRENT_FILE" ]; then
     {
       echo "# Handoff"
       echo ""
-      echo "## 上次 session ($TODAY)"
+      echo "## Last session ($TODAY)"
       echo ""
       echo "$STRIPPED"
       echo ""
       if [ -n "$PENDING" ]; then
-        echo "## 待辦"
+        echo "## Pending"
         echo ""
         echo "$PENDING" | tr ';' '\n' | while read -r item; do
           item=$(echo "$item" | sed 's/^ *//')
@@ -68,7 +68,7 @@ if [ -f "$CURRENT_FILE" ]; then
         echo ""
       fi
       if [ -n "$DECISIONS" ]; then
-        echo "## 決策"
+        echo "## Decisions"
         echo ""
         echo "$DECISIONS" | tr ';' '\n' | while read -r item; do
           item=$(echo "$item" | sed 's/^ *//')
@@ -84,8 +84,8 @@ if [ -f "$CURRENT_FILE" ]; then
   cat > "$CURRENT_FILE" << 'CURRENTEOF'
 # Current Session
 
-<!-- 由 AI 自動更新，記錄當前 session 正在做什麼 -->
-<!-- end-session.sh 會將此內容合併到 HANDOFF.md 後清空 -->
+<!-- Auto-updated by the AI: what this session is working on -->
+<!-- end-session.sh merges this into HANDOFF.md, then clears it -->
 CURRENTEOF
   echo "CURRENT.md cleared"
 fi

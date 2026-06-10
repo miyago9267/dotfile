@@ -36,8 +36,8 @@ if [ "$1" = "--init" ]; then
     cat > "$AI_DIR/CURRENT.md" << 'EOF'
 # Current Session
 
-<!-- 由 AI 自動更新，記錄當前 session 正在做什麼 -->
-<!-- end-session.sh 會將此內容合併到 HANDOFF.md 後清空 -->
+<!-- Auto-updated by the AI: what this session is working on -->
+<!-- end-session.sh merges this into HANDOFF.md, then clears it -->
 EOF
     echo "  Created CURRENT.md"
   fi
@@ -46,7 +46,7 @@ EOF
     cat > "$AI_DIR/HANDOFF.md" << 'EOF'
 # Handoff
 
-<!-- 跨 session 交接文件，bootstrap.sh 會讀取此檔案恢復 context -->
+<!-- Cross-session handoff; bootstrap.sh reads this to restore context -->
 EOF
     echo "  Created HANDOFF.md"
   fi
