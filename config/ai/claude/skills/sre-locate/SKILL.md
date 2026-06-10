@@ -1,6 +1,6 @@
 ---
 name: sre-locate
-description: "跨 cluster / project / VM 的服務與日誌定位 -- 觸發：使用者說「找不到」、「在哪個 cluster/namespace/project」、「定位服務」、「locate service」、「哪邊有 X」。Read-only，不修改任何狀態。"
+description: "Locate services and logs across clusters/projects/VMs -- triggers: cannot find it, which cluster/namespace/project, locate service, where is X. Read-only; modifies nothing."
 alwaysApply: false
 ---
 

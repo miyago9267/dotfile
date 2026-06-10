@@ -1,8 +1,8 @@
 ---
 name: search-discipline
-description: "搜索效率紀律 -- 限制 Agent/Explore 的濫用，優先用 Grep/Glob/Read 直接搜索。永遠生效。"
+description: "Search efficiency discipline -- restrain Agent/Explore overuse; prefer direct Grep/Glob/Read. Always on."
 alwaysApply: true
-when_to_use: "需要找檔案、關鍵字、函式、import 或 code path，且能先用 Grep/Glob/Read 解決時。"
+when_to_use: "Finding files, keywords, functions, imports, or code paths solvable with Grep/Glob/Read first."
 tags: [search, grep, glob, read, efficiency, codebase]
 effort: low
 shell: none

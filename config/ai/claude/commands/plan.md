@@ -1,6 +1,6 @@
 ---
 name: plan
-description: 實作規劃 -- 重述需求、評估風險、拆解步驟。確認後才動 code。
+description: Implementation planning -- restate requirements, assess risk, break down steps. Code only after confirmation.
 ---
 
 # /plan [描述]

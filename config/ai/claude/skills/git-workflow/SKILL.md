@@ -1,6 +1,6 @@
 ---
 name: git-workflow
-description: Git 操作安全規範與 commit 格式統一。永遠生效。
+description: Git safety rules and unified commit format. Always on.
 alwaysApply: true
 ---
 

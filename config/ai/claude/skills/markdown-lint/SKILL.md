@@ -1,6 +1,6 @@
 ---
 name: markdown-lint
-description: Markdown 寫入時自動套用 markdownlint 規範。永遠生效。硬規則。
+description: Apply markdownlint rules automatically when writing Markdown. Always on. Hard rule.
 alwaysApply: true
 ---
 

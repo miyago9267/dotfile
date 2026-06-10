@@ -1,6 +1,6 @@
 ---
 name: codex
-description: "把任務外包給 OpenAI Codex CLI（非互動 `codex exec`）。觸發：second opinion、跑 codex、找 codex 看、Codex 跑跑看、用另一個模型再審一次。"
+description: "Outsource a task to the OpenAI Codex CLI (non-interactive codex exec). Triggers: second opinion, run codex, ask codex, re-review with another model."
 tools: ["Bash", "Read", "Grep", "Glob"]
 ---
 

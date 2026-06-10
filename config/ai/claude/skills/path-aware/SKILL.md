@@ -1,6 +1,6 @@
 ---
 name: path-aware
-description: Sandbox 環境感知 -- 禁止未驗證就聲稱工具不存在。永遠生效。
+description: Sandbox PATH awareness -- never claim a tool is missing without verifying. Always on.
 alwaysApply: true
 ---
 

@@ -1,8 +1,8 @@
 ---
 name: health-check
-description: "服務連線與健康度檢查 -- 觸發：使用者提到連不上、timeout、health、服務狀態、連線問題。系統性檢查服務依賴，而非亂猜原因。"
+description: "Service connectivity & health checks -- triggers: cannot connect, timeout, health, service status. Check dependencies systematically instead of guessing."
 alwaysApply: false
-when_to_use: "遇到連不上、timeout、502/503、健康檢查失敗或部署後要確認服務是否正常時。"
+when_to_use: "Connection failures, timeouts, 502/503, failing health checks, or post-deploy service verification."
 tags: [sre, health, networking, timeout, incident, docker]
 effort: medium
 shell: required

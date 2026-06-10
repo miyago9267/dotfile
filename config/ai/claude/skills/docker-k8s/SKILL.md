@@ -1,8 +1,8 @@
 ---
 name: docker-k8s
-description: "Docker 與 Kubernetes 操作指引 -- 觸發：使用者提到 k8s、kubectl、pod、container、deploy、namespace。先探索 context 再行動，不要盲目下指令。"
+description: "Docker & Kubernetes ops guide -- triggers: k8s, kubectl, pod, container, deploy, namespace. Explore context before acting; no blind commands."
 alwaysApply: false
-when_to_use: "遇到 docker、k8s、kubectl、pod、deploy、namespace 類任務，且需要先探索 cluster 或 container context 時。"
+when_to_use: "docker/k8s/kubectl/pod/deploy/namespace tasks that need cluster or container context discovery first."
 tags: [docker, kubernetes, k8s, pod, deploy, namespace]
 effort: medium
 shell: required

@@ -1,6 +1,6 @@
 ---
 name: auto-docs
-description: 自動文檔歸檔（全域版，模型無關）
+description: Automatic doc archiving (global, model-agnostic)
 alwaysApply: true
 ---
 

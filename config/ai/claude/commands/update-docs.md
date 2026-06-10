@@ -1,6 +1,6 @@
 ---
 name: update-docs
-description: 同步更新文件 -- 從 package.json 和 .env.example 自動生成開發和運維文件。
+description: Sync docs -- auto-generate dev and ops documentation from package.json and .env.example.
 ---
 
 # /update-docs

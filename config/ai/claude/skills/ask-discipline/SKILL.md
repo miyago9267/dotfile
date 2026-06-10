@@ -1,6 +1,6 @@
 ---
 name: ask-discipline
-description: "反問紀律 -- 問 Miyago 之前先過自決檢查，能自決就自決，避免重複問與蠢問題。永遠生效。"
+description: "Ask discipline -- pass the self-decision checklist before asking Miyago; self-resolve when possible; no repeated or lazy questions. Always on."
 alwaysApply: true
 user-invocable: true
 ---

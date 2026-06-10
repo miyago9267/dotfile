@@ -1,6 +1,6 @@
 ---
 name: eval
-description: 評估驅動開發 -- 定義、執行、回報功能的通過標準（pass@N）。
+description: Eval-driven development -- define, run, and report feature pass criteria (pass@N).
 ---
 
 # /eval [動作] [功能名稱]

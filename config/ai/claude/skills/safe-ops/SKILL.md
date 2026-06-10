@@ -1,6 +1,6 @@
 ---
 name: safe-ops
-description: 危險操作前的安全確認機制。永遠生效。
+description: Safety confirmation before dangerous operations. Always on.
 alwaysApply: true
 ---
 

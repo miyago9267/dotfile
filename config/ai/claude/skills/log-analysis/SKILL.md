@@ -1,8 +1,8 @@
 ---
 name: log-analysis
-description: "日誌分析方法論 -- 觸發：使用者分享 log、提到錯誤日誌、debug production、查 log。系統性從日誌中抓 pattern，區分 signal 和 noise。"
+description: "Log analysis methodology -- triggers: shared logs, error logs, debugging production, log digging. Extract patterns systematically; separate signal from noise."
 alwaysApply: false
-when_to_use: "需要分析錯誤日誌、production log、stack trace，或要從 log 中定位 root cause 時。"
+when_to_use: "Analyzing error logs, production logs, stack traces, or locating root cause from logs."
 tags: [logs, incident, production, root-cause, debugging, sre]
 effort: medium
 shell: required

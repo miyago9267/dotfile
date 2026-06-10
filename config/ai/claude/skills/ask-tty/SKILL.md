@@ -1,6 +1,6 @@
 ---
 name: ask-tty
-description: "stdin proxy -- Bash tool 需要使用者輸入時（sudo、ssh、y/N），用 ask-tty 取得。永遠生效。"
+description: "stdin proxy -- when a Bash command needs user input (sudo, ssh, y/N), obtain it via ask-tty. Always on."
 alwaysApply: true
 ---
 

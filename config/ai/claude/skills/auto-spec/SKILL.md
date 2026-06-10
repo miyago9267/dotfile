@@ -1,8 +1,8 @@
 ---
 name: auto-spec
-description: "規格與進度自動追蹤 -- 背景持續運作，自動判斷任務是否需要 spec、追蹤 TASKS.md checkbox、連動 commit。不需手動觸發；手動啟動完整 SDD 流程請用 /sdd。"
+description: "Spec & progress auto-tracking -- runs in the background, decides whether a task needs a spec, tracks TASKS.md checkboxes, links commits. No manual trigger; use /sdd for the full manual SDD flow."
 alwaysApply: true
-when_to_use: "任務不是 trivial fix，或進入中大型實作、功能修改、跨檔變更，需要 spec/TASKS/PROGRESS 同步時。"
+when_to_use: "Task is beyond a trivial fix, or enters mid/large implementation, feature changes, or cross-file edits needing spec/TASKS/PROGRESS sync."
 tags: [spec, sdd, progress, tasks, planning, tracking]
 effort: medium
 shell: preferred

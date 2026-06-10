@@ -1,6 +1,6 @@
 ---
 name: no-ai-attribution
-description: git commit 禁止 Co-Authored-By 或任何 AI 署名行
+description: No Co-Authored-By or any AI attribution lines in git commits.
 alwaysApply: true
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: post-mortem
-description: "事後分析報告產生器 -- 事故處理完後，引導產出結構化 post-mortem 報告（timeline、root cause、action items）。"
+description: "Post-mortem generator -- after incident handling, produce a structured report (timeline, root cause, action items)."
 user-invocable: true
 ---
 

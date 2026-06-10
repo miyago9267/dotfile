@@ -1,6 +1,6 @@
 ---
 name: strategic-compact
-description: "在邏輯斷點建議手動 /compact，避免 auto-compaction 在任務中段丟失 context。由 PreToolUse hook 自動觸發，不需手動。"
+description: "Suggest manual /compact at logical breakpoints to avoid mid-task auto-compaction context loss. Fired by a PreToolUse hook; no manual trigger."
 alwaysApply: false
 ---
 

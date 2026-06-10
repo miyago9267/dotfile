@@ -1,6 +1,6 @@
 ---
 name: pickup
-description: 讀取上一個 session 的 handoff，繼承 context 後繼續工作
+description: Read the previous session handoff, inherit its context, and continue working.
 command: /pickup
 ---
 

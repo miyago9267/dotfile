@@ -1,6 +1,6 @@
 ---
 name: checkpoint
-description: 工作節點管理 -- 建立或驗證工作進度節點，支援回溯比較。
+description: Checkpoint management -- create or verify work-progress checkpoints with rollback comparison.
 ---
 
 # /checkpoint [動作] [名稱]

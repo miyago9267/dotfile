@@ -1,6 +1,6 @@
 ---
 name: learn
-description: "提取可重用模式 -- 分析當前 session，將值得保留的解法存成 skill。"
+description: "Extract reusable patterns -- analyze the current session and save keep-worthy solutions as skills."
 ---
 
 # /learn

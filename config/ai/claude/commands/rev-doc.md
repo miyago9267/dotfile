@@ -1,6 +1,6 @@
 ---
 name: rev-doc
-description: 逆向工程文檔產生器 -- 分析 minified/closed-source 程式碼，輸出結構化的技術調查報告。
+description: Reverse-engineering doc generator -- analyze minified/closed-source code and emit a structured investigation report.
 ---
 
 # /rev-doc — 逆向工程技術文檔

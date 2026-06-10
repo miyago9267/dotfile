@@ -1,10 +1,10 @@
 ---
-name: 公開參考資源索引
-description: 公開的參考專案和工具連結 -- 不含個人伺服器/團隊內部資訊
+name: references-global
+description: Public reference projects and tool links -- no personal/internal info
 type: reference
 ---
 
-## 參考專案
+## Reference Projects
 
-- AgentGal (記憶架構參考): https://github.com/huccihuang/AgentGal
-- Project AIRI (數位生命體參照): https://github.com/moeru-ai/airi
+- AgentGal (memory architecture reference): https://github.com/huccihuang/AgentGal
+- Project AIRI (digital-being reference): https://github.com/moeru-ai/airi

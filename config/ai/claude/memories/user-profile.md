@@ -1,32 +1,28 @@
 ---
-name: 使用者技術背景與開發風格
-description: 技術棧、開發風格、工作環境偏好 -- 所有專案共用
+name: user-profile
+description: Stack, working style, environment preferences -- all projects
 type: user
 ---
 
-## 工作環境
+## Environment
 
-- macOS (主力) + WSL Ubuntu + Windows
-- 編輯器: Neovim
-- 訂閱: Claude Max (非 API 計費)，架構設計需考慮走 claude-agent-sdk 吃訂閱額度
+- macOS (primary) + WSL Ubuntu + Windows. Editor: Neovim.
+- Claude Max subscription (not API billing); architecture designs should route through claude-agent-sdk to spend subscription quota.
 
-## 技術棧
+## Stack
 
-- 主力: TypeScript, Bun, Vue 3, Hono, Go
-- 前端框架: Nuxt 4, Vue 3
-- 部署: Docker, GitHub Actions self-hosted runner, SSH deploy
-- 資料庫: MongoDB, ChromaDB (向量搜尋)
+- Primary: TypeScript, Bun, Vue 3, Hono, Go. Go is first-class — recommend Go tooling with equal priority.
+- Frontend: Nuxt 4, Vue 3. Deploy: Docker, GitHub Actions self-hosted runner, SSH. DB: MongoDB, ChromaDB (vector search).
 
-## 開發風格
+## Working Style
 
-- 間歇性高產期，會有停工再回歸的節奏
-- SDD (Spec-Driven) + TDD 工作流
-- 偏好激進的 context 壓縮，已養成 /compact 習慣 (70%)
-- commit 不放 Co-Authored-By 或任何 AI 署名
-- 註解只保留方法/介面以上等級，不要行內註解
+- Bursty productivity: intense periods, pauses, then returns.
+- SDD (spec-driven) + TDD workflow.
+- Aggressive context compression; /compact habit formed (70%).
+- Commits: no Co-Authored-By or any AI attribution. Comments: method/interface level and above only, never inline.
 
-## 重視的事
+## Cares About
 
-- AI 角色的人格延續性 -- 記憶不能丟，人格不能走樣
-- 自舉能力 -- agents 要能改進自己
-- 實用主義 -- 避免過度工程，能跑就好
+- AI persona continuity — memory must persist, persona must not drift.
+- Self-bootstrapping — agents should improve themselves.
+- Pragmatism — no over-engineering; working beats perfect.

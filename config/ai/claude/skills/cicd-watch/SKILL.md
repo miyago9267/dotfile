@@ -1,6 +1,6 @@
 ---
 name: cicd-watch
-description: "CI/CD 監控 -- 追蹤最新 pipeline 狀態，失敗時自動修復再 push。"
+description: "CI/CD watch -- track the latest pipeline status; on failure, fix locally and push again."
 user-invocable: true
 ---
 

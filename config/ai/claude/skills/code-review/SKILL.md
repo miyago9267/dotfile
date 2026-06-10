@@ -1,8 +1,8 @@
 ---
 name: code-review
-description: "審查目前 diff、PR 或 patch 的正確性、安全、效能與測試。觸發：review、PR、diff、請幫我看這段 code。"
+description: "Review the current diff, PR, or patch for correctness, security, performance, and tests. Triggers: review, PR, diff, look at this code."
 user-invocable: true
-when_to_use: "使用者要求 review 目前 diff、PR、patch，或要結構化檢查 correctness、安全、效能與測試時。"
+when_to_use: "User asks to review the current diff/PR/patch, or wants a structured correctness/security/performance/test check."
 tags: [review, pr, diff, security, quality, testing]
 effort: medium
 shell: optional

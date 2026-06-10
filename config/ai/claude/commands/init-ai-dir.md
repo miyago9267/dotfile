@@ -1,6 +1,6 @@
 ---
 name: init-ai-dir
-description: 在當前專案初始化 .ai/ canonical 目錄，並生成各 LLM 的入口檔案
+description: Initialize the canonical .ai/ directory in the current project and generate per-LLM entry files.
 command: /init-ai-dir
 ---
 

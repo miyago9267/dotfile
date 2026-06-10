@@ -1,43 +1,31 @@
 ---
-description: "SDD + TDD 開發行為規則。適用於所有非 trivial 任務。"
+description: "SDD + TDD development rules. Apply to every non-trivial task."
 always_apply: true
 ---
 
-# 開發行為規則
+# Development Rules
 
-## SDD（硬規則）
+## SDD (hard rules)
 
-1. 非 trivial 任務必須先找或建 spec（`docs/specs/<slug>/SPEC.md`），再實作
-2. 不得重問 spec 中已記錄的決策
-3. 不得跳過 spec 直接進入中大型實作
-4. 實作完必須更新 `PROGRESS.md` 的 checkbox；Spec 只在設計變更時更新
-5. 中大型實作前必須等使用者確認
+1. Non-trivial tasks: find or create a spec (`docs/specs/<slug>/SPEC.md`) before implementing.
+2. Never re-ask decisions already recorded in the spec.
+3. Never skip the spec and jump into a mid/large implementation; wait for user confirmation before starting one.
+4. After implementing, update `PROGRESS.md` checkboxes; `SPEC.md` changes only on design changes.
 
-## TDD（強烈建議）
+## TDD (strong default)
 
-1. 新功能、修 bug、重構時優先先寫測試
-2. 遵循 Red -> Green -> Refactor 循環
-3. 覆蓋率目標 80%+，金融/認證/安全邏輯 100%
-4. 不做 TDD 時必須說明原因
-5. 回報時交代：測試是否新增、是否執行、未驗證範圍
+1. Tests first for new features, bugfixes, refactors: Red -> Green -> Refactor.
+2. Coverage target 80%+; 100% for finance/auth/security logic.
+3. If skipping TDD, state why.
+4. Always report: tests added? executed? what remains unverified?
 
-## SDD + TDD 整合流程
+## Combined Flow
 
-```text
-1. [SDD] 找到或建立 Spec
-2. [SDD] 確認需求和實作計畫
-3. [SDD] 使用者確認 -> 開始實作
-4. [TDD] 寫失敗的測試（RED）
-5. [TDD] 寫最少的實作（GREEN）
-6. [TDD] 重構（REFACTOR）
-7. [TDD] 重複 4-6 直到完成
-8. [SDD] 更新 PROGRESS.md / Changelog
-```
+spec found/created -> requirements & plan confirmed -> user confirms -> RED failing test -> GREEN minimal impl -> REFACTOR -> repeat -> update PROGRESS.md / changelog.
 
-## 通用原則
+## General
 
-1. 簡潔直接，不過度工程
-2. 只改被要求改的東西
-3. 不為假設性未來需求設計
-4. 安全優先（OWASP Top 10）
-5. 每次實作交代影響範圍和測試狀態
+1. Concise and direct; no over-engineering.
+2. Change only what was asked; no speculative design for hypothetical futures.
+3. Security first (OWASP Top 10).
+4. Every implementation reports blast radius and test status.

@@ -1,6 +1,6 @@
 ---
 name: setup-pm
-description: 設定套件管理器 -- 配置專案或全域偏好的套件管理器（npm/pnpm/yarn/bun）。
+description: Set up the package manager -- configure project or global preference (npm/pnpm/yarn/bun).
 disable-model-invocation: true
 ---
 

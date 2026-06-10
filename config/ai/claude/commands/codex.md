@@ -1,6 +1,6 @@
 ---
 name: codex
-description: "互動式呼叫 OpenAI Codex CLI 跑非互動 prompt（second opinion / 外包子任務）。"
+description: "Call the OpenAI Codex CLI with a non-interactive prompt (second opinion / outsourced subtask)."
 ---
 
 # /codex [prompt]

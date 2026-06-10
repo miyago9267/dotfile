@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: "Test-Driven Development (TDD) -- 啟動 Red-Green-Refactor 測試驅動開發循環。"
+description: "Test-Driven Development (TDD) -- run the Red-Green-Refactor cycle."
 user-invocable: true
 ---
 
