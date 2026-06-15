@@ -1,0 +1,179 @@
+#!/usr/bin/env python3
+"""Run Codex in a PTY and overlay a coralline status bar on top of the TUI."""
+
+from __future__ import annotations
+
+import json
+import os
+import pty
+import select
+import shutil
+import signal
+import struct
+import subprocess
+import sys
+import termios
+import time
+import tty
+from fcntl import ioctl
+
+
+ESC = "\033"
+DEFAULT_INTERVAL = 0.35
+
+
+def script_dir() -> str:
+    return os.path.dirname(os.path.realpath(__file__))
+
+
+def renderer_path() -> str:
+    configured = os.environ.get("CORALLINE_INJECT_RENDERER")
+    if configured:
+        return configured
+    return os.path.realpath(os.path.join(script_dir(), "..", "statusline.sh"))
+
+
+def codex_command(argv: list[str]) -> list[str]:
+    binary = os.environ.get("CORALLINE_CODEX_BIN") or shutil.which("codex")
+    if not binary:
+        raise SystemExit("codex not found in PATH")
+    if argv and argv[0] == "--":
+        argv = argv[1:]
+    return [binary, *argv]
+
+
+def winsize(fd: int = 1) -> tuple[int, int]:
+    try:
+        packed = ioctl(fd, termios.TIOCGWINSZ, b"\0" * 8)
+        rows, cols, _, _ = struct.unpack("HHHH", packed)
+        return max(rows, 1), max(cols, 1)
+    except OSError:
+        return 24, 80
+
+
+def set_winsize(fd: int, rows: int, cols: int) -> None:
+    try:
+        ioctl(fd, termios.TIOCSWINSZ, struct.pack("HHHH", rows, cols, 0, 0))
+    except OSError:
+        pass
+
+
+def render_status(cols: int) -> str:
+    payload = {
+        "cwd": os.getcwd(),
+        "model": os.environ.get("CODEX_MODEL", ""),
+        "context": {"used_percentage": os.environ.get("CODEX_CONTEXT_USED_PCT", "")},
+    }
+    env = os.environ.copy()
+    env["COLUMNS"] = str(cols)
+    try:
+        proc = subprocess.run(
+            [renderer_path()],
+            input=json.dumps(payload),
+            text=True,
+            capture_output=True,
+            env=env,
+            timeout=0.8,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    if proc.returncode != 0:
+        return ""
+    lines = [line for line in proc.stdout.splitlines() if line.strip()]
+    return lines[-1] if lines else ""
+
+
+def overlay() -> None:
+    rows, cols = winsize(1)
+    try:
+        offset = max(int(os.environ.get("CORALLINE_INJECT_ROW_FROM_BOTTOM", "2")), 1)
+    except ValueError:
+        offset = 2
+    row = max(rows - offset + 1, 1)
+    line = render_status(cols)
+    if line:
+        os.write(1, f"{ESC}7{ESC}[{row};1H{ESC}[2K{line}{ESC}[0m{ESC}8".encode())
+
+
+def parent_loop(pid: int, master_fd: int) -> int:
+    old_attrs = termios.tcgetattr(0)
+    child_done = False
+    status = 0
+    last_overlay = 0.0
+    interval = float(os.environ.get("CORALLINE_INJECT_INTERVAL", DEFAULT_INTERVAL))
+
+    def resize_child(_signum=None, _frame=None) -> None:
+        rows, cols = winsize(1)
+        set_winsize(master_fd, rows, cols)
+        try:
+            os.kill(pid, signal.SIGWINCH)
+        except ProcessLookupError:
+            pass
+        overlay()
+
+    signal.signal(signal.SIGWINCH, resize_child)
+    resize_child()
+
+    try:
+        tty.setraw(0)
+        while not child_done:
+            timeout = max(interval - (time.monotonic() - last_overlay), 0.02)
+            readable, _, _ = select.select([0, master_fd], [], [], timeout)
+            if 0 in readable:
+                data = os.read(0, 8192)
+                if data:
+                    os.write(master_fd, data)
+            if master_fd in readable:
+                try:
+                    data = os.read(master_fd, 8192)
+                except OSError:
+                    data = b""
+                if data:
+                    os.write(1, data)
+                    last_overlay = 0.0
+                else:
+                    child_done = True
+
+            try:
+                waited_pid, raw_status = os.waitpid(pid, os.WNOHANG)
+            except ChildProcessError:
+                waited_pid, raw_status = pid, 0
+            if waited_pid == pid:
+                child_done = True
+                if os.WIFEXITED(raw_status):
+                    status = os.WEXITSTATUS(raw_status)
+                elif os.WIFSIGNALED(raw_status):
+                    status = 128 + os.WTERMSIG(raw_status)
+
+            if time.monotonic() - last_overlay >= interval:
+                overlay()
+                last_overlay = time.monotonic()
+    finally:
+        termios.tcsetattr(0, termios.TCSADRAIN, old_attrs)
+    return status
+
+
+def main() -> int:
+    if sys.argv[1:] in (["-h"], ["--help"]):
+        print(
+            "Usage: coralline-codex-inject [-- CODEx_ARGS...]\n\n"
+            "Runs Codex in a PTY and overlays the coralline status bar.\n\n"
+            "Environment:\n"
+            "  CORALLINE_CODEX_BIN                 codex binary to launch\n"
+            "  CORALLINE_INJECT_RENDERER           statusline.sh path\n"
+            "  CORALLINE_INJECT_ROW_FROM_BOTTOM    row to overlay, default: 2\n"
+            "  CORALLINE_INJECT_INTERVAL           refresh seconds, default: 0.35"
+        )
+        return 0
+    if not os.isatty(0) or not os.isatty(1):
+        raise SystemExit("coralline-codex-inject requires an interactive terminal")
+    pid, master_fd = pty.fork()
+    command = codex_command(sys.argv[1:])
+    if pid == 0:
+        os.execvp(command[0], command)
+    return parent_loop(pid, master_fd)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

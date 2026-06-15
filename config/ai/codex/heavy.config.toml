@@ -3,6 +3,7 @@ model_reasoning_effort = "medium"
 plan_mode_reasoning_effort = "high"
 sandbox_mode = "danger-full-access"
 approval_policy = "never"
+tool_output_token_limit = 18000
 
 [plugins."github@openai-curated"]
 enabled = true
@@ -21,3 +22,21 @@ enabled = true
 
 [plugins."presentations@openai-primary-runtime"]
 enabled = true
+
+[tui]
+theme = "coralline-p10k-rainbow"
+status_line = [
+  "project-name",
+  "git-branch",
+  "pull-request-number",
+  "branch-changes",
+  "model-with-reasoning",
+  "context-remaining",
+  "context-used",
+  "five-hour-limit",
+  "weekly-limit",
+  "approval-mode",
+  "task-progress",
+  "raw-output",
+]
+status_line_use_colors = true

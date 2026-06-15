@@ -12,7 +12,12 @@ function cxh() {
   command codex exec -p heavy "$@"
 }
 
+function cxt() {
+  command "$HOME/.codex/coralline/bin/coralline-codex-inject" "$@"
+}
+
 alias cxe='cxc'
 alias codex-fast='cxf'
 alias codex-code='cxc'
 alias codex-heavy='cxh'
+alias codex-coralline='cxt'

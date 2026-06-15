@@ -131,3 +131,7 @@ gitlab_token() {
 }
 
 . "$HOME/.local/bin/env"
+
+
+# Added by Antigravity CLI installer
+export PATH="/Users/miyago/.local/bin:$PATH"

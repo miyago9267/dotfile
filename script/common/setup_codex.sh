@@ -68,6 +68,9 @@ for profile in fast code heavy; do
   link_item "$CODEX_SRC/$profile.config.toml" "$CODEX_DST/$profile.config.toml" "$profile.config.toml"
 done
 
+link_item "$CODEX_SRC/coralline" "$CODEX_DST/coralline" "coralline"
+link_item "$CODEX_SRC/coralline.conf" "$CODEX_DST/coralline.conf" "coralline.conf"
+
 printf "\n${Y}--- Shared Core Skills ---${N}\n"
 for name in "${SHARED_CORE_SKILLS[@]}"; do
   if [ -f "$SHARED_SKILL_SRC/$name/SKILL.md" ]; then

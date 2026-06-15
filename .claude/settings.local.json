@@ -4,7 +4,13 @@
       "mcp__pty-bridge__exec",
       "mcp__pty-bridge__result",
       "Bash(ln -s /Users/miyago/dotfile/config/ai/claude/memories /Users/miyago/.claude/memories)",
-      "Bash(/bin/ls -d ~/.claude/plugins/cache/everything-claude-code)"
+      "Bash(/bin/ls -d ~/.claude/plugins/cache/everything-claude-code)",
+      "Bash(/bin/ls)",
+      "Skill(update-config)",
+      "Bash(mkdir -p ~/.claude/coralline/themes)",
+      "Bash(curl -fsSL __TRACKED_VAR__/statusline.sh -o ~/.claude/coralline/statusline.sh)",
+      "Bash(curl -fsSL __TRACKED_VAR__/test/sample-input.json -o /tmp/coralline-sample.json)",
+      "Bash(chmod +x ~/.claude/coralline/statusline.sh)"
     ]
   },
   "enabledMcpjsonServers": [

@@ -3,6 +3,7 @@ model_reasoning_effort = "low"
 plan_mode_reasoning_effort = "medium"
 sandbox_mode = "workspace-write"
 approval_policy = "never"
+tool_output_token_limit = 6000
 
 [features]
 js_repl = false
@@ -24,3 +25,21 @@ enabled = false
 
 [plugins."presentations@openai-primary-runtime"]
 enabled = false
+
+[tui]
+theme = "coralline-p10k-rainbow"
+status_line = [
+  "project-name",
+  "git-branch",
+  "pull-request-number",
+  "branch-changes",
+  "model-with-reasoning",
+  "context-remaining",
+  "context-used",
+  "five-hour-limit",
+  "weekly-limit",
+  "approval-mode",
+  "task-progress",
+  "raw-output",
+]
+status_line_use_colors = true

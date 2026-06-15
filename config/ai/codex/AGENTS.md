@@ -56,10 +56,30 @@
 
 - 不要為了「保險」重複讀同一批檔案；讀過的檔案只在內容可能已變更、或需要精確引用時才重讀。
 - 對 codebase 或 vault 搜尋先用 `rg` / `find` 篩選，再讀少量命中檔；禁止全目錄掃讀、批量 `cat` 大量 markdown、或無目標地展開整個 vault。
+- 禁止把大範圍搜尋、binary `strings`、session/rollout JSONL、log dump、完整 test output 直接回灌到對話；先輸出到檔案或用 `jq`/`awk`/`wc`/`head`/`tail` 摘要。
+- 搜尋 `~/.codex`、`~/.claude`、`~/Library`、整個 `$HOME`、大型 mono repo、binary、cache、log 目錄時，必須先加 `--files` / `-l` / `--count` / `--max-count` / `--glob` / `--max-filesize` 或管到 summary；不得直接 `rg pattern dir` 展開全文。
+- 對工具輸出預設設定明確上限：探索類 shell 指令通常 `max_output_tokens <= 12000`，可疑大輸出先 `> /tmp/file` 再讀摘要；只有需要精確內容時才局部讀原文。
+- 同一 thread 的上下文若已超過約 120k tokens、或單 turn 輸入超過 80k tokens，完成目前小步後應主動建議 `/compact` 或開新 session，並先給出 handoff 摘要。
 - delegated explorer / worker 已經在找的東西，不要用本地工具重做同一輪搜尋；只能做不重疊的準備工作。
 - 寫入記錄、progress、log 或 knowledge node 前先查重；同一事實不要重複寫多份。
 - 任務中只保存對後續決策有用的結論；長輸出要摘要，不把工具輸出原樣搬進回覆。
 - 簡單任務不要開 subagent；只有任務真的跨模組、可平行、或需要獨立 sidecar 調查時才委派。
+
+## Context Engineering
+
+- 進入任務時先界定「需要留在上下文的決策資料」與「只需要現場查一次的證據」，後者用摘要替代原文。
+- 讀檔採 progressive disclosure：先 `rg --files` / `rg -n` 找 anchor，再讀最小段落；不要為了建立全貌而讀整份大型檔。
+- 對 logs、rollouts、CI output、benchmark、trace、JSONL，預設先產出統計表或 top-N：時間、類型、數量、最大值、錯誤摘要；不要貼完整事件。
+- 大型調查要在階段結束時固化成 5-10 行 handoff：目標、已查證事實、決策、未完成項、下一個最小動作。後續以 handoff 接續，不拖完整探索上下文。
+- 工具回傳若意外超大，下一步必須先壓縮結論並避免再讀同一輸出；不要接著展開更多相鄰大檔。
+
+## Prompt Engineering
+
+- 發給 subagent、`codex exec`、外部模型或工具的 prompt 必須包含：目標、範圍、禁止事項、輸出格式、預算上限。不要使用「全面研究」「找出所有相關」這類無界 prompt。
+- Second opinion / review prompt 預設要求短輸出：最多 5 個 findings、只引用必要檔案與行號、不要重述背景、不要提出未驗證重構。
+- 讓模型先回傳 decision table 或 top-N hypotheses，再決定是否深入；避免一次要求完整方案、完整實作與完整文件。
+- 使用者原始需求很寬時，先自己收斂成最小可驗證任務；只有產品意圖或權限邊界會不同時才提問。
+- 產出長文件前先確認必要性；若只是支撐實作，優先寫短 spec、progress、ADR 摘要，不把探索細節長期帶在對話裡。
 
 ## Runtime Budget
 
@@ -70,6 +90,7 @@
 - `codex exec` second opinion / review snippet defaults to Fast task unless the prompt explicitly asks to implement or verify.
 - Prefer partial useful output over exhaustive exploration when wall-clock exceeds 5 minutes.
 - Do not run browser, MCP, GUI, document, spreadsheet, or presentation plugins unless Miyago explicitly asks for that capability.
+- 大量工具輸出是 5h usage 的主要風險：寧可多做一次精準 summary command，也不要把 40k+ token 的原始輸出帶進下一輪。
 
 ## Verification Policy
 

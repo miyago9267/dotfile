@@ -20,6 +20,8 @@ ITEMS=(
   "hooks"
   "commands"
   "scripts"
+  "coralline"
+  "coralline.conf"
   "agents"
   "rules"
   "skills"
