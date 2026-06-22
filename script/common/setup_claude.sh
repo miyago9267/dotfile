@@ -17,6 +17,7 @@ N='\033[0m'
 ITEMS=(
   "settings.json"
   "CLAUDE.md"
+  "loop.md"
   "hooks"
   "commands"
   "scripts"

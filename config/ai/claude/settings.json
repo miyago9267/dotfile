@@ -116,6 +116,11 @@
             "type": "command",
             "command": "bash ~/dotfile/config/ai/claude/hooks/tty-respond.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/think-first-router.sh",
+            "timeout": 5
           }
         ]
       }
@@ -243,6 +248,6 @@
       }
     }
   },
-  "effortLevel": "medium",
+  "effortLevel": "high",
   "theme": "dark-ansi"
 }

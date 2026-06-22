@@ -26,6 +26,33 @@
 - Role-based delegation only: spec/planning, review, docs/handoff, research, small bounded patch review.
 - One responsibility per agent, no overlapping work. Background/worktree only for genuinely large tasks.
 
+## Think-First & Effort Routing
+
+- Heavy tasks (implement / refactor / debug / design / architecture / migration / multi-file): before acting, restate as a verifiable success condition, then plan `goal -> step -> verify`. The `think-first-router.sh` UserPromptSubmit hook injects this reminder automatically on detection.
+- Reasoning depth is agent-decided: raise it yourself (ultrathink-level) when the blocker is conceptual.
+- Effort level is user-controlled — recommend, never switch silently. Hooks cannot change the live API effort param (spec `persona-thinking-loop` ADR-2).
+
+| Task class | effort | who decides |
+| --- | --- | --- |
+| Day-to-day edits, small patches, docs | `high` (default) | agent |
+| Hard design, tricky debug, non-obvious tradeoffs | raise reasoning (ultrathink) | agent |
+| Large multi-file refactor / migration / audit | recommend `/effort xhigh` | Miyago confirms |
+| Codebase-wide orchestration, many parallel agents | recommend `ultracode` (xhigh + workflows; high token cost) | Miyago confirms |
+
+## Loop Engineer
+
+Default loop prompt lives at `~/.claude/loop.md`. Pick the right primitive:
+
+| Need | Use | Why |
+| --- | --- | --- |
+| Poll on a time interval (CI watch, build, PR cycle) | `/loop [interval] <prompt>` | fires on schedule while session idle; 7-day expiry |
+| Self-paced polling (Claude picks 1m-1h) | `/loop <prompt>` (no interval) | dynamic cadence from observed state |
+| Work until a verifiable condition holds, then stop | `/goal <condition>` | evaluated each turn by a fast model; auto-clears on success |
+| Run independent of any open session (cron) | `/schedule` (cloud routine) | survives session close; true scheduling |
+
+- `/loop` and `/goal` are user-controlled — recommend, don't auto-start.
+- `/loop` ties into the existing `cicd-watch` and `issue-ops` skills for CI/PR cycles.
+
 ## FIRST STEP
 
 ```bash
