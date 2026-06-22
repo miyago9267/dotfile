@@ -173,3 +173,4 @@ cat go.mod 2>/dev/null | grep -v "^//"
 3. 不要在沒確認 fork/權限的情況下直接 push
 4. PR/MR body 必須連結 issue（`Closes #N`）
 5. GitHub 用 `gh`，GitLab 用 `glab`
+6. Stage 4 的 `pending` / 無 review / `OPEN` 不要被動停在「等待中」：要嘛 `ScheduleWakeup` 自排下次輪詢（依 cache window 選間隔），要嘛建議 `/loop` 持續顧 CI/PR 週期，別把「再問一次」丟回給使用者。Review 一次回多條可動作意見時，升級 Workflow 平行處理而非逐條硬幹。

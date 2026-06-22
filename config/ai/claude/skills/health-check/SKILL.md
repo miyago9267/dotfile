@@ -178,3 +178,4 @@ echo | openssl s_client -connect {host}:443 -servername {host} 2>/dev/null | ope
 2. 每一步都用指令驗證，不要用推理代替實測
 3. Docker 環境要區分 host 網路和 container 網路
 4. 不要在不確定的情況下重啟服務 -- 先收集完證據
+5. 單一 target 的逐層排查保持序列（每步要前一步確認的輸出才能往下）；但要同時驗證多個獨立服務 / upstream 時（部署後批量確認、502 影響多個 upstream），用平行 Agent 各跑一條完整鏈，不要一個一個序列輪。

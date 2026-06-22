@@ -7,6 +7,9 @@ description: Multi-agent chained workflow -- chain agents by task type to comple
 
 串接多個專業 agent，處理複雜任務。
 
+> 這是「串行角色鏈」：用 Agent tool 依序交接 specialist agent，適合有明確階段順序的任務（plan -> impl -> review）。
+> 若任務是可平行 fan-out 的大批次——audit、migration、全庫 review、多來源 research、批次修補——改用原生 **Workflow tool**（deterministic 平行編排，一次跑多個 subagent），不要用這個串行流程硬扛。
+
 ## 內建工作流
 
 | 類型 | Agent 串接 | 適用情境 |

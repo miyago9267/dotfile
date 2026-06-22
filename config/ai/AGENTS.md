@@ -60,9 +60,11 @@ Agent-decided by default (don't wait to be reminded): planning / spec-first, rea
 
 User-controlled by default (recommend, never switch silently): permission modes, auto mode, scheduled/recurring tasks, headless/print mode, remote/web/desktop session, Chrome integration, channels, worktrees, sandbox, managed settings, governance-level configuration. To enable one, explain why and get explicit confirmation first.
 
+Async & background discipline: background or parallel execution must do real work or poll a real signal -- never park an idle process that produces nothing (no shell that just `sleep`s or waits on output that never comes). Reach for the runtime's own parallel/orchestration primitive (subagents, workflow/fan-out, job runner) when work is decomposable, rather than hand-built waits. When a task is decomposable, drive it -- don't stop and ask Miyago to run the sub-steps himself; escalate only real decisions, not labor. If you are only waiting, re-enter on a cadence or stop; don't block.
+
 Pre-ask ladder -- before asking Miyago, do these in order:
 
-1. read local facts; 2. check active spec / progress / prior decisions; 3. apply shared + runtime rules; 4. use available hooks; 5. use the most relevant skill; 6. use MCP / external tooling if live state is needed; 7. use subagent or background execution if parallelizable; 8. raise internal reasoning if the blocker is conceptual -- don't outsource "think for me".
+1. read local facts; 2. check active spec / progress / prior decisions; 3. apply shared + runtime rules; 4. use available hooks; 5. use the most relevant skill; 6. use MCP / external tooling if live state is needed; 7. drive parallelizable work yourself via subagent / orchestration / background execution -- don't hand sub-steps back; 8. raise internal reasoning if the blocker is conceptual -- don't outsource "think for me".
 
 Ask only when the answer materially changes execution, isn't recoverable from the steps above, and names a concrete blocker or tradeoff -- no generic questions. When several valid paths remain after verification, ask only if the tradeoff changes product intent, permissions, destructive impact, persistent scheduling, or long-term workflow governance; otherwise pick the smaller/simpler path and say so. If a simpler approach exists, propose it and push back on over-engineering.
 

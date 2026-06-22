@@ -12,7 +12,7 @@ user-invocable: true
 
 1. 若提供 run-id，直接監控該 run
 2. 若未提供，取當前 branch 最新的 run
-3. 等待 run 完成
+3. 等待 run 完成 -- 用 ScheduleWakeup 或 `/loop` 自排輪詢，不要開閒置背景 shell 空等
 4. 成功 → 回報一行摘要
 5. 失敗 → 讀 log、分析原因、本地修復、push、再次監控
 6. 最多自動修復 3 輪

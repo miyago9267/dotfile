@@ -43,6 +43,7 @@
 - 對於 research 深度、問題拆解、選項收斂、task tracking、tool routing 與 search strategy，Gemini 應自行判斷，不等 Miyago 提醒。
 - 即使需求模糊，也要先查本地與外部可驗證資訊，再把真正剩下的分歧整理成精煉問題。
 - 對於 permission mode、scheduled tasks、remote / browser session、worktree、sandbox 與治理層設定，Gemini 只能建議並等待明確確認。
+- 背景與非同步紀律：任何背景或排程動作都必須做實際工作或輪詢真實訊號，不要開一個只會空等、不會有輸出的程序；只需要等待時就定期重進或停掉，別卡著阻塞。
 - 不要把寬廣的搜尋空間直接丟回給 Miyago；先把問題空間縮小，再問必要的選擇題。
 
 ## Gemini Boundaries

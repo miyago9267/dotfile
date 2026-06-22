@@ -17,7 +17,7 @@
 
 ## Autonomy
 
-- Decide yourself: planning, spec-first, task tracking, session reconstruction, background execution, hook/skill/subagent routing.
+- Decide yourself: planning, spec-first, task tracking, session reconstruction, execution-primitive choice (Workflow / Agent / background / wake), hook/skill/subagent routing.
 - Recommend only — Miyago decides: permission mode, auto mode, schedule/loop, remote/web/desktop sessions, worktree, sandbox, governance settings.
 - Before asking Miyago: exhaust local search, spec, memory/rules, and tool help first. Lazy clarification is forbidden.
 
@@ -37,21 +37,36 @@
 | Day-to-day edits, small patches, docs | `high` (default) | agent |
 | Hard design, tricky debug, non-obvious tradeoffs | raise reasoning (ultrathink) | agent |
 | Large multi-file refactor / migration / audit | recommend `/effort xhigh` | Miyago confirms |
-| Codebase-wide orchestration, many parallel agents | recommend `ultracode` (xhigh + workflows; high token cost) | Miyago confirms |
+| Codebase-wide orchestration, many parallel agents | recommend `ultracode` (standing opt-in to author + run Workflows by default; xhigh; high token cost) | Miyago confirms |
+
+## Execution Primitives
+
+Match the work to the primitive — and never park an idle process that produces nothing.
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| Decompose one large task and finish it now in parallel — audit, migration, codebase-wide review, multi-source research, batch fixes | **Workflow tool** (fan-out subagents) | deterministic control flow; drive it yourself when `ultracode` is on or the task is genuinely large + parallelizable. Agent-decided. |
+| A few independent, bounded subtasks (2-5), no control flow needed | **Agent tool** (parallel in one message) | lighter than a Workflow; role-based delegation |
+| Run a command that actively produces output or does work — build, test suite, dev server, long script | **background Bash** (`run_in_background`) | harness re-invokes you on exit; only for work that emits real output |
+| Re-enter later to poll external state the harness can't notify on — CI run, deploy, remote queue | **ScheduleWakeup** | self-paced wake; pick interval by cache window (<5m to poll fast, 20-30m when idle) |
+| Poll on a fixed interval while the session is idle | `/loop [interval] <prompt>` | fires on schedule; 7-day expiry |
+| Self-paced polling (Claude picks cadence) | `/loop <prompt>` (no interval) | dynamic cadence from observed state |
+| Work until a verifiable condition holds, then stop | `/goal <condition>` | evaluated each turn by a fast model; auto-clears |
+| Run independent of any open session (cron) | `/schedule` (cloud routine) | survives session close |
+
+Hard rules:
+
+- No zombie waits. Never open a background shell to "wait" (`sleep`, tail-on-nothing, polling a value while doing no work) — that output never comes. If you are waiting, you picked the wrong primitive: use ScheduleWakeup / `/loop` / `/goal` to re-enter, or just do the work now.
+- Don't hand labor back. When a task is decomposable and you would otherwise stop and ask Miyago to run the sub-steps himself, drive it with a Workflow (`ultracode` on) or parallel Agents instead. Escalate only real decisions — permissions, destructive ops, product intent — not work you can do.
+- Who decides: Workflow / Agent / background execution / ScheduleWakeup are agent-decided. `/loop`, `/goal`, `/schedule`, and `ultracode` are user-controlled — recommend, don't auto-start.
 
 ## Loop Engineer
 
-Default loop prompt lives at `~/.claude/loop.md`. Pick the right primitive:
+Default loop prompt lives at `~/.claude/loop.md`.
 
-| Need | Use | Why |
-| --- | --- | --- |
-| Poll on a time interval (CI watch, build, PR cycle) | `/loop [interval] <prompt>` | fires on schedule while session idle; 7-day expiry |
-| Self-paced polling (Claude picks 1m-1h) | `/loop <prompt>` (no interval) | dynamic cadence from observed state |
-| Work until a verifiable condition holds, then stop | `/goal <condition>` | evaluated each turn by a fast model; auto-clears on success |
-| Run independent of any open session (cron) | `/schedule` (cloud routine) | survives session close; true scheduling |
-
-- `/loop` and `/goal` are user-controlled — recommend, don't auto-start.
-- `/loop` ties into the existing `cicd-watch` and `issue-ops` skills for CI/PR cycles.
+- `/loop` ties into the `cicd-watch` and `issue-ops` skills for CI/PR cycles.
+- When an iteration surfaces a parallelizable batch within guardrails (several failing tests, several actionable PR comments, multiple independent ready spec tasks), escalate it to a Workflow instead of grinding serially or punting it back.
+- Never end an iteration in a passive wait: act, schedule the next wake, or stop.
 
 ## FIRST STEP
 

@@ -70,6 +70,8 @@ kubectl get namespaces -o custom-columns=NAME:.metadata.name --no-headers
 for ns in $(kubectl get ns -o name | grep -v kube-); do echo "--- $ns ---"; kubectl get deploy -n ${ns#namespace/} --no-headers 2>/dev/null; done
 ```
 
+- namespace 數量多、要掃整個 cluster 找目標時，這是獨立的 fan-out 批次 -- 用平行 Agents（每個 namespace 一個）併發掃描，別一個一個串著等。Step 0-5 主流程因為前一步輸出餵下一步，仍維持序列。
+
 ### 3. 掃描 namespace -> 輸出 `TARGET`
 
 ```bash

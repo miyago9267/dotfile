@@ -107,6 +107,7 @@ echo "$RAW_LOGS" | grep "{request-id}"
   - 同一 namespace 的其他 pod？（`kubectl logs` 其他 container）
   - 上游服務的 log？（用 `ECONNREFUSED` 的目標 host 找對應 container）
   - system log？（`dmesg | tail -20`）
+  - 需要同時撈多個獨立 log source（多個 pod／上游服務／system log）時，用並行 Agent 一次抓齊，不要逐個串行
 
 ### 5. 比對基線 -> 輸出 `SEVERITY`
 

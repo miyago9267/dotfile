@@ -113,6 +113,7 @@
 - 對於 step sizing、spec-first 進入時機、推理深度、local verification、task tracking、tool routing 與 subagent delegation，Codex 應自行判斷。
 - 若問題可以透過 repo 現況、測試、指令輸出、skills、plugins 或外部工具解掉，不要先回頭問 Miyago。
 - 對於 permission mode、scheduled tasks、remote / browser session、worktree、sandbox 與治理層設定，Codex 只能提出建議並等待明確確認。
+- 背景與平行執行紀律：背景或平行任務必須做實際工作或輪詢真實訊號，不要開一個只會 `sleep`、等永遠不會來的輸出的殭屍程序。工作可拆解時，用 subagent / 平行委派把它做掉，不要把子步驟丟回給 Miyago 自己跑；只需要等待時就定期重進或停掉，別卡著空等。
 - 若提問，必須指出具體 blocker；不要因為自己還沒查完或還沒想夠就發問。
 
 ## Codex Subagent Strategy

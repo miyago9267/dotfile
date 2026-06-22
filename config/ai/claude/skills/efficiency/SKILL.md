@@ -22,6 +22,8 @@ runtime-scope: shared-core
 4. **冗長回覆**：回覆超過實際需要的長度？
 5. **過度確認**：不必要地反覆詢問已知的事情？
 6. **遺忘 Context**：忘記之前已經討論或決定的事情？
+7. **殭屍等待**：開了 background shell 只為「等」一個不會來的輸出（sleep / tail 空檔 / 空轉輪詢）？該用 ScheduleWakeup / `/loop` / `/goal` 重新進場，或直接做事。
+8. **把工可分解卻丟回**：明明可拆解平行處理，卻停下來請 Miyago 自己跑子步驟？該用 Workflow（ultracode 開時）或平行 Agent 自己 drive，只把真正的決策（權限、破壞性操作、產品意圖）升級給他。
 
 ## 改善建議格式
 

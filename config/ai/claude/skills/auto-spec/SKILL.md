@@ -22,6 +22,7 @@ runtime-scope: shared-core
               |
          docs/specs/ 下有相關 spec？
            |- 有 -> 讀 spec，確認設計，照 TASKS.md / PROGRESS.md 追蹤進度
+           |     （TASKS.md 有多個彼此獨立、皆已就緒的項目時，用 Workflow 或並行 Agent 同時推進，不要逐項串行、也不要把工作丟回給 Miyago）
            +- 沒有 -> 先建 spec（從 _templates/ 複製），等 Miyago 確認，再實作
 ```
 
