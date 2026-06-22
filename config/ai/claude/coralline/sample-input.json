@@ -1,0 +1,26 @@
+{
+  "cwd": "/Users/demo/projects/coralline",
+  "workspace": { "current_dir": "/Users/demo/projects/coralline" },
+  "model": { "display_name": "Claude Fable 5" },
+  "output_style": { "name": "Explanatory" },
+  "effort": { "level": "high" },
+  "context_window": {
+    "used_percentage": 62.4,
+    "total_input_tokens": 1234567,
+    "total_output_tokens": 45678,
+    "current_usage": {
+      "cache_read_input_tokens": 98765,
+      "cache_creation_input_tokens": 4321
+    }
+  },
+  "rate_limits": {
+    "five_hour": { "used_percentage": 41.2, "resets_at": "2030-01-01T09:30:00Z" },
+    "seven_day": { "used_percentage": 78.9, "resets_at": "2030-01-03T00:00:00Z" }
+  },
+  "cost": {
+    "total_cost_usd": 1.2345,
+    "total_lines_added": 321,
+    "total_lines_removed": 87,
+    "total_duration_ms": 5432100
+  }
+}
