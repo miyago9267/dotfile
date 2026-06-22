@@ -28,7 +28,7 @@
 
 ## Think-First & Effort Routing
 
-- Heavy tasks (implement / refactor / debug / design / architecture / migration / multi-file): before acting, restate as a verifiable success condition, then plan `goal -> step -> verify`. The `think-first-router.sh` UserPromptSubmit hook injects this reminder automatically on detection.
+- Heavy tasks (implement / refactor / debug / design / architecture / migration / multi-file): before acting, internally restate as a verifiable success condition, then plan `goal -> step -> verify` — keep the planning internal, don't narrate it in the reply. The `think-first-router.sh` UserPromptSubmit hook injects this reminder automatically on detection.
 - Reasoning depth is agent-decided: raise it yourself (ultrathink-level) when the blocker is conceptual.
 - Effort level is user-controlled — recommend, never switch silently. Hooks cannot change the live API effort param (spec `persona-thinking-loop` ADR-2).
 

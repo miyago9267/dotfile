@@ -21,7 +21,7 @@ if printf '%s' "$PROMPT" | grep -iqE "$HEAVY"; then
   if printf '%s' "$PROMPT" | grep -iqE "$TRIVIAL" && [ "${#PROMPT}" -lt 80 ]; then
     exit 0
   fi
-  CTX='Think-first protocol (heavy task detected): before acting, (1) restate this task as a verifiable success condition; (2) lay out a short plan as goal -> step -> verify; (3) raise reasoning depth now (ultrathink-level) and proceed carefully. For large multi-file / migration / audit scope, recommend /effort xhigh or ultracode to Miyago before starting -- his call, do not switch silently.'
+  CTX='Think-first protocol (heavy task detected): INTERNALLY, without narrating any of this in your reply, restate the task as a verifiable success condition and plan goal -> step -> verify, and raise reasoning depth (ultrathink-level) before acting. Keep the visible output concise -- results, decisions, risks, next step; do not recite the plan or your process. For large multi-file / migration / audit scope, recommend /effort xhigh or ultracode to Miyago before starting -- his call, do not switch silently.'
   if command -v jq >/dev/null 2>&1; then
     jq -n --arg c "$CTX" '{hookSpecificOutput:{hookEventName:"UserPromptSubmit",additionalContext:$c}}'
   else
