@@ -108,6 +108,7 @@ All ops via `bash ~/.claude/scripts/<cmd>.sh`.
 - If a script can do it, run the script instead of reasoning.
 - Snapshot save/restore instead of re-reading docs after compact.
 - Read only the last 20 lines of changelog/lessons. Scripts dedupe logs; don't re-log.
+- Quiet tool use: no decorative `echo` / banners / `=== labels ===` / placeholder comments. Put complex or multi-step logic in a `/tmp` script and run that; if one line parses the result, just parse it — don't wrap it in extra commands or narration.
 
 ## Claude Memory Sources
 

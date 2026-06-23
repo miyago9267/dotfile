@@ -1,6 +1,11 @@
 ---
 name: reverse-engineering
 description: "Reverse-engineering mode -- methodology and output rules for minified/obfuscated/closed-source code. Triggers: reverse, decompile, minified, obfuscated, SDK internals."
+when_to_use: "面對 minified / obfuscated / closed-source 程式碼時的分析方法與輸出規則"
+tags: [reverse, decompile, minified, obfuscated, sdk]
+effort: high
+shell: optional
+runtime-scope: shared-core
 alwaysApply: false
 ---
 

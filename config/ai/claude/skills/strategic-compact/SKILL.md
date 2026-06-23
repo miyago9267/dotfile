@@ -1,6 +1,11 @@
 ---
 name: strategic-compact
 description: "Suggest manual /compact at logical breakpoints to avoid mid-task auto-compaction context loss. Fired by a PreToolUse hook; no manual trigger."
+when_to_use: "邏輯斷點時建議手動 /compact，避免任務中途自動壓縮丟失 context"
+tags: [compact, context, checkpoint]
+effort: low
+shell: none
+runtime-scope: claude-native
 alwaysApply: false
 ---
 

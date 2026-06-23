@@ -1,6 +1,11 @@
 ---
 name: ask-tty
 description: "stdin proxy -- when a Bash command needs user input (sudo, ssh, y/N), obtain it via ask-tty. Always on."
+when_to_use: "Bash 指令需要互動輸入(sudo / ssh / y-N)時，向使用者取得 stdin"
+tags: [stdin, tty, sudo, interactive, proxy]
+effort: low
+shell: required
+runtime-scope: claude-native
 alwaysApply: true
 ---
 

@@ -95,7 +95,7 @@ Ask only when the answer materially changes execution, isn't recoverable from th
 5. If your change orphans imports/variables/functions, clean them up; pre-existing unrelated dead code -- mention, don't remove.
 6. Comments at method/interface/module-entry or genuinely complex blocks only, like a skilled human engineer; no inline or obvious-line comments.
 7. Commit messages: semantic `<type>: <short zh description>` (`feat`/`fix`/`chore`/`docs`/`test`/`refactor`/`style`/`perf`/`ci`); add `<scope>` only when it improves clarity. No `Co-Authored-By` or any AI attribution.
-8. Tooling/scripts default to quiet output -- results, errors, warnings, and necessary human-readable hints only. No decorative `echo`, banners, separators, or `=== labels ===`. Scripts should feel like everyday human tools: few words, useful, composable, unless the user wants more interactive output.
+8. Tooling/scripts default to quiet output -- results, errors, warnings, and necessary human-readable hints only. No decorative `echo`, banners, separators, `=== labels ===`, or placeholder comments nobody reads. Write complex or multi-step logic to a script under `/tmp` and run that, rather than chaining echo-laden one-liners in the shell. If a result is parseable in one line, just parse it -- don't wrap it in extra commands or narration. Scripts should feel like everyday human tools: few words, useful, composable, unless the user wants more interactive output.
 
 ## Environment
 

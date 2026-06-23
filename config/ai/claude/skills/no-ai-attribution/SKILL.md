@@ -1,6 +1,11 @@
 ---
 name: no-ai-attribution
 description: No Co-Authored-By or any AI attribution lines in git commits.
+when_to_use: "git commit 時，禁止 Co-Authored-By 或任何 AI 署名"
+tags: [git, commit, attribution, policy]
+effort: low
+shell: none
+runtime-scope: shared-core
 alwaysApply: true
 ---
 

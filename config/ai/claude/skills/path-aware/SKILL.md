@@ -1,6 +1,11 @@
 ---
 name: path-aware
 description: Sandbox PATH awareness -- never claim a tool is missing without verifying. Always on.
+when_to_use: "宣稱工具不存在前，先確認 PATH 或 source ~/.zshrc"
+tags: [path, shell, tooling, env]
+effort: low
+shell: optional
+runtime-scope: shared-core
 alwaysApply: true
 ---
 

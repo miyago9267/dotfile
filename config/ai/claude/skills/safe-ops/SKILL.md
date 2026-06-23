@@ -1,6 +1,11 @@
 ---
 name: safe-ops
 description: Safety confirmation before dangerous operations. Always on.
+when_to_use: "執行破壞性或高風險操作前的確認閘門"
+tags: [safety, destructive, confirm, guard]
+effort: low
+shell: none
+runtime-scope: shared-core
 alwaysApply: true
 ---
 

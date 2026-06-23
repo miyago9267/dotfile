@@ -1,6 +1,11 @@
 ---
 name: git-workflow
 description: Git safety rules and unified commit format. Always on.
+when_to_use: "任何 git commit / branch / push 操作前，套用安全規則與統一格式"
+tags: [git, commit, branch, safety, convention]
+effort: low
+shell: required
+runtime-scope: shared-core
 alwaysApply: true
 ---
 

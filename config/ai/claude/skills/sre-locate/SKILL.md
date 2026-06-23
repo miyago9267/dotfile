@@ -1,6 +1,11 @@
 ---
 name: sre-locate
 description: "Locate services and logs across clusters/projects/VMs -- triggers: cannot find it, which cluster/namespace/project, locate service, where is X. Read-only; modifies nothing."
+when_to_use: "跨 cluster / project / VM 定位服務與 log(read-only)"
+tags: [sre, locate, cluster, namespace, service]
+effort: medium
+shell: required
+runtime-scope: claude-native
 alwaysApply: false
 ---
 

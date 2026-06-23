@@ -1,6 +1,11 @@
 ---
 name: tdd
 description: "Test-Driven Development (TDD) -- run the Red-Green-Refactor cycle."
+when_to_use: "執行 Red-Green-Refactor 測試先行循環"
+tags: [tdd, test, red-green-refactor, coverage]
+effort: medium
+shell: preferred
+runtime-scope: shared-core
 user-invocable: true
 ---
 

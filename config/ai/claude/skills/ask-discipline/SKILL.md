@@ -1,6 +1,11 @@
 ---
 name: ask-discipline
 description: "Ask discipline -- pass the self-decision checklist before asking Miyago; self-resolve when possible; no repeated or lazy questions. Always on."
+when_to_use: "即將反問 Miyago 前，先過自決樹並亮出搜尋證據"
+tags: [ask, discipline, self-decision, no-lazy-question]
+effort: low
+shell: none
+runtime-scope: shared-core
 alwaysApply: true
 user-invocable: true
 ---
@@ -55,19 +60,9 @@ source: `~/.claude/CLAUDE.md` / `~/dotfile/config/ai/claude/memories/*.md` / `.a
 
 這些必須跳到 Q2（現場驗證），不要直接答。
 
-### 1.5 警告：記憶會過時、會誤導
+### 1.5 記憶會過時、會誤導
 
-> Miyago 親口提醒：「解決問題的時候不能過度依賴記憶，會被自己誤導。」
-
-記憶寫的是「寫入當下的快照」，不是當下事實。重構、移除、版本升級、別的 session 動過的東西，都會讓記憶失準。
-
-**判斷準則**：
-
-- 記憶說「Miyago 偏好 X」 -> 通常還算數（偏好變化慢）
-- 記憶說「檔案在 path/to/x.ts」 -> 必須驗證才能用
-- 記憶說「上次解 bug 用 Y 方法」 -> 當線索，不當答案；情境換了方法可能也換
-
-**規則**：解決問題類（不是偏好類）一律走 Q2 現場讀，記憶只用來「猜哪裡看」，不用來「決定怎麼做」。
+記憶是「寫入當下的快照」，不是當下事實——重構、移除、版本升級、別的 session 動過都會讓它失準。偏好類（變化慢）可信；解決問題類（檔案位置、API、code 狀態）一律走 Q2 現場驗證，記憶只用來「猜哪裡看」，不用來「決定怎麼做」。
 
 ### 2. 答案在專案脈絡裡？
 
@@ -167,15 +162,7 @@ source: `~/.claude/CLAUDE.md` / `~/dotfile/config/ai/claude/memories/*.md` / `.a
 
 ## 違規訊號（自我偵測）
 
-打字時出現這些 token，立刻 abort 並重跑決策樹：
-
-- 「請問你想要...？」
-- 「我應該...嗎？」
-- 「要不要...？」
-- 「你希望我...嗎？」
-- 「可以...嗎？」（破壞性操作除外）
-
-**例外**：用 AskUserQuestion 工具列具體選項時 OK，因為已經是「具體提案 + 預設」格式。
+打字出現「請問你想要…？」「我應該…嗎？」「要不要…？」「你希望我…嗎？」「可以…嗎？」（破壞性操作除外）立刻 abort、重跑決策樹。例外：用 AskUserQuestion 列具體選項時 OK（已是「提案 + 預設」格式）。
 
 ## 與其他 skill 的關係
 
