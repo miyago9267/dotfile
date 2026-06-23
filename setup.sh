@@ -115,45 +115,54 @@ BANNER
 
 print_menu() {
   local current=$1
-  local term_lines=$(tput lines 2>/dev/null || echo 24)
-  local max_items=$(( term_lines - 15 )) # 預留 Banner 和 Header 空間
-  [ "$max_items" -lt 5 ] && max_items=5
-  [ "$max_items" -gt "$TOTAL" ] && max_items=$TOTAL
+  local term_lines
+  term_lines=$(tput lines 2>/dev/null || echo 24)
+  # 預留 header + 上下指示 + 計數行；其餘行數給選單項目（含分類標題）
+  local avail=$(( term_lines - 15 ))
+  [ "$avail" -lt 3 ] && avail=3
 
-  local start_idx=0
-  local end_idx=$(( TOTAL - 1 ))
+  # 從 start 起算，在 budget 行內最多容納到哪個 index（分類標題各佔 1 行）
+  fit_end() {
+    local start=$1 budget=$2 prev_cat="" lines=0 end=$((start - 1)) i cat add
+    [ "$start" -gt 0 ] && prev_cat=$(get_field "$((start - 1))" cat)
+    for i in $(seq "$start" $((TOTAL - 1))); do
+      cat=$(get_field "$i" cat)
+      add=1
+      [ "$cat" != "$prev_cat" ] && add=2
+      [ $((lines + add)) -gt "$budget" ] && break
+      lines=$((lines + add)); prev_cat="$cat"; end=$i
+    done
+    echo "$end"
+  }
 
-  # 如果項目超過顯示高度，計算滑動視窗
-  if [ "$TOTAL" -gt "$max_items" ]; then
-    if [ "$current" -lt $(( max_items / 2 )) ]; then
-      start_idx=0
-      end_idx=$(( max_items - 1 ))
-    elif [ "$current" -ge $(( TOTAL - max_items / 2 )) ]; then
-      start_idx=$(( TOTAL - max_items ))
-      end_idx=$(( TOTAL - 1 ))
-    else
-      start_idx=$(( current - max_items / 2 ))
-      end_idx=$(( start_idx + max_items - 1 ))
-    fi
-  fi
+  # scroll-into-view：游標跑出視窗才捲動，平時保留上下文，避免卡在同一段
+  [ "$current" -lt "$VIEW_START" ] && VIEW_START=$current
+  local end_idx
+  end_idx=$(fit_end "$VIEW_START" "$avail")
+  while [ "$current" -gt "$end_idx" ] && [ "$VIEW_START" -lt "$current" ]; do
+    VIEW_START=$(( VIEW_START + 1 ))
+    end_idx=$(fit_end "$VIEW_START" "$avail")
+  done
+  local start_idx=$VIEW_START
 
-  local prev_cat=""
+  # 上方隱藏指示
   if [ "$start_idx" -gt 0 ]; then
-    prev_cat=$(get_field "$((start_idx - 1))" cat)
     printf "  ${C}↑ (還有 %d 項隱藏)${N}\033[K\n" "$start_idx"
   else
     printf "\033[K\n"
   fi
 
-  for i in $(seq $start_idx $end_idx); do
-    local name
+  local prev_cat=""
+  [ "$start_idx" -gt 0 ] && prev_cat=$(get_field "$((start_idx - 1))" cat)
+
+  local i
+  for i in $(seq "$start_idx" "$end_idx"); do
+    local name cat
     name=$(get_field "$i" name)
-    local cat
     cat=$(get_field "$i" cat)
 
     # 分類標題
     if [ "$cat" != "$prev_cat" ]; then
-      [ "$i" -gt "$start_idx" ] && echo -e "\033[K"
       printf "  ${C}── %s ──${N}\033[K\n" "$cat"
       prev_cat="$cat"
     fi
@@ -169,18 +178,19 @@ print_menu() {
     printf "  %b [%b] %s\033[K\n" "$cursor" "$check" "$name"
   done
 
+  # 下方隱藏指示
   if [ "$end_idx" -lt $(( TOTAL - 1 )) ]; then
     printf "  ${C}↓ (還有 %d 項隱藏)${N}\033[K\n" $(( TOTAL - 1 - end_idx ))
   else
     printf "\033[K\n"
   fi
 
-  # 清除下方殘餘行
-  printf "\033[J\n"
-
-  local count=0
+  local count=0 s
   for s in "${SELECTED[@]}"; do [ "$s" = "1" ] && count=$((count + 1)); done
   printf "  已選擇 ${G}%d${N} / %d 項\033[K\n" "$count" "$TOTAL"
+
+  # 清掉視窗下方殘餘行（取代每幀全螢幕 erase，消除閃爍）
+  printf "\033[J"
 }
 
 # -- 全部安裝模式 --
@@ -192,16 +202,18 @@ if [ "$1" = "--all" ]; then
 else
   # -- 互動式選單 --
   current=0
+  VIEW_START=0
 
   # 隱藏游標、設定 raw mode
   tput civis 2>/dev/null || true
-  trap 'tput cnorm 2>/dev/null; stty sane 2>/dev/null' EXIT
+  trap 'tput cnorm 2>/dev/null; tput rmcup 2>/dev/null; stty sane 2>/dev/null' EXIT
 
   # 進入迴圈前，先完整清空一次畫面
+  tput smcup 2>/dev/null || true
   clear
 
   while true; do
-    # 關鍵：將游標移至畫面最左上角 (0, 0)，然後原地覆蓋舊字串
+    # 將游標移至左上角原地覆蓋；清空交給逐行 \033[K 與 print_menu 結尾的 \033[J，避免每幀全清造成閃爍
     tput cup 0 0 2>/dev/null || printf "\033[H"
 
     print_header
@@ -253,6 +265,7 @@ else
       # q: 離開
       'q')
         tput cnorm 2>/dev/null || true
+        tput rmcup 2>/dev/null || true
         printf "\n${Y}已取消安裝${N}\n"
         exit 0
         ;;
@@ -261,6 +274,7 @@ else
 
   # 恢復游標
   tput cnorm 2>/dev/null || true
+  tput rmcup 2>/dev/null || true
 fi
 
 # -- 執行安裝 --
