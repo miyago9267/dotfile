@@ -106,6 +106,10 @@ description 是 Claude 匹配「使用者問題 -> skill」的唯一依據（SKI
 
 confidence >= 0.9 的 pattern -> 提取 trigger + action -> 走 Phase 1 Step 3-5 -> Phase 2
 
+## 從既有 prompt 升級
+
+使用者已有一份 system prompt（常來自 `prompt-smith`）想變成 skill -> 把它當 Phase 1 Step 4 的 content 素材，補 frontmatter 與觸發設計；注意 prompt 是「給目標 agent 讀」、skill 是「給 Claude 讀的指引」，需重構體裁而非整段沿用。
+
 ## 反模式
 
 | 問題 | 正確做法 |
