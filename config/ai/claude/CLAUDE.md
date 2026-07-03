@@ -103,6 +103,15 @@ All ops via `bash ~/.claude/scripts/<cmd>.sh`.
 - Spec layer (always committed) `docs/specs/<slug>/`: `SPEC.md` (what/why/ADR; update on design change), `TASKS.md` (current batch checkboxes; update per step), `TESTS.md` (EARS acceptance; update on design change), `PROGRESS.md` (phase tracking; update per phase), `archive/`. Templates in `docs/specs/_templates/`.
 - Working memory (always gitignored) `.ai/`: `CURRENT.md` (this session), `HANDOFF.md` (next session), `changelog.md`, `lessons.md`, `sessions/`, `snapshots/`.
 
+## Knowledge Bases
+
+| Need | Vault | Rules |
+| --- | --- | --- |
+| SRE service configs, infra, deploys, SOPs, incidents, ADRs | `~/Project/Note/sre-knowledge-base` | Read `INDEX.md` first to locate nodes, then read only those. New SRE knowledge is written back via that vault's own `AGENTS.md` Ingest workflow. |
+| PMS business logic, DB schema, app-layer triage | `~/Project/Note/itrd-knowledge-base` | Read-only (owned by backend RD, never write); SRE-view index at `sre-knowledge-base/wiki/itrd-knowledge-base-reference.md`. |
+
+Cite node names in answers; don't paste whole nodes into context.
+
 ## Token Thrift
 
 - If a script can do it, run the script instead of reasoning.

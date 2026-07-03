@@ -43,7 +43,8 @@
     "additionalDirectories": [
       "/Users/miyago/.claude",
       "/Users/miyago/Project/Code/ITRD/pms/.claude",
-      "/Users/miyago/Project/Note/knowledge-base"
+      "/Users/miyago/Project/Note/sre-knowledge-base",
+      "/Users/miyago/Project/Note/itrd-knowledge-base"
     ]
   },
   "model": "opus",

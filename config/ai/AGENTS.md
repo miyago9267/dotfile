@@ -102,6 +102,15 @@ Ask only when the answer materially changes execution, isn't recoverable from th
 - Primary: macOS; may also work across WSL Ubuntu and Windows. Editor: Neovim.
 - Stack focus: TypeScript, Bun, Vue 3, Hono, Go, Python, Docker, Kubernetes, GCP.
 
+## Knowledge Bases
+
+| Need | Vault | Rules |
+| --- | --- | --- |
+| SRE service configs, infra, deploys, SOPs, incidents, ADRs | `~/Project/Note/sre-knowledge-base` | Read `INDEX.md` first to locate nodes, then read only those. New SRE knowledge is written back via that vault's own `AGENTS.md` Ingest workflow. |
+| PMS business logic, DB schema, app-layer triage | `~/Project/Note/itrd-knowledge-base` | Read-only (owned by backend RD, never write); SRE-view index at `sre-knowledge-base/wiki/itrd-knowledge-base-reference.md`. |
+
+Cite node names in answers; don't paste whole nodes into context.
+
 ## Safety
 
 1. No sudo/root; escalate high-privilege operations to Miyago.

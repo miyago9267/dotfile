@@ -42,15 +42,16 @@
 
 ## Global Knowledge Base
 
-- 全域 Obsidian-style knowledge base 路徑：
-  `/Users/miyago/Project/Note/knowledge-base`
-- 當 Miyago 要「查知識庫」、「記到知識庫」、「引用 graph / Obsidian / vault」或任務明顯需要既有團隊知識時，先使用這個 vault。
-- 進入 vault 後先讀 `README.md`、`CLAUDE.md`、`CONVENTIONS.md`；實作時以 `CONVENTIONS.md` 的 vault 規則為準。
-- 查詢知識時，先用 `rg` 搜尋關鍵字、frontmatter、wikilink 與 `_MOC.md`，再讀相關節點；不要只靠檔名或記憶推測。
-- 寫入知識時，先查重，優先更新既有節點；新增節點要套 `_templates/`，補 frontmatter、`## Related`、對應 `_MOC.md`。
+- SRE 知識庫（服務組態、infra、部署、SOP、事件、ADR）：
+  `/Users/miyago/Project/Note/sre-knowledge-base`
+- PMS 業務知識（業務邏輯、DB schema、app 層排查）：
+  `/Users/miyago/Project/Note/itrd-knowledge-base` — **唯讀，後端 RD 維護，永不寫入**；SRE 視角索引在 `sre-knowledge-base/wiki/itrd-knowledge-base-reference.md`。
+- 當 Miyago 要「查知識庫」、「記到知識庫」、「引用 graph / Obsidian / vault」或任務明顯需要既有團隊知識時，先查對應 vault。
+- 查詢：先讀 `INDEX.md` 定位節點，配合 `rg` 搜關鍵字、frontmatter、wikilink 與 `_MOC.md`，只讀相關節點；不要只靠檔名或記憶推測。
+- 寫入（僅 sre-knowledge-base）：照該 vault `AGENTS.md` 的 Ingest workflow — 先查重、優先更新既有節點；新增節點套 `_templates/`，補 frontmatter、`## Related`、對應 `_MOC.md` 與 `INDEX.md`；硬規則以 `schema.md` 為準。
 - 跨檔引用使用 Obsidian wikilink；不要在 vault 內改成 markdown path link。
 - 修改 vault 後執行：
-  `bash /Users/miyago/Project/Note/knowledge-base/scripts/vault-lint.sh`
+  `bash /Users/miyago/Project/Note/sre-knowledge-base/scripts/vault-lint.sh`
 
 ## Token Discipline
 
