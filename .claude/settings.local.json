@@ -10,7 +10,12 @@
       "Bash(mkdir -p ~/.claude/coralline/themes)",
       "Bash(curl -fsSL __TRACKED_VAR__/statusline.sh -o ~/.claude/coralline/statusline.sh)",
       "Bash(curl -fsSL __TRACKED_VAR__/test/sample-input.json -o /tmp/coralline-sample.json)",
-      "Bash(chmod +x ~/.claude/coralline/statusline.sh)"
+      "Bash(chmod +x ~/.claude/coralline/statusline.sh)",
+      "Agent",
+      "Bash(/bin/bash -n /Users/miyago/dotfile/config/ai/claude/coralline/test/test-codex-quota.sh)",
+      "Bash(/bin/bash /Users/miyago/dotfile/config/ai/claude/coralline/test/test-codex-quota.sh)",
+      "Bash(bash ~/.claude/scripts/log.sh feat coralline config/ai/claude/coralline 'Sync v0.9.1 and add Codex app-server quota provider for remora sessions')",
+      "Read(//Users/miyago/Project/Code/resesh/**)"
     ]
   },
   "enabledMcpjsonServers": [
