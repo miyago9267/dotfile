@@ -1,0 +1,55 @@
+version = 1
+
+[proxy]
+base_url = "http://127.0.0.1:8317"
+auth_token_env = "REMORA_AUTH_TOKEN"
+# Prefer an OS credential store for daily use. This command is executed directly,
+# without a shell, and its stdout becomes ANTHROPIC_AUTH_TOKEN for the child only.
+auth_token_command = ["security", "find-generic-password", "-s", "remora-proxy-key", "-w"]
+
+[models]
+main = "gpt-5.6-sol"
+default_opus = "gpt-5.6-sol"
+default_sonnet = "gpt-5.6-terra"
+default_haiku = "gpt-5.6-luna"
+
+[context]
+# Safe default for the stock Claude Code binary. Unknown custom models are 200K
+# unless the user explicitly installs Calico Claude and selects mode = "calico".
+mode = "stock"
+stock_window = 200000
+discovery = true
+fallback_window = 372000
+effective_window_percent = 95
+# Used only by mode = "calico". Stock mode leaves Claude's compact pipeline untouched.
+auto_compact_percent = 90
+
+# Role keys track pilotfish's current roster (latest = v1.2.0, eight roles).
+# remora >=0.1.10 ships all eight in-session; older six-role configs still work via
+# fallbacks (plan-verifier <- verifier, security-reviewer <- security-executor).
+# Explicit keys below make routing/effort deterministic across remora versions.
+[agent_models]
+Explore = "gpt-5.6-luna"
+scout = "gpt-5.6-luna"
+mech-executor = "gpt-5.6-terra"
+executor = "gpt-5.6-terra"
+plan-verifier = "gpt-5.6-sol"
+security-reviewer = "gpt-5.6-sol"
+verifier = "gpt-5.6-sol"
+security-executor = "gpt-5.6-sol"
+
+[agent_effort]
+Explore = "low"
+scout = "low"
+mech-executor = "medium"
+executor = "high"
+plan-verifier = "high"
+security-reviewer = "max"
+verifier = "high"
+security-executor = "max"
+
+[runtime]
+claude_binary = "claude"
+max_tool_use_concurrency = 5
+enable_tool_search = false
+clear_subagent_model_override = true
