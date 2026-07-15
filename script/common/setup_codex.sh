@@ -43,6 +43,63 @@ link_item() {
   printf "${G}  [LINK] %s${N}\n" "$label"
 }
 
+normalize_git_url() {
+  printf '%s\n' "$1" | sed -E \
+    -e 's#^git@([^:]+):#\1/#' \
+    -e 's#^ssh://git@##' \
+    -e 's#^https?://##' \
+    -e 's#\.git/?$##' \
+    -e 's#/$##'
+}
+
+install_git_skill() {
+  local name="$1"
+  local repo="$2"
+  local dst="$CODEX_DST/skills/$name"
+  local actual_repo
+  local expected_repo
+  local ssh_command
+
+  if [ -L "$dst" ]; then
+    printf "${Y}  [SKIP] skills/%s -- unmanaged symlink exists${N}\n" "$name"
+    return
+  fi
+
+  if [ -d "$dst/.git" ]; then
+    actual_repo=$(git -C "$dst" remote get-url origin 2>/dev/null || true)
+    expected_repo=$(normalize_git_url "$repo")
+    if [ "$(normalize_git_url "$actual_repo")" != "$expected_repo" ]; then
+      printf "${Y}  [SKIP] skills/%s -- origin mismatch${N}\n" "$name"
+      return
+    fi
+    if [ -n "$(git -C "$dst" status --porcelain)" ]; then
+      printf "${Y}  [SKIP] skills/%s -- local changes exist${N}\n" "$name"
+      return
+    fi
+    ssh_command='ssh -o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=yes'
+    if GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="$ssh_command" \
+      git -C "$dst" pull --ff-only --quiet; then
+      printf "${G}  [OK]   skills/%s${N}\n" "$name"
+    else
+      printf "${Y}  [WARN] skills/%s -- update failed${N}\n" "$name"
+    fi
+    return
+  fi
+
+  if [ -e "$dst" ]; then
+    printf "${Y}  [SKIP] skills/%s -- unmanaged path exists${N}\n" "$name"
+    return
+  fi
+
+  ssh_command='ssh -o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=yes'
+  if GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="$ssh_command" \
+    git clone --quiet "$repo" "$dst"; then
+    printf "${G}  [CLONE] skills/%s${N}\n" "$name"
+  else
+    printf "${Y}  [SKIP] skills/%s -- private repo unavailable${N}\n" "$name"
+  fi
+}
+
 SHARED_CORE_SKILLS=(
   ask-discipline
   auto-docs
@@ -56,6 +113,10 @@ SHARED_CORE_SKILLS=(
   sdd
   search-discipline
   tdd
+)
+
+EXTERNAL_CODEX_SKILLS=(
+  "knowledge-base-router|git@github.com:miyago9267/knowledge-base-router.git"
 )
 
 printf "${Y}=== Codex CLI 設定 Symlink ===${N}\n"
@@ -87,5 +148,11 @@ if [ -d "$CODEX_SKILL_SRC" ]; then
     fi
   done
 fi
+
+printf '\n%b--- External Codex Skills ---%b\n' "$Y" "$N"
+for entry in "${EXTERNAL_CODEX_SKILLS[@]}"; do
+  IFS='|' read -r name repo <<< "$entry"
+  install_git_skill "$name" "$repo"
+done
 
 printf "${G}=== 完成 ===${N}\n"
