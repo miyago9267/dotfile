@@ -36,6 +36,7 @@ _ALL_ITEMS=(
   "install_claude.sh|Claude Code CLI|工具|0|all"
   "install_gemini.sh|Gemini CLI (gemini-cli)|工具|0|darwin"
   "install_codex.sh|Codex CLI|工具|0|darwin"
+  "install_sesh.sh|sesh (跨 CC/codex session finder)|工具|0|darwin linux:apt linux:pacman"
   "install_gh.sh|Git CLI 工具 (gh + glab)|工具|0|darwin linux:apt linux:pacman"
   "install_yazi.sh|Yazi 檔案管理器 (+ zoxide, bat)|工具|0|darwin linux:apt linux:pacman"
   "install_node.sh|Node.js 生態 (nvm + v24 + npm/yarn/pnpm)|語言|0|all"
