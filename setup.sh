@@ -1,9 +1,9 @@
 #!/bin/bash
-# Miyago Dotfile 互動式安裝腳本
+# Miyago Dotfile 開發環境 playbook
 # 使用方式：bash setup.sh [--all]
 #   --all  跳過選單，直接安裝全部
 
-set -e
+set -eo pipefail
 
 # -- 色彩 --
 Y='\033[1;33m'
@@ -16,6 +16,8 @@ N='\033[0m'
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT_DIR="$DIR/script/common"
 LINUX_DIR="$DIR/script/linux"
+ERROR_LOG="$DIR/error.log"
+CURRENT_RUN_LOG=""
 
 # -- 平台偵測 --
 . "$SCRIPT_DIR/_platform.sh"
@@ -34,8 +36,8 @@ _ALL_ITEMS=(
   "setup_codex.sh|Codex CLI 設定 (symlink)|工具|1|all"
   "setup_gemini.sh|Gemini CLI 設定 (symlink)|工具|1|all"
   "install_claude.sh|Claude Code CLI|工具|0|all"
-  "install_gemini.sh|Gemini CLI (gemini-cli)|工具|0|darwin"
-  "install_codex.sh|Codex CLI|工具|0|darwin"
+  "install_gemini.sh|Gemini CLI (official npm)|工具|0|darwin linux"
+  "install_codex.sh|Codex CLI (official installer)|工具|0|darwin linux"
   "install_sesh.sh|sesh (跨 CC/codex session finder)|工具|0|darwin linux:apt linux:pacman"
   "install_gh.sh|Git CLI 工具 (gh + glab)|工具|0|darwin linux:apt linux:pacman"
   "install_yazi.sh|Yazi 檔案管理器 (+ zoxide, bat)|工具|0|darwin linux:apt linux:pacman"
@@ -110,7 +112,7 @@ BANNER
   fi
   printf "  ${C}OS: ${N}%s\n\n" "$os_name"
 
-  printf "${B}  互動式安裝程式${N}\n"
+  printf "${B}  開發環境 Playbook${N}\n"
   printf "  方向鍵上下移動 | 空白鍵切換 | ${G}a${N} 全選 | ${R}n${N} 全不選 | ${Y}Enter${N} 開始安裝 | ${R}q${N} 離開\n\n"
 }
 
@@ -194,8 +196,33 @@ print_menu() {
   printf "\033[J"
 }
 
+cleanup() {
+  tput cnorm 2>/dev/null || true
+  tput rmcup 2>/dev/null || true
+  stty sane 2>/dev/null || true
+  [ -n "$CURRENT_RUN_LOG" ] && rm -f "$CURRENT_RUN_LOG"
+}
+
+record_failure() {
+  local name="$1"
+  local script="$2"
+  local status="$3"
+  local output_file="${4:-}"
+
+  {
+    printf '[%s] %s (%s), exit=%s\n' \
+      "$(date '+%Y-%m-%d %H:%M:%S %z')" "$name" "$script" "$status"
+    if [ -n "$output_file" ] && [ -s "$output_file" ]; then
+      sed 's/^/  /' "$output_file"
+    fi
+    printf '\n'
+  } >> "$ERROR_LOG"
+}
+
+trap cleanup EXIT
+
 # -- 全部安裝模式 --
-if [ "$1" = "--all" ]; then
+if [ "${1:-}" = "--all" ]; then
   printf "${Y}=== 全部安裝模式 ===${N}\n\n"
   for i in $(seq 0 $((TOTAL - 1))); do
     SELECTED[$i]=1
@@ -207,8 +234,6 @@ else
 
   # 隱藏游標、設定 raw mode
   tput civis 2>/dev/null || true
-  trap 'tput cnorm 2>/dev/null; tput rmcup 2>/dev/null; stty sane 2>/dev/null' EXIT
-
   # 進入迴圈前，先完整清空一次畫面
   tput smcup 2>/dev/null || true
   clear
@@ -298,19 +323,27 @@ for i in $(seq 0 $((TOTAL - 1))); do
   fi
 
   if [ ! -f "$script_path" ]; then
-    printf "${R}  [SKIP] %s -- 腳本不存在: %s${N}\n" "$local_name" "$local_script"
-    skipped=$((skipped + 1))
+    printf "${R}  [FAIL] %s -- 腳本不存在: %s${N}\n" "$local_name" "$local_script"
+    record_failure "$local_name" "$local_script" 127
+    failed=$((failed + 1))
     continue
   fi
 
   printf "${Y}  [RUN]  %s${N}\n" "$local_name"
-  if bash "$script_path"; then
+  CURRENT_RUN_LOG=$(mktemp /tmp/dotfile-install.XXXXXX)
+  if bash "$script_path" 2>&1 | tee "$CURRENT_RUN_LOG"; then
     printf "${G}  [OK]   %s${N}\n" "$local_name"
     installed=$((installed + 1))
   else
-    printf "${R}  [FAIL] %s${N}\n" "$local_name"
+    run_status=("${PIPESTATUS[@]}")
+    script_status="${run_status[0]}"
+    [ "$script_status" -eq 0 ] && script_status="${run_status[1]}"
+    record_failure "$local_name" "$local_script" "$script_status" "$CURRENT_RUN_LOG"
+    printf "${R}  [FAIL] %s -- 詳見 %s${N}\n" "$local_name" "$ERROR_LOG"
     failed=$((failed + 1))
   fi
+  rm -f "$CURRENT_RUN_LOG"
+  CURRENT_RUN_LOG=""
   echo ""
 done
 
@@ -321,4 +354,10 @@ printf "  ${G}成功${N}: %d\n" "$installed"
 [ "$failed" -gt 0 ] && printf "  ${R}失敗${N}: %d\n" "$failed"
 printf "  略過: %d\n" "$skipped"
 echo ""
+
+if [ "$failed" -gt 0 ]; then
+  printf "${R}失敗詳情已附加至 %s${N}\n" "$ERROR_LOG"
+  exit 1
+fi
+
 printf "${Y}請重新啟動終端以套用所有變更${N}\n"

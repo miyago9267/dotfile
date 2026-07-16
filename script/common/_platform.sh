@@ -55,5 +55,26 @@ platform_guard() {
 # is_installed cmd
 is_installed() { command -v "$1" >/dev/null 2>&1; }
 
+# download_installer url target
+download_installer() {
+  _di_url="$1"
+  _di_target="$2"
+
+  if ! is_installed curl; then
+    echo "[ERROR] curl not found" >&2
+    return 1
+  fi
+
+  curl --proto '=https' --tlsv1.2 \
+    --fail --silent --show-error --location \
+    --retry 3 --retry-delay 2 --connect-timeout 20 \
+    "$_di_url" --output "$_di_target"
+
+  if [ ! -s "$_di_target" ]; then
+    echo "[ERROR] downloaded installer is empty: $_di_url" >&2
+    return 1
+  fi
+}
+
 # skip_installed "Tool Name"
 skip_installed() { echo "[SKIP] $1: 已安裝"; exit 0; }

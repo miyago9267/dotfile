@@ -2,37 +2,31 @@
 set -euo pipefail
 . "$(dirname "$0")/_platform.sh"
 
-platform_guard "Codex CLI" darwin
+platform_guard "Codex CLI" darwin linux
 
-DOTFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+export PATH="$HOME/.local/bin:$PATH"
+installer=""
 
-Y="\033[1;33m"
-G="\033[1;32m"
-N="\033[0m"
-
-install_monika_codex() {
-  bash "$DOTFILE_DIR/config/ai/codex-plugin/scripts/build.sh"
-  bash "$DOTFILE_DIR/config/ai/codex-plugin/scripts/install-local.sh"
+cleanup() {
+  [ -n "$installer" ] && rm -f "$installer"
 }
+trap cleanup EXIT
 
-if [ "$_PLATFORM_PKG" = "brew" ]; then
-  if brew list --cask codex &>/dev/null; then
-    outdated_info=$(brew outdated --cask codex)
-    if [ -z "$outdated_info" ]; then
-      echo -e "${G}[SKIP] Codex CLI: 已安裝且為最新版本${N}"
-      install_monika_codex
-      exit 0
-    else
-      echo -e "${Y}[UPDATE] Codex CLI: 正在更新至最新版本...${N}"
-      brew upgrade --cask codex
-      install_monika_codex
-      exit 0
-    fi
-  else
-    echo -e "${Y}[INSTALL] Codex CLI: 正在安裝...${N}"
-    brew install --cask codex
-    install_monika_codex
-  fi
+if is_installed codex; then
+  echo "[UPDATE] Codex CLI via official standalone installer"
 else
-  echo "[SKIP] Codex CLI: 目前僅支援 macOS (Homebrew Cask)"
+  echo "[INSTALL] Codex CLI via official standalone installer"
 fi
+
+installer=$(mktemp /tmp/codex-install.XXXXXX)
+download_installer "https://chatgpt.com/codex/install.sh" "$installer"
+CODEX_NON_INTERACTIVE=1 sh "$installer"
+hash -r
+
+if ! is_installed codex; then
+  echo "[ERROR] Codex installer completed but codex is not on PATH" >&2
+  exit 1
+fi
+
+codex_version=$(codex --version)
+echo "[OK] $codex_version"

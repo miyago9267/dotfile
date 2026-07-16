@@ -1,16 +1,31 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 . "$(dirname "$0")/_platform.sh"
 
 platform_guard "Node.js" darwin linux
-{ is_installed nvm || [ -d "$HOME/.nvm" ]; } && skip_installed "Node.js (nvm)"
-
-# -- 安裝 nvm --
-echo "安裝 nvm..."
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 
 NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-sleep 2
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+  . "$NVM_DIR/nvm.sh"
+elif [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then
+  . "/opt/homebrew/opt/nvm/nvm.sh"
+fi
+
+is_installed npm && skip_installed "Node.js (npm)"
+
+# -- 安裝 nvm --
+if ! is_installed nvm; then
+  echo "安裝 nvm..."
+  installer=$(mktemp /tmp/nvm-install.XXXXXX)
+  trap 'rm -f "$installer"' EXIT
+  download_installer \
+    "https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh" \
+    "$installer"
+  bash "$installer"
+  rm -f "$installer"
+  trap - EXIT
+fi
+
 if [ -s "$NVM_DIR/nvm.sh" ]; then
   . "$NVM_DIR/nvm.sh"
 elif [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then

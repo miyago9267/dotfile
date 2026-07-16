@@ -1,31 +1,59 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 . "$(dirname "$0")/_platform.sh"
 
-platform_guard "Gemini CLI" darwin
+platform_guard "Gemini CLI" darwin linux
 
-Y="\033[1;33m"
-G="\033[1;32m"
-N="\033[0m"
-
-# 如果是 macOS，使用 brew
-if [ "$_PLATFORM_PKG" = "brew" ]; then
-  if brew list gemini-cli &>/dev/null; then
-    # brew outdated <formula> 返回 0 代表有更新 (有輸出)，非 0 代表沒有更新 (無輸出)
-    # 注意：brew outdated 的回傳值邏輯有時候會跟版本有關，通常檢查輸出是否為空比較準確
-    outdated_info=$(brew outdated gemini-cli)
-    if [ -z "$outdated_info" ]; then
-      echo -e "${G}[SKIP] Gemini CLI: 已安裝且為最新版本${N}"
-      exit 0
-    else
-      echo -e "${Y}[UPDATE] Gemini CLI: 正在從 $(brew info --json gemini-cli | jq -r '.[0].installed[0].version') 更新至最新版本...${N}"
-      brew upgrade gemini-cli
-      exit 0
-    fi
+if is_installed brew && brew list gemini-cli >/dev/null 2>&1; then
+  if [ -n "$(brew outdated gemini-cli 2>/dev/null)" ]; then
+    echo "[UPDATE] Gemini CLI via existing Homebrew installation"
+    brew upgrade gemini-cli
   else
-    echo -e "${Y}[INSTALL] Gemini CLI: 正在安裝...${N}"
-    brew install gemini-cli
+    echo "[SKIP] Gemini CLI: Homebrew installation is up to date"
   fi
-else
-  echo "[SKIP] Gemini CLI: 目前僅支援 macOS (Homebrew)"
+  if ! is_installed gemini; then
+    echo "[ERROR] Homebrew manages Gemini CLI but gemini is not on PATH" >&2
+    exit 1
+  fi
+  gemini_version=$(gemini --version)
+  echo "[OK] $gemini_version"
+  exit 0
 fi
+
+load_nvm() {
+  NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+  if [ -s "$NVM_DIR/nvm.sh" ]; then
+    . "$NVM_DIR/nvm.sh"
+  elif [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then
+    . "/opt/homebrew/opt/nvm/nvm.sh"
+  fi
+}
+
+load_nvm
+if ! is_installed npm; then
+  echo "[INFO] npm not found; installing the Node.js dependency first"
+  bash "$(dirname "$0")/install_node.sh"
+  load_nvm
+fi
+
+if ! is_installed npm; then
+  echo "[ERROR] npm is unavailable after Node.js setup" >&2
+  exit 1
+fi
+
+if is_installed gemini; then
+  echo "[UPDATE] Gemini CLI via official npm package"
+else
+  echo "[INSTALL] Gemini CLI via official npm package"
+fi
+
+npm install --global @google/gemini-cli@latest
+hash -r
+
+if ! is_installed gemini; then
+  echo "[ERROR] Gemini CLI installer completed but gemini is not on PATH" >&2
+  exit 1
+fi
+
+gemini_version=$(gemini --version)
+echo "[OK] $gemini_version"

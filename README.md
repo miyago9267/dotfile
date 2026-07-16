@@ -1,20 +1,22 @@
 # Dotfile
 
-Personal development environment setup for Vim, Neovim, and Tmux.
+Miyago 的個人開發環境 playbook。除了保存 dotfiles，也統一管理
+macOS / Linux 工具安裝、AI CLI 設定、runtime 與常用開發工具。
 
 ## Quick Start
 
-1. Clone this repo.
-2. `cd` to `dotfile` folder
-3. **remove the safe in `setup.sh`** and run `setup.sh`
+1. Clone 這個 repo。
+2. 進入 `dotfile` 目錄。
+3. 執行互動式 playbook，選擇要套用的項目。
 
-> Warning! This script will modified your setting, please use after thinking.
-> I'm not responsible for any damage caused by this script
-
-```shell
+```bash
 git clone https://github.com/miyago9267/dotfile.git && cd dotfile
-sh setup.sh
+bash setup.sh
 ```
+
+`bash setup.sh --all` 會跳過選單並執行所有支援的項目。
+安裝失敗時，當次 component 的輸出與 exit code 會附加到
+repo 根目錄的 `error.log`；該檔案已由 `*.log` 規則排除於版控。
 
 ## Supported Systems
 
@@ -24,6 +26,11 @@ sh setup.sh
 - **Windows (PowerShell 7+)** -- 見 [`powershell/README.md`](powershell/README.md)
 
 ## Features
+
+- Reproducible macOS / Linux environment setup
+- Vim、Neovim、Tmux 與 shell configuration
+- Claude Code、Codex 與 Gemini CLI 安裝／更新及共用 AI workflow
+- Language runtime、cloud CLI、mobile SDK 與 TUI 工具安裝
 
 ### Vim (.vimrc)
 
@@ -59,6 +66,8 @@ sh setup.sh
 │   ├── init.lua
 │   ├── lua/
 │   └── lazy-lock.json
+├── config/ai/             # Claude Code / Codex / Gemini 設定與 skills
+├── plugins/               # 可重複安裝的 AI workflow artifacts
 ├── powershell/            # Windows PowerShell 版
 │   ├── profile.ps1        # 主 profile
 │   ├── profile.d/         # 模組化載入
@@ -169,6 +178,7 @@ Prefix Key: Ctrl-b (or Ctrl-a)
 4. Configure Vim, Neovim, and Tmux
 5. Link configuration files to home directory
 6. Install language runtimes (optional)
+7. Install or update AI CLIs and link their runtime-specific configuration
 
 ### Windows
 
@@ -194,13 +204,24 @@ Available installation scripts in `script/common/`:
 ### Development Tools
 
 - `install_gh.sh` - GitHub CLI
-- `install_claude.sh` - Claude Code CLI
-- `install_codex.sh` - Codex CLI + Monika Codex plugin
 - `install_yazi.sh` - Yazi file manager + zoxide + bat
 - `install_argocd.sh` - ArgoCD CLI
 - `install_kubectl.sh` - Kubernetes CLI
 - `install_sops.sh` - Mozilla SOPS (secrets management)
 - `install_gcloud.sh` - Google Cloud SDK
+
+### AI CLIs
+
+- `install_claude.sh` - Claude Code official native installer via curl
+- `install_codex.sh` - Codex official standalone installer via curl
+- `install_gemini.sh` - Gemini CLI official npm package; installs Node.js via
+  the NVM curl installer when needed; existing Homebrew installs stay managed
+  by Homebrew
+
+The Claude Code and Codex scripts use the same official installer for fresh
+installs and updates. Gemini CLI does not provide an equivalent production curl
+installer, so the playbook follows its official `@google/gemini-cli@latest`
+package path while preserving existing Homebrew-managed installations.
 
 ### Mobile / SDK
 
@@ -238,6 +259,10 @@ All scripts support macOS, Ubuntu, and Arch Linux.
 - Both include VSCode-style editing features
 
 ## Troubleshooting
+
+**A setup component failed:**
+Inspect `error.log` in the repository root. Each failure includes a timestamp,
+component name, exit code, and the captured installer output.
 
 **LSP not working in Neovim:**
 Run `:Mason` to install language servers manually.
