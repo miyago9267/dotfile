@@ -1,6 +1,6 @@
 {
   "env": {
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "25"
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "100"
   },
   "permissions": {
     "allow": [
@@ -47,7 +47,7 @@
       "/Users/miyago/Project/Note/itrd-knowledge-base"
     ]
   },
-  "model": "opus",
+  "model": "gpt-5.6-luna",
   "hooks": {
     "InstructionsLoaded": [
       {
