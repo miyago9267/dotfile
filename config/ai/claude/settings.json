@@ -47,7 +47,6 @@
       "/Users/miyago/Project/Note/itrd-knowledge-base"
     ]
   },
-  "model": "gpt-5.6-luna",
   "hooks": {
     "InstructionsLoaded": [
       {
