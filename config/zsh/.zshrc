@@ -135,3 +135,23 @@ gitlab_token() {
 
 # Added by Antigravity CLI installer
 export PATH="/Users/miyago/.local/bin:$PATH"
+
+# >>> tokenbar-remote-sync exit hook >>>
+ssh() {
+    command ssh "$@"
+    local rc=$? arg skip=0 host=""
+    for arg in "$@"; do
+        if (( skip )); then skip=0; continue; fi
+        case "$arg" in
+            -[bcDEeFIiJLlmOopQRSWw]) skip=1 ;;
+            -*) ;;
+            *) host="${arg#*@}"; break ;;
+        esac
+    done
+    if [ -n "$host" ]; then
+        ("$HOME/.local/bin/tokenbar-remote-sync.sh" "$host" \
+            >> "$HOME/Library/Logs/tokenbar-remote-sync.log" 2>&1 &)
+    fi
+    return $rc
+}
+# <<< tokenbar-remote-sync exit hook <<<

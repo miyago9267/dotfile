@@ -15,7 +15,22 @@
       "Bash(/bin/bash -n /Users/miyago/dotfile/config/ai/claude/coralline/test/test-codex-quota.sh)",
       "Bash(/bin/bash /Users/miyago/dotfile/config/ai/claude/coralline/test/test-codex-quota.sh)",
       "Bash(bash ~/.claude/scripts/log.sh feat coralline config/ai/claude/coralline 'Sync v0.9.1 and add Codex app-server quota provider for remora sessions')",
-      "Read(//Users/miyago/Project/Code/resesh/**)"
+      "Read(//Users/miyago/Project/Code/resesh/**)",
+      "Bash(git clone *)",
+      "Bash(git -C /tmp/i-have-adhd-audit status --short --branch)",
+      "Bash(git -C /tmp/i-have-adhd-audit ls-tree -r --name-only HEAD)",
+      "Skill(claude-api)",
+      "Bash(git *)",
+      "Bash(/bin/ls *)",
+      "Bash(gh repo *)",
+      "Bash(gh api *)",
+      "Bash(/usr/bin/codesign *)",
+      "Bash(xattr *)",
+      "Bash(/usr/bin/sips --help)",
+      "Bash(/usr/bin/grep -E 'verify|pixelWidth|pixelHeight|format')",
+      "Bash(/usr/bin/head -n 20)",
+      "mcp__interactive-bash__InteractiveBash",
+      "mcp__playwright__browser_tabs"
     ]
   },
   "enabledMcpjsonServers": [
