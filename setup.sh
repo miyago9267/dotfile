@@ -40,6 +40,7 @@ _ALL_ITEMS=(
   "install_codex.sh|Codex CLI (official installer)|工具|0|darwin linux"
   "install_sesh.sh|sesh (跨 CC/codex session finder)|工具|0|darwin linux:apt linux:pacman"
   "install_gh.sh|Git CLI 工具 (gh + glab)|工具|0|darwin linux:apt linux:pacman"
+  "install_remora_proxy.sh|Remora + Calico Claude + Proxy|工具|0|darwin"
   "install_yazi.sh|Yazi 檔案管理器 (+ zoxide, bat)|工具|0|darwin linux:apt linux:pacman"
   "install_node.sh|Node.js 生態 (nvm + v24 + npm/yarn/pnpm)|語言|0|all"
   "install_bun.sh|Bun|語言|0|all"

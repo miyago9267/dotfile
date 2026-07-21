@@ -2,8 +2,8 @@
 set -euo pipefail
 . "$(dirname "$0")/_platform.sh"
 
-# Remora Proxy playbook：CLIProxyAPI(native, launchd) + aluo 官方轉發後端。
-# 冪等；重跑安全。--force 會重新產生 config.native.yaml 與 remora config.toml。
+# Remora + Calico + CLIProxyAPI(native, launchd) + aluo 官方轉發後端。
+# 冪等；重跑安全。--force 只會重新產生 config.native.yaml。
 #
 # 為什麼 native + aluo：Docker Desktop VM 太吃資源；逆向 codex 來源 prefill 只有
 # ~530 tok/s（40K context 冷啟 83s）。aluo 是 OpenAI-compatible 中轉、轉發官方
@@ -12,13 +12,17 @@ set -euo pipefail
 
 platform_guard "Remora Proxy (CLIProxyAPI native + aluo)" darwin
 
+export PATH="$HOME/.local/bin:$PATH"
+
 DOTFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TPL="$DOTFILE_DIR/config/ai/claude/remora-proxy"
 
 # --- 可用環境變數覆寫 ---
 PROXY_DIR="${CLIPROXY_DIR:-$HOME/containers/cliproxyapi}"
 CPA_VERSION="${CPA_VERSION:-7.2.71}"
+REMORA_VERSION="${REMORA_VERSION:-0.1.13}"
 REMORA_CFG="$HOME/.config/remora-cc/config.toml"
+CALICO_BIN="$HOME/.local/bin/calico-claude"
 PLIST="$HOME/Library/LaunchAgents/com.miyago.cliproxyapi.plist"
 BIN="$PROXY_DIR/bin/cli-proxy-api"
 CONFIG="$PROXY_DIR/config.native.yaml"
@@ -27,7 +31,81 @@ FORCE=0
 [ "${1:-}" = "--force" ] && FORCE=1
 
 mkdir -p "$PROXY_DIR/bin" "$PROXY_DIR/auths" "$PROXY_DIR/logs" \
-         "$HOME/Library/LaunchAgents" "$HOME/.config/remora-cc"
+         "$HOME/Library/LaunchAgents" "$HOME/.config/remora-cc" "$HOME/.local/bin"
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || {
+    echo "[ERROR] 缺少必要指令：$1" >&2
+    exit 1
+  }
+}
+
+verify_checksum() {
+  local checksum_file="$1" artifact="$2" artifact_name="$3" expected actual
+  expected="$(awk -v name="$artifact_name" '$2 == name { print $1 }' "$checksum_file")"
+  [ -n "$expected" ] || {
+    echo "[ERROR] checksum 找不到：$artifact_name" >&2
+    exit 1
+  }
+  actual="$(shasum -a 256 "$artifact" | awk '{ print $1 }')"
+  [ "$expected" = "$actual" ] || {
+    echo "[ERROR] checksum 驗證失敗：$artifact_name" >&2
+    exit 1
+  }
+}
+
+install_remora_and_calico() {
+  local claude_version calico_arch calico_tag tmp remora_archive calico_archive
+
+  require_command claude
+  require_command curl
+  require_command gh
+  require_command shasum
+  require_command tar
+
+  claude_version="$(claude --version | awk 'NR == 1 { print $1 }')"
+  [ -n "$claude_version" ] || {
+    echo "[ERROR] 無法取得 Claude Code 版本" >&2
+    exit 1
+  }
+  case "$(uname -m)" in
+    arm64|aarch64) calico_arch="arm64" ;;
+    x86_64|amd64) calico_arch="x64" ;;
+    *) echo "[ERROR] 不支援的 Calico 架構: $(uname -m)" >&2; exit 1 ;;
+  esac
+  calico_tag="v${claude_version}-macos-${calico_arch}"
+
+  if is_installed remora && [ "$(remora version 2>/dev/null || true)" = "remora $REMORA_VERSION" ]; then
+    echo "[SKIP] remora-cc: v$REMORA_VERSION 已就位"
+  else
+    tmp="$(mktemp -d)"
+    remora_archive="$tmp/remora-cc-$REMORA_VERSION.tar.gz"
+    download_installer "https://github.com/Nanako0129/remora-cc/releases/download/v${REMORA_VERSION}/remora-cc-${REMORA_VERSION}.tar.gz" "$remora_archive"
+    download_installer "https://github.com/Nanako0129/remora-cc/releases/download/v${REMORA_VERSION}/checksums.txt" "$tmp/remora-checksums.txt"
+    verify_checksum "$tmp/remora-checksums.txt" "$remora_archive" "remora-cc-${REMORA_VERSION}.tar.gz"
+    gh attestation verify "$remora_archive" --repo Nanako0129/remora-cc >/dev/null
+    tar xzf "$remora_archive" -C "$tmp"
+    "$tmp/remora-cc-$REMORA_VERSION/install.sh"
+    rm -rf "$tmp"
+  fi
+
+  if [ -x "$CALICO_BIN" ] && "$CALICO_BIN" --version 2>/dev/null | head -1 | grep -qx "$claude_version (Claude Code)"; then
+    echo "[SKIP] Calico Claude: $claude_version 已就位"
+  else
+    tmp="$(mktemp -d)"
+    calico_archive="$tmp/claude.native.macos.patched"
+    download_installer "https://github.com/Nanako0129/calico-claude/releases/download/$calico_tag/claude.native.macos.patched" "$calico_archive"
+    download_installer "https://github.com/Nanako0129/calico-claude/releases/download/$calico_tag/checksums.txt" "$tmp/calico-checksums.txt"
+    verify_checksum "$tmp/calico-checksums.txt" "$calico_archive" "claude.native.macos.patched"
+    gh attestation verify "$calico_archive" --repo Nanako0129/calico-claude >/dev/null
+    install -m 0755 "$calico_archive" "$CALICO_BIN"
+    xattr -dr com.apple.quarantine "$CALICO_BIN" 2>/dev/null || true
+    rm -rf "$tmp"
+    echo "[OK] Calico Claude: $claude_version"
+  fi
+}
+
+install_remora_and_calico
 
 # --- 1. CLIProxyAPI binary ---
 if [ -x "$BIN" ] && ("$BIN" --help 2>&1 || true) | grep -q "Version: $CPA_VERSION"; then
@@ -110,13 +188,9 @@ open(out, "w").write(open(tpl).read().replace("__PROXY_DIR__", proxy_dir))
 PY
 echo "plist → $PLIST"
 
-# --- 5. remora config.toml（無 secret；已存在則保留） ---
-if [ -f "$REMORA_CFG" ] && [ "$FORCE" = 0 ]; then
-  echo "[SKIP] remora config.toml 已存在（--force 覆蓋）"
-else
-  cp "$TPL/remora.config.toml" "$REMORA_CFG"
-  echo "remora config → $REMORA_CFG"
-fi
+# --- 5. remora config.toml（無 secret；dotfile 為唯一來源） ---
+install -m 600 "$TPL/remora.config.toml" "$REMORA_CFG"
+echo "remora config → $REMORA_CFG"
 
 # --- 6. 啟動 launchd ---
 launchctl unload "$PLIST" 2>/dev/null || true
@@ -129,11 +203,6 @@ else
 fi
 
 # --- 7. 驗證 ---
-if is_installed remora; then
-  remora doctor --online 2>&1 | grep -E 'PASS|FAIL|proxy endpoint' | tail -12 || true
-else
-  echo "[NOTE] 尚未安裝 remora-cc，proxy 已就緒。安裝 remora 見："
-  echo "       $TPL/README.md"
-fi
+remora doctor --online 2>&1 | grep -E 'PASS|FAIL|WARN|proxy endpoint|context policy' | tail -24 || true
 
 echo "[DONE] Remora proxy (aluo backend) 就緒"

@@ -7,6 +7,8 @@ set -euo pipefail
 DOTFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CLAUDE_SRC="$DOTFILE_DIR/config/ai/claude"
 CLAUDE_DST="$HOME/.claude"
+REMORA_SRC="$CLAUDE_SRC/remora-proxy/remora.config.toml"
+REMORA_DST="$HOME/.config/remora-cc/config.toml"
 
 Y='\033[1;33m'
 G='\033[1;32m'
@@ -68,5 +70,9 @@ mkdir -p "$CLAUDE_DST"
 for item in "${ITEMS[@]}"; do
   link_item "$item"
 done
+
+mkdir -p "$(dirname "$REMORA_DST")"
+install -m 600 "$REMORA_SRC" "$REMORA_DST"
+printf "${G}  [SYNC] remora-cc/config.toml${N}\n"
 
 printf "${G}=== 完成 ===${N}\n"

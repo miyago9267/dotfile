@@ -18,7 +18,7 @@
 | `config.native.yaml.tmpl` | CLIProxyAPI 設定樣板（key 用 placeholder，實檔含 secret 不進 git） |
 | `com.miyago.cliproxyapi.plist.tmpl` | launchd 常駐樣板（路徑 placeholder） |
 | `remora.config.toml` | remora 設定（三層 routing + effort + concurrency，無 secret，直接複製） |
-| `../../../script/common/install_remora_proxy.sh` | 冪等 playbook |
+| `../../../script/common/install_remora_proxy.sh` | 冪等安裝與設定同步 playbook |
 
 ## 用法
 
@@ -27,12 +27,17 @@
 bash setup.sh
 
 # 或直接跑
-bash script/common/install_remora_proxy.sh          # 冪等，已存在的 config 會保留
-bash script/common/install_remora_proxy.sh --force   # 重新產生 config.native.yaml 與 remora config.toml
+bash script/common/install_remora_proxy.sh          # 安裝／更新 Remora、Calico、proxy，並同步設定
+bash script/common/install_remora_proxy.sh --force   # 另外重新產生 config.native.yaml
 ```
 
-playbook 會：抓 CLIProxyAPI binary → 解析 secret → 產生 config 與 plist → 載入 launchd → 驗證 port，
-若已裝 remora 再跑 `doctor --online`。
+playbook 會：驗證並安裝對應的 Remora release、與原生 Claude Code 同版本的 Calico binary（獨立放在
+`~/.local/bin/calico-claude`）→ 抓 CLIProxyAPI binary → 解析 secret → 產生 config 與 plist → 載入
+launchd → 驗證 port 與 `remora doctor --online`。Calico 不會覆蓋原生 `claude`。
+
+`setup.sh --all` 會包含這個項目；互動式執行時可在「工具」選取它。一般的 Claude 設定同步也會覆蓋
+`~/.config/remora-cc/config.toml`，因此 pull dotfile 後再次執行 `bash setup.sh` 即可套用受版本控制的
+Remora model 與 context 設定。
 
 ## Secret 來源（aluo api-key，依序嘗試）
 
@@ -42,10 +47,10 @@ playbook 會：抓 CLIProxyAPI binary → 解析 secret → 產生 config 與 pl
 
 CLIProxyAPI 的 client auth key 存 macOS Keychain（`remora-proxy-key`），沒有會自動生成並寫回。
 
-## 前置：安裝 remora-cc
+## 前置
 
-本 playbook 只管 proxy 閘道；remora binary 另裝（verified release）：
-見 <https://github.com/Nanako0129/remora-cc>。裝好後 `remora doctor --online` 應全 PASS。
+需要原生 Claude Code、`gh`、`curl`、`shasum`、`tar`。安裝腳本會使用 release SHA-256 與 GitHub
+attestation 驗證 Remora 與 Calico artifacts，再進行安裝。
 
 ## Pilotfish 對應
 
