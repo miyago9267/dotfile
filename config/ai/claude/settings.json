@@ -47,6 +47,7 @@
       "/Users/miyago/Project/Note/itrd-knowledge-base"
     ]
   },
+  "model": "sonnet",
   "hooks": {
     "InstructionsLoaded": [
       {
@@ -248,6 +249,6 @@
       }
     }
   },
-  "effortLevel": "high",
+  "effortLevel": "medium",
   "theme": "dark-ansi"
 }
