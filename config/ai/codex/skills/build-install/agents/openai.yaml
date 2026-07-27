@@ -1,4 +1,0 @@
-interface:
-  display_name: "Build Install"
-  short_description: "建立 AI playbook 與 curl install.sh 的雙模式安裝流程"
-  default_prompt: "使用 $build-install，為目前專案建立 INSTALL.md、INSTALL_PROMPT.md 與可安全 curl | bash 的 install.sh。"

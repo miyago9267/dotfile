@@ -117,6 +117,7 @@ SHARED_CORE_SKILLS=(
 
 EXTERNAL_CODEX_SKILLS=(
   "knowledge-base-router|git@github.com:miyago9267/knowledge-base-router.git"
+  "build-install|https://github.com/miyago9267/build-install.git"
 )
 
 printf "${Y}=== Codex CLI 設定 Symlink ===${N}\n"

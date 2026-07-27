@@ -35,7 +35,7 @@ bash setup.sh --all
 ## AI skills
 
 Codex 的 native skills 放在 `config/ai/codex/skills/`，Claude 共用的 skills 放在
-`config/ai/claude/skills/`。目前比較特別的是 `build-install`，用來幫其他專案產生兩種安裝入口：
+`config/ai/claude/skills/`。另外有一個獨立的 [`build-install`](https://github.com/miyago9267/build-install) skill，專門幫其他專案產生兩種安裝入口：
 
 - 給 agent 讀的 `INSTALL.md` 和安裝 prompt
 - 給人直接 `curl | bash` 使用的 `install.sh`
