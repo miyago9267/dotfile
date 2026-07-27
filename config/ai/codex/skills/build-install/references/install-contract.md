@@ -26,6 +26,7 @@ documented boundary, then follow the playbook and report verification results.
 - use `set -Eeuo pipefail`, a temporary directory, cleanup, and quoted paths;
 - support `--help`, `--dry-run`, and a visible `--ref`/version choice;
 - avoid `eval`, unbounded `rm`, implicit `sudo`, and silent writes outside the documented destination;
+- shell-quote generated metadata and reject project names that would create path traversal or command substitution;
 - delegate project-specific installation to a reviewable hook;
 - be rerunnable without clobbering user configuration.
 

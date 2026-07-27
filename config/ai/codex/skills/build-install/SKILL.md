@@ -17,7 +17,7 @@ description: 建立跨專案可重用的雙模式安裝入口：給 AI agent 讀
 3. Replace every `TODO` and placeholder. Keep project-specific work in a local `scripts/install-project.sh` hook or an equivalent narrow command. Make the public installer a thin, auditable bootstrapper.
 4. Write `INSTALL.md` as an agent playbook: preflight, files/commands to inspect, confirmation boundary, execution, verification, rollback/uninstall, and a report of what changed. Tell the agent to inspect `install.sh` before running it and to pin a release when possible.
 5. Write `INSTALL_PROMPT.md` as a short copy-paste prompt that fetches the raw `INSTALL.md`, asks the agent to read and follow it, and does not bypass the confirmation boundary.
-6. Make `install.sh` strict (`set -Eeuo pipefail`), quote variables, avoid `eval`, avoid implicit `sudo`, use a temporary directory with cleanup, and expose `--help`, `--dry-run`, `--ref`, and project-specific options only when implemented. Keep network access at install time; installed runtime code must not make unexpected network calls.
+6. Make `install.sh` strict (`set -Eeuo pipefail`), shell-quote every generated value, reject unsafe install slugs, avoid `eval`, avoid implicit `sudo`, use a temporary directory with cleanup, and expose `--help`, `--dry-run`, `--ref`, and project-specific options only when implemented. Keep network access at install time; installed runtime code must not make unexpected network calls.
 7. Verify with `bash -n install.sh`, a dry run, and the project’s narrowest relevant test. If available, run ShellCheck. Do not run a live install unless the user asks for it.
 
 ## Decision rules

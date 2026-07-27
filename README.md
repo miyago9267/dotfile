@@ -32,6 +32,31 @@ repo 根目錄的 `error.log`；該檔案已由 `*.log` 規則排除於版控。
 - Claude Code、Codex 與 Gemini CLI 安裝／更新及共用 AI workflow
 - Language runtime、cloud CLI、mobile SDK 與 TUI 工具安裝
 
+### Build Install skill
+
+`config/ai/codex/skills/build-install/` provides a reusable installation
+scaffold for projects that need both an AI-agent playbook and a traditional
+shell installer. It generates:
+
+- `INSTALL.md` — an inspectable playbook for an agent to read and follow;
+- `INSTALL_PROMPT.md` — a short copy-paste prompt for fetching the playbook;
+- `install.sh` — a pinned-ref, `--dry-run`-capable `curl | bash` entrypoint.
+
+Generate the files for a project with:
+
+```bash
+python3 config/ai/codex/skills/build-install/scripts/scaffold_install.py \
+  /path/to/project \
+  --name ProjectName \
+  --repo https://github.com/OWNER/PROJECT.git \
+  --install-url https://raw.githubusercontent.com/OWNER/PROJECT/main
+```
+
+Replace the generated placeholders and provide
+`scripts/install-project.sh` for project-specific installation logic. Check
+`install.sh` before running a remote installer; prefer a tagged `--ref`, then
+verify with `bash -n` and `--dry-run`.
+
 ### Vim (.vimrc)
 
 - NERDTree file explorer

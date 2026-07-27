@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import re
+import shlex
 from pathlib import Path
 
 
@@ -27,9 +29,17 @@ def render(template: str, values: dict[str, str]) -> str:
     return template
 
 
+def slugify(name: str) -> str:
+    slug = re.sub(r"[^a-z0-9._-]+", "-", name.lower()).strip("-.")
+    if not slug or slug == "..":
+        raise SystemExit("project name must produce a safe install directory name")
+    return slug
+
+
 def main() -> int:
     args = parse_args()
-    install_dir = args.install_dir or f"$HOME/.local/share/{args.name.lower().replace(' ', '-') }"
+    slug = slugify(args.name)
+    install_dir = args.install_dir or f"${{HOME}}/.local/share/{slug}"
     uninstall = args.uninstall.replace("<INSTALL_DIR>", install_dir)
     skill_root = Path(__file__).resolve().parents[1]
     templates = skill_root / "assets"
@@ -42,6 +52,10 @@ def main() -> int:
         "PREREQUISITES": args.prerequisites,
         "VERIFY_COMMAND": args.verify,
         "UNINSTALL_STEPS": uninstall,
+        "PROJECT_NAME_SHELL": shlex.quote(args.name),
+        "REPOSITORY_URL_SHELL": shlex.quote(args.repo),
+        "DEFAULT_REF_SHELL": shlex.quote(args.ref),
+        "INSTALL_DIR_SHELL": f'"${{HOME}}/.local/share/{slug}"' if not args.install_dir else shlex.quote(install_dir),
     }
     outputs = {
         "INSTALL.md": "INSTALL.md.tmpl",
