@@ -23,6 +23,8 @@ Desktop.ini
 docs/ai/
 .ai/
 .omo/
+# Pilotfish temporary backups (timestamp/hash suffix changes frequently)
+*.pilotfish-*
 # PROGRESS.md 在 docs/specs/ 底下需要 commit，只排除根目錄的
 /PROGRESS.md
 
