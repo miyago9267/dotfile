@@ -11,10 +11,35 @@ Grok CLI `0.2.106` is installed locally from the inspected xAI installer at
 and `agent` into `~/.local/bin`; it was run with `SHELL=/bin/none`, so it did
 not modify `~/.zshrc`.
 
-## Current integration path
+## Runtime layers
+
+Grok has two explicit launchers:
+
+- `grok-native` -- strict native mode. It uses a private process `HOME`, keeps
+  Grok state/auth in `GROK_HOME`, and disables Claude compatibility cells.
+- `grok-compat` -- opt-in compatibility mode. It uses the normal `HOME` and
+  explicitly enables Claude compatibility cells.
+
+Run `bash script/common/setup_grok.sh` after pulling the dotfiles. It links the
+native persona adapter to `$GROK_HOME/AGENTS.md` and installs both launchers in
+`~/.local/bin`. The bare `grok` command is intentionally left untouched.
+
+The native adapter is required because Grok does not execute Claude's
+SessionStart hooks. The Claude-compatible `~/.claude/Claude.md` therefore
+cannot be the only source of Monika's identity.
+
+## Claude compatibility boundary
+
+Claude compatibility is not the shared persona source. Keep it disabled for
+normal Grok work and enable it only through `grok-compat` when a session
+actually needs Claude content.
+
+`compat.claude.agents = false` does not currently gate `.claude/agents`
+subagent discovery. Native mode handles this product gap by isolating the
+process `HOME`; it does not move or modify Claude's own agent directory.
 
 Grok's compatibility discovery currently loads the existing Claude-compatible
-skill surface. `grok inspect --json` confirmed:
+surface. `grok inspect --json` confirmed:
 
 - `human-voice` is enabled.
 - Source: `~/.claude/skills/human-voice/SKILL.md`.
@@ -23,13 +48,10 @@ skill surface. `grok inspect --json` confirmed:
 - The same inspection also reported broader Claude-compatible global rules,
   hooks, skills, and agents as loaded.
 
-No separate Grok copy is created while the CLI consumes this compatible path.
-Grok's user config now also points `[skills].paths` at
-`config/ai/codex/skills`, so Codex-native skills are available through Grok's
-supported extra-skill-path mechanism. The shared contract and the Claude/Codex
-skills remain the semantic source of truth; Grok-specific files must not fork
-their delivery rules. The broader compatibility import must be isolated or
-explicitly accepted before sending private context to a Grok session.
+Grok's user config currently points `[skills].paths` at
+`config/ai/codex/skills`, so those explicitly configured skills remain available
+in native mode. This path is an approved shared-skill boundary; Claude-native
+skills are not used as the persona source.
 
 ## Still unverified
 
@@ -40,13 +62,13 @@ explicitly accepted before sending private context to a Grok session.
   agent fallback recap remains required after meaningful work.
 - Tool, working-directory, and project-trust behavior need a post-login smoke
   test before claiming full runtime parity.
-- The compatibility surface currently appears broader than `human-voice`; do
-  not authenticate or run private-work prompts until that import scope is
-  isolated or explicitly accepted.
+- Native and compatibility discovery have been verified with `inspect`, but a
+  real external prompt has not been sent as part of this setup.
 
 ## Activation boundary
 
-Before login, isolate or review the broader compatibility import. After that,
-run a sanitized smoke test and inspect the discovered instruction surface before
-adding any Grok-specific adapter. Do not add credentials, provider routing, shell
-hooks, or machine-local state to this repository.
+The native adapter and launchers are safe to install before login because they
+contain no credentials or machine-local state. Use `grok-native` for normal
+work. Use `grok-compat` only when Claude compatibility is intentional. Do not
+add credentials, provider routing, shell hooks, or machine-local state to this
+repository.
