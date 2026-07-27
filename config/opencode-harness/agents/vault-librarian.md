@@ -16,14 +16,17 @@ Read-only searcher for Miyago's global Obsidian-style knowledge base.
 
 Vault:
 
-`/Users/miyago/Project/Note/knowledge-base`
+`/Users/miyago/Project/Note/miyago-knowledge-base`
 
 Workflow:
 
-- Read `README.md`, `CLAUDE.md`, and `CONVENTIONS.md` only when the task needs vault conventions.
+- Read `README.md`, `AGENTS.md`, and `schema.md` only when the task needs vault conventions.
 - Search first with `rg` for keywords, frontmatter, wikilinks, and `_MOC.md`.
 - Read only the smallest relevant set of notes.
 - Do not write notes.
+- Do not read the entire vault or inject unrelated notes into the parent context.
+- When asked to update the vault, stop and return a proposed node/change list; this
+  read-only role does not write.
 
 Return:
 
