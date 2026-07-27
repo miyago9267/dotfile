@@ -3,297 +3,54 @@
 Miyago 的個人開發環境 playbook。除了保存 dotfiles，也統一管理
 macOS / Linux 工具安裝、AI CLI 設定、runtime 與常用開發工具。
 
-## Quick Start
+這個 repo 很雜，基本上就是我平常會用到的設定和安裝腳本，想到什麼就慢慢補進來。
 
-1. Clone 這個 repo。
-2. 進入 `dotfile` 目錄。
-3. 執行互動式 playbook，選擇要套用的項目。
+## 怎麼用
+
+先把 repo clone 下來，然後跑 setup：
 
 ```bash
-git clone https://github.com/miyago9267/dotfile.git && cd dotfile
+git clone https://github.com/miyago9267/dotfile.git
+cd dotfile
 bash setup.sh
 ```
 
-`bash setup.sh --all` 會跳過選單並執行所有支援的項目。
-安裝失敗時，當次 component 的輸出與 exit code 會附加到
-repo 根目錄的 `error.log`；該檔案已由 `*.log` 規則排除於版控。
-
-## Supported Systems
-
-- macOS (Darwin)
-- Ubuntu/Debian (APT)
-- Arch Linux (Pacman)
-- **Windows (PowerShell 7+)** -- 見 [`powershell/README.md`](powershell/README.md)
-
-## Features
-
-- Reproducible macOS / Linux environment setup
-- Vim、Neovim、Tmux 與 shell configuration
-- Claude Code、Codex 與 Gemini CLI 安裝／更新及共用 AI workflow
-- Language runtime、cloud CLI、mobile SDK 與 TUI 工具安裝
-
-### Build Install skill
-
-`config/ai/codex/skills/build-install/` provides a reusable installation
-scaffold for projects that need both an AI-agent playbook and a traditional
-shell installer. It generates:
-
-- `INSTALL.md` — an inspectable playbook for an agent to read and follow;
-- `INSTALL_PROMPT.md` — a short copy-paste prompt for fetching the playbook;
-- `install.sh` — a pinned-ref, `--dry-run`-capable `curl | bash` entrypoint.
-
-Generate the files for a project with:
+想全部跑完可以用：
 
 ```bash
-python3 config/ai/codex/skills/build-install/scripts/scaffold_install.py \
-  /path/to/project \
-  --name ProjectName \
-  --repo https://github.com/OWNER/PROJECT.git \
-  --install-url https://raw.githubusercontent.com/OWNER/PROJECT/main
+bash setup.sh --all
 ```
 
-Replace the generated placeholders and provide
-`scripts/install-project.sh` for project-specific installation logic. Check
-`install.sh` before running a remote installer; prefer a tagged `--ref`, then
-verify with `bash -n` and `--dry-run`.
+安裝失敗的 component 會把輸出和 exit code 記到根目錄的 `error.log`，方便之後回頭看。
 
-### Vim (.vimrc)
+## 裡面大概有什麼
 
-- NERDTree file explorer
-- Lightline status bar
-- ALE linting and fixing
-- Syntax highlighting for multiple languages
-- VSCode-style keybindings
-- Auto-completion with CoC
+- macOS、Ubuntu/Debian、Arch Linux 的安裝腳本
+- Windows PowerShell 設定
+- Vim、Neovim、Tmux 和 shell 設定
+- Claude Code、Codex、Gemini CLI 的設定與 skills
+- Node、Python、Go、Rust、Bun 等 runtime
+- Kubernetes、cloud CLI、Android、Flutter 和一些平常會用的 TUI 工具
 
-### Neovim (nvim/init.lua)
+## AI skills
 
-- Lazy.nvim plugin manager
-- LSP support (Lua, TypeScript, Python, Go)
-- Telescope fuzzy finder
-- Avante.nvim AI assistant with GitHub Copilot
-- Treesitter syntax highlighting
-- Git integration (Gitsigns, Neogit)
-- Tmux integration with seamless navigation
-- VSCode-style editing features
+Codex 的 native skills 放在 `config/ai/codex/skills/`，Claude 共用的 skills 放在
+`config/ai/claude/skills/`。目前比較特別的是 `build-install`，用來幫其他專案產生兩種安裝入口：
 
-### Tmux
+- 給 agent 讀的 `INSTALL.md` 和安裝 prompt
+- 給人直接 `curl | bash` 使用的 `install.sh`
 
-- Custom key bindings
-- Neovim integration via vim-tmux-navigator
-- Prefix key: Ctrl-b (or Ctrl-a)
+## 目錄看不懂也沒關係
 
-## File Structure
+大概可以先看這幾個地方：
 
-```tree
-.
-├── nvim/                  # Neovim 配置（跨平台共用）
-│   ├── init.lua
-│   ├── lua/
-│   └── lazy-lock.json
-├── config/ai/             # Claude Code / Codex / Gemini 設定與 skills
-├── plugins/               # 可重複安裝的 AI workflow artifacts
-├── powershell/            # Windows PowerShell 版
-│   ├── profile.ps1        # 主 profile
-│   ├── profile.d/         # 模組化載入
-│   ├── setup.ps1          # 互動式安裝
-│   └── setup.d/           # 安裝腳本
-├── script/
-│   ├── common/            # 跨平台安裝腳本
-│   ├── linux/             # Linux 專用腳本
-│   └── utils/
-├── tmux/
-│   ├── base.conf
-│   └── nvim-extension.conf
-├── .zshrc                 # Zsh 主設定
-├── .zshrc.d/              # Zsh 模組化載入
-├── alias.sh               # Shell 別名
-├── .vimrc                 # Vim 設定
-├── setup.sh               # macOS/Linux 互動式安裝
-└── README.md
+```text
+config/ai/    AI CLI 設定和 skills
+script/       各種安裝腳本
+powershell/   Windows 設定
+nvim/         Neovim 設定
+tmux/         Tmux 設定
+setup.sh      macOS/Linux 的入口
 ```
 
-## Key Bindings
-
-### Neovim Specific
-
-Leader Key: Space
-
-#### Telescope (Fuzzy Finder)
-
-- `Ctrl-p` - Find files
-- `<leader>sf` - Search files
-- `<leader>sg` - Search by grep
-- `<leader>sb` - Search buffers
-- `<leader>sh` - Search help tags
-
-#### Avante AI Assistant
-
-- `<leader>aa` - Ask AI
-- `<leader>ae` - Edit with AI
-- `<leader>at` - Toggle AI panel
-- `<leader>ar` - Refresh AI response
-
-#### Navigation
-
-- `s` - Leap forward
-- `S` - Leap backward
-- `gs` - Leap from window
-- `Ctrl-h/j/k/l` - Navigate between Neovim and Tmux panes
-
-#### LSP
-
-- `gd` - Go to definition
-- `gr` - Go to references
-- `gi` - Go to implementation
-- `K` - Hover documentation
-- `<leader>rn` - Rename symbol
-- `<leader>ca` - Code action
-
-#### Git
-
-- `<leader>ng` - Open Neogit
-- `<leader>gs` - Grug-far search and replace
-
-### VSCode-Style Keybindings (Both Vim and Neovim)
-
-#### Line Movement
-
-- `Alt-Up` - Move line up
-- `Alt-Down` - Move line down
-
-#### Commenting
-
-- `Ctrl-/` - Toggle comment (Linux/Windows)
-- `Cmd-/` - Toggle comment (macOS)
-
-#### Smart Cursor
-
-- `j/k` - Smart movement with boundary detection
-
-### Common Keybindings (Both Vim and Neovim)
-
-#### File Management
-
-- `F4` - Toggle file explorer
-- `Ctrl-s` - Save file
-- `Ctrl-w` - Close buffer
-
-#### Compilation (Vim)
-
-- `F9/F10` - Compile and run C++
-- `F7/F8` - Run Python
-
-### Tmux Specific
-
-Prefix Key: Ctrl-b (or Ctrl-a)
-
-#### Tmux Navigation
-
-- `Prefix + h/j/k/l` - Switch panes (when not in Neovim)
-- `Ctrl-h/j/k/l` - Seamless navigation between Neovim and Tmux
-
-## How it works
-
-### macOS / Linux
-
-1. Detect operating system (macOS/Ubuntu/Arch)
-2. Install system packages via package manager
-3. Download and setup plugins
-4. Configure Vim, Neovim, and Tmux
-5. Link configuration files to home directory
-6. Install language runtimes (optional)
-7. Install or update AI CLIs and link their runtime-specific configuration
-
-### Windows
-
-1. Install PowerShell 7+ and Windows Terminal
-2. Run `pwsh powershell/setup.ps1`
-3. Select components to install (scoop, Neovim, oh-my-posh, etc.)
-4. Configuration is symlinked or copied to standard paths
-5. See [`powershell/README.md`](powershell/README.md) for details
-
-## Installation Scripts
-
-Available installation scripts in `script/common/`:
-
-### Language Runtimes
-
-- `install_bun.sh` - Bun runtime
-- `install_golang.sh` - Go language
-- `install_node.sh` - Node.js via NVM
-- `install_php.sh` - PHP
-- `install_python.sh` - Python with Poetry/UV/Pyenv
-- `install_rust.sh` - Rust via rustup
-
-### Development Tools
-
-- `install_gh.sh` - GitHub CLI
-- `install_yazi.sh` - Yazi file manager + zoxide + bat
-- `install_argocd.sh` - ArgoCD CLI
-- `install_kubectl.sh` - Kubernetes CLI
-- `install_sops.sh` - Mozilla SOPS (secrets management)
-- `install_gcloud.sh` - Google Cloud SDK
-
-### AI CLIs
-
-- `install_claude.sh` - Claude Code official native installer via curl
-- `install_codex.sh` - Codex official standalone installer via curl
-- `install_gemini.sh` - Gemini CLI official npm package; installs Node.js via
-  the NVM curl installer when needed; existing Homebrew installs stay managed
-  by Homebrew
-
-The Claude Code and Codex scripts use the same official installer for fresh
-installs and updates. Gemini CLI does not provide an equivalent production curl
-installer, so the playbook follows its official `@google/gemini-cli@latest`
-package path while preserving existing Homebrew-managed installations.
-
-### Mobile / SDK
-
-- `install_android_sdk.sh` - Android SDK
-- `install_flutter.sh` - Flutter SDK
-- `install_fvm.sh` - Flutter Version Manager
-
-### TUI Tools
-
-- `install_tui_tools.sh` - Terminal UI tools (batch install)
-
-Included tools:
-
-| Tool | Command | Description |
-|------|---------|-------------|
-| lazygit | `lazygit` | Git TUI client |
-| lazydocker | `lazydocker` | Docker management TUI |
-| k9s | `k9s` | Kubernetes management TUI |
-| btop | `btop` | System monitor (htop replacement) |
-| VHS | `vhs` | Terminal session recorder (GIF/MP4) |
-| superfile | `spf` | Modern file manager TUI |
-| Glow | `glow` | Terminal markdown renderer |
-| slides | `slides` | Terminal presentation tool |
-| presenterm | `presenterm` | Markdown-to-slides with code execution |
-| lazysql | `lazysql` | Database TUI (MySQL/PostgreSQL/SQLite) |
-| posting | `posting` | API client TUI (Postman alternative) |
-| harlequin | `harlequin` | SQL IDE TUI (DuckDB/SQLite) |
-
-All scripts support macOS, Ubuntu, and Arch Linux.
-
-## Configuration Priority
-
-- Use `nvim` - Full configuration from nvim/init.lua
-- Use `vim` - Configuration from .vimrc
-- Both include VSCode-style editing features
-
-## Troubleshooting
-
-**A setup component failed:**
-Inspect `error.log` in the repository root. Each failure includes a timestamp,
-component name, exit code, and the captured installer output.
-
-**LSP not working in Neovim:**
-Run `:Mason` to install language servers manually.
-
-**Tmux navigation not working:**
-Ensure vim-tmux-navigator is installed and tmux config is loaded.
-
-**Copilot not working:**
-Check GitHub Copilot subscription and run `:Copilot setup` in Neovim.
+這份設定主要是給我自己用的，直接拿去別台機器跑之前，建議先看一下腳本會改哪些檔案。
