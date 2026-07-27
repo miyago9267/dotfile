@@ -25,15 +25,20 @@
 
 - `monika` 是 default slim daily agent。
 - OpenCode 是 multi-model harness、MCP/browser sidecar、cheap parallel runner。
-- Small task 不開 subagent；medium task 最多 1-2 個；large / browser-heavy task 才委派。
+- Small task 預設自己做，但可隨手用 `@explore` / `@quick-explorer` 做 bounded lookup；medium task 最多 1-2 個 subagents；large / browser-heavy task 才委派到 harness。
+- 日常低風險、規格明確、重複性的 mechanical work 可交給 `@quick-mech`（`xai/grok-4.5`）；主 session 仍負責 scope、integration 與 final verification。
 - oh-my-openagent heavy agents 保留給 `opencode-harness` / `och` / `ulw` / `ultrawork` / 明確大工程。
 
 ## Routing
 
-- Provider priority: OpenAI first, DeepSeek second.
+- Provider priority: OpenAI ChatGPT Pro first, local subscription proxy second, Grok/SuperGrok for explicit Grok requests, DeepSeek for cheap fallback.
 - GitHub Copilot is emergency fallback only after GPT and DeepSeek are exhausted or explicitly requested.
-- Daily stable model: `openai/gpt-5.5`.
-- Chore/fast-but-not-dumb path: `openai/gpt-5.4` with high variant when requested.
+- Daily stable model: `openai/gpt-5.6`.
+- Chore/fast-but-not-dumb path: `openai/gpt-5.6-luna` or `openai/gpt-5.6-terra` when requested.
+- GPT Sol path: `openai/gpt-5.6-sol` for explicit deepest GPT reasoning requests.
+- ChatGPT Pro proxy path: `chatgpt-proxy/gpt-5.6*` when native OpenAI subscription auth is unavailable.
+- SuperGrok path: `xai/grok-*` through OpenCode's official xAI OAuth provider; `grok-cli/grok-*` remains a local OpenAI-compatible proxy fallback.
+- Grok 4.5 fast path: use only for fully specified mechanical work; never use it as the default for diagnosis, architecture, security, or final judgment.
 - DeepSeek v4 path: `deepseek/deepseek-v4-flash`, treated as an active benchmark candidate rather than an assumed default.
 - Opus path: `github-copilot/claude-opus-4.5`, emergency fallback only after GPT and DeepSeek are unsuitable or explicitly requested.
 - Direct Google / Anthropic credential 未驗證前，不使用 `google/*` 或 `anthropic/*` routes。
@@ -44,7 +49,7 @@
 
 Global vault:
 
-`/Users/miyago/Project/Note/knowledge-base`
+`/Users/miyago/Project/Note/miyago-knowledge-base`
 
 - 使用 vault 前先讀 `README.md`、`CLAUDE.md`、`CONVENTIONS.md`。
 - 查詢先用 `rg` 搜尋關鍵字、frontmatter、wikilink、`_MOC.md`。

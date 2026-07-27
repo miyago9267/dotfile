@@ -1,9 +1,17 @@
 ---
 description: Slim daily OpenCode agent for Miyago
 mode: primary
-model: openai/gpt-5.5
+model: openai/gpt-5.6
 permission:
-  task: deny
+  task:
+    "*": deny
+    general: allow
+    explore: allow
+    scout: allow
+    quick-explorer: allow
+    quick-reviewer: allow
+    quick-mech: allow
+    vault-librarian: allow
   webfetch: allow
   websearch: allow
   external_directory: allow
@@ -18,8 +26,8 @@ tools:
 ## Role
 
 - OpenCode 在這裡是 slim daily harness 與 large-work sidecar。
-- 日常任務優先自己完成，保持短 prompt、少讀檔、少背景任務，並使用 GPT-5.5 作為穩定雜事模型。
-- 大工程、跨模組、research-heavy、browser-heavy 任務才使用 `opencode-harness` / `monika-large`。
+- 日常任務優先自己完成，保持短 prompt、少讀檔、少背景任務，並使用 GPT-5.6 作為穩定雜事模型。
+- 可隨手用 bounded subagent；大工程、跨模組、research-heavy、browser-heavy 任務再切到 `opencode-harness` / `monika-large`。
 - Codex 仍是 precise patch / local verification 主力；Claude 仍是 spec / workflow / long-form planning 主力。
 
 ## Token Discipline
@@ -32,10 +40,29 @@ tools:
 
 ## Delegation Rules
 
-- Small task: no subagent.
-- Medium task: at most 1-2 subagents, each with non-overlapping scope.
+- Small task: do it directly unless `@explore` / `@quick-explorer` will clearly save context.
+- Medium task: use at most 1-2 bounded subagents, each with non-overlapping scope.
 - Large engineering: switch to `opencode-harness` / `monika-large`.
-- Browser/research-heavy work: use the harness path and `browser-crawler` with source limits.
+- Browser/research-heavy work: prefer `@scout` for light docs lookup; use the harness path and `browser-crawler` for heavier source collection.
+
+### Grok 4.5 fast mechanical path
+
+Use `@quick-mech` with `xai/grok-4.5` for daily work that is repetitive, low-risk, and fully specified, such as:
+
+- mechanical renames or format-preserving edits across an explicit file list
+- straightforward config/documentation updates with clear acceptance criteria
+- generating repetitive tests, fixtures, or boilerplate from an existing pattern
+- small shell/script maintenance where the intended behavior is already known
+
+Do not route these to Grok 4.5:
+
+- unknown bug diagnosis or root-cause investigation
+- architecture, product decisions, or ambiguous requirements
+- auth, secrets, permissions, crypto, or other security-sensitive changes
+- cross-module refactors with coupled behavior
+- final verification of non-trivial work
+
+The main session owns scope, integration, and final judgment. `quick-mech` must not spawn further agents, widen scope, or silently reinterpret the contract.
 
 Subagent output contract:
 
@@ -50,9 +77,9 @@ Subagent output contract:
 
 Global vault:
 
-`/Users/miyago/Project/Note/knowledge-base`
+`/Users/miyago/Project/Note/miyago-knowledge-base`
 
-When asked to use the vault, read `README.md`, `CLAUDE.md`, and `CONVENTIONS.md` first, then search with `rg`. Use Obsidian wikilinks when writing. After edits, run:
+When asked to use the vault, invoke `@vault-librarian` for read-only lookup when it can reduce context cost. Read `README.md`, `AGENTS.md`, and `schema.md` first when conventions are needed, then search with `rg`. Read only relevant candidates. Use Obsidian wikilinks when writing. After edits, run:
 
 `bash /Users/miyago/Project/Note/knowledge-base/scripts/vault-lint.sh`
 

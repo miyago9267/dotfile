@@ -11,11 +11,12 @@ opencode
 Daily path:
 
 - default agent: `monika`
-- model: `openai/gpt-5.5`
-- small model: `openai/gpt-5.4`
+- model: `openai/gpt-5.6`
+- small model: `openai/gpt-5.6-luna`
 - no `oh-my-openagent`
 - no MCP servers
-- no subagent task tool
+- bounded daily subagents: built-in `@explore` / `@scout`, plus `@quick-explorer` / `@quick-reviewer`
+- fast mechanical subagent: `@quick-mech` on `xai/grok-4.5`
 - no skill tool
 
 Use this for small edits, questions, quick checks, and low-token work.
@@ -46,6 +47,8 @@ Fill only the secret values:
 ```sh
 $EDITOR ~/.config/opencode/secrets/gemini-api-key
 $EDITOR ~/.config/opencode/secrets/aluo-api-key
+$EDITOR ~/.config/opencode/secrets/chatgpt-proxy-base-url
+$EDITOR ~/.config/opencode/secrets/grok-cli-base-url
 chmod 600 ~/.config/opencode/secrets/*
 ```
 
@@ -56,6 +59,14 @@ auto-sync these file secrets when these env vars are present:
 
 - `GEMINI_API_KEY` or `AVANTE_GEMINI_API_KEY` -> `gemini-api-key`
 - `ALUO_API_KEY` or `OPENCODE_ALUO_API_KEY` -> `aluo-api-key`
+- `CHATGPT_PROXY_BASE_URL` or `OPENCODE_CHATGPT_PROXY_BASE_URL` -> `chatgpt-proxy-base-url`
+- `CHATGPT_PROXY_API_KEY` or `OPENCODE_CHATGPT_PROXY_API_KEY` -> `chatgpt-proxy-api-key`
+- `GROK_CLI_BASE_URL` or `OPENCODE_GROK_CLI_BASE_URL` -> `grok-cli-base-url`
+- `GROK_CLI_API_KEY` or `OPENCODE_GROK_CLI_API_KEY` -> `grok-cli-api-key`
+
+For OpenAI subscription auth, prefer OpenCode's built-in `/connect` -> OpenAI -> ChatGPT Plus/Pro. Use `chatgpt-proxy/*` only when native subscription auth is unavailable and a local OpenAI-compatible proxy is running.
+
+For SuperGrok subscription auth, prefer OpenCode's built-in `/connect` -> xAI -> xAI Grok OAuth. Browser OAuth and headless device-code OAuth are both supported; no separate `XAI_API_KEY` is needed when the subscription includes Grok API access. Use `grok-cli/*` only as a local proxy fallback.
 
 ## Model Shortcuts
 
@@ -65,11 +76,29 @@ Stable daily:
 opencode
 ```
 
-GPT-5.4 high for chores:
+GPT-5.6 stable / Sol / Terra / Luna:
 
 ```sh
-oc54h
+oc56
+ocsol
+octerra
+ocluna
 ```
+
+ChatGPT Pro local proxy fallback:
+
+```sh
+oc56proxy
+```
+
+SuperGrok local CLI proxy:
+
+```sh
+ocxai
+ocgrok
+```
+
+Daily Grok 4.5 mechanical worker is invoked explicitly with `@quick-mech`; it is not the default model and does not replace main-session verification.
 
 DeepSeek v4 Flash benchmark path:
 
@@ -102,7 +131,7 @@ Harness path:
 - default agent: `monika-large`
 - loads `oh-my-openagent`
 - enables Playwright MCP and existing research/code MCPs
-- enables bounded subagents
+- enables pilotfish-style phase-gated subagents
 - enables oh-my-openagent Team Mode with conservative bounds
 - keeps `pty-bridge` and Sentry disabled
 
@@ -112,6 +141,14 @@ Harness dry-run prompts for subagent validation:
 
 ```text
 @repo-explorer Scope: config/opencode only. Read the daily OpenCode config and monika agent. Return scope, files read, findings, confidence, and uncertainty. Do not edit files.
+```
+
+```text
+@scout Scope: config/opencode only. Find how daily subagent permission is configured. Return scope, files read, findings, evidence, uncertainty, and next action. Do not edit files.
+```
+
+```text
+@plan-verifier Check this Plan: "Update only config/opencode docs to mention GPT-5.6 aliases; no code changes; verify markdown only." Return READY or REVISE with blocking issues and minimal revision needed. Do not edit files.
 ```
 
 ```text
