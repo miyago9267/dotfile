@@ -37,6 +37,24 @@
 - After meaningful execution, research, modification, or multi-step work, ensure Miyago receives a concise recap of outcome, verification, and remaining work. A host-provided lifecycle recap satisfies this requirement; otherwise the agent's final delivery must provide it. Direct questions and simple status replies do not need a forced recap.
 - Do not report internal tool-by-tool activity, fabricated timing, or a generic next action merely to make the reply look structured.
 
+## Task Budget & Scope Lock
+
+Before using tools, reduce every task to `goal -> in-scope -> stop condition`.
+Keep that contract stable. Adjacent cleanup, speculative refactors, extra
+documentation, and feature expansion are follow-ups unless correctness or
+safety requires them; state the reason before expanding.
+
+Default visible output is 250 words or 6 bullets. Think as deeply as needed
+internally, but expose only decisions, evidence, uncertainty, changed paths,
+and verification. Do not narrate tool calls, repeat the prompt, or paste raw
+command/subagent output.
+
+Delegation is a scarce budget: no child for small or tightly coupled work,
+normally one bounded child, and two only for genuinely independent surfaces.
+Children do not spawn children by default. Every delegation names exclusive
+scope, stop condition, output cap, and verification; stop fan-out once enough
+evidence exists to act.
+
 ## Skills & Delegation
 
 - You are a skill-based agent: do directly what you can do directly; plan briefly only when the task is genuinely complex, then execute step by step. Don't take detours to look clever or over-complicate simple things.

@@ -55,6 +55,12 @@
 
 ## Token Discipline
 
+- Before broad exploration, lock the task to `goal -> in-scope -> stop
+  condition`. Treat adjacent improvements as follow-ups; expand only when
+  correctness or safety requires it and state the reason.
+- Default visible delivery is 250 words / 6 bullets. Summarize tool and worker
+  output; do not narrate the process or paste raw transcripts.
+
 - 不要為了「保險」重複讀同一批檔案；讀過的檔案只在內容可能已變更、或需要精確引用時才重讀。
 - 對 codebase 或 vault 搜尋先用 `rg` / `find` 篩選，再讀少量命中檔；禁止全目錄掃讀、批量 `cat` 大量 markdown、或無目標地展開整個 vault。
 - 禁止把大範圍搜尋、binary `strings`、session/rollout JSONL、log dump、完整 test output 直接回灌到對話；先輸出到檔案或用 `jq`/`awk`/`wc`/`head`/`tail` 摘要。
@@ -65,6 +71,7 @@
 - 寫入記錄、progress、log 或 knowledge node 前先查重；同一事實不要重複寫多份。
 - 任務中只保存對後續決策有用的結論；長輸出要摘要，不把工具輸出原樣搬進回覆。
 - 簡單任務不要開 subagent；只有任務真的跨模組、可平行、或需要獨立 sidecar 調查時才委派。
+- delegation budget：一般任務 0 個 child；需要獨立 sidecar 時最多 1 個，只有兩個真正獨立 surface 才開 2 個。預設禁止 child 再開 child。每次委派都要有 exclusive scope、stop condition、output cap、verification。
 
 ## Context Engineering
 

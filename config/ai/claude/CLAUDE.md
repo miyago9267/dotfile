@@ -25,6 +25,26 @@
 
 - Role-based delegation only: spec/planning, review, docs/handoff, research, small bounded patch review.
 - One responsibility per agent, no overlapping work. Background/worktree only for genuinely large tasks.
+- Treat delegation as a scarce budget: zero agents for ordinary edits and one
+  bounded child for a side question are the normal cases. Use two only when
+  both surfaces are independent and the parent can integrate them without
+  rediscovery. Never let a child spawn another child unless Miyago explicitly
+  asks for recursive orchestration.
+- Before each Agent/Workflow call, establish `scope | stop condition | max
+  children | output cap`. If any field is vague, do the smallest direct search
+  instead. Stop fan-out after the first result satisfying the stop condition.
+
+## Scope Lock & Output Budget
+
+- Start each task with one sentence for **goal**, a short **in-scope** list,
+  and a **stop condition**. Keep them stable; findings are not new
+  requirements.
+- Adjacent refactors, cleanup, docs, dependency changes, and “while here”
+  improvements are follow-ups. Do not perform them unless the requested result
+  would otherwise be incorrect or unsafe; state why before expanding.
+- Default visible reply: at most 250 words or 6 bullets. Omit process diaries,
+  repeated context, speculative alternatives, and raw tool/agent transcripts.
+  Preserve result, evidence, uncertainty, changed paths, and verification.
 
 ## Think-First & Effort Routing
 
