@@ -34,5 +34,9 @@ copy_placeholder() {
 
 copy_placeholder "gemini-api-key"
 copy_placeholder "aluo-api-key"
+copy_placeholder "chatgpt-proxy-base-url"
+copy_placeholder "chatgpt-proxy-api-key"
+copy_placeholder "grok-cli-base-url"
+copy_placeholder "grok-cli-api-key"
 
 echo -e "${G}[OK]${N} OpenCode secret files are present; replace placeholder values if needed"

@@ -25,6 +25,26 @@ opencode-secrets-sync() {
     printf '%s' "${ALUO_API_KEY:-$OPENCODE_ALUO_API_KEY}" > "$_dir/aluo-api-key"
     chmod 600 "$_dir/aluo-api-key" 2>/dev/null || true
   fi
+
+  if [ -n "${CHATGPT_PROXY_BASE_URL:-${OPENCODE_CHATGPT_PROXY_BASE_URL:-}}" ] && { [ ! -s "$_dir/chatgpt-proxy-base-url" ] || grep -q '^replace-with-' "$_dir/chatgpt-proxy-base-url" 2>/dev/null; }; then
+    printf '%s' "${CHATGPT_PROXY_BASE_URL:-$OPENCODE_CHATGPT_PROXY_BASE_URL}" > "$_dir/chatgpt-proxy-base-url"
+    chmod 600 "$_dir/chatgpt-proxy-base-url" 2>/dev/null || true
+  fi
+
+  if [ -n "${CHATGPT_PROXY_API_KEY:-${OPENCODE_CHATGPT_PROXY_API_KEY:-}}" ] && { [ ! -s "$_dir/chatgpt-proxy-api-key" ] || grep -q '^replace-with-' "$_dir/chatgpt-proxy-api-key" 2>/dev/null; }; then
+    printf '%s' "${CHATGPT_PROXY_API_KEY:-$OPENCODE_CHATGPT_PROXY_API_KEY}" > "$_dir/chatgpt-proxy-api-key"
+    chmod 600 "$_dir/chatgpt-proxy-api-key" 2>/dev/null || true
+  fi
+
+  if [ -n "${GROK_CLI_BASE_URL:-${OPENCODE_GROK_CLI_BASE_URL:-}}" ] && { [ ! -s "$_dir/grok-cli-base-url" ] || grep -q '^replace-with-' "$_dir/grok-cli-base-url" 2>/dev/null; }; then
+    printf '%s' "${GROK_CLI_BASE_URL:-$OPENCODE_GROK_CLI_BASE_URL}" > "$_dir/grok-cli-base-url"
+    chmod 600 "$_dir/grok-cli-base-url" 2>/dev/null || true
+  fi
+
+  if [ -n "${GROK_CLI_API_KEY:-${OPENCODE_GROK_CLI_API_KEY:-}}" ] && { [ ! -s "$_dir/grok-cli-api-key" ] || grep -q '^replace-with-' "$_dir/grok-cli-api-key" 2>/dev/null; }; then
+    printf '%s' "${GROK_CLI_API_KEY:-$OPENCODE_GROK_CLI_API_KEY}" > "$_dir/grok-cli-api-key"
+    chmod 600 "$_dir/grok-cli-api-key" 2>/dev/null || true
+  fi
 }
 
 opencode-secrets-sync
@@ -63,6 +83,34 @@ oc54h() {
 
 oc55() {
   opencode --model openai/gpt-5.5 "$@"
+}
+
+oc56() {
+  opencode --model openai/gpt-5.6 "$@"
+}
+
+ocsol() {
+  opencode --model openai/gpt-5.6-sol "$@"
+}
+
+octerra() {
+  opencode --model openai/gpt-5.6-terra "$@"
+}
+
+ocluna() {
+  opencode --model openai/gpt-5.6-luna "$@"
+}
+
+oc56proxy() {
+  opencode --model chatgpt-proxy/gpt-5.6 "$@"
+}
+
+ocxai() {
+  opencode --model xai/grok-4 "$@"
+}
+
+ocgrok() {
+  opencode --model grok-cli/grok-4 "$@"
 }
 
 ocds() {

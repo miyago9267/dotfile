@@ -20,10 +20,11 @@ if ! is_installed bun; then
 fi
 
 if is_installed opencode; then
-  echo -e "${G}[SKIP] OpenCode CLI: installed at $(command -v opencode)${N}"
+  echo -e "${Y}[UPDATE] OpenCode CLI via Bun: $(command -v opencode)${N}"
+  bun add -g opencode-ai@latest
 else
   echo -e "${Y}[INSTALL] OpenCode CLI via Bun${N}"
-  bun add -g opencode-ai
+  bun add -g opencode-ai@latest
 fi
 
 echo -e "${Y}[SETUP] Linking OpenCode config${N}"
