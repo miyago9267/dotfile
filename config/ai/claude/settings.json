@@ -47,7 +47,7 @@
       "/Users/miyago/Project/Note/itrd-knowledge-base"
     ]
   },
-  "model": "sonnet",
+  "model": "opus[1m]",
   "hooks": {
     "InstructionsLoaded": [
       {
