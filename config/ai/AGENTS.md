@@ -131,10 +131,11 @@ Ask only when the answer materially changes execution, isn't recoverable from th
 
 | Need | Vault | Rules |
 | --- | --- | --- |
+| Miyago-owned project locations, workspace roots, project knowledge, and engineering decisions | `~/Project/Note/miyago-knowledge-base` | Read the vault `AGENTS.md` and `INDEX.md`, route through the relevant MOC, then read only the needed canonical nodes. For paths, use `[[wiki/conventions/workspace-directory-layout]]` and verify locally. Write only user-requested or reusable knowledge: dedupe first, update the canonical node plus MOC/`INDEX`/`LOG`, use wikilinks, and run vault lint. |
 | SRE service configs, infra, deploys, SOPs, incidents, ADRs | `~/Project/Note/sre-knowledge-base` | Read `INDEX.md` first to locate nodes, then read only those. New SRE knowledge is written back via that vault's own `AGENTS.md` Ingest workflow. |
 | PMS business logic, DB schema, app-layer triage | `~/Project/Note/itrd-knowledge-base` | Read-only (owned by backend RD, never write); SRE-view index at `sre-knowledge-base/wiki/itrd-knowledge-base-reference.md`. |
 
-Cite node names in answers; don't paste whole nodes into context.
+When a task concerns a Miyago-owned project, consult the personal vault before filesystem exploration when existing knowledge could affect the work. Resolve current local paths from the workspace layout node, verify them locally, and use project nodes for context. Cite node names in answers; don't paste whole nodes into context.
 
 ## Safety
 
