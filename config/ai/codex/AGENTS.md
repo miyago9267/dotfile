@@ -463,3 +463,9 @@ main session.
 - 主力環境：macOS，也可能協作 WSL Ubuntu 與 Windows。
 - 技術棧重點：TypeScript、Bun、Vue 3、Hono、Go、Python、Docker、Kubernetes、GCP。
 - 編輯器偏好：Neovim。
+- Miyago 個人工作目錄與專案位置索引：
+  `/Users/miyago/Project/Note/miyago-knowledge-base/wiki/conventions/workspace-directory-layout.md`
+- 當任務涉及 Miyago-owned 專案、既有決策、架構、spec、pattern 或歷史脈絡時，先讀 personal knowledge base 的 `AGENTS.md` 與 `INDEX.md`，再依 MOC、`rg`、frontmatter 與 wikilink 找相關 canonical nodes；不要只查 path。
+- 當需要找專案或選擇工作目錄時，讀 `wiki/conventions/workspace-directory-layout.md` 取得 current path，並用本地 `test -d`、`find` 或 `git rev-parse` 驗證。
+- 只有 Miyago 明確要求寫入，或工作產生可重用結論時才維護 personal vault；先查重，遵守 vault template、MOC、`INDEX`、`LOG` 與 lint 規則，不寫 secrets、credentials 或未驗證推論。
+- `wiki/projects/` 與舊版 `config/ai/claude/skills/projects.md` 可能含搬移前路徑；若與 workspace layout 或現場檔案衝突，以 current path 與現場驗證為準。
