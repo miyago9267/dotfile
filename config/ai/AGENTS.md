@@ -143,6 +143,23 @@ When a task concerns a Miyago-owned project, consult the personal vault before f
 2. Never hand-create CI/CD-managed containers with `docker run`; let the existing pipeline / compose workflow manage them.
 3. Before running CLI tools, `source ~/.zshrc 2>/dev/null` or confirm PATH is complete.
 
+## Local Credential Broker
+
+When a local task requires a protected credential, use `~/bin/agent-secret` rather than reading KeePassXC directly:
+
+```bash
+agent-secret run <alias> -- <approved-command> [args...]
+```
+
+Available aliases:
+
+- `gitlab-aluo` — GitLab work account
+- `gitlab-dunqian` — GitLab Dunqian account
+- `cloudflare-dunqian-itrd` — Dunqian ITRD cert-manager Cloudflare token
+- `github-personal` — Miyago's personal GitHub token
+
+The broker prompts locally for the KeePassXC master password when its 15-minute memory cache is empty. Never request or paste the master password or secret value in chat, logs, files, command arguments, or tool output. Do not call `keepassxc-cli show` directly. Lock the cache with `agent-secret lock` when changing context or leaving the machine. Confirm the alias and target environment before write, deployment, production, rotation, or destructive operations.
+
 ## Scope Boundary
 
 Not part of the shared contract -- keep in each agent's local entry file or runtime config: context compression strategy; bootstrap/handoff/snapshot flows; vendor-specific scripts, tool names, hooks, subagent mechanisms; agent-specific memory loading and adapter syntax.

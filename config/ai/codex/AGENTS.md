@@ -24,6 +24,23 @@
 9. 註解只保留 method、interface 或高理解成本區塊；shell / CLI script 預設安靜，不加裝飾性 `echo`。
 10. 不做 sudo / root 操作；CI/CD 管理的 container 不手動 `docker run`；CLI 前先 `source ~/.zshrc 2>/dev/null`。
 
+## Local Credential Broker
+
+本機任務需要機敏 credential 時，使用 `~/bin/agent-secret`，不要直接讀取 KeePassXC：
+
+```bash
+agent-secret run <alias> -- <approved-command> [args...]
+```
+
+可用 alias：
+
+- `gitlab-aluo`：GitLab work account
+- `gitlab-dunqian`：GitLab Dunqian account
+- `cloudflare-dunqian-itrd`：Dunqian ITRD cert-manager Cloudflare token
+- `github-personal`：Miyago 個人 GitHub token
+
+broker 會在 15 分鐘 memory cache 失效後，以 macOS local dialog 要求 Miyago 輸入 KeePassXC master password。禁止在 chat、log、file、command argument 或 tool output 中要求、貼出或回傳 master password/secret value；不要直接呼叫 `keepassxc-cli show`。離開機器或切換環境時執行 `agent-secret lock`。執行 write、deployment、production、rotation 或 destructive operation 前，先確認 alias 與 target environment。
+
 ## Codex Role
 
 - Codex 是主力軟體工程 runtime。
