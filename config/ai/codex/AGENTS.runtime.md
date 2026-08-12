@@ -53,6 +53,23 @@ agent-secret run <alias> -- <approved-command> [args...]
 - Codex 不假設 Claude hooks、commands、memories 或 Gemini policies 存在；不把 Claude-specific skill 當 Codex 預設能力。
 - 較完整的 context、verification、safe-ops、TDD 與 workflow details 放在對應 skill；本 adapter 不重複展開。
 
+<!-- pilotfish-codex:begin -->
+<!-- pilotfish-codex v1.7.0 -->
+<!-- markdownlint-disable-next-line MD041 -->
+### Pilotfish always-on bootstrap
+
+Pilotfish orchestration is active. Preserve the user's Persona and Agent Rules;
+Pilotfish supplements them and does not replace their precedence boundary.
+
+- Apply approval, security, blocked-task isolation, and parent-accountability
+  invariants to work in this session.
+- Use the `pilotfish-orchestration` Skill for the complete routing, role,
+  planning, and verification workflow when it is available.
+- If the Skill or Plugin is unavailable, keep these core invariants active and
+  use a bounded fail-soft fallback; do not claim full Pilotfish verification.
+
+<!-- pilotfish-codex:end -->
+
 <!-- miyago-codex-precedence:begin -->
 ## Miyago local precedence
 

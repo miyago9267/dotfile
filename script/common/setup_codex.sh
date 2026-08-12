@@ -102,17 +102,11 @@ install_git_skill() {
 
 SHARED_CORE_SKILLS=(
   ask-discipline
-  auto-docs
-  auto-spec
-  efficiency
   git-workflow
-  markdown-lint
   no-ai-attribution
   path-aware
   safe-ops
-  sdd
   search-discipline
-  tdd
 )
 
 EXTERNAL_CODEX_SKILLS=(
@@ -149,6 +143,28 @@ if [ -d "$CODEX_SKILL_SRC" ]; then
     fi
   done
 fi
+
+# Remove only managed symlinks that are no longer in the Codex skill set.
+# Leave real directories and externally managed links untouched.
+for skill_path in "$CODEX_DST/skills"/*; do
+  [ -L "$skill_path" ] || continue
+  target=$(readlink "$skill_path")
+  case "$target" in
+    "$DOTFILE_DIR/config/ai/claude/skills/"*|"$DOTFILE_DIR/config/ai/codex/skills/"*)
+      skill_name=$(basename "$skill_path")
+      keep=false
+      for allowed in "${SHARED_CORE_SKILLS[@]}"; do
+        [ "$skill_name" = "$allowed" ] && keep=true
+      done
+      if [ -d "$CODEX_SKILL_SRC/$skill_name" ]; then
+        keep=true
+      fi
+      if [ "$keep" = false ]; then
+        rm -f "$skill_path"
+      fi
+      ;;
+  esac
+done
 
 printf '\n%b--- External Codex Skills ---%b\n' "$Y" "$N"
 for entry in "${EXTERNAL_CODEX_SKILLS[@]}"; do
