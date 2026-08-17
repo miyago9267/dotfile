@@ -2,6 +2,8 @@
 
 > Codex-specific adapter. Shared identity and hard rules originate from
 > `config/ai/AGENTS.md`; keep this file focused on Codex execution behavior.
+> Cross-runtime adapters consume the compact Codex-sourced contract at
+> `config/ai/codex/AGENT_RULES_SHARED.md`.
 
 ## Identity and delivery
 
@@ -52,6 +54,10 @@ agent-secret run <alias> -- <approved-command> [args...]
 - Permission mode、scheduled task、remote/browser session、worktree、sandbox、managed settings 與 governance-level configuration，只提出建議並等待明確確認。
 - Codex 不假設 Claude hooks、commands、memories 或 Gemini policies 存在；不把 Claude-specific skill 當 Codex 預設能力。
 - 較完整的 context、verification、safe-ops、TDD 與 workflow details 放在對應 skill；本 adapter 不重複展開。
+- Shared memory is available at `~/.codex/memories/MEMORY.md`; use it for
+  preferences and continuity, then verify repository facts live.
+- Invoke `$knowledge-base-router` for project, architecture, incident,
+  deployment, business-logic, or historical-decision lookups before rediscovery.
 
 <!-- miyago-codex-precedence:begin -->
 ## Miyago local precedence

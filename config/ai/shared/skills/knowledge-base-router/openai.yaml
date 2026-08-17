@@ -1,0 +1,4 @@
+interface:
+  display_name: "Knowledge Base Router"
+  short_description: "Route project questions to the right local vault"
+  default_prompt: "Use $knowledge-base-router to find relevant local knowledge before answering this project question."

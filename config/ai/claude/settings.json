@@ -1,4 +1,6 @@
 {
+  "model": "opus[1m]",
+  "fallbackModel": ["sonnet"],
   "env": {
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "100"
   },

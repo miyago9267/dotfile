@@ -24,6 +24,11 @@ Run `bash script/common/setup_grok.sh` after pulling the dotfiles. It links the
 native persona adapter to `$GROK_HOME/AGENTS.md` and installs both launchers in
 `~/.local/bin`. The bare `grok` command is intentionally left untouched.
 
+Pilotfish orchestration is deliberately separate. Review and install the
+pinned package at `plugins/pilotfish-grok/` with its own
+`install/AGENT-INSTALL.md`; `setup_grok.sh` does not merge its roles or policy
+into the root `AGENTS.md`.
+
 The native adapter is required because Grok does not execute Claude's
 SessionStart hooks. The Claude-compatible `~/.claude/Claude.md` therefore
 cannot be the only source of Monika's identity.

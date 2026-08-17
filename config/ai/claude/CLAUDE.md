@@ -1,6 +1,9 @@
 # Global Rules -- Miyago
 
-> Cross-runtime persona/hard rules for Codex/Gemini live in `config/ai/AGENTS.md` (not loaded here).
+@AGENT_RULES_SHARED.md
+
+> Cross-runtime persona and hard rules are loaded above from the Codex-sourced
+> `config/ai/codex/AGENT_RULES_SHARED.md`.
 > Claude persona is injected by the SessionStart hook; this file holds Claude-runtime workflow only.
 > Instructions are English to minimize token cost; always reply in Traditional Chinese per persona rules.
 
@@ -142,12 +145,10 @@ When a task concerns a Miyago-owned project, consult the personal vault before f
 
 ## Claude Memory Sources
 
-@memories/user-profile.md
-@memories/feedback-global.md
-@memories/references-global.md
+@memories/MEMORY.md
 
 <!-- pilotfish:begin -->
-<!-- pilotfish v1.2.1 -->
+<!-- pilotfish v1.2.1 + upstream v1.3.10 compatibility -->
 ## Orchestration
 
 Main-session policy. If you are running as a subagent role (scout, Explore, plan-verifier, security-reviewer, mech-executor, executor, verifier, security-executor), ignore this section entirely and just do the task you were given — do the work yourself and never spawn further subagents; delegation is a main-session-only concern.
@@ -188,4 +189,8 @@ Running agents in parallel:
 - **Long-running processes are yours, not a subagent's.** When a subagent's foreground command exceeds its `timeout`, the harness promotes it to a background task — and if you spawned that agent with `run_in_background: false`, the promoted process is `SIGTERM`ed seconds after the agent returns: the work is destroyed and its captured output truncated mid-stream. In a background-spawned agent the same work survives, runs to completion, is captured, and fires a notification that re-invokes the agent. So **spawn any agent that might run a long command with `run_in_background: true`** — that is not merely cheaper and more parallel, it is the difference between work finishing and work being killed. Every Bash-capable leaf role (`mech-executor`, `executor`, `verifier`, `security-executor`) therefore carries the same no-detach and exact-context handoff contract. When one reports that its task needs a long-running process, require the exact command, absolute working directory or isolated worktree, required environment, and input paths; run it yourself with `Bash(run_in_background: true)` in that exact context rather than the parent checkout, then resume the agent with the output.
 - **Don't diagnose agent liveness from host signals** — inference is remote (a busy agent burns no local CPU) and transcripts flush lazily, so "no processes, stale file" proves nothing, and killing on suspicion destroys real work. Check the tracked task state and output first. If the task still appears active and needs a liveness probe or redirection, send it a message: a probe that queues for delivery means it is alive and working; one that resumes a custom agent starts another run with its retained context. Use that channel only for liveness, redirection, or genuinely new continuation work — never to collect an already completed result. Read completed output directly, and only resume when the task itself has changed or needs more work.
 - **A subagent's final message is its deliverable, and you pull it — the harness never makes the agent push it to you.** When an agent finishes, the harness captures that message and returns it: inline as the tool result for a foreground agent, and on completion for a background one, where it stays retrievable from the finished task. The read-only recon and review roles (`scout`, `Explore`, `plan-verifier`, `security-reviewer`) carry positive read-only tool allowlists that exclude outbound messaging. That prevents them from initiating interim or peer messages; it does not prevent the orchestrator from redirecting or resuming a custom agent through the harness. Never ask an agent to send, relay, or report back findings that already exist in its completed output, and never resume or re-dispatch a finished agent merely to make those results "return directly": they already returned, and re-running only pays the discovery cost and latency again. Resume only for genuinely new or redirected work, then collect the new final message from that run. A finished-but-unread agent is a collection step, never lost work — treating it as unretrievable and relaunching is the most expensive possible recovery and the exact waste this policy exists to prevent.
+Compatibility guardrails from upstream v1.3.10: classify intent before routing;
+keep routing separate from authority; treat missing roles or review receipts as
+capability gaps; require primary acceptance before fresh-context verification;
+and never retry an unchanged brief or claim parity without runtime evidence.
 <!-- pilotfish:end -->

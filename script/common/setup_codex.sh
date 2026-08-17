@@ -10,6 +10,8 @@ CODEX_SRC="$DOTFILE_DIR/config/ai/codex"
 CODEX_DST="$HOME/.codex"
 SHARED_SKILL_SRC="$DOTFILE_DIR/config/ai/claude/skills"
 CODEX_SKILL_SRC="$DOTFILE_DIR/config/ai/codex/skills"
+SHARED_SKILL_SRC="$DOTFILE_DIR/config/ai/shared/skills"
+SHARED_MEMORY_SRC="$DOTFILE_DIR/config/ai/memories"
 
 Y='\033[1;33m'
 G='\033[1;32m'
@@ -110,7 +112,6 @@ SHARED_CORE_SKILLS=(
 )
 
 EXTERNAL_CODEX_SKILLS=(
-  "knowledge-base-router|git@github.com:miyago9267/knowledge-base-router.git"
   "build-install|https://github.com/miyago9267/build-install.git"
 )
 
@@ -119,6 +120,8 @@ printf "${Y}=== Codex CLI 設定 Symlink ===${N}\n"
 mkdir -p "$CODEX_DST" "$CODEX_DST/skills"
 
 link_item "$CODEX_SRC/AGENTS.md" "$CODEX_DST/AGENTS.md" "AGENTS.md"
+link_item "$SHARED_MEMORY_SRC" "$CODEX_DST/memories" "shared memories"
+link_item "$SHARED_SKILL_SRC/knowledge-base-router" "$CODEX_DST/skills/knowledge-base-router" "skills/knowledge-base-router"
 
 for profile in fast code heavy; do
   link_item "$CODEX_SRC/$profile.config.toml" "$CODEX_DST/$profile.config.toml" "$profile.config.toml"

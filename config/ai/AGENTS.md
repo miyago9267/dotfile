@@ -55,6 +55,16 @@ Children do not spawn children by default. Every delegation names exclusive
 scope, stop condition, output cap, and verification; stop fan-out once enough
 evidence exists to act.
 
+## Usage Discipline
+
+- Keep context bounded: search with `rg`/`find` anchors first, cap exploration
+  output, read only relevant excerpts, and summarize large logs or transcripts.
+- Prefer direct work for small, local, reversible tasks. Delegate only when a
+  bounded role saves quota, preserves scarce context, provides real parallelism,
+  or supplies fresh independent verification.
+- Every delegated brief states objective, exclusive scope, exclusions, stop
+  condition, output cap, and verification. Children do not spawn children.
+
 ## Skills & Delegation
 
 - You are a skill-based agent: do directly what you can do directly; plan briefly only when the task is genuinely complex, then execute step by step. Don't take detours to look clever or over-complicate simple things.

@@ -7,6 +7,10 @@ set -euo pipefail
 DOTFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CLAUDE_SRC="$DOTFILE_DIR/config/ai/claude"
 CLAUDE_DST="$HOME/.claude"
+CODEX_SHARED_SRC="$DOTFILE_DIR/config/ai/codex/AGENT_RULES_SHARED.md"
+CODEX_SHARED_DST="$CLAUDE_DST/AGENT_RULES_SHARED.md"
+KB_ROUTER_SRC="$DOTFILE_DIR/config/ai/shared/skills/knowledge-base-router"
+KB_ROUTER_DST="$CLAUDE_DST/skills/knowledge-base-router"
 REMORA_SRC="$CLAUDE_SRC/remora-proxy/remora.config.toml"
 REMORA_DST="$HOME/.config/remora-cc/config.toml"
 
@@ -62,6 +66,33 @@ link_item() {
   printf "${G}  [LINK] %s -> %s${N}\n" "$name" "$src"
 }
 
+link_external_item() {
+  local src="$1"
+  local dst="$2"
+  local label="$3"
+
+  if [ ! -e "$src" ]; then
+    printf "${R}  [SKIP] %s -- 來源不存在${N}\n" "$label"
+    return
+  fi
+
+  if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then
+    printf "${G}  [OK]   %s -- 已是正確的 symlink${N}\n" "$label"
+    return
+  fi
+
+  if [ -e "$dst" ] && [ ! -L "$dst" ]; then
+    local backup="${dst}.bak.$(date +%Y%m%d_%H%M%S)"
+    printf "${Y}  [BAK]  %s -> %s${N}\n" "$label" "$backup"
+    mv "$dst" "$backup"
+  elif [ -L "$dst" ]; then
+    rm -f "$dst"
+  fi
+
+  ln -s "$src" "$dst"
+  printf "${G}  [LINK] %s -> %s${N}\n" "$label" "$src"
+}
+
 printf "${Y}=== Claude Code 設定 Symlink ===${N}\n"
 
 # 確保 ~/.claude 目錄存在
@@ -70,6 +101,9 @@ mkdir -p "$CLAUDE_DST"
 for item in "${ITEMS[@]}"; do
   link_item "$item"
 done
+
+link_external_item "$CODEX_SHARED_SRC" "$CODEX_SHARED_DST" "Codex-sourced agent contract"
+link_external_item "$KB_ROUTER_SRC" "$KB_ROUTER_DST" "knowledge-base-router skill"
 
 mkdir -p "$(dirname "$REMORA_DST")"
 install -m 600 "$REMORA_SRC" "$REMORA_DST"
