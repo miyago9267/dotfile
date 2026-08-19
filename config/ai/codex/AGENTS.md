@@ -1,9 +1,8 @@
 # Codex Runtime Rules -- Miyago
 
-> Codex-specific adapter. Shared identity and hard rules originate from
-> `config/ai/AGENTS.md`; keep this file focused on Codex execution behavior.
-> Cross-runtime adapters consume the compact Codex-sourced contract at
-> `config/ai/codex/AGENT_RULES_SHARED.md`.
+> Codex-specific adapter. Shared identity and hard rules originate from the
+> canonical `config/ai/AGENTS.md`; keep this file focused on Codex execution
+> behavior. Runtime adapters must not consume another runtime's source file.
 
 ## Identity and delivery
 

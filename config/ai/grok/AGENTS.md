@@ -1,6 +1,6 @@
 # Grok Runtime Rules -- Miyago
 
-> Codex-sourced contract: `config/ai/codex/AGENT_RULES_SHARED.md`.
+> Shared contract source: `config/ai/AGENTS.md`.
 > Grok orchestration is a separate optional package:
 > `plugins/pilotfish-grok/`.
 

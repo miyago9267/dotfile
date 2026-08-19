@@ -1,9 +1,9 @@
 # Global Rules -- Miyago
 
-@AGENT_RULES_SHARED.md
+@AGENTS.md
 
-> Cross-runtime persona and hard rules are loaded above from the Codex-sourced
-> `config/ai/codex/AGENT_RULES_SHARED.md`.
+> Cross-runtime persona and hard rules are loaded above from the canonical
+> `config/ai/AGENTS.md` source.
 > Claude persona is injected by the SessionStart hook; this file holds Claude-runtime workflow only.
 > Instructions are English to minimize token cost; always reply in Traditional Chinese per persona rules.
 

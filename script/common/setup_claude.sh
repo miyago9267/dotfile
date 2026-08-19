@@ -7,8 +7,12 @@ set -euo pipefail
 DOTFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CLAUDE_SRC="$DOTFILE_DIR/config/ai/claude"
 CLAUDE_DST="$HOME/.claude"
-CODEX_SHARED_SRC="$DOTFILE_DIR/config/ai/codex/AGENT_RULES_SHARED.md"
-CODEX_SHARED_DST="$CLAUDE_DST/AGENT_RULES_SHARED.md"
+SHARED_RULES_SRC="$DOTFILE_DIR/config/ai/AGENTS.md"
+PERSONAL_MODEL_SRC="${PERSONAL_MODEL_SRC:-$DOTFILE_DIR/../Project/AI/agent-workspace/personal-model/PROFILE.md}"
+SHARED_RULES_DST="$CLAUDE_DST/AGENTS.md"
+ACTIVE_RULES_DIR="$DOTFILE_DIR/config/ai/generated/claude"
+ACTIVE_RULES_SRC="$ACTIVE_RULES_DIR/AGENTS.md"
+LEGACY_SHARED_DST="$CLAUDE_DST/AGENT_RULES_SHARED.md"
 KB_ROUTER_SRC="$DOTFILE_DIR/config/ai/shared/skills/knowledge-base-router"
 KB_ROUTER_DST="$CLAUDE_DST/skills/knowledge-base-router"
 REMORA_SRC="$CLAUDE_SRC/remora-proxy/remora.config.toml"
@@ -93,6 +97,22 @@ link_external_item() {
   printf "${G}  [LINK] %s -> %s${N}\n" "$label" "$src"
 }
 
+compose_active_rules() {
+  mkdir -p "$ACTIVE_RULES_DIR"
+  local tmp_file="$ACTIVE_RULES_SRC.tmp.$$"
+  {
+    cat "$SHARED_RULES_SRC"
+    printf '\n\n<!-- miyago-personal-model:begin -->\n\n'
+    if [ -f "$PERSONAL_MODEL_SRC" ]; then
+      awk 'NR == 1 && $0 == "---" { frontmatter = 1; next } frontmatter && $0 == "---" { frontmatter = 0; next } !frontmatter { print }' "$PERSONAL_MODEL_SRC"
+    else
+      printf '%s\n' 'Personal Model unavailable; use shared contract only.' >&2
+    fi
+    printf '\n<!-- miyago-personal-model:end -->\n'
+  } > "$tmp_file"
+  mv "$tmp_file" "$ACTIVE_RULES_SRC"
+}
+
 printf "${Y}=== Claude Code 設定 Symlink ===${N}\n"
 
 # 確保 ~/.claude 目錄存在
@@ -102,8 +122,18 @@ for item in "${ITEMS[@]}"; do
   link_item "$item"
 done
 
-link_external_item "$CODEX_SHARED_SRC" "$CODEX_SHARED_DST" "Codex-sourced agent contract"
+compose_active_rules
+link_external_item "$ACTIVE_RULES_SRC" "$SHARED_RULES_DST" "shared agent contract + personal model"
 link_external_item "$KB_ROUTER_SRC" "$KB_ROUTER_DST" "knowledge-base-router skill"
+
+if [ -L "$LEGACY_SHARED_DST" ] && [ "$(readlink "$LEGACY_SHARED_DST")" = "$DOTFILE_DIR/config/ai/codex/AGENT_RULES_SHARED.md" ]; then
+  if [ -e "${LEGACY_SHARED_DST}.legacy" ] || [ -L "${LEGACY_SHARED_DST}.legacy" ]; then
+    printf '%s\n' "[SKIP] legacy shared contract backup already exists"
+  else
+    mv "$LEGACY_SHARED_DST" "${LEGACY_SHARED_DST}.legacy"
+    printf '%s\n' "[BACKUP] legacy Codex-owned shared contract link"
+  fi
+fi
 
 mkdir -p "$(dirname "$REMORA_DST")"
 install -m 600 "$REMORA_SRC" "$REMORA_DST"

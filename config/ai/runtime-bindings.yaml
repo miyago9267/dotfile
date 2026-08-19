@@ -1,0 +1,416 @@
+version: 1
+
+purpose: >-
+  描述 AI 設定來源如何接到各 runtime 的生效位置。這是規劃與驗證 contract，
+  會由各 runtime 的 setup/build 流程實際套用。
+
+canonical:
+  configuration_source: /Users/miyago/dotfile/config/ai
+  shared_rules: /Users/miyago/dotfile/config/ai/AGENTS.md
+  global_workspace: /Users/miyago/Project/AI/agent-workspace
+  personal_model: /Users/miyago/Project/AI/agent-workspace/personal-model/PROFILE.md
+  no_cross_runtime_sources: true
+  allowed_shared_sources:
+    - /Users/miyago/dotfile/config/ai/AGENTS.md
+    - /Users/miyago/dotfile/config/ai/shared
+    - /Users/miyago/dotfile/config/ai/memories
+    - /Users/miyago/Project/AI/agent-workspace/personal-model
+
+audit_state:
+  audited_at: 2026-08-19
+  source_structure: phase_0_verified
+  symlink_migration: phase_0_runtime_targets_applied
+  setup_script_migration: phase_0_active_loading_applied
+  blockers: []
+  remaining_manual_migration:
+    - "仍保留的 codex/AGENT_RULES_SHARED.md 舊來源檔"
+    - "OpenCode family 的 shared instruction 尚未以 runtime 啟動測試確認"
+    - "不同 runtime 的實際載入證據仍需在各 CLI 新 session 驗證"
+
+opencode_family:
+  role: one-harness-family
+  policy: "把 daily、harness、studio 視為不同 effort/profile，不要求三者完全對稱"
+  shared_binding: family_level_optional
+  profiles:
+    daily:
+      source_root: /Users/miyago/dotfile/config/opencode
+      effort: lean
+      use_for: "日常、單一 repo、低到中複雜度工作"
+      primary_agent: monika
+      required_components:
+        - opencode.json
+        - AGENTS.md
+        - agents/
+    harness:
+      source_root: /Users/miyago/dotfile/config/opencode-harness
+      effort: high
+      use_for: "大型工程、跨模組、browser、MCP、subagent"
+      primary_agent: monika-large
+      required_components:
+        - opencode.json
+        - agents/
+        - oh-my-openagent.json
+      adapter_file: optional
+      reason: "主要工作契約由 profile、agents、plugin 與 MCP 組成，不硬造另一份 AGENTS.md"
+    studio:
+      source_root: /Users/miyago/dotfile/config/opencode-studio
+      effort: domain-specific
+      use_for: "創意、遊戲、資產、引擎與 multimodal 工作"
+      primary_agent: studio-monika
+      required_components:
+        - opencode.json
+        - AGENTS.md
+        - agents/
+  decision_rule: "先選 effort/profile，再由 profile 決定 agents、MCP、permissions 與 model route"
+
+mechanisms:
+  link:
+    meaning: "runtime 直接讀取 source 的同一份檔案或目錄"
+    preferred_for:
+      - identical_skill
+      - identical_memory
+      - identical_static_asset
+  include:
+    meaning: "runtime 讀取 adapter 時，再載入 shared source"
+    requirement: "必須有該 runtime 的可驗證 include 語法"
+  generate:
+    meaning: "setup/build 將 shared source 與 runtime adapter 組合成生效檔"
+    preferred_for:
+      - runtime_has_no_verified_include
+      - shared_and_adapter_need_different_file_names
+
+runtimes:
+  claude:
+    family: claude-code
+    source_root: /Users/miyago/dotfile/config/ai/claude
+    adapter_source: /Users/miyago/dotfile/config/ai/claude/CLAUDE.md
+    target_root: /Users/miyago/.claude
+    entry_file: CLAUDE.md
+    current:
+      entry_target: /Users/miyago/.claude/CLAUDE.md
+      entry_mode: link
+      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      shared_target: /Users/miyago/.claude/AGENTS.md
+      shared_mode: link_and_include
+      status: phase_0_active
+    target:
+      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      shared_target: /Users/miyago/.claude/AGENTS.md
+      adapter_load: include
+      expected_include: "@AGENTS.md"
+      entry_mode: link
+    evidence:
+      - /Users/miyago/dotfile/script/common/setup_claude.sh
+      - /Users/miyago/dotfile/config/ai/claude/CLAUDE.md
+    shared_capability: confirmed_include
+    notes:
+      - "Claude source currently includes a file named AGENT_RULES_SHARED.md."
+      - "The include mechanism is confirmed locally; canonical source ownership must change."
+
+  codex:
+    family: codex-cli
+    source_root: /Users/miyago/dotfile/config/ai/codex
+    adapter_source: /Users/miyago/dotfile/config/ai/codex/AGENTS.md
+    target_root: /Users/miyago/.codex
+    entry_file: AGENTS.md
+    current:
+      entry_target: /Users/miyago/.codex/AGENTS.md
+      entry_mode: link
+      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      shared_mode: generated_composition
+      status: phase_0_active
+    target:
+      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      shared_target: /Users/miyago/.codex/AGENTS.shared.md
+      adapter_load: generate
+      generated_entry: /Users/miyago/.codex/AGENTS.md
+      entry_mode: link
+    evidence:
+      - /Users/miyago/dotfile/script/common/setup_codex.sh
+      - /Users/miyago/dotfile/config/ai/codex/AGENTS.md
+      - /Users/miyago/dotfile/config/ai/codex-plugin/scripts/build.sh
+    shared_capability: include_not_verified
+    notes:
+      - "Current setup links the Codex adapter directly."
+      - "Target keeps an independently inspectable generated Codex entry and forbids Codex-to-other-runtime references."
+
+  gemini:
+    family: gemini-cli
+    source_root: /Users/miyago/dotfile/config/ai/gemini
+    adapter_source: /Users/miyago/dotfile/config/ai/gemini/GEMINI.md
+    target_root: /Users/miyago/.gemini
+    entry_file: GEMINI.md
+    current:
+      entry_target: /Users/miyago/.gemini/GEMINI.md
+      entry_mode: link
+      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      shared_mode: generated_composition
+      status: phase_0_active
+    target:
+      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      shared_target: /Users/miyago/.gemini/AGENTS.shared.md
+      adapter_load: generate
+      generated_entry: /Users/miyago/.gemini/GEMINI.md
+      entry_mode: link
+    evidence:
+      - /Users/miyago/dotfile/script/common/setup_gemini.sh
+      - /Users/miyago/dotfile/config/ai/gemini/GEMINI.md
+    shared_capability: include_not_verified
+    notes:
+      - "Gemini has a native GEMINI.md and policies path; no shared instruction include was verified."
+      - "The setup script currently names Claude skills as SHARED_SKILL_SRC and must be corrected later."
+
+  grok:
+    family: grok-cli
+    source_root: /Users/miyago/dotfile/config/ai/grok
+    adapter_source: /Users/miyago/dotfile/config/ai/grok/AGENTS.md
+    target_root: /Users/miyago/.grok
+    entry_file: AGENTS.md
+    current:
+      entry_target: /Users/miyago/.grok/AGENTS.md
+      entry_mode: link
+      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      shared_target: /Users/miyago/.grok/AGENTS.shared.md
+      shared_mode: generated_composition
+      status: phase_0_active
+    target:
+      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      shared_target: /Users/miyago/.grok/AGENTS.shared.md
+      adapter_load: generate
+      generated_entry: /Users/miyago/.grok/AGENTS.md
+      entry_mode: link
+    evidence:
+      - /Users/miyago/dotfile/script/common/setup_grok.sh
+      - /Users/miyago/dotfile/config/ai/grok/AGENTS.md
+    shared_capability: include_not_verified
+    notes:
+      - "Grok has its own adapter and memory behavior; it must not consume a Codex-owned file."
+
+  opencode-daily:
+    family: opencode
+    source_root: /Users/miyago/dotfile/config/opencode
+    adapter_source: /Users/miyago/dotfile/config/opencode/AGENTS.md
+    target_root: /Users/miyago/.config/opencode
+    entry_file: AGENTS.md
+    current:
+      entry_target: /Users/miyago/.config/opencode/AGENTS.md
+      entry_mode: link_via_directory
+      instruction_setting: AGENTS.md
+      status: adapter_only
+    target:
+      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      adapter_load: instruction_path
+      generated_entry: null
+      instruction_setting:
+        - /Users/miyago/dotfile/config/ai/AGENTS.md
+        - AGENTS.md
+      entry_mode: link_via_directory
+    evidence:
+      - /Users/miyago/dotfile/script/common/setup_dotfiles.sh
+      - /Users/miyago/dotfile/config/opencode/opencode.json
+      - /Users/miyago/dotfile/config/opencode/AGENTS.md
+    shared_capability: instruction_path_configured_runtime_test_pending
+    notes:
+      - "OpenCode currently loads AGENTS.md through its instructions setting."
+      - "Relative path behavior for an external shared file must be tested before replacing the adapter with a direct include."
+
+  opencode-harness:
+    family: opencode
+    source_root: /Users/miyago/dotfile/config/opencode-harness
+    adapter_source: null
+    target_root: /Users/miyago/.config/opencode-harness
+    entry_file: AGENTS.md
+    current:
+      entry_target: null
+      entry_mode: link_via_directory
+      status: profile_variant_without_adapter
+    target:
+      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      adapter_load: instruction_path
+      generated_entry: null
+      entry_mode: profile_native
+    evidence:
+      - /Users/miyago/dotfile/script/common/setup_dotfiles.sh
+      - /Users/miyago/dotfile/config/opencode-harness/opencode.json
+    shared_capability: family_level_optional
+    notes:
+      - "This profile intentionally has no standalone AGENTS.md adapter."
+      - "Do not create one merely to make the three OpenCode profiles symmetrical."
+
+  opencode-studio:
+    family: opencode
+    source_root: /Users/miyago/dotfile/config/opencode-studio
+    adapter_source: /Users/miyago/dotfile/config/opencode-studio/AGENTS.md
+    target_root: /Users/miyago/.config/opencode-studio
+    entry_file: AGENTS.md
+    current:
+      entry_target: /Users/miyago/.config/opencode-studio/AGENTS.md
+      entry_mode: link_via_directory
+      status: adapter_only
+    target:
+      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      adapter_load: instruction_path
+      generated_entry: null
+      instruction_setting:
+        - /Users/miyago/dotfile/config/ai/AGENTS.md
+        - AGENTS.md
+      entry_mode: link_via_directory
+    evidence:
+      - /Users/miyago/dotfile/script/common/setup_dotfiles.sh
+      - /Users/miyago/dotfile/config/opencode-studio/opencode.json
+    shared_capability: instruction_path_configured_runtime_test_pending
+
+  deepseek-harness:
+    family: deepseek-harness
+    ownership: official-deepseek
+    installation: "npx @deepseek-ai/dsh web"
+    source_root: external-not-installed
+    target_root: runtime-defined
+    entry_file: dsh
+    current:
+      status: not_installed
+      model_provider: deepseek-native
+    target:
+      role: dedicated-harness
+      architecture: plugin-first-cordis
+      composition: profiles_and_bundles
+      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      adapter_load: plugin_or_profile_patch
+      workspace: explicit_workspace_selection
+      entry_mode: harness_native
+    capabilities:
+      - web_ui
+      - headless_runner
+      - replaceable_model_adapter
+      - replaceable_tool_registry
+      - session_log_and_persistence
+      - agent_loop_plugins
+      - approval_policy
+      - sandbox
+      - plugin_bundles
+      - profile_patches
+    shared_capability: not_verified
+    evidence:
+      - https://github.com/deepseek-ai/deepseek-harness
+      - https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/architecture.md
+      - https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/guide/index.md
+    risks:
+      - developer_preview
+      - compatibility_breaking_changes_expected
+      - shared_instruction_loading_contract_not_yet_known
+    notes:
+      - "This is a Harness, not merely a model provider."
+      - "Its architecture makes model, tools, session, agent loop and policy replaceable plugins."
+      - "Do not install until its workspace, instruction and plugin persistence paths are mapped."
+
+  deepseek-tui:
+    family: deepseek-tui
+    ownership: community
+    installation: "npm install -g deepseek-tui or cargo install deepseek-tui-cli"
+    source_root: external-not-installed
+    target_root: ~/.deepseek
+    entry_file: deepseek
+    current:
+      status: not_installed
+      model_provider: deepseek-native
+    target:
+      role: terminal-coding-harness
+      architecture: codex-style-rust-workspace
+      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      adapter_load: project_or_user_skill_and_generated_instruction
+      workspace: current_directory
+      entry_mode: harness_native
+    capabilities:
+      - plan_mode
+      - agent_mode
+      - approval_gated_tools
+      - sandboxed_execution
+      - mcp_client_and_server
+      - skills
+      - hooks
+      - subagents
+      - recursive_lm_for_large_inputs
+      - http_runtime_api
+    shared_capability: not_verified
+    evidence:
+      - https://github.com/Hmbown/DeepSeek-TUI
+      - https://github.com/deepseek-ai/awesome-deepseek-agent/blob/main/docs/deepseek-tui.md
+    risks:
+      - community_project
+      - compatibility_and_maintenance_risk
+      - shared_instruction_loading_contract_not_yet_known
+    notes:
+      - "This is closer to a terminal coding runtime than the official dsh web/plugin platform."
+      - "Its advertised skills path is ~/.deepseek/skills or project ./.deepseek/skills; this needs a separate binding design."
+
+model_provider_only:
+  deepseek_v4:
+    role: model_provider_not_harness
+    current_local_route: /Users/miyago/dotfile/config/opencode/opencode.json
+    integration: "Use DeepSeek as the model behind existing OpenCode, Claude Code or other compatible agent tools."
+    models:
+      - deepseek-v4-pro
+      - deepseek-v4-flash
+    capabilities:
+      - thinking_mode
+      - tool_calls
+      - reasoning_effort_high_or_max
+      - OpenAI_compatible_API
+      - Anthropic_compatible_API
+    shared_capability: inherited_from_host_harness
+    evidence:
+      - https://api-docs.deepseek.com/guides/tool_calls/
+      - https://api-docs.deepseek.com/api/create-chat-completion/
+      - https://api-docs.deepseek.com/guides/agent_integrations/opencode
+    notes:
+      - "This path changes the model but keeps the existing Harness, skills, memory and permissions."
+      - "It is the lowest-risk way to evaluate DeepSeek before installing a new Harness."
+
+shared_assets:
+  knowledge-base-router:
+    source: /Users/miyago/dotfile/config/ai/shared/skills/knowledge-base-router
+    current_links:
+      - /Users/miyago/.codex/skills/knowledge-base-router
+      - /Users/miyago/.claude/skills/knowledge-base-router
+      - /Users/miyago/.grok/skills/knowledge-base-router
+    missing_or_unverified:
+      - gemini
+      - opencode-daily
+      - opencode-harness
+      - opencode-studio
+    mechanism: link
+    status: partially_confirmed
+
+  memory:
+    source: /Users/miyago/dotfile/config/ai/memories/MEMORY.md
+    current_links:
+      - /Users/miyago/.codex/memories
+      - /Users/miyago/.grok/memory/MEMORY.md
+    other_runtimes: review_required
+    mechanism: link
+    status: partial_runtime_compatibility
+
+verification_plan:
+  - id: source-ownership
+    check: "runtime adapter 不得引用另一個 runtime 目錄"
+  - id: link-resolution
+    check: "每個 target link 必須解析到預期 source"
+  - id: include-resolution
+    check: "只對有證據的 runtime 測試 include 或 instructions path"
+  - id: generated-parity
+    check: "generated entry 必須可追溯到 shared source 與同一 runtime adapter"
+  - id: startup-read
+    check: "在隔離測試目錄中確認 runtime 實際載入 shared 規則"
+  - id: behavioral-parity
+    check: "用同一組架構、維運與閒聊 prompt 比對各 provider 是否符合 Personal Model，並記錄差異與不可達成項"
+    scope: "Claude、Codex、Gemini、Grok 四個 generated runtime；OpenCode 僅記錄，不作阻擋"
+    repetitions: 2
+    dimensions:
+      - "語言是否符合繁體中文與必要的技術詞保留"
+      - "工程情境是否能保留結果、邊界與驗證重點"
+      - "閒聊情境是否脫離固定工程輸出形狀"
+      - "是否違反 Personal Model 的明文偏好或 shared contract 硬規則"
+    pass_rule: "允許 provider 的文風與能力差異；上述四個維度不得出現明文違反，能力差異必須記為 capability gap"
+    evaluator: "固定 rubric + Miyago 抽查；不由同一 provider 自評"
+
+next_step: "先完成 Phase 1 的 behavioral-parity 隔離測試，再決定是否進入 task context 與 context assembly。"

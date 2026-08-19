@@ -8,10 +8,13 @@ set -euo pipefail
 DOTFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CODEX_SRC="$DOTFILE_DIR/config/ai/codex"
 CODEX_DST="$HOME/.codex"
-SHARED_SKILL_SRC="$DOTFILE_DIR/config/ai/claude/skills"
 CODEX_SKILL_SRC="$DOTFILE_DIR/config/ai/codex/skills"
 SHARED_SKILL_SRC="$DOTFILE_DIR/config/ai/shared/skills"
+SHARED_RULES_SRC="$DOTFILE_DIR/config/ai/AGENTS.md"
+PERSONAL_MODEL_SRC="${PERSONAL_MODEL_SRC:-$DOTFILE_DIR/../Project/AI/agent-workspace/personal-model/PROFILE.md}"
 SHARED_MEMORY_SRC="$DOTFILE_DIR/config/ai/memories"
+ACTIVE_RULES_DIR="$DOTFILE_DIR/config/ai/generated/codex"
+ACTIVE_RULES_SRC="$ACTIVE_RULES_DIR/AGENTS.md"
 
 Y='\033[1;33m'
 G='\033[1;32m'
@@ -102,6 +105,25 @@ install_git_skill() {
   fi
 }
 
+compose_active_rules() {
+  mkdir -p "$ACTIVE_RULES_DIR"
+  local tmp_file="$ACTIVE_RULES_SRC.tmp.$$"
+  {
+    cat "$SHARED_RULES_SRC"
+    printf '\n\n<!-- miyago-personal-model:begin -->\n\n'
+    if [ -f "$PERSONAL_MODEL_SRC" ]; then
+      awk 'NR == 1 && $0 == "---" { frontmatter = 1; next } frontmatter && $0 == "---" { frontmatter = 0; next } !frontmatter { print }' "$PERSONAL_MODEL_SRC"
+    else
+      printf '%s\n' 'Personal Model unavailable; use shared contract only.' >&2
+    fi
+    printf '\n<!-- miyago-personal-model:end -->\n\n'
+    printf '%s\n\n' '<!-- runtime-adapter:begin -->'
+    cat "$CODEX_SRC/AGENTS.md"
+    printf '\n%s\n' '<!-- runtime-adapter:end -->'
+  } > "$tmp_file"
+  mv "$tmp_file" "$ACTIVE_RULES_SRC"
+}
+
 SHARED_CORE_SKILLS=(
   ask-discipline
   git-workflow
@@ -119,7 +141,9 @@ printf "${Y}=== Codex CLI 設定 Symlink ===${N}\n"
 
 mkdir -p "$CODEX_DST" "$CODEX_DST/skills"
 
-link_item "$CODEX_SRC/AGENTS.md" "$CODEX_DST/AGENTS.md" "AGENTS.md"
+compose_active_rules
+link_item "$ACTIVE_RULES_SRC" "$CODEX_DST/AGENTS.md" "AGENTS.md"
+link_item "$SHARED_RULES_SRC" "$CODEX_DST/AGENTS.shared.md" "shared agent contract"
 link_item "$SHARED_MEMORY_SRC" "$CODEX_DST/memories" "shared memories"
 link_item "$SHARED_SKILL_SRC/knowledge-base-router" "$CODEX_DST/skills/knowledge-base-router" "skills/knowledge-base-router"
 
@@ -153,7 +177,7 @@ for skill_path in "$CODEX_DST/skills"/*; do
   [ -L "$skill_path" ] || continue
   target=$(readlink "$skill_path")
   case "$target" in
-    "$DOTFILE_DIR/config/ai/claude/skills/"*|"$DOTFILE_DIR/config/ai/codex/skills/"*)
+    "$DOTFILE_DIR/config/ai/shared/skills/"*|"$DOTFILE_DIR/config/ai/codex/skills/"*)
       skill_name=$(basename "$skill_path")
       keep=false
       for allowed in "${SHARED_CORE_SKILLS[@]}"; do

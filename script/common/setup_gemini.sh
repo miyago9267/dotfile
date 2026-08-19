@@ -8,7 +8,11 @@ set -euo pipefail
 DOTFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 GEMINI_SRC="$DOTFILE_DIR/config/ai/gemini"
 GEMINI_DST="$HOME/.gemini"
-SHARED_SKILL_SRC="$DOTFILE_DIR/config/ai/claude/skills"
+SHARED_RULES_SRC="$DOTFILE_DIR/config/ai/AGENTS.md"
+PERSONAL_MODEL_SRC="${PERSONAL_MODEL_SRC:-$DOTFILE_DIR/../Project/AI/agent-workspace/personal-model/PROFILE.md}"
+ACTIVE_RULES_DIR="$DOTFILE_DIR/config/ai/generated/gemini"
+ACTIVE_RULES_SRC="$ACTIVE_RULES_DIR/GEMINI.md"
+SHARED_SKILL_SRC="$DOTFILE_DIR/config/ai/shared/skills"
 GEMINI_SKILL_SRC="$DOTFILE_DIR/config/ai/gemini/skills"
 GEMINI_POLICIES_SRC="$DOTFILE_DIR/config/ai/gemini/policies"
 
@@ -45,16 +49,7 @@ link_item() {
 }
 
 SHARED_CORE_SKILLS=(
-  ask-discipline
-  auto-docs
-  auto-spec
-  git-workflow
-  markdown-lint
-  no-ai-attribution
-  path-aware
-  safe-ops
-  sdd
-  tdd
+  knowledge-base-router
 )
 
 should_install_gemini_skill() {
@@ -70,11 +65,32 @@ should_install_gemini_skill() {
   esac
 }
 
+compose_active_rules() {
+  mkdir -p "$ACTIVE_RULES_DIR"
+  local tmp_file="$ACTIVE_RULES_SRC.tmp.$$"
+  {
+    cat "$SHARED_RULES_SRC"
+    printf '\n\n<!-- miyago-personal-model:begin -->\n\n'
+    if [ -f "$PERSONAL_MODEL_SRC" ]; then
+      awk 'NR == 1 && $0 == "---" { frontmatter = 1; next } frontmatter && $0 == "---" { frontmatter = 0; next } !frontmatter { print }' "$PERSONAL_MODEL_SRC"
+    else
+      printf '%s\n' 'Personal Model unavailable; use shared contract only.' >&2
+    fi
+    printf '\n<!-- miyago-personal-model:end -->\n\n'
+    printf '%s\n\n' '<!-- runtime-adapter:begin -->'
+    cat "$GEMINI_SRC/GEMINI.md"
+    printf '\n%s\n' '<!-- runtime-adapter:end -->'
+  } > "$tmp_file"
+  mv "$tmp_file" "$ACTIVE_RULES_SRC"
+}
+
 printf "${Y}=== Gemini CLI 設定 Symlink ===${N}\n"
 
 mkdir -p "$GEMINI_DST" "$GEMINI_DST/skills"
 
-link_item "$GEMINI_SRC/GEMINI.md" "$GEMINI_DST/GEMINI.md" "GEMINI.md"
+compose_active_rules
+link_item "$ACTIVE_RULES_SRC" "$GEMINI_DST/GEMINI.md" "GEMINI.md"
+link_item "$SHARED_RULES_SRC" "$GEMINI_DST/AGENTS.shared.md" "shared agent contract"
 link_item "$GEMINI_POLICIES_SRC" "$GEMINI_DST/policies" "policies"
 
 printf "\n${Y}--- Shared Core Skills ---${N}\n"
