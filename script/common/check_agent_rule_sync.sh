@@ -48,6 +48,7 @@ grep -Fq '/Users/miyago/Project/AI/agent-workspace/personal-model/PROFILE.md' \
   "$dotfile_dir/config/opencode-harness/opencode.json"
 
 for active_file in "$claude_active_file" "$codex_active_file" "$gemini_active_file" "$grok_active_file"; do
+  grep -Fq 'miyago-context-harness' "$active_file"
   grep -Fq 'Miyago Personal Model' "$active_file"
   grep -Fq '<!-- miyago-personal-model:begin -->' "$active_file"
   grep -Fq '<!-- miyago-personal-model:end -->' "$active_file"

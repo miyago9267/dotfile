@@ -10,6 +10,21 @@
   deployment; this directory is not itself a shared project runtime.
 - Read `AGENT-ENTRY.md` before routing global Agent behavior, skills, memory,
   harness or workspace-context work.
+- At the beginning of a new session that concerns an existing task, use the
+  shared Context Harness to discover and resume the task before searching
+  project history. Prefer `/Users/miyago/.local/bin/miyago-context-harness`; if
+  it is unavailable, report that the bootstrap is not installed rather than
+  silently falling back to another project or reading all history.
+- The Context Harness must stop when task selection is ambiguous, scope does
+  not match the current directory, or a source crosses the non-entry boundary.
+  An explicit `MIYAGO_TASK_ID` or `--task` may select a task across projects.
+- Before changing files, use `miyago-context-harness plan` and follow its
+  effort, verification and human-gate output. Do not silently cross a listed
+  human gate.
+- After a meaningful verified milestone, use `miyago-context-harness
+  checkpoint` to record current state, completed work, next actions and direct
+  evidence. Before changing session or scope, use `miyago-context-harness
+  handoff --reason ...`; do not rely on the transcript as the only state store.
 - `/Users/miyago/Project/AI/monika` is `non-entry`. Do not read, modify, test,
   or infer global Agent behavior from that project unless Miyago explicitly
   names it as the project-specific target.
