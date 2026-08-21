@@ -35,15 +35,25 @@ not the canonical content.
 
 ## Query Workflow
 
-1. Read the selected vault's `AGENTS.md` if it is not already loaded.
-2. Read `INDEX.md` first when present; use its MOCs to select candidates.
-3. Search narrowly with `rg` across titles, aliases, tags, frontmatter,
+1. For project, architecture, history, routing, configuration, or next-step
+   questions, first ask the installed Factory for a bounded RoutePlan:
+
+   ```bash
+   agent-workflow route --cwd "$PWD" --query "<the user's question>"
+   ```
+
+   Use its `retrieval_order` and selected evidence as the search boundary. If
+   the command is unavailable, report the bootstrap gap and use the manual
+   process below; do not scan every vault.
+2. Read the selected vault's `AGENTS.md` if it is not already loaded.
+3. Read `INDEX.md` first when present; use its MOCs to select candidates.
+4. Search narrowly with `rg` across titles, aliases, tags, frontmatter,
    wikilinks, `_MOC.md`, and relevant project nodes.
-4. Read only the nodes needed for the current decision. Follow `## Related`
+5. Read only the nodes needed for the current decision. Follow `## Related`
    links only when they resolve a concrete gap.
-5. State which node supplied a decision or rule. Separate verified facts,
+6. State which node supplied a decision or rule. Separate verified facts,
    inferences, conflicts, and missing knowledge.
-6. If the vault has no relevant evidence, say so and continue from repository
+7. If the vault has no relevant evidence, say so and continue from repository
    facts; do not invent a knowledge-base conclusion.
 
 ## Consult Proactively

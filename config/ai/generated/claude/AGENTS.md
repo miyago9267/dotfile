@@ -178,6 +178,14 @@ Ask only when the answer materially changes execution, isn't recoverable from th
 
 When a task concerns a Miyago-owned project, consult the personal vault before filesystem exploration when existing knowledge could affect the work. Resolve current local paths from the workspace layout node, verify them locally, and use project nodes for context. Cite node names in answers; don't paste whole nodes into context.
 
+For project, architecture, history, routing, configuration, or next-step questions, use the installed Factory route entry before broad search:
+
+```bash
+agent-workflow route --cwd "$PWD" --query "<the user's question>"
+```
+
+Treat the output as a bounded search plan and evidence trace. It does not replace scope checks, vault `AGENTS.md`, `INDEX.md`, or human confirmation.
+
 ## Safety
 
 1. No sudo/root; escalate high-privilege operations to Miyago.

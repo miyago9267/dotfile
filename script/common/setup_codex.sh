@@ -11,6 +11,8 @@ CODEX_DST="$HOME/.codex"
 CODEX_SKILL_SRC="$DOTFILE_DIR/config/ai/codex/skills"
 CODEX_HOOK_SRC="$DOTFILE_DIR/config/ai/codex/hooks/experience-observe.py"
 CODEX_HOOK_DST="$HOME/.codex/hooks/experience-observe.py"
+CODEX_ROUTE_HOOK_SRC="$DOTFILE_DIR/config/ai/codex/hooks/context-route.py"
+CODEX_ROUTE_HOOK_DST="$HOME/.codex/hooks/context-route.py"
 SHARED_SKILL_SRC="$DOTFILE_DIR/config/ai/shared/skills"
 SHARED_RULES_SRC="$DOTFILE_DIR/config/ai/AGENTS.md"
 PERSONAL_MODEL_SRC="${PERSONAL_MODEL_SRC:-$DOTFILE_DIR/../Project/AI/agent-workspace/personal-model/PROFILE.md}"
@@ -151,6 +153,8 @@ link_item "$SHARED_MEMORY_SRC" "$CODEX_DST/memories" "shared memories"
 mkdir -p "$CODEX_DST/hooks"
 chmod 755 "$CODEX_HOOK_SRC"
 link_item "$CODEX_HOOK_SRC" "$CODEX_HOOK_DST" "hooks/experience-observe.py"
+chmod 755 "$CODEX_ROUTE_HOOK_SRC"
+link_item "$CODEX_ROUTE_HOOK_SRC" "$CODEX_ROUTE_HOOK_DST" "hooks/context-route.py"
 
 ensure_experience_hook() {
   local hooks_file="$CODEX_DST/hooks.json"
@@ -180,7 +184,30 @@ ensure_experience_hook() {
   fi
 }
 
+ensure_context_route_hook() {
+  local hooks_file="$CODEX_DST/hooks.json"
+  local tmp_file
+  [ -f "$hooks_file" ] || return
+  command -v jq >/dev/null 2>&1 || return
+  tmp_file="$hooks_file.tmp.$$"
+  if jq --arg command "$CODEX_ROUTE_HOOK_DST" '
+    .hooks //= {}
+    | .hooks.UserPromptSubmit //= []
+    | if any(.hooks.UserPromptSubmit[]?.hooks[]?; .command == $command)
+      then .
+      else .hooks.UserPromptSubmit += [{hooks: [{type: "command", command: $command, timeout: 5}]}]
+      end
+  ' "$hooks_file" > "$tmp_file"; then
+    mv "$tmp_file" "$hooks_file"
+    printf "${G}  [OK]   hooks.json -- context routing enabled${N}\n"
+  else
+    rm -f "$tmp_file"
+    printf "${Y}  [SKIP] hooks.json -- context routing not enabled${N}\n"
+  fi
+}
+
 ensure_experience_hook
+ensure_context_route_hook
 link_item "$SHARED_SKILL_SRC/knowledge-base-router" "$CODEX_DST/skills/knowledge-base-router" "skills/knowledge-base-router"
 
 for profile in fast code heavy; do
