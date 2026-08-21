@@ -280,6 +280,16 @@ Not part of the shared contract -- keep in each agent's local entry file or runt
 - 正常 coding 使用 `codex exec --ignore-user-config -p code`；只有 browser、GUI、文件或大型任務才使用 heavy profile。
 - 不主打長篇規劃、流程敘事或 Claude-specific workflow；使用 Codex native tools、skills、plugins 與本地 shell。
 
+## Experience bootstrap
+
+- 新 session 進入有既有 task 的 workspace 後，先執行：
+  `miyago-context-harness sync --runtime codex --cwd "$PWD"`。
+- 讀取輸出中的 `experience_bundle_path`；只採用與目前 task scope 相符的 confirmed experience。
+- Miyago 明確說「記住」、「這是我的習慣」或「保留這個偏好」時，直接用
+  `observe --kind explicit_preference --runtime codex` 記錄單行摘要；不要保存完整對話，也不要要求 Miyago 手動執行指令。
+- `sync` 會自動整理 observation、確認明確的使用者偏好並產生 bundle；推測性候選仍留在 review queue，不得自行升級。
+- 若 `sync` 因 task 不明確、scope 不符或 non-entry 邊界而停止，保留停車狀態並回報 Miyago，不自行擴大讀取範圍。
+
 ## Core guardrails
 
 - 新功能、bug fix、refactor 採 risk-based verification；高風險邏輯、public API、security、migration 與核心業務邏輯優先 TDD。
