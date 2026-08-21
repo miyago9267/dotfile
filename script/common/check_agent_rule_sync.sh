@@ -38,14 +38,17 @@ if ! cmp -s <(head -n "$shared_line_count" "$grok_active_file") "$source_file"; 
   exit 1
 fi
 
-grep -Fq '/Users/miyago/dotfile/config/ai/AGENTS.md' \
+for opencode_config in \
   "$dotfile_dir/config/opencode/opencode.json" \
   "$dotfile_dir/config/opencode-studio/opencode.json" \
-  "$dotfile_dir/config/opencode-harness/opencode.json"
-grep -Fq '/Users/miyago/Project/AI/agent-workspace/personal-model/PROFILE.md' \
-  "$dotfile_dir/config/opencode/opencode.json" \
-  "$dotfile_dir/config/opencode-studio/opencode.json" \
-  "$dotfile_dir/config/opencode-harness/opencode.json"
+  "$dotfile_dir/config/opencode-harness/opencode.json"; do
+  grep -Fq '~/.config/miyago-agent/AGENTS.md' "$opencode_config"
+  grep -Fq '~/.config/miyago-agent/personal-model/PROFILE.md' "$opencode_config"
+done
+test -L "${XDG_CONFIG_HOME:-$HOME/.config}/miyago-agent/AGENTS.md"
+test -L "${XDG_CONFIG_HOME:-$HOME/.config}/miyago-agent/personal-model/PROFILE.md"
+test -s "${XDG_CONFIG_HOME:-$HOME/.config}/miyago-agent/AGENTS.md"
+test -s "${XDG_CONFIG_HOME:-$HOME/.config}/miyago-agent/personal-model/PROFILE.md"
 
 for active_file in "$claude_active_file" "$codex_active_file" "$gemini_active_file" "$grok_active_file"; do
   grep -Fq 'miyago-context-harness' "$active_file"

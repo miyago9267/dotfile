@@ -5,8 +5,8 @@
   "default_agent": "studio-monika",
   "share": "disabled",
   "instructions": [
-    "/Users/miyago/dotfile/config/ai/AGENTS.md",
-    "/Users/miyago/Project/AI/agent-workspace/personal-model/PROFILE.md",
+    "~/.config/miyago-agent/AGENTS.md",
+    "~/.config/miyago-agent/personal-model/PROFILE.md",
     "AGENTS.md"
   ],
   "mcp": {

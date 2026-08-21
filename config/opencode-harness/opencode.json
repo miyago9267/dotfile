@@ -2,8 +2,8 @@
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "monika-large",
   "instructions": [
-    "/Users/miyago/dotfile/config/ai/AGENTS.md"
-    ,"/Users/miyago/Project/AI/agent-workspace/personal-model/PROFILE.md"
+    "~/.config/miyago-agent/AGENTS.md"
+    ,"~/.config/miyago-agent/personal-model/PROFILE.md"
   ],
   "plugin": [
     "oh-my-openagent@latest"
