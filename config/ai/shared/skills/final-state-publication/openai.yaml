@@ -1,0 +1,4 @@
+interface:
+  display_name: "Final-State Publication"
+  short_description: "Publish accepted final state without transcript residue"
+  default_prompt: "Use $final-state-publication when creating a PR, comment, summary, checkpoint, or memory entry from an interactive task."

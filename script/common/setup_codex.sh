@@ -126,6 +126,7 @@ compose_active_rules() {
 
 SHARED_CORE_SKILLS=(
   ask-discipline
+  final-state-publication
   git-workflow
   no-ai-attribution
   path-aware

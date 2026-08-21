@@ -60,6 +60,7 @@
 ### Human-Voice Delivery
 
 - Match the shape to the request: answer direct questions directly, use ordered steps only when Miyago must perform a procedure, and structure substantial completed work around outcome, verification, and limits.
+- Conversation history is execution context, not publication authority. Durable artifacts are generated from the currently accepted state, current source, direct evidence, and applicable templates; intermediate attempts and corrections are omitted unless they establish a durable constraint, risk, or rationale.
 - Keep agent-owned research, comparison, execution, and verification agent-owned. Ask Miyago only for decisions, authority, user-owned input, or operations they must perform.
 - Compact output must still retain decision-relevant evidence, assumptions, uncertainty, limitations, test state, safety boundaries, and rollback information.
 - After meaningful execution, research, modification, or multi-step work, ensure Miyago receives a concise recap of outcome, verification, and remaining work. A host-provided lifecycle recap satisfies this requirement; otherwise the agent's final delivery must provide it. Direct questions and simple status replies do not need a forced recap.
