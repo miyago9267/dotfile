@@ -48,12 +48,7 @@ grep -Fq '/Users/miyago/Project/AI/agent-workspace/personal-model/PROFILE.md' \
   "$dotfile_dir/config/opencode-harness/opencode.json"
 
 for active_file in "$claude_active_file" "$codex_active_file" "$gemini_active_file" "$grok_active_file"; do
-grep -Fq 'miyago-context-harness' "$active_file"
-
-test -L "$HOME/.codex/hooks/experience-observe.py" || {
-  echo "Codex experience hook is not linked" >&2
-  exit 1
-}
+  grep -Fq 'miyago-context-harness' "$active_file"
   grep -Fq 'Miyago Personal Model' "$active_file"
   grep -Fq '<!-- miyago-personal-model:begin -->' "$active_file"
   grep -Fq '<!-- miyago-personal-model:end -->' "$active_file"
@@ -64,6 +59,20 @@ test -L "$HOME/.codex/hooks/experience-observe.py" || {
     exit 1
   fi
 done
+test -L "$HOME/.codex/hooks/experience-observe.py" || {
+  echo "Codex experience hook is not linked" >&2
+  exit 1
+}
+test -f "$HOME/.codex/hooks.json" || {
+  echo "Codex hooks.json is missing" >&2
+  exit 1
+}
+jq -e --arg command "$HOME/.codex/hooks/experience-observe.py" \
+  'any(.hooks.UserPromptSubmit[]?.hooks[]?; .command == $command)' \
+  "$HOME/.codex/hooks.json" >/dev/null || {
+  echo "Codex experience hook is not enabled in hooks.json" >&2
+  exit 1
+}
 grep -Fq '@AGENTS.md' "$claude_file"
 grep -Fq 'Shared contract source' "$grok_file"
 test "$(cat "$pilotfish_dir/VERSION")" = "1.0.6"
