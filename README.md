@@ -32,6 +32,21 @@ bash setup.sh --all
 - Node、Python、Go、Rust、Bun 等 runtime
 - Kubernetes、cloud CLI、Android、Flutter 和一些平常會用的 TUI 工具
 
+## Agent Workflow Factory 的邊界
+
+這個 repo 只保存 runtime 設定與 adapter：例如 generated instruction、skills、hooks、MCP 設定、CLI bootstrap 與 symlink setup。它不保存 Context Harness 本體、task/experience 資料、benchmark 結果或 Factory 的安裝入口。
+
+那些內容由獨立的 `Agent Workflow Factory` repository 管理。Factory 安裝時透過 `MIYAGO_AGENT_WORKSPACE_ROOT` 與 `MIYAGO_DOTFILE_ROOT` 把這個設定來源接上；因此換 Factory 版本不會複製或接管 dotfile，換 runtime 也不需要把經驗資料塞進設定 repo。
+
+日常接入 Factory 的入口是：
+
+```bash
+agent-workflow runtime sync --all
+agent-workflow runtime doctor
+```
+
+runtime-specific 的 hook 與設定仍由本 repo 負責；Factory 只使用它們提供的 bootstrap contract，不把 runtime 實作混進核心 Harness。
+
 ## AI skills
 
 Codex 的 native skills 放在 `config/ai/codex/skills/`，Claude 共用的 skills 放在
