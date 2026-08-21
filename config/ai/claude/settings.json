@@ -1,6 +1,4 @@
 {
-  "model": "opus[1m]",
-  "fallbackModel": ["sonnet"],
   "env": {
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "100"
   },
@@ -50,6 +48,9 @@
     ]
   },
   "model": "opus[1m]",
+  "fallbackModel": [
+    "sonnet"
+  ],
   "hooks": {
     "InstructionsLoaded": [
       {
@@ -219,6 +220,11 @@
             "type": "command",
             "command": "bash ~/dotfile/config/ai/claude/hooks/sre-inventory-stale-check.sh",
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/agent-stack-auto-update.sh",
+            "async": true
           }
         ]
       }
@@ -257,5 +263,6 @@
     }
   },
   "effortLevel": "medium",
-  "theme": "dark-ansi"
+  "theme": "dark-ansi",
+  "agentPushNotifEnabled": true
 }
