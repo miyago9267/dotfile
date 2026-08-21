@@ -155,3 +155,6 @@ ssh() {
     return $rc
 }
 # <<< tokenbar-remote-sync exit hook <<<
+
+# opencode
+export PATH="$HOME/.opencode/bin:$PATH"
