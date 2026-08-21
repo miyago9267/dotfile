@@ -130,8 +130,14 @@ runtimes:
       - /Users/miyago/dotfile/config/ai/codex/AGENTS.md
       - /Users/miyago/dotfile/config/ai/codex-plugin/scripts/build.sh
     shared_capability: include_not_verified
+    experience_hook:
+      source: /Users/miyago/dotfile/config/ai/codex/hooks/experience-observe.py
+      target: /Users/miyago/.codex/hooks/experience-observe.py
+      event: UserPromptSubmit
+      status: phase_1_active
     notes:
       - "Current setup links the Codex adapter directly."
+      - "The Codex UserPromptSubmit hook captures only explicit preference markers; it does not persist raw prompts."
       - "Target keeps an independently inspectable generated Codex entry and forbids Codex-to-other-runtime references."
 
   gemini:
