@@ -63,6 +63,10 @@ test -L "$HOME/.codex/hooks/experience-observe.py" || {
   echo "Codex experience hook is not linked" >&2
   exit 1
 }
+test -x "$HOME/.codex/hooks/experience-observe.py" || {
+  echo "Codex experience hook is not executable" >&2
+  exit 1
+}
 test -f "$HOME/.codex/hooks.json" || {
   echo "Codex hooks.json is missing" >&2
   exit 1

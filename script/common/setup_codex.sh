@@ -149,6 +149,7 @@ link_item "$ACTIVE_RULES_SRC" "$CODEX_DST/AGENTS.md" "AGENTS.md"
 link_item "$SHARED_RULES_SRC" "$CODEX_DST/AGENTS.shared.md" "shared agent contract"
 link_item "$SHARED_MEMORY_SRC" "$CODEX_DST/memories" "shared memories"
 mkdir -p "$CODEX_DST/hooks"
+chmod 755 "$CODEX_HOOK_SRC"
 link_item "$CODEX_HOOK_SRC" "$CODEX_HOOK_DST" "hooks/experience-observe.py"
 
 ensure_experience_hook() {

@@ -4,6 +4,10 @@ set -euo pipefail
 dotfile_dir="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 workspace_root="${MIYAGO_AGENT_WORKSPACE_ROOT:-$HOME/Project/AI/agent-workspace}"
 hook="$dotfile_dir/config/ai/codex/hooks/experience-observe.py"
+test -x "$hook" || {
+  echo "codex_experience_hook: source hook is not executable" >&2
+  exit 1
+}
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/miyago-codex-hook.XXXXXX")"
 trap 'rm -rf "$test_root"' EXIT
 
