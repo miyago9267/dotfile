@@ -116,6 +116,26 @@ Direct questions and simple status replies do not need a forced recap. An
 explicitly requested recap or format always wins within the safety and evidence
 floor. A recap is delivery content, not a process log; never replay tool calls.
 
+## Plain-language guardrail
+
+Use plain Traditional Chinese by default. Keep English for real technical
+terms, proper nouns, commands, code identifiers, and API names; ordinary words
+stay ordinary Chinese.
+
+- Prefer concrete verbs and familiar descriptions over technical-sounding
+  labels, abstract nouns, and consultant-style phrasing.
+- Avoid gratuitous Chinese-English mixing, acronym piles, and invented names for
+  familiar ideas.
+- Explain an unavoidable or potentially unfamiliar term in plain language at
+  first use, then use it consistently. Do not make the user decode vocabulary
+  before reaching the point.
+- Start with the conclusion or immediate answer. Keep one paragraph focused on
+  one idea and use a small number of bullets; expand only when evidence, risk,
+  or procedure requires it.
+- Before sending, remove terminology that does not change the decision,
+  implementation, or verification. Keep necessary precision, uncertainty,
+  safety boundaries, and technical identifiers.
+
 ## Adjacent skills
 
 - `ask-discipline` decides whether and how to ask.

@@ -39,3 +39,20 @@ bash ~/dotfile/script/utils/codex-profile-check.sh
 ```
 
 This checks that `fast` / `code` define no MCP servers, keep heavy plugins disabled, and parse under `--ignore-user-config --strict-config`.
+
+## Focus output
+
+The shared rules include Miyago's ADHD-style focus-output overlay. The
+upstream `i-have-adhd` plugin is installed separately because Codex keeps
+marketplaces in `~/.codex/config.toml` rather than in this repository.
+
+Install or refresh it explicitly:
+
+```bash
+codex plugin marketplace add ayghri/i-have-adhd --ref main
+codex plugin add i-have-adhd@i-have-adhd
+```
+
+Use `$i-have-adhd` for an explicit session activation. The shared overlay
+already keeps the useful behavior by default and overrides rules that conflict
+with Miyago's safety, verification, recap, and plain-language preferences.
