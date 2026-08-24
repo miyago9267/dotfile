@@ -109,6 +109,46 @@ install_git_skill() {
   fi
 }
 
+install_pinned_git_skill() {
+  local name="$1"
+  local repo="$2"
+  local commit="$3"
+  local dst="$CODEX_DST/vendor/$name"
+  local actual_repo
+
+  if [ -L "$dst" ]; then
+    printf "${Y}  [SKIP] vendor/%s -- unmanaged symlink exists${N}\n" "$name"
+    return
+  fi
+
+  if [ -d "$dst/.git" ]; then
+    actual_repo=$(git -C "$dst" remote get-url origin 2>/dev/null || true)
+    if [ "$(normalize_git_url "$actual_repo")" != "$(normalize_git_url "$repo")" ]; then
+      printf "${Y}  [SKIP] vendor/%s -- origin mismatch${N}\n" "$name"
+      return
+    fi
+    if [ "$(git -C "$dst" rev-parse HEAD 2>/dev/null || true)" = "$commit" ]; then
+      printf "${G}  [OK]   vendor/%s @ %s${N}\n" "$name" "${commit:0:12}"
+    else
+      printf "${Y}  [SKIP] vendor/%s -- pinned commit mismatch${N}\n" "$name"
+    fi
+    return
+  fi
+
+  if [ -e "$dst" ]; then
+    printf "${Y}  [SKIP] vendor/%s -- unmanaged path exists${N}\n" "$name"
+    return
+  fi
+
+  if GIT_TERMINAL_PROMPT=0 git clone --quiet "$repo" "$dst" \
+    && git -C "$dst" checkout --quiet "$commit" \
+    && [ "$(git -C "$dst" rev-parse HEAD)" = "$commit" ]; then
+    printf "${G}  [CLONE] vendor/%s @ %s${N}\n" "$name" "${commit:0:12}"
+  else
+    printf "${Y}  [SKIP] vendor/%s -- pinned install failed${N}\n" "$name"
+  fi
+}
+
 compose_active_rules() {
   mkdir -p "$ACTIVE_RULES_DIR"
   local tmp_file="$ACTIVE_RULES_SRC.tmp.$$"
@@ -142,9 +182,13 @@ EXTERNAL_CODEX_SKILLS=(
   "build-install|https://github.com/miyago9267/build-install.git"
 )
 
+PINNED_EXTERNAL_CODEX_SKILLS=(
+  "reverse-skill-pack|https://github.com/zhaoxuya520/reverse-skill.git|914f74ad7d42d18d983d5842f8156440d9068399"
+)
+
 printf "${Y}=== Codex CLI 設定 Symlink ===${N}\n"
 
-mkdir -p "$CODEX_DST" "$CODEX_DST/skills"
+mkdir -p "$CODEX_DST" "$CODEX_DST/skills" "$CODEX_DST/vendor"
 
 compose_active_rules
 link_item "$ACTIVE_RULES_SRC" "$CODEX_DST/AGENTS.md" "AGENTS.md"
@@ -260,6 +304,12 @@ printf '\n%b--- External Codex Skills ---%b\n' "$Y" "$N"
 for entry in "${EXTERNAL_CODEX_SKILLS[@]}"; do
   IFS='|' read -r name repo <<< "$entry"
   install_git_skill "$name" "$repo"
+done
+
+printf '\n%b--- Pinned External Codex Skills ---%b\n' "$Y" "$N"
+for entry in "${PINNED_EXTERNAL_CODEX_SKILLS[@]}"; do
+  IFS='|' read -r name repo commit <<< "$entry"
+  install_pinned_git_skill "$name" "$repo" "$commit"
 done
 
 printf "${G}=== 完成 ===${N}\n"

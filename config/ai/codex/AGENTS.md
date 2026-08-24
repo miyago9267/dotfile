@@ -86,3 +86,18 @@ isolation, parent-accountability and fresh-context verification boundaries.
 Use the `pilotfish-orchestration` skill when routing or verification requires
 more than direct execution.
 <!-- pilotfish-codex:end -->
+
+## Routing precedence
+
+Routing is semantic rather than a single numeric priority:
+
+1. System, developer, user, root `AGENTS.md`, and shared safety rules remain authoritative.
+2. Pilotfish is always-on orchestration: classify execution mode, enforce
+   approval/security gates, choose roles, integrate work, and verify outcomes.
+3. Event-driven domain skills activate only when their task description matches.
+   `reverse-skill-router` is inactive for ordinary coding, planning, or chat.
+4. After a domain router activates, its selected PRIMARY module handles the
+   domain work. It does not replace Pilotfish or start another top-level router.
+
+Context retrieval skills may run alongside this flow when their own signals
+match; they provide context and do not become the domain PRIMARY route.
