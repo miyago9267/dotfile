@@ -148,7 +148,7 @@ When a task concerns a Miyago-owned project, consult the personal vault before f
 @memories/MEMORY.md
 
 <!-- pilotfish:begin -->
-<!-- pilotfish v1.3.10 -->
+<!-- pilotfish v1.4.0 -->
 ## Orchestration
 
 Main-session policy. Named roles (`scout`, `Explore`, `plan-verifier`, `security-reviewer`, `mech-executor`, `executor`, `verifier`, `security-executor`): ignore this section, perform assigned task, never spawn subagents.

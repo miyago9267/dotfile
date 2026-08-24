@@ -23,7 +23,7 @@
 ## Experience bootstrap
 
 - 新 session 進入有既有 task 的 workspace 後，先執行：
-  `miyago-context-harness sync --runtime codex --cwd "$PWD"`。
+  `agent-workflow session-start --runtime codex --cwd "$PWD"`。
 - 讀取輸出中的 `experience_bundle_path`；只採用與目前 task scope 相符的 confirmed experience。
 - Miyago 明確說「記住」、「這是我的習慣」或「保留這個偏好」時，直接用
   `observe --kind explicit_preference --runtime codex` 記錄單行摘要；不要保存完整對話，也不要要求 Miyago 手動執行指令。

@@ -11,10 +11,12 @@
 - Read `AGENT-ENTRY.md` before routing global Agent behavior, skills, memory,
   harness or workspace-context work.
 - At the beginning of a new session that concerns an existing task, use the
-  shared Context Harness to discover and resume the task before searching
-  project history. Prefer `/Users/miyago/.local/bin/miyago-context-harness`; if
-  it is unavailable, report that the bootstrap is not installed rather than
-  silently falling back to another project or reading all history.
+  installed Factory session entry to discover and resume the task before
+  searching project history: `agent-workflow session-start --runtime <runtime>
+  --cwd "$PWD"`. It first matches the current project scope; Miyago's local
+  installation may provide a configured default task for a workspace-level
+  session. A generic installation without a default must stop clearly rather
+  than silently reading unrelated history.
 - The Context Harness must stop when task selection is ambiguous, scope does
   not match the current directory, or a source crosses the non-entry boundary.
   An explicit `MIYAGO_TASK_ID` or `--task` may select a task across projects.
