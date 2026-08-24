@@ -15,8 +15,9 @@
   searching project history: `agent-workflow session-start --runtime <runtime>
   --cwd "$PWD"`. It first matches the current project scope; Miyago's local
   installation may provide a configured default task for a workspace-level
-  session. A generic installation without a default must stop clearly rather
-  than silently reading unrelated history.
+  session. A generic installation without a default continues as a fresh
+  session; it does not read unrelated history. If resume or experience sync
+  fails, report the warning and continue the current work without that layer.
 - The Context Harness must stop when task selection is ambiguous, scope does
   not match the current directory, or a source crosses the non-entry boundary.
   An explicit `MIYAGO_TASK_ID` or `--task` may select a task across projects.
