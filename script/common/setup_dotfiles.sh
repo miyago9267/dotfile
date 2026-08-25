@@ -20,6 +20,7 @@ link() {
 
 link "$dotfile_dir/config/bash/.bashrc"      "$HOME/.bashrc"
 link "$dotfile_dir/config/zsh/.zshrc"        "$HOME/.zshrc"
+link "$dotfile_dir/config/zsh/.zshenv"        "$HOME/.zshenv"
 link "$dotfile_dir/config/zsh/.zshrc.d"      "$HOME/.zshrc.d"
 link "$dotfile_dir/config/zsh/.p10k.zsh"     "$HOME/.p10k.zsh"
 link "$dotfile_dir/config/zsh/alias.sh"      "$HOME/alias.sh"

@@ -27,7 +27,6 @@ source ~/.zplug/init.zsh
 
 # Zplug plugins
 zplug "romkatv/powerlevel10k", as:theme, depth:1
-zplug 'zplug/zplug', hook-build:'zplug --self-manage'
 zplug "zsh-users/zsh-completions"
 zplug "zsh-users/zsh-history-substring-search"
 zplug "zsh-users/zsh-autosuggestions"
