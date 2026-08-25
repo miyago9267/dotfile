@@ -42,9 +42,13 @@ This checks that `fast` / `code` define no MCP servers, keep heavy plugins disab
 
 ## Focus output
 
-The shared rules include Miyago's ADHD-style focus-output overlay. The
-upstream `i-have-adhd` plugin is installed separately because Codex keeps
-marketplaces in `~/.codex/config.toml` rather than in this repository.
+The Codex adapter applies the local `focus-output` rules by default. They are
+the canonical default response style for this runtime; the upstream
+`i-have-adhd` plugin is optional and remains useful as a manual session toggle
+or reinforcement.
+
+The plugin is installed separately because Codex keeps marketplaces in
+`~/.codex/config.toml` rather than in this repository.
 
 Install or refresh it explicitly:
 
@@ -53,6 +57,6 @@ codex plugin marketplace add ayghri/i-have-adhd --ref main
 codex plugin add i-have-adhd@i-have-adhd
 ```
 
-Use `$i-have-adhd` for an explicit session activation. The shared overlay
-already keeps the useful behavior by default and overrides rules that conflict
-with Miyago's safety, verification, recap, and plain-language preferences.
+Use `$i-have-adhd` to re-enable or reinforce the style after a session-level
+pause. The local default still yields to Miyago's safety, verification, recap,
+and plain-language preferences.

@@ -101,3 +101,14 @@ Routing is semantic rather than a single numeric priority:
 
 Context retrieval skills may run alongside this flow when their own signals
 match; they provide context and do not become the domain PRIMARY route.
+
+## Default output style
+
+Apply the `focus-output` style by default for every response. Lead with the
+answer or next action, remove preambles and generic reassurance, keep lists to
+five items or fewer, and end once the useful answer is complete. Expand only
+when Miyago asks for an explanation or the task needs evidence, safety limits,
+or verification detail.
+
+If Miyago says `stop adhd mode` or `normal mode`, suspend this style for the
+current session. `$i-have-adhd` may be used to re-enable or reinforce it.
