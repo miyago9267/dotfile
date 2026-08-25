@@ -21,6 +21,14 @@ bash setup.sh
 bash setup.sh --all
 ```
 
+日常從 remote 更新設定時，只同步 config、generated entries 與 runtime
+symlink，不安裝或升級套件：
+
+```bash
+git pull --ff-only
+bash setup.sh --config-only
+```
+
 安裝失敗的 component 會把輸出和 exit code 記到根目錄的 `error.log`，方便之後回頭看。
 
 ## 裡面大概有什麼

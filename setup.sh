@@ -1,7 +1,8 @@
 #!/bin/bash
 # Miyago Dotfile 開發環境 playbook
-# 使用方式：bash setup.sh [--all]
+# 使用方式：bash setup.sh [--all|--config-only]
 #   --all  跳過選單，直接安裝全部
+#   --config-only 只同步 dotfiles、AI runtime 設定與 symlink
 
 set -eo pipefail
 
@@ -67,6 +68,10 @@ for _item in "${_ALL_ITEMS[@]}"; do
   fi
 done
 unset _item _platforms
+
+if [ "${1:-}" = "--config-only" ]; then
+  exec bash "$SCRIPT_DIR/update_config.sh"
+fi
 
 TOTAL=${#ITEMS[@]}
 
