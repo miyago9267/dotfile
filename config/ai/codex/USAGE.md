@@ -57,6 +57,8 @@ codex plugin marketplace add ayghri/i-have-adhd --ref main
 codex plugin add i-have-adhd@i-have-adhd
 ```
 
-Use `$i-have-adhd` to re-enable or reinforce the style after a session-level
-pause. The local default still yields to Miyago's safety, verification, recap,
-and plain-language preferences.
+Say `normal mode`, `詳細解說這一回合`, or `暫時詳細說明` for one detailed
+response; the default style resumes automatically afterward. Use
+`stop adhd mode` for a session-level pause, or `$i-have-adhd` to re-enable or
+reinforce the style. The local default still yields to Miyago's safety,
+verification, recap, and plain-language preferences.

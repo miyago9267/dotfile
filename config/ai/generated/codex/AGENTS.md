@@ -412,7 +412,9 @@ five items or fewer, and end once the useful answer is complete. Expand only
 when Miyago asks for an explanation or the task needs evidence, safety limits,
 or verification detail.
 
-If Miyago says `stop adhd mode` or `normal mode`, suspend this style for the
-current session. `$i-have-adhd` may be used to re-enable or reinforce it.
+If Miyago says `normal mode`, `詳細解說這一回合`, or `暫時詳細說明`, suspend
+this style for the next response only, then resume it automatically. If Miyago
+says `stop adhd mode`, suspend it for the current session. `$i-have-adhd` may
+be used to re-enable or reinforce it.
 
 <!-- runtime-adapter:end -->
