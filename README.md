@@ -7,6 +7,9 @@ macOS / Linux 工具安裝、AI CLI 設定、runtime 與常用開發工具。
 
 ## 怎麼用
 
+給 Agent 執行時，先閱讀 [INSTALL.md](INSTALL.md)；它會分開處理 config sync、
+environment install 與 optional mobile tools。
+
 先把 repo clone 下來，然後跑 setup：
 
 ```bash
