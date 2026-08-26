@@ -1,5 +1,8 @@
-# Set up Go environment
-# Priority: use g if available, otherwise try brew, then fallback
+# Set up Go environment only when Go or its version manager exists.
+if command -v go >/dev/null 2>&1 || command -v g >/dev/null 2>&1 \
+  || [ -x "/opt/homebrew/opt/go/libexec/bin/go" ] \
+  || [ -x "/usr/local/opt/go/libexec/bin/go" ] \
+  || [ -x "/usr/local/go/bin/go" ]; then
 
 if alias g >/dev/null 2>&1 && [[ "$(alias g)" == *"git"* ]]; then
   unalias g
@@ -46,3 +49,4 @@ else
 fi
 
 export PATH
+fi

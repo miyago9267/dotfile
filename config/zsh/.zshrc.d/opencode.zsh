@@ -47,9 +47,8 @@ opencode-secrets-sync() {
   fi
 }
 
-opencode-secrets-sync
-
 opencode-harness() {
+  opencode-secrets-sync
   OPENCODE_CONFIG="${OPENCODE_CONFIG:-$HOME/.config/opencode-harness/opencode.json}" \
     OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode-harness}" \
     opencode "$@"
@@ -60,6 +59,7 @@ och() {
 }
 
 opencode-studio() {
+  opencode-secrets-sync
   OPENCODE_CONFIG="$HOME/.config/opencode-studio/opencode.json" \
     OPENCODE_CONFIG_DIR="$HOME/.config/opencode-studio" \
     opencode "$@"

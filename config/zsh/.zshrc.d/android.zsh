@@ -22,7 +22,7 @@ __zshrc_detect_android_home() {
 }
 ANDROID_HOME="$(__zshrc_detect_android_home)"
 unset -f __zshrc_detect_android_home
-if [ -d "$ANDROID_HOME" ]; then
+if [ -x "$ANDROID_HOME/platform-tools/adb" ] || command -v adb >/dev/null 2>&1; then
   for dir in "$ANDROID_HOME/cmdline-tools/latest/bin" "$ANDROID_HOME/platform-tools"; do
     __zshrc_prepend_path_if_dir "$dir"
   done

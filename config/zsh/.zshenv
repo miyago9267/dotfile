@@ -1,5 +1,3 @@
-. "$HOME/.cargo/env"
-
 # Ubuntu WSL runs compinit from /etc/zsh/zshrc before ~/.zshrc.
 case "$(uname -s)" in
   Linux)

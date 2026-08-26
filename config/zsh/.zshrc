@@ -4,17 +4,6 @@
 ##																									##
 ######################################################
 
-# macOS Homebrew 路徑修復
-HOMEBREW_BIN_DIR="/opt/homebrew/bin"
-LEGACY_HOMEBREW_BIN_DIR="/usr/local/bin"
-if [ -d "$HOMEBREW_BIN_DIR" ]; then
-  export PATH="$HOMEBREW_BIN_DIR:$PATH"
-elif [ -d "$LEGACY_HOMEBREW_BIN_DIR" ]; then
-  export PATH="$LEGACY_HOMEBREW_BIN_DIR:$PATH"
-fi
-unset HOMEBREW_BIN_DIR
-unset LEGACY_HOMEBREW_BIN_DIR
-
 export PERL_BADLANG=0
 typeset -i FUNCNEST=1000
 
@@ -105,55 +94,25 @@ if [ -d "$ZSHRC_D" ]; then
     [ -r "$f" ] && . "$f"
   done
 fi
+
+# Load only the platform layer that matches the current Unix environment.
+case "$(uname -s)" in
+  Darwin)
+    ZSH_PLATFORM="darwin"
+    ;;
+  Linux)
+    if grep -qi microsoft /proc/version 2>/dev/null; then
+      ZSH_PLATFORM="wsl"
+    else
+      ZSH_PLATFORM="linux"
+    fi
+    ;;
+esac
+if [ -n "${ZSH_PLATFORM:-}" ] && [ -r "$ZSHRC_D/platform/$ZSH_PLATFORM.zsh" ]; then
+  . "$ZSHRC_D/platform/$ZSH_PLATFORM.zsh"
+fi
+unset ZSH_PLATFORM
 unset -f __zshrc_prepend_path 2>/dev/null
 unset -f __zshrc_prepend_path_if_dir 2>/dev/null
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
-# agent-skills updater
-alias agent-update='bash /Users/miyago/Project/Code/ITRD/General/agent-skills/update.sh'
-
-# skill-run shorthand
-alias ask='skill-run'
-
-# bun completions
-[ -s "/Users/miyago/.bun/_bun" ] && source "/Users/miyago/.bun/_bun"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-
-# GitLab token helper (multi-instance, reads from git config)
-gitlab_token() {
-  local host=$(git remote get-url origin 2>/dev/null | sed 's|https\?://\([^/]*\).*|\1|')
-  git config --get gitlab."https://${host}".token
-}
-
-. "$HOME/.local/bin/env"
-
-
-# Added by Antigravity CLI installer
-export PATH="/Users/miyago/.local/bin:$PATH"
-
-# >>> tokenbar-remote-sync exit hook >>>
-ssh() {
-    command ssh "$@"
-    local rc=$? arg skip=0 host=""
-    for arg in "$@"; do
-        if (( skip )); then skip=0; continue; fi
-        case "$arg" in
-            -[bcDEeFIiJLlmOopQRSWw]) skip=1 ;;
-            -*) ;;
-            *) host="${arg#*@}"; break ;;
-        esac
-    done
-    if [ -n "$host" ]; then
-        ("$HOME/.local/bin/tokenbar-remote-sync.sh" "$host" \
-            >> "$HOME/Library/Logs/tokenbar-remote-sync.log" 2>&1 &)
-    fi
-    return $rc
-}
-# <<< tokenbar-remote-sync exit hook <<<
-
-# opencode
-export PATH="$HOME/.opencode/bin:$PATH"
