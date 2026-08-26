@@ -15,10 +15,25 @@ cd dotfile
 bash setup.sh
 ```
 
-想全部跑完可以用：
+只安裝環境（不碰 config symlink）可以用：
+
+```bash
+bash setup.sh --environment
+```
+
+一般 `bash setup.sh` 只預選 config；環境項目會列在同一個 TUI 中，但不會自動勾選。
+
+若要執行所有非 optional 項目：
 
 ```bash
 bash setup.sh --all
+```
+
+Android SDK、Flutter、FVM 屬於 optional mobile 工具，不會被 `--all` 安裝；真的需要
+時才使用：
+
+```bash
+bash setup.sh --everything
 ```
 
 日常從 remote 更新設定時，只同步 config、generated entries 與 runtime
@@ -28,6 +43,10 @@ symlink，不安裝或升級套件：
 git pull --ff-only
 bash setup.sh --config-only
 ```
+
+互動式安裝會優先使用已安裝的 `fzf` 提供搜尋、多選與 checkbox 操作；沒有
+`fzf` 時會使用內建零依賴選單。`Space` 切換、`Ctrl-A` 全選、`Ctrl-N` 清除、
+`Enter` 套用、`Esc` 取消。非互動環境請使用 `--all` 或 `--config-only`。
 
 安裝失敗的 component 會把輸出和 exit code 記到根目錄的 `error.log`，方便之後回頭看。
 

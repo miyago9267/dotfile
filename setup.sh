@@ -1,7 +1,9 @@
 #!/bin/bash
 # Miyago Dotfile 開發環境 playbook
-# 使用方式：bash setup.sh [--all|--config-only]
-#   --all  跳過選單，直接安裝全部
+# 使用方式：bash setup.sh [--environment|--all|--everything|--config-only|--help]
+#   --environment 只顯示環境安裝項目
+#   --all         安裝所有非 optional 項目
+#   --everything  安裝包含 optional 項目的全部項目
 #   --config-only 只同步 dotfiles、AI runtime 設定與 symlink
 
 set -eo pipefail
@@ -23,51 +25,83 @@ CURRENT_RUN_LOG=""
 # -- 平台偵測 --
 . "$SCRIPT_DIR/_platform.sh"
 
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+  cat <<'HELP'
+Usage: bash setup.sh [--environment|--all|--everything|--config-only|--help]
+
+  (default)       Interactive config selection (environment items visible)
+  --environment   Interactive environment-install selection only
+  --all           Run every non-optional platform-supported item
+  --everything    Run every platform-supported item, including optional mobile tools
+  --config-only   Sync repository-managed config and runtime symlinks only
+  --help          Show this help
+
+Interactive keys:
+  Space          Toggle item
+  Ctrl-A / Ctrl-N Select all / clear all
+  Enter          Apply selection
+  Esc            Cancel
+HELP
+  exit 0
+fi
+
 # -- 安裝項目定義 --
-# 格式：腳本檔名|顯示名稱|分類|預設勾選(1/0)|平台標籤
+# 格式：腳本檔名|顯示名稱|分類|config預設|environment預設|模式|平台標籤|optional
 _ALL_ITEMS=(
-  "dependencis.sh|基礎依賴套件 (Homebrew 等)|基礎|1|all"
-  "setup_dotfiles.sh|Dotfiles 連結 (symlink)|基礎|1|all"
-  "setup_zsh.sh|Zsh 設定|Shell|1|darwin linux"
-  "setup_vim.sh|Vim 設定|編輯器|1|all"
-  "setup_neovim.sh|Neovim 設定|編輯器|1|darwin linux:apt linux:pacman"
-  "setup_tmux.sh|Tmux 設定|終端|1|darwin linux:apt linux:pacman"
-  "setup_fonts.sh|字型安裝|基礎|1|all"
-  "setup_claude.sh|Claude Code 設定 (symlink)|工具|1|all"
-  "setup_codex.sh|Codex CLI 設定 (symlink)|工具|1|all"
-  "setup_gemini.sh|Gemini CLI 設定 (symlink)|工具|1|all"
-  "install_claude.sh|Claude Code CLI|工具|0|all"
-  "install_gemini.sh|Gemini CLI (official npm)|工具|0|darwin linux"
-  "install_codex.sh|Codex CLI (official installer)|工具|0|darwin linux"
-  "install_sesh.sh|sesh (跨 CC/codex session finder)|工具|0|darwin linux:apt linux:pacman"
-  "install_gh.sh|Git CLI 工具 (gh + glab)|工具|0|darwin linux:apt linux:pacman"
-  "install_remora_proxy.sh|Remora + Calico Claude + Proxy|工具|0|darwin"
-  "install_yazi.sh|Yazi 檔案管理器 (+ zoxide, bat)|工具|0|darwin linux:apt linux:pacman"
-  "install_node.sh|Node.js 生態 (nvm + v24 + npm/yarn/pnpm)|語言|0|all"
-  "install_bun.sh|Bun|語言|0|all"
-  "install_golang.sh|Go (g 版本管理)|語言|0|all"
-  "install_python.sh|Python (uv)|語言|0|all"
-  "install_rust.sh|Rust|語言|0|all"
-  "install_php.sh|PHP 8.3|語言|0|darwin linux:apt linux:pacman"
-  "install_flutter.sh|Flutter|行動端|0|all"
-  "install_fvm.sh|FVM (Flutter 版本管理)|行動端|0|all"
-  "install_android_sdk.sh|Android SDK|行動端|0|darwin linux"
-  "install_gcloud.sh|Google Cloud SDK|雲端|0|all"
-  "install_kubectl.sh|kubectl|雲端|0|darwin linux:apt linux:pacman"
-  "install_argocd.sh|Argo CD CLI|雲端|0|all"
-  "install_sops.sh|age + sops (Secret 管理)|安全|0|darwin linux:apt linux:pacman"
-  "install_locale.sh|Locale 設定|基礎|0|linux"
+  "dependencis.sh|基礎依賴套件 (Homebrew 等)|基礎|0|1|environment|all|0"
+  "setup_dotfiles.sh|Dotfiles 連結 (symlink)|基礎|1|0|config|all|0"
+  "setup_zsh.sh|Zsh / Zplug 環境|Shell|0|1|environment|darwin linux|0"
+  "setup_vim.sh|Vim 設定|編輯器|1|0|config|all|0"
+  "setup_neovim.sh|Neovim 環境與設定|編輯器|0|1|environment|darwin linux:apt linux:pacman|0"
+  "setup_tmux.sh|Tmux 環境與設定|終端|0|1|environment|darwin linux:apt linux:pacman|0"
+  "setup_fonts.sh|字型安裝|基礎|0|0|environment|all|0"
+  "setup_claude.sh|Claude Code 設定 (symlink)|工具|1|0|config|all|0"
+  "setup_codex.sh|Codex CLI 設定 (symlink)|工具|1|0|config|all|0"
+  "setup_gemini.sh|Gemini CLI 設定 (symlink)|工具|1|0|config|all|0"
+  "install_claude.sh|Claude Code CLI|工具|0|0|environment|all|0"
+  "install_gemini.sh|Gemini CLI (official npm)|工具|0|0|environment|darwin linux|0"
+  "install_codex.sh|Codex CLI (official installer)|工具|0|0|environment|darwin linux|0"
+  "install_sesh.sh|sesh (跨 CC/codex session finder)|工具|0|0|environment|darwin linux:apt linux:pacman|0"
+  "install_gh.sh|Git CLI 工具 (gh + glab)|工具|0|0|environment|darwin linux:apt linux:pacman|0"
+  "install_remora_proxy.sh|Remora + Calico Claude + Proxy|工具|0|0|environment|darwin|0"
+  "install_yazi.sh|Yazi 檔案管理器 (+ zoxide, bat)|工具|0|0|environment|darwin linux:apt linux:pacman|0"
+  "install_node.sh|Node.js 生態 (nvm + v24 + npm/yarn/pnpm)|語言|0|0|environment|all|0"
+  "install_bun.sh|Bun|語言|0|0|environment|all|0"
+  "install_golang.sh|Go (g 版本管理)|語言|0|0|environment|all|0"
+  "install_python.sh|Python (uv)|語言|0|0|environment|all|0"
+  "install_rust.sh|Rust|語言|0|0|environment|all|0"
+  "install_php.sh|PHP 8.3|語言|0|0|environment|darwin linux:apt linux:pacman|0"
+  "install_flutter.sh|Flutter|行動端|0|0|environment|all|1"
+  "install_fvm.sh|FVM (Flutter 版本管理)|行動端|0|0|environment|all|1"
+  "install_android_sdk.sh|Android SDK|行動端|0|0|environment|darwin linux|1"
+  "install_gcloud.sh|Google Cloud SDK|雲端|0|0|environment|all|0"
+  "install_kubectl.sh|kubectl|雲端|0|0|environment|darwin linux:apt linux:pacman|0"
+  "install_argocd.sh|Argo CD CLI|雲端|0|0|environment|all|0"
+  "install_sops.sh|age + sops (Secret 管理)|安全|0|0|environment|darwin linux:apt linux:pacman|0"
+  "install_locale.sh|Locale 設定|基礎|0|0|environment|linux|0"
 )
 
 # -- 依平台過濾 --
 ITEMS=()
 for _item in "${_ALL_ITEMS[@]}"; do
-  IFS='|' read -r _ _ _ _ _platforms <<< "$_item"
+  IFS='|' read -r _ _ _ _ _ _mode _platforms _optional <<< "$_item"
   if platform_supported $_platforms; then
     ITEMS+=("$_item")
   fi
 done
 unset _item _platforms
+
+SETUP_MODE="config"
+if [ "${1:-}" = "--environment" ]; then
+  SETUP_MODE="environment"
+  FILTERED_ITEMS=()
+  for _item in "${ITEMS[@]}"; do
+    IFS='|' read -r _ _ _ _ _ _mode _ _ <<< "$_item"
+    [ "$_mode" = "environment" ] && FILTERED_ITEMS+=("$_item")
+  done
+  ITEMS=("${FILTERED_ITEMS[@]}")
+  unset _item _mode FILTERED_ITEMS
+fi
 
 if [ "${1:-}" = "--config-only" ]; then
   exec bash "$SCRIPT_DIR/update_config.sh"
@@ -78,20 +112,27 @@ TOTAL=${#ITEMS[@]}
 # -- 勾選狀態陣列 --
 declare -a SELECTED
 for i in $(seq 0 $((TOTAL - 1))); do
-  IFS='|' read -r _ _ _ default _ <<< "${ITEMS[$i]}"
-  SELECTED[$i]=$default
+  IFS='|' read -r _ _ _ config_default environment_default _ _ _ <<< "${ITEMS[$i]}"
+  if [ "$SETUP_MODE" = "environment" ]; then
+    SELECTED[$i]=$environment_default
+  else
+    SELECTED[$i]=$config_default
+  fi
 done
 
 # -- 工具函式 --
 get_field() {
   local idx=$1 field=$2
-  IFS='|' read -r f1 f2 f3 f4 f5 <<< "${ITEMS[$idx]}"
+  IFS='|' read -r f1 f2 f3 f4 f5 f6 f7 f8 <<< "${ITEMS[$idx]}"
   case $field in
     script) echo "$f1" ;;
     name)   echo "$f2" ;;
     cat)    echo "$f3" ;;
     default) echo "$f4" ;;
-    platform) echo "$f5" ;;
+    environment_default) echo "$f5" ;;
+    mode)   echo "$f6" ;;
+    platform) echo "$f7" ;;
+    optional) echo "$f8" ;;
   esac
 }
 
@@ -202,11 +243,53 @@ print_menu() {
   printf "\033[J"
 }
 
+select_with_fzf() {
+  local action="" idx name cat default status
+  local output
+
+  for idx in $(seq 0 $((TOTAL - 1))); do
+    IFS='|' read -r _ name cat _config_default _environment_default _mode _platform optional <<< "${ITEMS[$idx]}"
+    if [ "${SELECTED[$idx]}" = "1" ]; then
+      [ -n "$action" ] && action+="+"
+      action+="toggle"
+    fi
+    if [ "$idx" -lt $((TOTAL - 1)) ]; then
+      [ -n "$action" ] && action+="+"
+      action+="down"
+    fi
+  done
+
+  output=$(for idx in $(seq 0 $((TOTAL - 1))); do
+    IFS='|' read -r _ name cat _config_default _environment_default _mode _platform optional <<< "${ITEMS[$idx]}"
+    [ "$optional" = "1" ] && name="[optional] $name"
+    printf '%s\t[%s] %s\n' "$idx" "$cat" "$name"
+  done | fzf --multi \
+    --height=100% --layout=reverse --border \
+    --delimiter=$'\t' --with-nth=2 \
+    --marker='✓ ' --pointer='▶ ' --prompt='安裝 > ' \
+    --header='Space 選取  Ctrl-A 全選  Ctrl-N 清除  Enter 套用  Esc 取消' \
+    --bind='space:toggle+down' \
+    --bind='ctrl-a:select-all' \
+    --bind='ctrl-n:deselect-all' \
+    --bind="load:$action")
+  status=$?
+
+  [ "$status" -eq 0 ] || return "$status"
+
+  for idx in $(seq 0 $((TOTAL - 1))); do
+    SELECTED[$idx]=0
+  done
+  while IFS=$'\t' read -r idx _; do
+    [ -n "$idx" ] && SELECTED[$idx]=1
+  done <<< "$output"
+}
+
 cleanup() {
   tput cnorm 2>/dev/null || true
   tput rmcup 2>/dev/null || true
   stty sane 2>/dev/null || true
   [ -n "$CURRENT_RUN_LOG" ] && rm -f "$CURRENT_RUN_LOG"
+  return 0
 }
 
 record_failure() {
@@ -227,24 +310,45 @@ record_failure() {
 
 trap cleanup EXIT
 
-# -- 全部安裝模式 --
-if [ "${1:-}" = "--all" ]; then
-  printf "${Y}=== 全部安裝模式 ===${N}\n\n"
+# -- 非互動模式 --
+if [ "${1:-}" = "--all" ] || [ "${1:-}" = "--everything" ]; then
+  printf "${Y}=== 全部環境與設定模式 ===${N}\n\n"
   for i in $(seq 0 $((TOTAL - 1))); do
-    SELECTED[$i]=1
+    optional=$(get_field "$i" optional)
+    if [ "${1:-}" = "--everything" ] || [ "$optional" != "1" ]; then
+      SELECTED[$i]=1
+    else
+      SELECTED[$i]=0
+    fi
   done
 else
   # -- 互動式選單 --
+  if [ ! -t 0 ] || [ ! -t 1 ]; then
+    printf '%s\n' 'Interactive setup requires a TTY. Use --all or --config-only.' >&2
+    exit 2
+  fi
+
   current=0
   VIEW_START=0
 
-  # 隱藏游標、設定 raw mode
-  tput civis 2>/dev/null || true
-  # 進入迴圈前，先完整清空一次畫面
-  tput smcup 2>/dev/null || true
-  clear
+  if command -v fzf >/dev/null 2>&1; then
+    fzf_status=0
+    select_with_fzf || fzf_status=$?
+    if [ "$fzf_status" -eq 0 ]; then
+      :
+    elif [ "$fzf_status" -eq 130 ]; then
+      printf "\n${Y}已取消安裝${N}\n"
+      exit 0
+    fi
+  fi
 
-  while true; do
+  if [ "${fzf_status:-1}" -ne 0 ]; then
+    # 隱藏游標、設定 raw mode
+    tput civis 2>/dev/null || true
+    tput smcup 2>/dev/null || true
+    clear
+
+    while true; do
     # 將游標移至左上角原地覆蓋；清空交給逐行 \033[K 與 print_menu 結尾的 \033[J，避免每幀全清造成閃爍
     tput cup 0 0 2>/dev/null || printf "\033[H"
 
@@ -275,12 +379,12 @@ else
           SELECTED[$current]=1
         fi
         ;;
-      # j/k 也可以（Miyago 習慣 j=上 k=下）
+      # vim-style navigation: j=down, k=up
       'j')
-        current=$(( (current - 1 + TOTAL) % TOTAL ))
+        current=$(( (current + 1) % TOTAL ))
         ;;
       'k')
-        current=$(( (current + 1) % TOTAL ))
+        current=$(( (current - 1 + TOTAL) % TOTAL ))
         ;;
       # a: 全選
       'a')
@@ -302,11 +406,11 @@ else
         exit 0
         ;;
     esac
-  done
+    done
 
-  # 恢復游標
-  tput cnorm 2>/dev/null || true
-  tput rmcup 2>/dev/null || true
+    tput cnorm 2>/dev/null || true
+    tput rmcup 2>/dev/null || true
+  fi
 fi
 
 # -- 執行安裝 --

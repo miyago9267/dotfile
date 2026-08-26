@@ -5,7 +5,10 @@
 #requires -Version 7.0
 
 param(
-    [switch]$All
+    [switch]$All,
+    [switch]$Everything,
+    [switch]$Environment,
+    [switch]$ConfigOnly
 )
 
 $ErrorActionPreference = 'Stop'
@@ -25,29 +28,35 @@ function Write-ColorLine {
 }
 
 # -- 安裝項目定義 --
-# 格式：腳本檔名 | 顯示名稱 | 分類 | 預設勾選
+# config / environment 分離；optional 項目不會被 --All 帶入。
 $Items = @(
-    @{ Script = 'install_scoop.ps1';    Name = 'Scoop 套件管理器';              Category = '基礎'; Default = $true }
-    @{ Script = 'setup_dotfiles.ps1';   Name = 'Dotfiles 連結 (symlink)';      Category = '基礎'; Default = $true }
-    @{ Script = 'install_fonts.ps1';    Name = 'Nerd Fonts 字型';              Category = '基礎'; Default = $true }
-    @{ Script = 'install_ohmyposh.ps1'; Name = 'oh-my-posh 提示字元';          Category = 'Shell'; Default = $true }
-    @{ Script = 'install_neovim.ps1';   Name = 'Neovim + 依賴';               Category = '編輯器'; Default = $true }
-    @{ Script = 'setup_neovim.ps1';     Name = 'Neovim 配置連結';              Category = '編輯器'; Default = $true }
-    @{ Script = 'setup_claude.ps1';     Name = 'Claude Code 設定 (symlink)';   Category = '工具'; Default = $true }
-    @{ Script = 'install_node.ps1';     Name = 'Node.js (fnm)';               Category = '語言'; Default = $false }
-    @{ Script = 'install_python.ps1';   Name = 'Python (uv + pyenv-win)';     Category = '語言'; Default = $false }
-    @{ Script = 'install_go.ps1';       Name = 'Go';                           Category = '語言'; Default = $false }
-    @{ Script = 'install_rust.ps1';     Name = 'Rust (rustup)';               Category = '語言'; Default = $false }
-    @{ Script = 'install_bun.ps1';      Name = 'Bun';                          Category = '語言'; Default = $false }
-    @{ Script = 'install_gcloud.ps1';   Name = 'Google Cloud SDK';             Category = '雲端'; Default = $false }
-    @{ Script = 'install_kubectl.ps1';  Name = 'kubectl';                      Category = '雲端'; Default = $false }
-    @{ Script = 'install_argocd.ps1';   Name = 'Argo CD CLI';                 Category = '雲端'; Default = $false }
-    @{ Script = 'install_gh.ps1';       Name = 'GitHub CLI (gh)';             Category = '工具'; Default = $false }
+    @{ Script = 'install_scoop.ps1';    Name = 'Scoop 套件管理器';           Category = '基礎'; ConfigDefault = $false; EnvironmentDefault = $true;  Mode = 'environment'; Optional = $false }
+    @{ Script = 'setup_dotfiles.ps1';   Name = 'Dotfiles 連結 (symlink)';     Category = '基礎'; ConfigDefault = $true;  EnvironmentDefault = $false; Mode = 'config'; Optional = $false }
+    @{ Script = 'install_fonts.ps1';    Name = 'Nerd Fonts 字型';             Category = '基礎'; ConfigDefault = $false; EnvironmentDefault = $false; Mode = 'environment'; Optional = $false }
+    @{ Script = 'install_ohmyposh.ps1'; Name = 'oh-my-posh 提示字元';         Category = 'Shell'; ConfigDefault = $false; EnvironmentDefault = $false; Mode = 'environment'; Optional = $false }
+    @{ Script = 'install_neovim.ps1';   Name = 'Neovim + 依賴';                Category = '編輯器'; ConfigDefault = $false; EnvironmentDefault = $true; Mode = 'environment'; Optional = $false }
+    @{ Script = 'setup_neovim.ps1';     Name = 'Neovim 配置連結';              Category = '編輯器'; ConfigDefault = $true;  EnvironmentDefault = $false; Mode = 'config'; Optional = $false }
+    @{ Script = 'setup_claude.ps1';     Name = 'Claude Code 設定 (symlink)';   Category = '工具'; ConfigDefault = $true;  EnvironmentDefault = $false; Mode = 'config'; Optional = $false }
+    @{ Script = 'install_node.ps1';     Name = 'Node.js (fnm)';                Category = '語言'; ConfigDefault = $false; EnvironmentDefault = $false; Mode = 'environment'; Optional = $false }
+    @{ Script = 'install_python.ps1';   Name = 'Python (uv + pyenv-win)';      Category = '語言'; ConfigDefault = $false; EnvironmentDefault = $false; Mode = 'environment'; Optional = $false }
+    @{ Script = 'install_go.ps1';       Name = 'Go';                           Category = '語言'; ConfigDefault = $false; EnvironmentDefault = $false; Mode = 'environment'; Optional = $false }
+    @{ Script = 'install_rust.ps1';     Name = 'Rust (rustup)';                Category = '語言'; ConfigDefault = $false; EnvironmentDefault = $false; Mode = 'environment'; Optional = $false }
+    @{ Script = 'install_bun.ps1';      Name = 'Bun';                          Category = '語言'; ConfigDefault = $false; EnvironmentDefault = $false; Mode = 'environment'; Optional = $false }
+    @{ Script = 'install_gcloud.ps1';   Name = 'Google Cloud SDK';             Category = '雲端'; ConfigDefault = $false; EnvironmentDefault = $false; Mode = 'environment'; Optional = $false }
+    @{ Script = 'install_kubectl.ps1';  Name = 'kubectl';                      Category = '雲端'; ConfigDefault = $false; EnvironmentDefault = $false; Mode = 'environment'; Optional = $false }
+    @{ Script = 'install_argocd.ps1';   Name = 'Argo CD CLI';                 Category = '雲端'; ConfigDefault = $false; EnvironmentDefault = $false; Mode = 'environment'; Optional = $false }
+    @{ Script = 'install_gh.ps1';       Name = 'GitHub CLI (gh)';              Category = '工具'; ConfigDefault = $false; EnvironmentDefault = $false; Mode = 'environment'; Optional = $false }
 )
+
+$SetupMode = if ($Environment) { 'environment' } else { 'config' }
+if ($Environment -or $ConfigOnly) {
+    $wantedMode = if ($Environment) { 'environment' } else { 'config' }
+    $Items = @($Items | Where-Object { $_.Mode -eq $wantedMode })
+}
 
 $Selected = @{}
 for ($i = 0; $i -lt $Items.Count; $i++) {
-    $Selected[$i] = $Items[$i].Default
+    $Selected[$i] = if ($SetupMode -eq 'environment') { $Items[$i].EnvironmentDefault } else { $Items[$i].ConfigDefault }
 }
 
 # -- Banner --
@@ -68,19 +77,74 @@ function Show-Banner {
     Write-Host ""
 }
 
+function Select-ItemsWithFzf {
+    if (-not (Get-Command fzf -ErrorAction SilentlyContinue)) {
+        return 1
+    }
+
+    $lines = @()
+    $actions = [System.Collections.Generic.List[string]]::new()
+    for ($i = 0; $i -lt $Items.Count; $i++) {
+        $item = $Items[$i]
+        $lines += "$i`t[$($item.Category)] $($item.Name)"
+        if ($Selected[$i]) {
+            [void]$actions.Add('toggle')
+        }
+        if ($i -lt ($Items.Count - 1)) {
+            [void]$actions.Add('down')
+        }
+    }
+
+    $fzfArgs = @(
+        '--multi', '--height=100%', '--layout=reverse', '--border',
+        "--delimiter=`t", '--with-nth=2', '--marker=✓ ', '--pointer=▶ ',
+        '--prompt=安裝 > ',
+        '--header=Space 選取  Ctrl-A 全選  Ctrl-N 清除  Enter 套用  Esc 取消',
+        '--bind=space:toggle+down', '--bind=ctrl-a:select-all',
+        '--bind=ctrl-n:deselect-all', "--bind=load:$($actions -join '+')"
+    )
+
+    $selectedLines = @($lines | & fzf @fzfArgs)
+    $status = $LASTEXITCODE
+    if ($status -ne 0) {
+        return $status
+    }
+
+    for ($i = 0; $i -lt $Items.Count; $i++) {
+        $Selected[$i] = $false
+    }
+    foreach ($line in $selectedLines) {
+        if ($line -match '^(\d+)\t') {
+            $Selected[[int]$Matches[1]] = $true
+        }
+    }
+    return 0
+}
+
 # -- 全部安裝模式 --
-if ($All) {
+if ($All -or $Everything -or $ConfigOnly) {
     Show-Banner
     Write-ColorLine "=== 全部安裝模式 ===" Yellow
     Write-Host ""
     for ($i = 0; $i -lt $Items.Count; $i++) {
-        $Selected[$i] = $true
+        $Selected[$i] = $Everything -or -not $Items[$i].Optional
     }
 } else {
-    # -- 互動式選單 --
-    $current = 0
+    if ([Console]::IsInputRedirected -or [Console]::IsOutputRedirected) {
+        throw 'Interactive setup requires a TTY. Use -All instead.'
+    }
 
-    while ($true) {
+    $fzfStatus = Select-ItemsWithFzf
+    if ($fzfStatus -eq 130) {
+        Write-ColorLine "`n  已取消安裝" Yellow
+        return
+    }
+
+    if ($fzfStatus -ne 0) {
+        # -- 零依賴 fallback 互動式選單 --
+        $current = 0
+
+        while ($true) {
         Clear-Host
         Show-Banner
 
@@ -139,7 +203,8 @@ if ($All) {
             }
         }
 
-        if ($key.Key -eq 'Enter') { break }
+            if ($key.Key -eq 'Enter') { break }
+        }
     }
 }
 
