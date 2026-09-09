@@ -1,5 +1,8 @@
 # OpenCode Studio Runtime Rules -- Miyago
 
+> Shared identity, safety, communication, and engineering rules come from
+> `~/.config/miyago-agent/AGENTS.md`. This file only defines Studio behavior.
+
 ## Role
 
 - `opencode-studio` / `ocstudio` is the explicit creative and game-engine harness.
