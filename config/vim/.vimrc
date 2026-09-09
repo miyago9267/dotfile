@@ -1,3 +1,13 @@
+" Neovim loads this file for the shared base only. Its plugin and mapping
+" layer belongs to the Vim fallback below.
+let s:shared_root = fnamemodify(resolve(expand('<sfile>:p')), ':h')
+execute 'source ' . fnameescape(s:shared_root . '/base.vim')
+unlet s:shared_root
+
+if has('nvim')
+  finish
+endif
+
 " =====================
 "   Plugin Section
 " =====================
@@ -47,66 +57,19 @@ Plug 'sainnhe/edge'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 
-" NeoVim only plugins
-" if has('nvim')
-"   Plug 'neoclide/coc.nvim', {'branch': 'master'}
-" endif
-
 call plug#end()
 
 " =====================
-"   General Settings
+"   Vim-only Settings
 " =====================
-filetype plugin indent on
-
-" global setting
-
-set nu
-set ai
-set nowrap
-set mouse=a
-set ruler cursorline
-set scrolloff=5
-set tabstop=4
-set shiftwidth=4
-set softtabstop=4
-set expandtab
-set autoindent
-set smartindent
 set cindent
-set noshowmode
-set showcmd
-set encoding=utf-8
-set clipboard=unnamed
-set fileencodings=utf-8,big5,euc-jp,euc-kr,latin1
-set fileformat=unix
-set hlsearch
-set incsearch
 set guifont=Uni2-Terminus16
 set laststatus=2
-set expandtab smarttab
-set wildmenu
-set title
-set cmdheight=2
 set showtabline=2
-set updatetime=300
-set shortmess+=c
-set whichwrap+=<,>,[,]
-set signcolumn=yes
-set splitbelow splitright
-set shell=/bin/zsh
+set smarttab
 set t_Co=256
-" set paste
 let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
 let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
-
-syntax enable
-syntax on
-
-
-if has('termguicolors')
-    set termguicolors
-endif
 
 " nvim hahapeeyen
 if has('nvim')
@@ -187,16 +150,6 @@ let g:indentLine_bufNameExclude=['_.*', 'NERD_tree.*']
 " let g:syntastic_cpp_compiler = 'g++'
 " let g:syntastic_cpp_compiler_options = ' -std=c++2a --stdlib=libc++'
 
-
-" =====================
-"   CoC.nvim (Neovim only)
-" =====================
-" if has('nvim')
-"  let g:coc_disable_startup_warning = 1
-"  if filereadable(expand('~/.config/nvim/coc-config.vim'))
-"    execute 'so ~/.config/nvim/coc-config.vim'
-"  endif
-"endif
 
 " NerdTree settings 
 nnoremap <silent> <F4> :NERDTree<CR>
@@ -434,7 +387,7 @@ let g:vim_vue_plugin_highlight_vue_attr=1
 let g:vim_vue_plugin_highlight_vue_keyword=1
 
 
-" coc.nvim 補全選單設置
+" Insert completion fallback
 " Enter 確認補全選項
 " inoremap <silent><expr> <CR> pumvisible() ? coc#_select_confirm()
 "                              \: \<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
@@ -477,9 +430,6 @@ command Wq wq
 command WQ wq
 
 "
-" 強制 Q 為強制退出，不啟動 Ex 模式
-silent! unmap QQ
-nnoremap Q :q!<CR>
 nnoremap <F1> :call Change_Background()<CR>
 nnoremap <F3> :set nu!<BAR>set nonu?<CR>
 nnoremap <F4> :NERDTreeToggle<CR>
@@ -554,6 +504,7 @@ let mapleader=" "
 nnoremap <leader>rr :%s/<C-r><C-w>//g<Left><Left>
 " F12 (Go to definition) 替代 (原生 vim 跳轉)
 nnoremap <leader>gd <C-]>
+nnoremap <F12> <C-]>
 
 " Sudo save when forgot to use sudo
 " Use :W! to save with sudo
