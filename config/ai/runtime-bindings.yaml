@@ -125,6 +125,9 @@ runtimes:
       adapter_load: generate
       generated_entry: /Users/miyago/.codex/AGENTS.md
       entry_mode: link
+      orca_managed_target: "/Users/miyago/Library/Application Support/orca/codex-runtime-home/home"
+      orca_entry_mode: link
+      orca_shared_target: "/Users/miyago/Library/Application Support/orca/codex-runtime-home/home/AGENTS.shared.md"
     evidence:
       - /Users/miyago/dotfile/script/common/setup_codex.sh
       - /Users/miyago/dotfile/config/ai/codex/AGENTS.md
@@ -136,7 +139,7 @@ runtimes:
       event: UserPromptSubmit
       status: phase_1_active
     notes:
-      - "Current setup links the Codex adapter directly."
+      - "Current setup links the generated Codex entry to both ~/.codex and Orca's Codex-only managed home."
       - "The Codex UserPromptSubmit hook captures only explicit preference markers; it does not persist raw prompts."
       - "Target keeps an independently inspectable generated Codex entry and forbids Codex-to-other-runtime references."
 

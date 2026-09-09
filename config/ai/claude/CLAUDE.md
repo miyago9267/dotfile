@@ -1,28 +1,16 @@
-# Global Rules -- Miyago
+# Claude Runtime Adapter -- Miyago
 
 @AGENTS.md
 
-> Cross-runtime persona and hard rules are loaded above from the canonical
-> `config/ai/AGENTS.md` source.
-> Claude persona is injected by the SessionStart hook; this file holds Claude-runtime workflow only.
-> Instructions are English to minimize token cost; always reply in Traditional Chinese per persona rules.
-
-## Language Protocol
-
-- Miyago types prompts in Chinese; treat them exactly as if issued in English — same precision, no fidelity loss. Think and reason in English.
-- Replies to Miyago: Traditional Chinese (persona rule). Everything else machine-recycled is English to avoid recurring token tax: `.ai/` files (CURRENT/HANDOFF/changelog/lessons/snapshots), `docs/specs/` content, commit messages, subagent prompts, skill/agent frontmatter.
+> Shared identity, communication, truthfulness, safety, and general engineering
+> rules are loaded through `@AGENTS.md`. This file holds Claude-runtime workflow
+> only.
 
 ## Runtime Role
 
 - Claude leads: planning, specs, workflow orchestration, docs, review framing, handoffs, and small well-scoped patches.
 - Not the heavy-coding runtime: don't default to large multi-file reimplementations.
 - Prefer Claude-native commands, hooks, memories, and the Scripts CLI; don't assume Codex/Gemini workflows apply here.
-
-## Autonomy
-
-- Decide yourself: planning, spec-first, task tracking, session reconstruction, execution-primitive choice (Workflow / Agent / background / wake), hook/skill/subagent routing.
-- Recommend only — Miyago decides: permission mode, auto mode, schedule/loop, remote/web/desktop sessions, worktree, sandbox, governance settings.
-- Before asking Miyago: exhaust local search, spec, memory/rules, and tool help first. Lazy clarification is forbidden.
 
 ## Subagents
 
@@ -36,18 +24,6 @@
 - Before each Agent/Workflow call, establish `scope | stop condition | max
   children | output cap`. If any field is vague, do the smallest direct search
   instead. Stop fan-out after the first result satisfying the stop condition.
-
-## Scope Lock & Output Budget
-
-- Start each task with one sentence for **goal**, a short **in-scope** list,
-  and a **stop condition**. Keep them stable; findings are not new
-  requirements.
-- Adjacent refactors, cleanup, docs, dependency changes, and “while here”
-  improvements are follow-ups. Do not perform them unless the requested result
-  would otherwise be incorrect or unsafe; state why before expanding.
-- Default visible reply: at most 250 words or 6 bullets. Omit process diaries,
-  repeated context, speculative alternatives, and raw tool/agent transcripts.
-  Preserve result, evidence, uncertainty, changed paths, and verification.
 
 ## Think-First & Effort Routing
 
@@ -126,29 +102,12 @@ All ops via `bash ~/.claude/scripts/<cmd>.sh`.
 - Spec layer (always committed) `docs/specs/<slug>/`: `SPEC.md` (what/why/ADR; update on design change), `TASKS.md` (current batch checkboxes; update per step), `TESTS.md` (EARS acceptance; update on design change), `PROGRESS.md` (phase tracking; update per phase), `archive/`. Templates in `docs/specs/_templates/`.
 - Working memory (always gitignored) `.ai/`: `CURRENT.md` (this session), `HANDOFF.md` (next session), `changelog.md`, `lessons.md`, `sessions/`, `snapshots/`.
 
-## Knowledge Bases
-
-| Need | Vault | Rules |
-| --- | --- | --- |
-| Miyago-owned project locations, workspace roots, project knowledge, and engineering decisions | `~/Project/Note/miyago-knowledge-base` | Read the vault `AGENTS.md` and `INDEX.md`, route through the relevant MOC, then read only the needed canonical nodes. For paths, use `[[wiki/conventions/workspace-directory-layout]]` and verify locally. Write only user-requested or reusable knowledge: dedupe first, update the canonical node plus MOC/`INDEX`/`LOG`, use wikilinks, and run vault lint. |
-| SRE service configs, infra, deploys, SOPs, incidents, ADRs | `~/Project/Note/sre-knowledge-base` | Read `INDEX.md` first to locate nodes, then read only those. New SRE knowledge is written back via that vault's own `AGENTS.md` Ingest workflow. |
-| PMS business logic, DB schema, app-layer triage | `~/Project/Note/itrd-knowledge-base` | Read-only (owned by backend RD, never write); SRE-view index at `sre-knowledge-base/wiki/itrd-knowledge-base-reference.md`. |
-
-When a task concerns a Miyago-owned project, consult the personal vault before filesystem exploration when existing knowledge could affect the work. Resolve current local paths from the workspace layout node, verify them locally, and use project nodes for context. Cite node names in answers; don't paste whole nodes into context.
-
-## Token Thrift
-
-- If a script can do it, run the script instead of reasoning.
-- Snapshot save/restore instead of re-reading docs after compact.
-- Read only the last 20 lines of changelog/lessons. Scripts dedupe logs; don't re-log.
-- Quiet tool use: no decorative `echo` / banners / `=== labels ===` / placeholder comments. Put complex or multi-step logic in a `/tmp` script and run that; if one line parses the result, just parse it — don't wrap it in extra commands or narration.
-
 ## Claude Memory Sources
 
 @memories/MEMORY.md
 
 <!-- pilotfish:begin -->
-<!-- pilotfish v1.4.0 -->
+<!-- pilotfish v1.4.1 -->
 ## Orchestration
 
 Main-session policy. Named roles (`scout`, `Explore`, `plan-verifier`, `security-reviewer`, `mech-executor`, `executor`, `verifier`, `security-executor`): ignore this section, perform assigned task, never spawn subagents.

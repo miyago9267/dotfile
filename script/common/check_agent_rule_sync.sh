@@ -70,14 +70,10 @@ test -x "$HOME/.codex/hooks/experience-observe.py" || {
   echo "Codex experience hook is not executable" >&2
   exit 1
 }
-test -L "$HOME/.codex/hooks/context-route.py" || {
-  echo "Codex context route hook is not linked" >&2
+if [ -e "$HOME/.codex/hooks/context-route.py" ]; then
+  echo "Codex context route hook must remain inactive" >&2
   exit 1
-}
-test -x "$HOME/.codex/hooks/context-route.py" || {
-  echo "Codex context route hook is not executable" >&2
-  exit 1
-}
+fi
 test -f "$HOME/.codex/hooks.json" || {
   echo "Codex hooks.json is missing" >&2
   exit 1
@@ -89,7 +85,7 @@ jq -e --arg command "$HOME/.codex/hooks/experience-observe.py" \
   exit 1
 }
 grep -Fq '@AGENTS.md' "$claude_file"
-grep -Fq 'Shared contract source' "$grok_file"
+grep -Fq 'rules come from `config/ai/AGENTS.md`' "$grok_file"
 test "$(cat "$pilotfish_dir/VERSION")" = "1.0.6"
 test -f "$pilotfish_dir/install/AGENT-INSTALL.md"
 test -f "$pilotfish_dir/templates/rules.pilotfish-grok.md"
@@ -119,8 +115,8 @@ for anchor in \
 done
 
 for anchor in \
-  'Children never spawn children' \
-  'credential broker'; do
+  'Runtime integration' \
+  'rules come from `config/ai/AGENTS.md`'; do
   grep -Fq "$anchor" "$grok_file"
 done
 

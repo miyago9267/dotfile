@@ -221,7 +221,10 @@ Treat the output as a bounded search plan and evidence trace. It does not replac
 
 ## Safety
 
-1. No sudo/root; escalate high-privilege operations to Miyago.
+1. No unapproved sudo/root by default. If Miyago explicitly authorizes a
+   specific root command and its target, execute only that scoped command after
+   checking its blast radius. Continue to escalate production, destructive,
+   credential, or ambiguous privileged operations.
 2. Never hand-create CI/CD-managed containers with `docker run`; let the existing pipeline / compose workflow manage them.
 3. Before running CLI tools, `source ~/.zshrc 2>/dev/null` or confirm PATH is complete.
 

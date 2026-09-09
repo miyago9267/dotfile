@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CODEX_DIR="$ROOT/config/ai/codex"
+ORCA_CODEX_RUNTIME_HOME="${ORCA_CODEX_RUNTIME_HOME:-$HOME/Library/Application Support/orca/codex-runtime-home/home}"
 HUMAN_VOICE_SRC="$CODEX_DIR/skills/human-voice/SKILL.md"
 HUMAN_VOICE_DST="$HOME/.codex/skills/human-voice"
 
@@ -57,6 +58,22 @@ check_light_profile() {
 
 check_light_profile fast
 check_light_profile code
+
+check_profile_deployment() {
+  local profile="$1"
+  local source="$CODEX_DIR/$profile.config.toml"
+  local native_target="$HOME/.codex/$profile.config.toml"
+  local orca_target="$ORCA_CODEX_RUNTIME_HOME/$profile.config.toml"
+
+  [ -L "$native_target" ] || fail "$native_target is not a symlink"
+  [ "$(readlink "$native_target")" = "$source" ] || fail "$native_target points to the wrong source"
+  [ -L "$orca_target" ] || fail "$orca_target is not a symlink"
+  [ "$(readlink "$orca_target")" = "$source" ] || fail "$orca_target points to the wrong source"
+}
+
+check_profile_deployment fast
+check_profile_deployment code
+check_profile_deployment heavy
 
 codex exec --ignore-user-config -p fast --strict-config --version >/dev/null
 codex exec --ignore-user-config -p code --strict-config --version >/dev/null
