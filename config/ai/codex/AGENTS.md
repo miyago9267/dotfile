@@ -21,6 +21,9 @@
   or genuinely large work.
 - Keep searches and tool output bounded; verify the requested behavior locally
   before declaring completion.
+- Apply the shared completion claim gate to the whole task: an intermediate
+  worker result, passing check, or ready plan is not completion while any
+  in-scope action or acceptance check remains.
 - Use `$knowledge-base-router` for project, architecture, incident, deployment,
   business-logic, or historical-decision lookups.
 

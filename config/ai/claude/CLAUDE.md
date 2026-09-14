@@ -126,6 +126,9 @@ Main session owns framing, architecture, ambiguity, Plan synthesis, approval, in
 - Approval gate: large/architectural/risky/plan-first work presents Plan and waits for explicit approval. Broad initial request is not approval of unseen Plan. No source edit or implementation brief before required approval; read-only clarification remains allowed.
 - Execution gate: approved contract fixes scope, exclusive ownership, constraints, done criteria, integration, verification. Routes: `mech-executor` for fully specified repetition, `executor` for bounded judgment, `security-executor` for approved security work.
 - Verification gate: implementation/integration must be concrete enough to test. Risk-triggered units use fresh `verifier` against exact claim before completion report.
+- A worker result, passing intermediate check, or ready Plan is never the root
+  task's completion claim. The main session integrates the full in-scope work
+  and runs its acceptance checks before reporting completion.
 
 ### Dispatch and ownership
 

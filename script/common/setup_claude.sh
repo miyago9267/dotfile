@@ -15,6 +15,8 @@ ACTIVE_RULES_SRC="$ACTIVE_RULES_DIR/AGENTS.md"
 LEGACY_SHARED_DST="$CLAUDE_DST/AGENT_RULES_SHARED.md"
 KB_ROUTER_SRC="$DOTFILE_DIR/config/ai/shared/skills/knowledge-base-router"
 KB_ROUTER_DST="$CLAUDE_DST/skills/knowledge-base-router"
+TECH_BRIEF_SRC="$DOTFILE_DIR/config/ai/shared/skills/community-tech-brief"
+TECH_BRIEF_DST="$CLAUDE_DST/skills/community-tech-brief"
 REMORA_SRC="$CLAUDE_SRC/remora-proxy/remora.config.toml"
 REMORA_DST="$HOME/.config/remora-cc/config.toml"
 
@@ -125,6 +127,7 @@ done
 compose_active_rules
 link_external_item "$ACTIVE_RULES_SRC" "$SHARED_RULES_DST" "shared agent contract + personal model"
 link_external_item "$KB_ROUTER_SRC" "$KB_ROUTER_DST" "knowledge-base-router skill"
+link_external_item "$TECH_BRIEF_SRC" "$TECH_BRIEF_DST" "community-tech-brief skill"
 
 if [ -L "$LEGACY_SHARED_DST" ] && [ "$(readlink "$LEGACY_SHARED_DST")" = "$DOTFILE_DIR/config/ai/codex/AGENT_RULES_SHARED.md" ]; then
   if [ -e "${LEGACY_SHARED_DST}.legacy" ] || [ -L "${LEGACY_SHARED_DST}.legacy" ]; then

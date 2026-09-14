@@ -10,6 +10,7 @@ codex_active_file="$dotfile_dir/config/ai/generated/codex/AGENTS.md"
 claude_active_file="$dotfile_dir/config/ai/generated/claude/AGENTS.md"
 gemini_active_file="$dotfile_dir/config/ai/generated/gemini/GEMINI.md"
 grok_active_file="$dotfile_dir/config/ai/generated/grok/AGENTS.md"
+claude_settings_file="$dotfile_dir/config/ai/claude/settings.json"
 claude_file="$dotfile_dir/config/ai/claude/CLAUDE.md"
 grok_file="$dotfile_dir/config/ai/grok/AGENTS.md"
 pilotfish_dir="$dotfile_dir/plugins/pilotfish-grok"
@@ -20,6 +21,13 @@ test -s "$codex_active_file"
 test -s "$claude_active_file"
 test -s "$gemini_active_file"
 test -s "$grok_active_file"
+if jq -e '
+  ((.enabledPlugins // {}) | has("dev-discipline@dev-discipline")) or
+  ((.extraKnownMarketplaces // {}) | has("dev-discipline"))
+' "$claude_settings_file" >/dev/null; then
+  printf '%s\n' 'dev-discipline must remain detached from Claude runtime settings' >&2
+  exit 1
+fi
 shared_line_count=$(wc -l < "$source_file" | tr -d ' ')
 if ! cmp -s <(head -n "$shared_line_count" "$codex_active_file") "$source_file"; then
   printf '%s\n' 'Codex composed rules do not start with canonical shared rules' >&2
@@ -110,9 +118,18 @@ fi
 
 for anchor in \
   'Fact-check' \
-  'goal -> in-scope -> stop condition'; do
+  'goal -> in-scope -> stop condition' \
+  'Completion claim gate' \
+  'Do not call work complete while any in-scope action'; do
   grep -Fq "$anchor" "$source_file"
 done
+
+for anchor in \
+  'Completion claim gate' \
+  '完成但尚未驗證'; do
+  grep -Fq "$anchor" "$dotfile_dir/config/ai/claude/hooks/persona-reminder.sh"
+done
+grep -Fq 'Apply the shared completion claim gate' "$codex_active_file"
 
 for anchor in \
   'Runtime integration' \

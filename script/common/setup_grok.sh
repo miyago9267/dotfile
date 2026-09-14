@@ -17,6 +17,8 @@ LEGACY_SHARED_DST="$GROK_HOME_DIR/AGENT_RULES_SHARED.md"
 SHARED_MEMORY_SRC="$DOTFILE_DIR/config/ai/memories/MEMORY.md"
 KB_ROUTER_SRC="$DOTFILE_DIR/config/ai/shared/skills/knowledge-base-router"
 KB_ROUTER_DST="$GROK_HOME_DIR/skills/knowledge-base-router"
+TECH_BRIEF_SRC="$DOTFILE_DIR/config/ai/shared/skills/community-tech-brief"
+TECH_BRIEF_DST="$GROK_HOME_DIR/skills/community-tech-brief"
 GROK_MEMORY_DST="$GROK_HOME_DIR/memory/MEMORY.md"
 GROK_CONFIG="$GROK_HOME_DIR/config.toml"
 LOCAL_BIN="$HOME/.local/bin"
@@ -123,6 +125,7 @@ compose_active_rules
 link_managed "$ACTIVE_RULES_SRC" "$GROK_DST"
 link_managed "$SHARED_RULES_SRC" "$SHARED_RULES_DST"
 link_managed "$KB_ROUTER_SRC" "$KB_ROUTER_DST"
+link_managed "$TECH_BRIEF_SRC" "$TECH_BRIEF_DST"
 
 if [ -L "$LEGACY_SHARED_DST" ] && [ "$(readlink "$LEGACY_SHARED_DST")" = "$DOTFILE_DIR/config/ai/codex/AGENT_RULES_SHARED.md" ]; then
   if [ -e "${LEGACY_SHARED_DST}.legacy" ] || [ -L "${LEGACY_SHARED_DST}.legacy" ]; then

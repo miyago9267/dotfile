@@ -169,6 +169,7 @@ compose_active_rules() {
 
 SHARED_CORE_SKILLS=(
   final-state-publication
+  community-tech-brief
 )
 
 EXTERNAL_CODEX_SKILLS=(
@@ -182,6 +183,7 @@ PINNED_EXTERNAL_CODEX_SKILLS=(
 printf "${Y}=== Codex CLI 設定 Symlink ===${N}\n"
 
 mkdir -p "$CODEX_DST" "$CODEX_DST/skills" "$CODEX_DST/vendor"
+mkdir -p "$HOME/bin"
 
 compose_active_rules
 link_item "$ACTIVE_RULES_SRC" "$CODEX_DST/AGENTS.md" "AGENTS.md"

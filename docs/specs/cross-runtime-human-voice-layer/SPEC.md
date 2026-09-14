@@ -3,7 +3,7 @@ id: spec-cross-runtime-human-voice-layer
 title: Claude-First Human-Voice Layer
 status: implemented
 created: 2026-07-21
-updated: 2026-07-21
+updated: 2026-09-14
 author: Miyago
 tags: [persona, communication, human-voice, claude, skills]
 priority: high
@@ -49,6 +49,14 @@ The layer preserves evidence, assumptions, uncertainty, limitations, test state,
 - **R17**: When Grok capability facts are missing or unverifiable, the system shall not activate a guessed adapter, installer, provider route, credential setup, or host-recap assumption; Grok shall remain explicitly unverified.
 - **R18**: When the installed Grok CLI discovers the existing Claude-compatible skill surface, it shall reuse the repository-owned human-voice semantics without creating a divergent Grok copy.
 - **R19**: When Grok compatibility discovery imports broader Claude rules, hooks, skills, or agents, authenticated/private-work sessions shall wait until that import scope is isolated or explicitly accepted.
+- **R20**: When an agent reports completion, every in-scope action, integration
+  step, and required acceptance check shall already be complete; an
+  intermediate implementation result or passing check shall not be reported
+  as task completion.
+- **R21**: When required work or acceptance evidence remains, the agent shall
+  continue agent-owned work when possible or report the exact
+  `進行中`/`阻塞` state; it shall not describe the task as
+  `完成但尚未驗證` or an equivalent.
 
 ## Non-goals
 
@@ -101,6 +109,17 @@ Existing `ask-discipline` remains responsible for whether and how to ask. Existi
 - **Agent fallback recap**: required in the final delivery when the host has no equivalent recap or its capability is unknown.
 - **Direct-answer response**: no forced recap when no meaningful work was performed.
 - **User-requested recap**: follow the requested format while preserving verification and remaining-work information.
+
+### Completion claim taxonomy
+
+- **Complete**: all in-scope work and acceptance evidence pass the stop
+  condition.
+- **In progress**: agent-owned work or acceptance remains and can still be
+  executed.
+- **Blocked**: a concrete authority, user-input, external-state, or
+  environment blocker prevents the remaining work.
+- **Intermediate evidence**: code, tests, builds, plans, worker results, and
+  host lifecycle events that do not by themselves authorize a completion claim.
 
 ## Alternatives Considered
 

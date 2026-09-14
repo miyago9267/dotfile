@@ -390,6 +390,25 @@ shared_assets:
     mechanism: link
     status: partially_confirmed
 
+  community-tech-brief:
+    source: /Users/miyago/dotfile/config/ai/shared/skills/community-tech-brief
+    setup_destinations:
+      claude: /Users/miyago/.claude/skills/community-tech-brief
+      codex: /Users/miyago/.codex/skills/community-tech-brief
+      gemini: /Users/miyago/.gemini/skills/community-tech-brief
+      grok: /Users/miyago/.grok/skills/community-tech-brief
+    current_links:
+      - /Users/miyago/.claude/skills/community-tech-brief
+      - /Users/miyago/.codex/skills/community-tech-brief
+      - /Users/miyago/.grok/skills/community-tech-brief
+    missing_or_unverified:
+      - gemini
+      - opencode-daily
+      - opencode-harness
+      - opencode-studio
+    mechanism: link
+    status: partially_confirmed
+
   memory:
     source: /Users/miyago/dotfile/config/ai/memories/MEMORY.md
     current_links:

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Community Tech Brief"
+  short_description: "Triage Discord/community tech talk against our workflow and cost"
+  default_prompt: "Use $community-tech-brief to analyze this community tech discussion summary for workflow fit and cost."

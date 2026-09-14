@@ -20,6 +20,8 @@
 | --- | --- |
 | `Ctrl-Space` | 開啟傳統 completion |
 | `Ctrl-n` / `Ctrl-p` | 下一個／上一個候選 |
+| `↓` / `→` | 下一個候選 |
+| `↑` / `←` | 上一個候選 |
 | `Enter` | 確認候選 |
 | `Tab` | Copilot 建議 → completion 候選 → 原本的 Tab |
 | `Shift-Tab` | 上一個 completion 候選 |

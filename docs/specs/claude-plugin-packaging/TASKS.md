@@ -3,3 +3,4 @@
 - [x] 將 artifact build/install 接到 `install_claude.sh`
 - [x] 產出 `plugins/monika-claude/`
 - [x] 驗證 artifact manifest、README、install flow
+- [x] 將 Claude runtime 從 `dev-discipline` marketplace package 拆開

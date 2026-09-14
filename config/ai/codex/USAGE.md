@@ -8,6 +8,40 @@
 
 Raw `codex` is intentionally untouched because `~/.codex/config.toml` carries desktop, project trust, MCP, and plugin state. Use `cxh` when that heavy surface is desired.
 
+## Approval gate
+
+`codex-approval-gate` is an independent opt-in wrapper around the local Codex
+app-server. It keeps manual approval for high-risk requests and uses Touch ID
+only for the allowlisted low-risk command policy.
+
+Install the standalone tool from its own repository:
+
+```bash
+git clone https://github.com/miyago9267/codex-approval-gate ~/Project/Active/Tools/codex-approval-gate
+cd ~/Project/Active/Tools/codex-approval-gate
+./install.sh --dry-run
+./install.sh --ref main
+```
+
+Run Codex through the gate:
+
+```bash
+~/.local/bin/codex-approval-gate
+```
+
+Use `CODEX_APPROVAL_AUTH=mock` only for local wiring tests. Normal `codex`,
+`cxf`, `cxc`, and `cxh` entrypoints remain unchanged when the wrapper is not
+used. The audit log is outside the repository at
+`~/.local/state/codex-approval-gate/audit.jsonl`.
+
+Rollback is immediate: stop the wrapper and invoke the normal Codex entrypoint
+again. Remove the standalone tool with:
+
+```bash
+cd ~/Project/Active/Tools/codex-approval-gate
+./install.sh --uninstall
+```
+
 ## Profile intent
 
 - `fast`: shortest wall-clock; no base config, browser, document, spreadsheet, presentation, or computer-use plugins.

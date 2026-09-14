@@ -14,3 +14,9 @@
 
 - status: completed
 - result: artifact validation and install smoke test passed
+
+## Phase 4: Runtime Decomposition
+
+- status: completed
+- result: Claude settings no longer enable the legacy `dev-discipline`
+  marketplace package; native runtime components remain independently managed
