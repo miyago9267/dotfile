@@ -13,7 +13,7 @@ UI 稿、整頁畫面、元件。Figma MCP 有自己的 skill，**必先讀再�
 
 Fallback（Figma 不可用）-> `code-asset`：用 codex 產 HTML/CSS 版面，存成 `.html`。
 
-## design-system — Claude Design
+## design-system — Claude Design（設計系統）
 
 design tokens、元件庫與 claude.ai design-system 專案同步。
 

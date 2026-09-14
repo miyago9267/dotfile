@@ -21,6 +21,39 @@ test -s "$codex_active_file"
 test -s "$claude_active_file"
 test -s "$gemini_active_file"
 test -s "$grok_active_file"
+
+language_files=(
+  "$source_file"
+  "$dotfile_dir/config/ai/codex/AGENTS.md"
+  "$claude_file"
+  "$dotfile_dir/config/ai/gemini/GEMINI.md"
+  "$grok_file"
+  "$dotfile_dir/config/ai/codex/skills/human-voice/SKILL.md"
+  "$dotfile_dir/config/ai/claude/skills/human-voice/SKILL.md"
+)
+for language_file in "${language_files[@]}"; do
+  if ! grep -Fq '繁體中文' "$language_file"; then
+    printf '%s\n' "Traditional Chinese policy anchor missing: $language_file" >&2
+    exit 1
+  fi
+done
+for anchor in \
+  '## 語言政策' \
+  '預設使用台灣繁體中文' \
+  '平實用語規則' \
+  '完成宣告規則' \
+  '語言政策'; do
+  grep -Fq "$anchor" "$source_file"
+done
+grep -Fq 'User-facing output 預設使用台灣繁體中文' "$dotfile_dir/config/ai/codex/AGENTS.md"
+grep -Fq 'User-facing output 預設使用台灣繁體中文' "$dotfile_dir/config/ai/claude/CLAUDE.md"
+grep -Fq 'User-facing output 預設使用台灣繁體中文' "$dotfile_dir/config/ai/gemini/GEMINI.md"
+grep -Fq 'user-facing prose 預設使用台灣繁體中文' "$grok_file"
+grep -Fq '預設使用台灣繁體中文' "$dotfile_dir/config/ai/codex/skills/human-voice/SKILL.md"
+grep -Fq '預設使用台灣繁體中文' "$dotfile_dir/config/ai/claude/skills/human-voice/SKILL.md"
+grep -Fq '完成宣告規則' "$dotfile_dir/config/ai/codex/skills/human-voice/SKILL.md"
+grep -Fq '完成宣告規則' "$dotfile_dir/config/ai/claude/skills/human-voice/SKILL.md"
+
 if jq -e '
   ((.enabledPlugins // {}) | has("dev-discipline@dev-discipline")) or
   ((.extraKnownMarketplaces // {}) | has("dev-discipline"))

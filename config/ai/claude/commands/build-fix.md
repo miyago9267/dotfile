@@ -1,6 +1,6 @@
 ---
 name: build-fix
-description: Incrementally fix build errors -- resolve TypeScript/build errors one by one, rebuilding after each fix.
+description: 漸進式修復 build errors；一次解決一個 TypeScript/build error，每次 fix 後重新 build。
 ---
 
 # /build-fix

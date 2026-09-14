@@ -1,6 +1,6 @@
 ---
 name: e2e
-description: End-to-end testing (Playwright) -- generate tests, run them, capture artifacts, flag flaky tests.
+description: 執行端對端測試（Playwright）；生成並執行 tests、保存 artifacts，標記 flaky tests。
 ---
 
 # /e2e [描述]

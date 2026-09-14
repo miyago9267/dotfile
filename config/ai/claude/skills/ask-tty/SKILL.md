@@ -1,6 +1,6 @@
 ---
 name: ask-tty
-description: "stdin proxy -- when a Bash command needs user input (sudo, ssh, y/N), obtain it via ask-tty. Always on."
+description: "stdin proxy：Bash command 需要使用者輸入（sudo、ssh、y/N）時，透過 ask-tty 取得。永遠生效。"
 when_to_use: "Bash 指令需要互動輸入(sudo / ssh / y-N)時，向使用者取得 stdin"
 tags: [stdin, tty, sudo, interactive, proxy]
 effort: low

@@ -1,6 +1,6 @@
 ---
 name: setup-pm
-description: Set up the package manager -- configure project or global preference (npm/pnpm/yarn/bun).
+description: 設定 package manager；設定 project 或 global preference（npm/pnpm/yarn/bun）。
 disable-model-invocation: true
 ---
 

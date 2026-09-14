@@ -1,51 +1,49 @@
 ---
 name: prototype
-description: "Codex throwaway prototype workflow -- build small disposable experiments to answer a concrete design, state, or UI question. Use when Miyago asks to prototype, sanity-check a model, try UI options, explore a state machine, or make something quick to play with before committing to production code."
+description: "Codex throwaway prototype workflow：建立小型 disposable experiments，回答具體的 design、state 或 UI question。Miyago 要 prototype、sanity-check model、嘗試 UI options、探索 state machine，或在 production code 前快速試作時使用。"
 user-invocable: true
-when_to_use: "Use when learning from a runnable experiment is cheaper than designing the final implementation upfront."
+when_to_use: "從 runnable experiment 學習，比一開始就設計 final implementation 更省成本時使用。"
 tags: [codex, prototype, experiment, ui, state]
 effort: medium
 shell: preferred
 runtime-scope: codex-native
 ---
 
-# Codex Prototype
+# Codex Prototype（原型）
 
-A prototype answers one question. Treat it as disposable from the first file.
+Prototype 只回答一個 question。從第一個 file 開始就把它視為 disposable。
 
-## Pick The Prototype Type
+## 選擇 Prototype Type
 
-- **Logic/state question**: build a tiny CLI or script that exercises the model
-  and prints full state after each action.
-- **UI question**: build a temporary route, page, or component with 2-4 distinct
-  variants behind a simple switch.
+- **Logic/state question**：建立 tiny CLI 或 script 操作 model，並在每個 action
+  後印出完整 state。
+- **UI question**：建立 temporary route、page 或 component，用 simple switch
+  切換 2-4 個明確 variants。
 
-State the question at the top of the prototype file or adjacent note.
+在 prototype file 頂端或旁邊的 note 寫明 question。
 
-## Rules
+## 規則（Rules）
 
-- Put prototype code near the relevant module or route, named with `prototype`,
-  `scratch`, or equivalent local convention.
-- Use the repo's existing runtime and routing conventions.
-- Provide one command or URL to run it.
-- Keep persistence in memory unless persistence itself is the question.
-- Skip production polish, broad tests, and abstractions.
-- Render or print enough state that Miyago can judge the result.
-- Delete the prototype or fold the validated decision into production code when
-  done.
+- Prototype code 放在相關 module 或 route 附近，名稱使用 `prototype`、`scratch`
+  或等效的 local convention。
+- 使用 repo 既有的 runtime 與 routing conventions。
+- 提供一個 command 或 URL 來執行。
+- 除非 question 本身是 persistence，否則將 persistence 留在 memory。
+- 跳過 production polish、broad tests 與 abstractions。
+- Render 或 print 足夠的 state，讓 Miyago 能判斷結果。
+- 完成後刪除 prototype，或把已驗證的 decision 合併進 production code。
 
-## Verification
+## 驗證（Verification）
 
-Run the cheapest command that proves the prototype starts and exercises the key
-path. For UI prototypes, use Browser/Playwright only when Miyago asked for
-browser verification or the UI behavior cannot be judged from code.
+執行能證明 prototype 啟動並走過 key path 的最低成本 command。UI prototype 只有
+在 Miyago 要求 browser verification，或 UI behavior 無法從 code 判斷時，才用
+Browser/Playwright。
 
-## Capture The Result
+## 記錄結果（Capture The Result）
 
-When the prototype answers its question, record the decision in the durable
-place that matches the task:
+Prototype 回答 question 後，把 decision 記錄在符合 task 的 durable location：
 
 - commit message
 - issue/spec note
-- ADR for hard-to-reverse architectural choices
-- short `NOTES.md` next to the prototype if it must remain briefly
+- 難以回復的 architectural choice 使用 ADR
+- Prototype 必須短暫保留時，在旁邊放簡短 `NOTES.md`

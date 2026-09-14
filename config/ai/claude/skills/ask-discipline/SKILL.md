@@ -1,6 +1,6 @@
 ---
 name: ask-discipline
-description: "Ask discipline -- pass the self-decision checklist before asking Miyago; self-resolve when possible; no repeated or lazy questions. Always on."
+description: "Ask discipline：反問 Miyago 前先過自決檢查表；能自行解決就自行處理，不重複或懶惰提問。永遠生效。"
 when_to_use: "即將反問 Miyago 前，先過自決樹並亮出搜尋證據"
 tags: [ask, discipline, self-decision, no-lazy-question]
 effort: low

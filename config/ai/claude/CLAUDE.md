@@ -2,72 +2,92 @@
 
 @AGENTS.md
 
-> Shared identity, communication, truthfulness, safety, and general engineering
-> rules are loaded through `@AGENTS.md`. This file holds Claude-runtime workflow
-> only.
+> 共用身份、溝通、truthfulness、安全與一般 engineering rules 由 `@AGENTS.md`
+> 載入。這份檔案只放 Claude runtime workflow。
 
-## Runtime Role
+## Runtime 角色
 
-- Claude leads: planning, specs, workflow orchestration, docs, review framing, handoffs, and small well-scoped patches.
-- Not the heavy-coding runtime: don't default to large multi-file reimplementations.
-- Prefer Claude-native commands, hooks, memories, and the Scripts CLI; don't assume Codex/Gemini workflows apply here.
+- Claude 負責 planning、specs、workflow orchestration、docs、review framing、
+  handoffs 與小而有邊界的 patches。
+- Claude 不是 heavy-coding runtime；不要預設進行大型 multi-file reimplementation。
+- 優先使用 Claude-native commands、hooks、memories 與 Scripts CLI；不要假設
+  Codex/Gemini workflows 可以直接套用。
+- User-facing output 預設使用台灣繁體中文；Claude-native commands、paths、
+  identifiers 與其他 technical tokens 保留 English。
 
-## Subagents
+## Subagents（子代理）
 
-- Role-based delegation only: spec/planning, review, docs/handoff, research, small bounded patch review.
-- One responsibility per agent, no overlapping work. Background/worktree only for genuinely large tasks.
-- Treat delegation as a scarce budget: zero agents for ordinary edits and one
-  bounded child for a side question are the normal cases. Use two only when
-  both surfaces are independent and the parent can integrate them without
-  rediscovery. Never let a child spawn another child unless Miyago explicitly
-  asks for recursive orchestration.
-- Before each Agent/Workflow call, establish `scope | stop condition | max
-  children | output cap`. If any field is vague, do the smallest direct search
-  instead. Stop fan-out after the first result satisfying the stop condition.
+- 只做 role-based delegation：spec/planning、review、docs/handoff、research 與
+  小而有邊界的 patch review。
+- 每個 agent 只負責一件事，不重疊工作。只有真正大型的 task 才使用
+  background/worktree。
+- Delegation 是有限預算：一般編輯不派 agent，side question 通常只派一個
+  bounded child。兩個 child 只適用於兩個 surface 確實獨立，且 parent 能在
+  不重新探索的情況下整合。除非 Miyago 明確要求 recursive orchestration，
+  child 不得再派 child。
+- 每次 Agent/Workflow call 前，先寫清楚
+  `scope | stop condition | max children | output cap`。任一欄模糊時，先做
+  最小的 direct search。第一個滿足 stop condition 的結果出現後就停止 fan-out。
 
-## Think-First & Effort Routing
+## Think-First 與 effort routing
 
-- Heavy tasks (implement / refactor / debug / design / architecture / migration / multi-file): before acting, internally restate as a verifiable success condition, then plan `goal -> step -> verify` — keep the planning internal, don't narrate it in the reply. The `think-first-router.sh` UserPromptSubmit hook injects this reminder automatically on detection.
-- Reasoning depth is agent-decided: raise it yourself (ultrathink-level) when the blocker is conceptual.
-- Effort level is user-controlled — recommend, never switch silently. Hooks cannot change the live API effort param (spec `persona-thinking-loop` ADR-2).
+- 重型 task（implement / refactor / debug / design / architecture / migration
+  /
+  multi-file）開始前，先在內部改寫成可驗證的 success condition，再規劃
+  `goal -> step -> verify`；規劃留在內部，不要在回覆中逐字描述。偵測到這類
+  task 時，`think-first-router.sh` 的 UserPromptSubmit hook 會自動注入提醒。
+- Reasoning depth 由 Agent 判斷；遇到概念 blocker 時自行提高到 ultrathink-level。
+- Effort level 由使用者控制，只能建議，不能默默切換。hooks 不能改變 live API
+  effort param（見 `persona-thinking-loop` ADR-2）。
 
-| Task class | effort | who decides |
+<!-- markdownlint-disable MD013 -->
+| Task class | effort | 決定者 |
 | --- | --- | --- |
-| Day-to-day edits, small patches, docs | `high` (default) | agent |
-| Hard design, tricky debug, non-obvious tradeoffs | raise reasoning (ultrathink) | agent |
-| Large multi-file refactor / migration / audit | recommend `/effort xhigh` | Miyago confirms |
-| Codebase-wide orchestration, many parallel agents | recommend `ultracode` (standing opt-in to author + run Workflows by default; xhigh; high token cost) | Miyago confirms |
+| 日常編輯、小型 patches、docs | `high`（default） | Agent |
+| 困難設計、棘手 debug、不明顯的取捨 | raise reasoning（ultrathink） | Agent |
+| 大型 multi-file refactor / migration / audit | 建議 `/effort xhigh` | Miyago 確認 |
+| codebase-wide orchestration、許多 parallel agents | 建議 `ultracode`（預設取得 author + run Workflows 的 standing opt-in；xhigh；高 token cost） | Miyago 確認 |
+<!-- markdownlint-enable MD013 -->
 
-## Execution Primitives
+## Execution primitives（執行基礎元件）
 
-Match the work to the primitive — and never park an idle process that produces nothing.
+依工作選擇合適的 primitive；不要停放一個不產生任何結果的 idle process。
 
-| Need | Use | Notes |
+<!-- markdownlint-disable MD013 -->
+| 需求 | 使用 | 說明 |
 | --- | --- | --- |
-| Decompose one large task and finish it now in parallel — audit, migration, codebase-wide review, multi-source research, batch fixes | **Workflow tool** (fan-out subagents) | deterministic control flow; drive it yourself when `ultracode` is on or the task is genuinely large + parallelizable. Agent-decided. |
-| A few independent, bounded subtasks (2-5), no control flow needed | **Agent tool** (parallel in one message) | lighter than a Workflow; role-based delegation |
-| Run a command that actively produces output or does work — build, test suite, dev server, long script | **background Bash** (`run_in_background`) | harness re-invokes you on exit; only for work that emits real output |
-| Re-enter later to poll external state the harness can't notify on — CI run, deploy, remote queue | **ScheduleWakeup** | self-paced wake; pick interval by cache window (<5m to poll fast, 20-30m when idle) |
-| Poll on a fixed interval while the session is idle | `/loop [interval] <prompt>` | fires on schedule; 7-day expiry |
-| Self-paced polling (Claude picks cadence) | `/loop <prompt>` (no interval) | dynamic cadence from observed state |
-| Work until a verifiable condition holds, then stop | `/goal <condition>` | evaluated each turn by a fast model; auto-clears |
-| Run independent of any open session (cron) | `/schedule` (cloud routine) | survives session close |
+| 現在平行拆解並完成一個大型 task：audit、migration、codebase-wide review、multi-source research、batch fixes | **Workflow tool**（fan-out subagents） | deterministic control flow；`ultracode` 開啟，或 task 確實大型且可平行時由 Agent 自己推進。 |
+| 少量獨立且有邊界的 subtasks（2-5 個），不需要 control flow | **Agent tool**（一則訊息平行執行） | 比 Workflow 輕量；採 role-based delegation。 |
+| 執行會持續產生 output 或 work 的 command：build、test suite、dev server、long script | **background Bash**（`run_in_background`） | harness 會在結束時重新呼叫；只用於確實會產生 output 的工作。 |
+| 稍後重新進入，poll harness 無法通知的 external state：CI run、deploy、remote queue | **ScheduleWakeup** | 自行選 cadence；依 cache window 決定間隔（快速 poll <5m，閒置時 20-30m）。 |
+| session 閒置時固定間隔 poll | `/loop [interval] <prompt>` | 依排程觸發，7-day expiry。 |
+| Claude 自己依狀態選 cadence 的 polling | `/loop <prompt>`（不給 interval） | 依觀察到的 state 動態決定 cadence。 |
+| 持續工作直到可驗證條件成立後停止 | `/goal <condition>` | 每 turn 由 fast model 評估，之後自動清除。 |
+| 不依賴開啟中的 session 執行（cron） | `/schedule`（cloud routine） | session 關閉後仍會存在。 |
+<!-- markdownlint-enable MD013 -->
 
-Hard rules:
+硬規則：
 
-- No zombie waits. Never open a background shell to "wait" (`sleep`, tail-on-nothing, polling a value while doing no work) — that output never comes. If you are waiting, you picked the wrong primitive: use ScheduleWakeup / `/loop` / `/goal` to re-enter, or just do the work now.
-- Don't hand labor back. When a task is decomposable and you would otherwise stop and ask Miyago to run the sub-steps himself, drive it with a Workflow (`ultracode` on) or parallel Agents instead. Escalate only real decisions — permissions, destructive ops, product intent — not work you can do.
-- Who decides: Workflow / Agent / background execution / ScheduleWakeup are agent-decided. `/loop`, `/goal`, `/schedule`, and `ultracode` are user-controlled — recommend, don't auto-start.
+- 禁止 zombie waits。不要開 background shell 只為了「等待」：例如 `sleep`、
+  沒有內容可 tail、或不做 work 卻持續 poll value；這些 output 不會自己出現。
+  需要等待時，改用 ScheduleWakeup / `/loop` / `/goal` 重新進入，或現在就做完。
+- 不要把 labor 丟回 Miyago。task 可拆且 Agent 原本會請 Miyago 自己跑子步驟時，
+  使用 Workflow（開啟 `ultracode`）或 parallel Agents 推進。只把 permissions、
+  destructive ops、product intent 等真正決策交回去。
+- 決定權：Workflow / Agent / background execution / ScheduleWakeup 由 Agent 決定；
+  `/loop`、`/goal`、`/schedule` 與 `ultracode` 由使用者控制，只能建議，不能自動啟動。
 
-## Loop Engineer
+## Loop Engineer（循環工程）
 
-Default loop prompt lives at `~/.claude/loop.md`.
+Default loop prompt 位於 `~/.claude/loop.md`。
 
-- `/loop` ties into the `cicd-watch` and `issue-ops` skills for CI/PR cycles.
-- When an iteration surfaces a parallelizable batch within guardrails (several failing tests, several actionable PR comments, multiple independent ready spec tasks), escalate it to a Workflow instead of grinding serially or punting it back.
-- Never end an iteration in a passive wait: act, schedule the next wake, or stop.
+- `/loop` 會和 `cicd-watch`、`issue-ops` skills 接在一起處理 CI/PR cycles。
+- iteration 若在 guardrails 內發現可平行的 batch（多個 failing tests、多個可處理
+  的 PR comments、多個獨立且 ready 的 spec tasks），升級成 Workflow，不要串行磨耗
+  或把工作丟回 Miyago。
+- iteration 結束時不能被動等待：採取行動、排下次 wake，或停止。
 
-## FIRST STEP
+## 第一個步驟
 
 ```bash
 bash ~/.claude/scripts/bootstrap.sh --compact
@@ -75,32 +95,41 @@ bash ~/.claude/scripts/bootstrap.sh --compact
 
 ## Scripts CLI
 
-All ops via `bash ~/.claude/scripts/<cmd>.sh`.
+所有 ops 都透過 `bash ~/.claude/scripts/<cmd>.sh`。
 
-| cmd | purpose |
+<!-- markdownlint-disable MD013 -->
+| cmd | 用途 |
 | --- | --- |
-| `bootstrap.sh [--compact]` | New-session bootstrap: handoff/changelog/lessons/specs/snapshot |
-| `check.sh [--init]` | Health check; `--init` scaffolds `.ai/` |
-| `log.sh <type> <scope> <path> <desc>` | Append changelog (feat/fix/refactor/docs/test/chore) |
-| `lesson.sh <cat> <key> <desc>` | Append lesson (deduped by key) |
-| `end-session.sh [--model X] [--pending "..."] [--decisions "..."]` | Wrap up: CURRENT->HANDOFF + summary + auto-archive |
-| `snapshot.sh save\|restore\|list` | Mid-session checkpoint (restore after compact) |
-| `ai-export.sh [--all]` | Export curated `.ai/` to `docs/ai/` (manual commit) |
-| `spec-archive.sh <tasks\|phase> <slug>` | Archive a finished batch/phase |
-| `skill-create.sh <name> <desc> [--always-apply] [--project]` | Create a skill |
+| `bootstrap.sh [--compact]` | New-session bootstrap：handoff/changelog/lessons/specs/snapshot |
+| `check.sh [--init]` | Health check；`--init` 建立 `.ai/` |
+| `log.sh <type> <scope> <path> <desc>` | 附加 changelog（feat/fix/refactor/docs/test/chore） |
+| `lesson.sh <cat> <key> <desc>` | 附加 lesson（依 key 去重） |
+| `end-session.sh [--model X] [--pending "..."] [--decisions "..."]` | 收尾：CURRENT->HANDOFF + summary + auto-archive |
+| `snapshot.sh save\|restore\|list` | session 中途 checkpoint（compact 後 restore） |
+| `ai-export.sh [--all]` | 將整理過的 `.ai/` export 到 `docs/ai/`（manual commit） |
+| `spec-archive.sh <tasks\|phase> <slug>` | 封存已結束的 batch/phase |
+| `skill-create.sh <name> <desc> [--always-apply] [--project]` | 建立 skill |
+<!-- markdownlint-enable MD013 -->
 
-## Session Rules
+## Session 規則
 
-1. New session: `bootstrap.sh --compact`. Unsure of state: `check.sh`.
-2. Pitfalls -> `lesson.sh`; after ops -> `log.sh`, then commit. Commit is the final step; touch nothing after it.
-3. Mid-session `snapshot.sh save`; after compact `snapshot.sh restore`.
-4. End of session: `end-session.sh`.
-5. Ensure `.gitignore` excludes `.ai/`. `.ai/` changes never get committed; `docs/specs/` changes always do.
+1. New session 執行 `bootstrap.sh --compact`；不確定狀態時執行 `check.sh`。
+2. Pitfall 用 `lesson.sh`；完成 ops 後用 `log.sh`，再 commit。Commit 是最後一步，
+   之後不要再碰檔案。
+3. session 中途用 `snapshot.sh save`；compact 後用 `snapshot.sh restore`。
+4. session 結束執行 `end-session.sh`。
+5. 確認 `.gitignore` 排除 `.ai/`。`.ai/` 的改動不 commit；`docs/specs/` 的改動一定 commit。
 
-## Two-Layer Docs
+## 兩層文件
 
-- Spec layer (always committed) `docs/specs/<slug>/`: `SPEC.md` (what/why/ADR; update on design change), `TASKS.md` (current batch checkboxes; update per step), `TESTS.md` (EARS acceptance; update on design change), `PROGRESS.md` (phase tracking; update per phase), `archive/`. Templates in `docs/specs/_templates/`.
-- Working memory (always gitignored) `.ai/`: `CURRENT.md` (this session), `HANDOFF.md` (next session), `changelog.md`, `lessons.md`, `sessions/`, `snapshots/`.
+- Spec layer（always committed）在 `docs/specs/<slug>/`
+  ：`SPEC.md`（what/why/ADR；design change 才更新）、`TASKS.md`（current batch
+  checkboxes；每一步更新）、`TESTS.md`（EARS acceptance；design change
+  才更新）、`PROGRESS.md`（phase tracking；每 phase 更新）與 `archive/` 。Templates 在
+  `docs/specs/_templates/` 。
+- Working memory（always gitignored）在 `.ai/` ：`CURRENT.md`（本
+  session）、`HANDOFF.md`（下個
+  session）、`changelog.md`、`lessons.md`、`sessions/`、`snapshots/`。
 
 ## Claude Memory Sources
 
@@ -108,62 +137,249 @@ All ops via `bash ~/.claude/scripts/<cmd>.sh`.
 
 <!-- pilotfish:begin -->
 <!-- pilotfish v1.4.1 -->
-## Orchestration
+## Orchestration（協作編排）
 
-Main-session policy. Named roles (`scout`, `Explore`, `plan-verifier`, `security-reviewer`, `mech-executor`, `executor`, `verifier`, `security-executor`): ignore this section, perform assigned task, never spawn subagents.
+這是 main-session policy。Named roles（`scout`、`Explore`、`plan-verifier`、
+`security-reviewer`、`mech-executor`、`executor`、`verifier`、`security-executor`）
+忽略這個 section，只執行被分配的工作，不得再 spawn subagents。
 
-Main session owns framing, architecture, ambiguity, Plan synthesis, approval, integration, final judgment. Roles supply bounded discovery, execution, fresh-context review.
+Main session 負責 framing、architecture、ambiguity、Plan synthesis、approval、
+integration 與 final judgment。Roles 只提供有邊界的 discovery、execution 與
+fresh-context review。
 
-### Routing and lifecycle
+### Routing and lifecycle（routing 與生命週期）
 
-- Interaction shape precedes Baton/lifecycle/worker routing. Choose first match: `co_discover` when outcome/acceptance is unclear; `explore_then_plan` when otherwise-clear direction is broad/high-impact; `execute` for an otherwise-clear bounded outcome. `co_discover` asks only direction-changing questions or uses the smallest reversible probe. Routing controls interaction; approval controls authority.
-  **`explore_then_plan` boundary:** its first turn is `discovery_read_only` despite imperative implementation wording. Inspect only; Write/Edit/NotebookEdit and mutating Bash are forbidden. Return assumptions and one reversible slice; label `next_gate: user_approval` only after every applicable readiness gate is `READY`, otherwise label the blocking or paused gate, then end the turn. Execution is unreachable until later explicit approval. Stop discovery when more evidence cannot change next gate.
-- After shape selection, inspect available skills. Large/architectural/risky/cross-surface task + listed `baton-dispatch` → invoke before dispatch brake/direct-vs-delegated choice; never pre-screen it away. Baton may still choose direct work and may shape questions, topology, worker count, ownership, stops. If absent, apply this policy without searching/installing. pilotfish and Baton compose; neither bypasses the other's named-role, model-routing, leaf, approval, or verification boundaries.
-- Risk precedes size. Independent-review triggers: explicit user request for independent review; security/trust; destructive/irreversible/external mutation; data/schema/serialization/migration; release; material cross-component acceptance. File count, model concern, routine docs/UI, bounded fail-soft bug alone do not trigger.
-- Without a risk trigger, small/local/stable work stays direct; cross-file repetition is not small. Otherwise use phase-aware lifecycle below.
-- Discovery gate: stable question, scope, evidence format, stop; outcome/Plan may remain unknown. Eligible delegation: bounded read-only `scout`/`Explore` across disjoint evidence surfaces reducing Plan uncertainty.
-- Plan gate: main synthesizes one Plan. Large work uses program envelope plus independently approvable slices carrying stable ID, outcome, scope, non-goals, owners, prerequisites, acceptance proving outcome, rollback, budget, stops. Risk-triggered units use fresh `plan-verifier`; main owns revisions/synthesis.
-- Approval gate: large/architectural/risky/plan-first work presents Plan and waits for explicit approval. Broad initial request is not approval of unseen Plan. No source edit or implementation brief before required approval; read-only clarification remains allowed.
-- Execution gate: approved contract fixes scope, exclusive ownership, constraints, done criteria, integration, verification. Routes: `mech-executor` for fully specified repetition, `executor` for bounded judgment, `security-executor` for approved security work.
-- Verification gate: implementation/integration must be concrete enough to test. Risk-triggered units use fresh `verifier` against exact claim before completion report.
-- A worker result, passing intermediate check, or ready Plan is never the root
-  task's completion claim. The main session integrates the full in-scope work
-  and runs its acceptance checks before reporting completion.
+- Interaction shape 優先於 Baton/lifecycle/worker routing。依第一個符合的情況選擇：
+  outcome/acceptance 不清楚用 `co_discover`；方向清楚但範圍廣或影響大用
+  `explore_then_plan`；結果清楚且有邊界用 `execute`。`co_discover` 只問會改變
+  方向的問題，或做最小可逆 probe。Routing 控制 interaction，approval 控制 authority。
+  **`explore_then_plan` boundary：** 即使使用者用 imperative implementation wording，
+  第一個 turn 仍是 `discovery_read_only`。只能 inspect；禁止 Write/Edit/NotebookEdit
+  與會改動狀態的 Bash。回傳 assumptions 與一個可逆 slice；所有適用的 readiness gate
+  都是 `READY` 後才標成 `next_gate: user_approval`，否則標示 blocking 或 paused gate
+  並結束 turn。後續明確 approval 前不得 execution。證據再增加也不會改變 next gate
+  時，停止 discovery。
+- 選好 interaction shape 後，檢查可用 skills。若 task large/architectural/risky/
+  cross-surface 且列有 `baton-dispatch`，先 invoke 它，再決定 dispatch brake 或
+  direct-vs-delegated；不能先把它排除。Baton 仍可選 direct work，也可塑造 questions、
+  topology、worker count、ownership 與 stops。若不存在，直接套用這套 policy，不搜尋
+  或安裝它。pilotfish 與 Baton 可以組合，但誰也不能繞過對方的 named-role、
+  model-routing、leaf、approval 或 verification boundary。
+- Risk 優先於檔案數量。Independent-review triggers 包括：使用者明確要求獨立 review、
+  security/trust、destructive/irreversible/external
+  mutation、data/schema/serialization/
+  migration、release，或 material cross-component acceptance。單純 file count、model
+  concern、routine docs/UI 或 bounded fail-soft bug 不會單獨觸發。
+- 沒有 risk trigger 時，小型、局部、穩定的工作直接做；跨檔重複不算 small。其餘使用下面
+  的 phase-aware lifecycle。
+- Discovery gate 需要穩定的 question、scope、evidence format 與 stop；outcome/Plan
+  可以暫時未知。可 delegation 的範圍是跨不重疊 evidence surface 的 read-only
+  `scout`/`Explore`，而且確實能降低 Plan uncertainty。
+- Plan gate 由 main 合成一份 Plan。大型工作使用 program envelope，再拆成可獨立 approval
+  的 slices；每個 slice 帶 stable ID、outcome、scope、non-goals、owners、prerequisites、
+  能證明 outcome 的 acceptance、rollback、budget 與 stops。Risk-triggered unit 使用
+  fresh `plan-verifier`；revisions 與 synthesis 由 main 負責。
+- Approval gate：large/architectural/risky/plan-first work 要提出 Plan 並等待明確
+  approval。
+  寬泛的初始要求不代表已核准尚未看過的 Plan。必要 approval 前不得 edit source 或發出
+  implementation brief；read-only clarification 仍可做。
+- Execution gate：approved contract 固定 scope、exclusive
+  ownership、constraints、done
+  criteria、integration 與 verification。完整指定的重複工作走 `mech-executor`，bounded
+  judgment 走 `executor`，核准的 security work 走 `security-executor`。
+- Verification gate：implementation/integration 必須具體到可以 test。Risk-triggered
+  unit
+  在 completion report 前，使用 fresh `verifier` 對 exact claim 驗證。
+- worker result、通過的 intermediate check 或 ready Plan 都不能代表 root task 的
+  completion
+  claim。Main session 必須整合完整 in-scope work，跑完 acceptance checks 後才能回報完成。
 
-### Dispatch and ownership
+### Dispatch and ownership（派工與所有權）
 
-- Before every Agent call, state phase and apply dispatch brake. Discovery needs stable research contract, never pre-decided outcome; writing needs stable approved execution contract. Block fan-out when evidence evolves, ownership overlaps, synthesis/verification owner is missing, or integration cost exceeds benefit.
-- Bounded task-local search stays main-session work by default, even cross-directory, when splitting duplicates startup/synthesis. Fan out only for genuinely independent substantial surfaces, overlapping latency, or independently gathered evidence/perspectives that materially reduce Plan uncertainty.
-- Before discovery launch, declare main-owned versus agent-owned read scopes. Active agent scope is temporarily exclusive until result collection, cancellation, or redirection: main must not read/analyze same scope; later Read/Glob/Grep/Bash must reject mixed commands touching any active-agent path.
-- Collect all discovery results before cross-surface comparison. Post-result sanity checks target only decision-carrying facts. Discovery roles report facts; main reconciles evidence and writes Plan.
-- Stable same-shape multi-file mechanical repetition defaults to one `mech-executor` with complete one-shot brief, exclusive ownership, independent items, per-item acceptance. Foreground unless possible long command requires background.
-- Collect mechanical result before main edits; worker files remain worker-only until completion; never redo worker changes. Main retains per-item triage, exceptions, integration, acceptance.
-- Direct main execution of qualifying mechanical work requires prior concrete blocker: evolving/coupled evidence, ownership/integration conflict, worker unavailable, or non-positive net benefit.
-- Outside mechanical shape, delegate only when lower cost/quota, preserved context, parallelism, isolated ownership, or fresh-context independence outweigh reconstruction, coordination, integration, verification cost. `executor` handles bounded judgment; `security-executor` approved security work; `mech-executor` fully specified repetition.
-- Dispatch brakes judge one call at a time. Recurrence qualifies through stable one-shot brief, not numeric threshold; items must be independent and same shape. Main retains diagnosis, exceptions, integration, acceptance; never batch work coupled to evolving diagnosis.
-- Single unknown bug stays main-session work through root-cause discovery, trace-driven debugging, coupled state propagation, patch design, first minimal fix, live verification when one path owns them. Never build sequential `scout`→`executor` pipeline. Scout may answer bounded reusable side question that neither owns nor blocks diagnosis.
-- Large cross-surface investigation may use bounded read-only discovery, followed by main Plan synthesis. Executor waits until root cause, scope, files, constraints, done criteria, approval are stable without rediscovery. Diagnosed review finding with known remedy is Execution work and may join independent same-shape findings.
-- One-shot spec includes goal, constraints, done criteria, relevant paths, rationale. Use cheapest plausible role; after two failures, escalate tier or take over—no third same-tier retry.
-- Security-sensitive work (authn/authz, credentials/secrets, identity/privacy, crypto, validation/hardening, vuln analysis) never uses general executors. Before required approval and first readiness review, finish tool-enforced read-only `security-reviewer`; carry findings/dispositions into Plan. After approval, send stable contract to `security-executor`. Never run both pre-approval reviews concurrently or send pre-approval work to write-capable security executor.
-- Any independent-review trigger makes that unit risky: pre-approval `plan-verifier` and post-implementation `verifier` are mandatory Agent calls, with no extra opt-in. Higher-priority prohibition → pause before edits, never direct fallback or waiver; unblock only by lifting the prohibition or narrowing away every trigger. Bounded fail-soft exception applies only without listed risk. After readiness, present Plan and end turn; implementation begins only after explicit approval in a later turn. Plan readiness judges proposed acceptance check.
-- Named-role model routing lives in agent definitions. Omit invocation `model`; override would replace role routing. Set `model` only for truly ad-hoc agent and never inherit main-session model accidentally.
-- `plan-verifier` reviews one stable envelope/slice and returns **READY** or **REVISE** under its role contract; malformed output is protocol failure. Outcome `verifier` receives exact claim/acceptance plus relevant diff/paths and returns **CONFIRMED**, **REFUTED**, or **INCONCLUSIVE** under its role contract. Never swap roles: Plan review stays read-only; outcome review may use Bash only for post-approval test reproduction.
-- Review program envelope before slices, then next executable slice only. Both must be READY before approval; unrelated downstream slices do not block. Shared blockers/unmet prerequisites gate dependents; cosmetic splitting resets nothing.
-- Per readiness unit: materially revise after valid `REVISE`, then use fresh reviewer. Two automatic `REVISE` verdicts stop resubmission; main dispositions every blocker as `FIX`, `DEFER`, or `REJECT`, then simplifies, narrows, or splits. Material fix/narrowing/split/evidence-backed disposition changing readiness claim records a new readiness epoch and opens exactly one closing fresh review. Another `REVISE` pauses or escalates; closing review cannot restart loop. Ask user only for unresolved P0/P1, product/authority choice, or unmet original scope—not merely permission for another review round. Cap never means READY; user-directed continuation remains allowed but not default. Never resubmit substantially unchanged Plan.
-- Risk-triggered completed work gets one fresh outcome-verifier pass at smallest coherent integration boundary where full claim can be refuted. Run primary user-visible acceptance first; avoid micro-verifier calls. Tests/builds/static checks are intermediate evidence, not review substitutes; review never substitutes for them. Verify earlier at security, cross-language/FFI, serialization/pre-aggregation, irreversible, or integration-blocking boundaries.
-- Role verdicts are evidence, never implementation/scope authority. Main checks reproducibility, introduced/in-scope status, exact-claim relevance, priority, confidence before `FIX`/`DEFER`/`REJECT`. Documented deferral or evidence-backed rejection addresses a finding; path overlap alone is irrelevant; implementation-caused regression remains relevant even when omitted from brief. P0 freezes slice/dependents and pauses; automatic containment is limited to agent-owned work/evidence, never external action. P1 requires approved-scope fix or pause. Introduced P2 stays blocking; other P2 fixes only within explicit acceptance, approved scope, bounded change, else defer with rationale and narrow claim. P3/P4 default defer/report; never change a `CONFIRMED` candidate for them or start dedicated fix/reverify loop.
-- Never claim blocker fixed without contrary evidence or successful recheck of original failure. Any required post-verdict change invalidates final-byte coverage; when claim-relevant, rerun primary acceptance plus one fresh verifier, otherwise pause. Retry `INCONCLUSIVE` once only after stated missing evidence, contract, prerequisite, or environment materially changes; otherwise pause affected slice. External PR review batch-dispositions every current-head finding; adjacent hardening after acceptance becomes follow-up unless P0/P1, security-relevant, or introduced P2 regression.
-- Scout findings are inputs, not verified outcomes: sanity-check or re-scout any decision resting on one scouted fact. Verifier gate covers executor work, never reconnaissance. Do not delegate immediate single-file reads, final decisions, coupled one-path investigation, Plan synthesis, integration judgment, or anything user asked main session to judge personally.
+- 每次 Agent call 前先寫 phase 並套用 dispatch brake。Discovery 需要穩定的 research
+  contract，
+  不能預設 outcome；writing 需要穩定且已核准的 execution contract。證據仍在變、ownership
+  重疊、缺少 synthesis/verification owner，或 integration cost 高於收益時，停止 fan-out。
+- 有邊界的 task-local search 預設留在 main session；即使跨 directory，只要拆分只會重複 startup
+  與 synthesis，就不要 fan-out。只有 genuinely independent 的 substantial surface、重疊
+  latency，
+  或獨立取得且能實質降低 Plan uncertainty 的 evidence/perspective 才 fan-out。
+- 開始 discovery 前，宣告 main-owned 與 agent-owned read scope。Active agent scope
+  在收集結果、
+  cancellation 或 redirection 前暫時 exclusive：main 不得讀或分析同一 scope；後續 Read/Glob/
+  Grep/Bash 也必須拒絕碰到 active-agent path 的 mixed command。
+- 收齊所有 discovery result 後才做 cross-surface comparison。Post-result sanity check
+  只檢查
+  會影響決策的 facts。Discovery roles 回報 facts，main 負責整合 evidence 與寫 Plan。
+- 穩定、同形狀的 multi-file mechanical repetition，預設交給一個 `mech-executor`；brief 要一次
+  寫完整，包含 exclusive ownership、independent items 與 per-item acceptance。除非可能的長
+  command 需要 background，否則使用 foreground。
+- 先收 mechanical result，再由 main edit；worker file 在完成前只由 worker 使用，不能重做 worker
+  已做的改動。Main 保留每項 triage、exceptions、integration 與 acceptance。
+- Main 直接執行符合條件的 mechanical work，必須先有具體 blocker：evolving/coupled evidence、
+  ownership/integration conflict、worker unavailable 或 net benefit 不為正。
+- 不符合 mechanical shape 時，只有 delegation 的 lower cost/quota、保留
+  context、parallelism、
+  isolated ownership 或 fresh-context independence 大於
+  reconstruction、coordination、integration、
+  verification cost 才 delegation。`executor` 處理 bounded
+  judgment；`security-executor` 處理核准
+  的 security work；`mech-executor` 處理完整指定的 repetition。
+- Dispatch brake 一次只判斷一個 call。是否能重複執行由穩定的 one-shot brief 決定，不看數字門檻；
+  items 必須獨立且同形狀。Main 保留 diagnosis、exceptions、integration、acceptance；不能把仍在
+  演變的 diagnosis 綁成一批。
+- 單一未知 bug 從 root-cause discovery、trace-driven debugging、coupled state
+  propagation、patch
+  design、第一個最小 fix 到 live verification 都留在 main session，只要同一條 path 能涵蓋。不要
+  建立 sequential `scout`→`executor` pipeline。Scout 只能回答不擁有、也不阻塞 diagnosis 的
+  bounded reusable side question。
+- 大型 cross-surface investigation 可以先做 bounded read-only discovery，再由 main 合成
+  Plan。
+  `executor` 要等 root cause、scope、files、constraints、done criteria 與 approval
+  穩定，不要重做
+  discovery。已知 remedy 的 diagnosed review finding 屬於 Execution work，可加入獨立同形狀
+  findings。
+- One-shot spec 必須有 goal、constraints、done criteria、relevant paths 與
+  rationale。選最便宜的
+  合適 role；失敗兩次後升級 tier 或由 main 接手，不做第三次同 tier retry。
+- Security-sensitive
+  work（authn/authz、credentials/secrets、identity/privacy、crypto、validation/
+  hardening、vuln analysis）不得交給 general executors。必要 approval 與第一次 readiness
+  review 前，
+  先完成 tool-enforced read-only `security-reviewer` ，把 findings/dispositions 帶進
+  Plan。approval
+  後才把穩定 contract 交給 `security-executor`。禁止兩個 pre-approval review 同時執行，也不能把
+  pre-approval work 交給可寫入的 security executor。
+- 任何 independent-review trigger 都讓 unit 變成 risky：pre-approval `plan-verifier`
+  與 post-
+  implementation `verifier` 是必要的 Agent calls，不需額外 opt-in。較高優先級的禁止事項出現時，
+  edit 前 pause，不能 direct fallback 或 waiver；只有解除禁止或縮小到完全沒有 trigger 才能恢復。
+  Bounded fail-soft 只適用於沒有列出 risk 的工作。readiness 後提出 Plan 並結束 turn；後續 turn
+  取得明確 approval 前，implementation 不開始。Plan readiness 必須判斷 proposed acceptance
+  check。
+- Named-role model routing 放在 agent definitions。Invocation 不要指定 `model` ，因為
+  override 會取代
+  role routing；只有真正 ad-hoc agent 才設定 `model`，也不能意外繼承 main-session model。
+- `plan-verifier` 依 role contract review 一個穩定的 envelope/slice，回傳 **READY** 或
+  **REVISE**；
+  malformed output 是 protocol failure。Outcome `verifier` 收到 exact
+  claim/acceptance 與相關
+  diff/paths，依 role contract 回傳 **CONFIRMED**、**REFUTED** 或
+  **INCONCLUSIVE**。不能交換 roles：
+  Plan review 保持 read-only；outcome review 只能在 approval 後用 Bash 重現 test。
+- 先 review program envelope，再 review 下一個可執行 slice。兩者都 `READY` 才能 approval；無關的
+  downstream slices 不阻塞。Shared blockers 或未滿足 prerequisite 會卡住 dependents；只做
+  cosmetic
+  splitting 不會重設任何東西。
+- 每個 readiness unit 在有效 `REVISE` 後要實質修改，再用 fresh reviewer。兩次自動 `REVISE` 後停止
+  resubmission；main 對每個 blocker 做 `FIX`、`DEFER` 或 `REJECT`，再簡化、縮小或拆分。會改變
+  readiness claim 的 material fix/narrowing/split/evidence-backed disposition
+  要記錄新 readiness
+  epoch，並開 exactly one closing fresh review。再次 `REVISE` 就 pause 或升級；closing
+  review 不得
+  重新啟動 loop。只為 unresolved P0/P1、product/authority choice 或 unmet original
+  scope 問使用者，
+  不為下一輪 review 的 permission 問。Cap 永遠不等於 READY；user-directed continuation 可以存在，
+  但不是預設。不能重新送出實質未改的 Plan。
+- Risk-triggered completed work 在最小、可整體反駁 claim 的 integration boundary 做一次
+  fresh
+  outcome-verifier。先跑 primary user-visible acceptance，避免 micro-verifier
+  calls。Tests/builds/
+  static checks 是 intermediate evidence，不能取代 review；review 也不能取代它們。在 security、
+  cross-language/FFI、serialization/pre-aggregation、irreversible 或
+  integration-blocking boundary
+  提前驗證。
+- Role verdicts 是 evidence，不是 implementation/scope authority。Main 在 `FIX`
+  /`DEFER`/`REJECT` 前
+  檢查 reproducibility、introduced/in-scope status、exact-claim relevance、priority
+  與 confidence。
+  有紀錄的 deferral 或有 evidence 支持的 rejection 就算處理 finding；只有 path overlap 不相關，
+  implementation-caused regression 即使 brief 沒列也相關。P0 凍結 slice/dependents 並
+  pause；
+  automatic containment 只限 agent-owned work/evidence，不能做 external action。P1 要
+  approved-scope
+  fix 或 pause。Introduced P2 仍阻塞；其他 P2 只有在 explicit acceptance、approved scope 與
+  bounded
+  change 內才修，否則帶 rationale defer 並縮小 claim。P3/P4 預設 defer/report；不能因為它們改動
+  `CONFIRMED` candidate 或啟動專門 fix/reverify loop。
+- 沒有 contrary evidence 或 original failure 的 successful recheck，不能宣稱 blocker
+  已修好。任何
+  post-verdict change 都會讓 final-byte coverage 失效；若和 claim 有關，重跑 primary
+  acceptance
+  與一次 fresh verifier，否則 pause。`INCONCLUSIVE` 只有在 missing
+  evidence、contract、prerequisite
+  或 environment 確實改變後才能 retry 一次，否則 pause affected slice。External PR review
+  要對每個
+  current-head finding 做 batch disposition；acceptance 後的相鄰 hardening 列為
+  follow-up，除非是
+  P0/P1、security-relevant 或 introduced P2 regression。
+- Scout findings 是 inputs，不是 verified outcomes：任何依賴單一 scout fact 的 decision 都要
+  sanity-check 或 re-scout。Verifier gate 只涵蓋 executor work，不涵蓋
+  reconnaissance。不要 delegation
+  immediate single-file read、final decision、coupled one-path
+  investigation、Plan synthesis、
+  integration judgment，或 Miyago 已要求由 main session 親自判斷的工作。
 
-### Recovery and authority
+### Recovery and authority（恢復與權限）
 
-- Severity rules apply every verification run; AUTO/ASK mode selection applies only to likely-long autonomous work. Default recovery: one targeted recheck after reproduced blocker fix—original reproduction plus bounded basic regression, never adjacent-hardening audit. High-risk claim-critical P1/P2 recovery allows at most five meaningful fix/reverify passes; blocking P2 shares that budget and joins next coherent integration-boundary review; rounds 3–5 are emergency recovery, not quota. Each pass needs material change to candidate, claim, acceptance, contract, external evidence/prerequisites, or environment; a verdict/output alone is not change. Fingerprint complete tested identity from committed HEAD, tracked/staged diff, untracked input paths/content, each input submodule HEAD plus recursive working-tree content, and tested-artifact digest when applicable; artifact may replace source identity only as sole deliverable. Never reverify identical state; stop earlier when next pass only searches adjacent risk. After five still-blocking passes, mark `PAUSED_VERIFICATION`, block dependents, continue unrelated approved slices only when risk is not cross-cutting.
-- Before likely long autonomous work, offer `AUTO` or `ASK` and wait. Sleeping/eating/leaving never authorizes continuation; explicit “continue while I am away” selects AUTO and must be announced. `/goal` preserves objective only. Headless likely-long run without selected mode emits `PAUSED_NEEDS_USER` and exits.
-- `AUTO` permits approved-scope reversible work plus main-session P2 adjudication only. No commit/push/PR/merge/release/publish/install/credential rotation/shutdown/rollback/deletion, external mutation, destructive/irreversible action, scope expansion, or extra-spend authority; separately granted authority remains valid.
-- `ASK` uses `AskUserQuestion` when available; otherwise end with `PAUSED_NEEDS_USER`, one concise question, choices, recommendation. Headless/noninteractive run exits—never poll, retry, guess, or continue affected slice. Questions belong to main session, never child. P0 freezes affected slice/dependents; cross-cutting P0 stops program. Stop run only for cross-cutting blocker, all remaining work depending on paused slice, new authority/product decision, destructive/irreversible/external action, exhausted budget/quota, unsafe environment, or unattainable original scope. Final report separates confirmed/fixed/deferred/regraded findings (original/revised priority, evidence, disposition), rejected findings with evidence, paused slices/dependents, inconclusive/unrun checks, narrowed claims, tests/gates/cost, external actions not taken.
+- 每次 verification run 都套用 severity rules；AUTO/ASK mode 只適用於可能很久的
+  autonomous work。預設 recovery 是 blocker fix 重現後做一次 targeted recheck：重跑
+  original reproduction 加 bounded basic regression，不做相鄰 hardening audit。高風險且
+  claim-critical 的 P1/P2 recovery 最多五次有意義的 fix/reverify；blocking P2 共用這個
+  預算，並加入下一個完整的 integration-boundary review；第 3-5 輪是 emergency recovery，
+  不是 quota。每輪都要有 candidate、claim、acceptance、contract、external evidence/
+  prerequisites 或 environment 的實質變化；單獨的 verdict/output 不算變化。測試身份要
+  fingerprint committed HEAD、tracked/staged diff、untracked input
+  paths/content、每個
+  input submodule 的 HEAD 與 recursive working-tree content，必要時加 tested-artifact
+  digest；
+  只有 artifact 是唯一交付物時，才可用它取代 source identity。不能對相同 state 重驗；下一輪
+  只會搜尋相鄰風險時提早停止。五輪仍阻塞就標成 `PAUSED_VERIFICATION`、阻止 dependents；
+  只要風險不 cross-cutting，仍可繼續無關且已核准的 slices。
+- 可能很久的 autonomous work 開始前，先提供 `AUTO` 或 `ASK` 並等待。睡覺、吃飯或離開不
+  代表授權繼續；明確說「我不在時繼續」才選 AUTO，且要公告。`/goal` 只保存 objective。
+  Headless 的 long run 沒有選 mode 時，輸出 `PAUSED_NEEDS_USER` 後離開。
+- `AUTO` 只允許 approved-scope 的可逆工作與 main-session P2 adjudication。不能
+  commit/push/
+  PR/merge/release/publish/install、credential
+  rotation、shutdown、rollback、deletion、
+  external mutation、destructive/irreversible action、scope expansion 或
+  extra-spend authority；
+  另行授予的 authority 仍有效。
+- `ASK` 有 `AskUserQuestion` 時使用它；否則以 `PAUSED_NEEDS_USER` 結束，提出一個簡短問題、
+  choices 與 recommendation。Headless/noninteractive run 直接離開；不能 poll、retry、猜測或
+  繼續 affected slice。問題只能由 main session 提出，不能由 child 提出。P0 凍結 affected
+  slice/dependents；cross-cutting P0 停止 program。只有 cross-cutting
+  blocker、剩餘工作全依賴
+  paused slice、新 authority/product decision、destructive/irreversible/external
+  action、
+  budget/quota 用盡、不安全 environment 或原始 scope 無法達成時才停止。Final report 分開列出
+  confirmed/fixed/deferred/regraded findings（original/revised
+  priority、evidence、disposition）、
+  有 evidence 的 rejected findings、paused slices/dependents、inconclusive/unrun
+  checks、
+  narrowed claims、tests/gates/cost 與沒有執行的 external actions。
 
-### Parallel and runtime mechanics
+### Parallel and runtime mechanics（平行與 runtime 機制）
 
-- Schedule by dependency, not eventual need. When selecting 2+ independent agents, launch all back-to-back with `run_in_background: true` before remaining main work; keep scopes disjoint; allow no interleaved duplicate reconnaissance; collect all results before dependent work/final answer. Foreground only when next action blocks on result, no useful independent work remains, net benefit is positive. Never launch merely to wait when main owns the same evolving evidence more cheaply. Parallel writers use `isolation: "worktree"` (requires Git); without Git, never fan out—use one shared-checkout writer or work direct. Read-only roles may share checkout. Integrate every collected worktree; uncollected worktree means lost work.
-- Long-running processes belong to main session. Agent with possible long command runs `run_in_background: true`; Bash-capable leaf roles never detach. Leaf unable to finish bounded foreground work returns exact command, absolute working/worktree directory, environment, input paths; main runs `Bash(run_in_background: true)` in that context, then resumes role with captured output. Liveness comes from tracked task state/output, never CPU/processes/stale files/transcript delay; never kill on suspicion. Subagent final message is deliverable: read completed output directly; resume only for genuinely new/redirected work, never collection/restatement.
+- 依 dependency 排程，不依 eventual need。選兩個以上獨立 agents 時，在做剩餘 main work
+  前用 `run_in_background: true` 連續啟動；scope 必須不重疊，禁止交錯的重複 reconnaissance，
+  收齊所有 result 後才做 dependent work 或 final answer。只有下一步被 result 卡住、沒有其他
+  有用的獨立工作且 net benefit 為正時才用 foreground。main 能更便宜地處理同一份 evolving
+  evidence 時，不要只為了等待而 launch。平行 writer 使用 `isolation: "worktree"`（需要 Git）；
+  沒有 Git 時禁止 fan-out，改用一個 shared-checkout writer 或由 main 直接做。Read-only roles
+  可以共用 checkout。每個收回的 worktree 都要整合；未收回的 worktree 等於遺失 work。
+- Long-running process 歸 main session 管。可能很久的 command 用
+  `run_in_background: true` ；
+  能用 Bash 的 leaf role 不得 detach。Leaf 無法在 bounded foreground 完成時，回傳 exact
+  command、
+  absolute working/worktree directory、environment 與 input paths；main 在該
+  context 執行
+  `Bash(run_in_background: true)` ，再用 captured output 恢復 role。Liveness 來自
+  tracked task
+  state/output，不來自 CPU、process、stale file 或 transcript delay；不能因猜疑而
+  kill。Subagent
+  的 final message 是 deliverable，直接讀取完成內容；只有 genuinely new/redirected work 才
+  resume，
+  不為 collection 或 restatement resume。
 <!-- pilotfish:end -->

@@ -1,6 +1,6 @@
 ---
 name: post-mortem
-description: "Post-mortem generator -- after incident handling, produce a structured report (timeline, root cause, action items)."
+description: "Post-mortem generator：incident handling 後產出結構化 report（timeline、root cause、action items）。"
 when_to_use: "事故處理後，產出 timeline / root cause / action items 報告"
 tags: [post-mortem, incident, report, sre]
 effort: medium

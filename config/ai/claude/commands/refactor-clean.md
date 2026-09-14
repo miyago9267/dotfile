@@ -1,6 +1,6 @@
 ---
 name: refactor-clean
-description: Safely remove dead code -- find unused code and dependencies, delete under test protection.
+description: 安全移除 dead code；找出未使用的 code 與 dependencies，在 tests 保護下刪除。
 ---
 
 # /refactor-clean

@@ -1,6 +1,6 @@
 ---
 name: reverse-engineering
-description: "Reverse-engineering mode -- methodology and output rules for minified/obfuscated/closed-source code. Triggers: reverse, decompile, minified, obfuscated, SDK internals."
+description: "Reverse-engineering mode：minified/obfuscated/closed-source code 的 methodology 與 output rules。觸發詞：reverse、decompile、minified、obfuscated、SDK internals。"
 when_to_use: "面對 minified / obfuscated / closed-source 程式碼時的分析方法與輸出規則"
 tags: [reverse, decompile, minified, obfuscated, sdk]
 effort: high
@@ -67,4 +67,4 @@ alwaysApply: false
 | 主報告 | `docs/learning/` 或 `docs/research/` | `{target}-reverse-engineering-v{ver}.md` |
 | 錨點索引 | 同上 | `{target}-anchor-index-v{ver}.md` |
 | 工程筆記 | 同上 | `{topic}-工程筆記.md` |
-| Patch script | `scripts/` | `patch-{name}.sh` |
+| Patch script（修補腳本） | `scripts/` | `patch-{name}.sh` |

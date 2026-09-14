@@ -1,6 +1,6 @@
 ---
 name: markdown-lint
-description: Apply markdownlint rules automatically when writing Markdown. Always on. Hard rule.
+description: 撰寫 Markdown 時自動套用 markdownlint rules。永遠生效，且是 hard rule。
 when_to_use: "撰寫或修改 Markdown 時，自動套用 markdownlint 規則"
 tags: [markdown, lint, format, docs]
 effort: low

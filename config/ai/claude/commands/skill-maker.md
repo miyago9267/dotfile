@@ -1,6 +1,6 @@
 ---
 name: skill-maker
-description: "Create a new skill -- two-stage flow (draft -> review) ensuring complete frontmatter, clear entry/exit, unbroken skill chains."
+description: "建立新 skill；採兩階段流程（draft -> review），確保 frontmatter 完整、entry/exit 清楚、skill chain 不斷裂。"
 ---
 
 # /skill-maker [name] [description]

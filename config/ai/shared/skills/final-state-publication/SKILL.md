@@ -1,67 +1,61 @@
 ---
 name: final-state-publication
-description: Generate PRs, comments, summaries, checkpoints, and memory entries from the currently accepted final state instead of conversational correction history. Use when a durable artifact will be written or published; do not use for ordinary direct replies.
+description: 從目前已接受的 final state 產生 PRs、comments、summaries、checkpoints 與 memory entries，不使用對話中的修正歷史。要寫入或發布 durable artifact 時使用；一般直接回覆不要使用。
 metadata:
-  short-description: Publish final state without transcript residue
+  short-description: 發布 final state，不帶入 transcript residue
 ---
 
-# Final-State Publication
+# Final-State Publication（最終狀態發布）
 
-Use this skill when turning an interactive task into a durable artifact. The
-artifact must describe the accepted current state, not the path taken to reach
-it.
+把 interactive task 轉成 durable artifact 時使用此 skill。Artifact 必須描述已
+接受的 current state，不描述抵達它的過程。
 
-## Source boundary
+## 來源邊界
 
-Treat the conversation as execution context. It may contain guesses, rejected
-interpretations, abandoned edits, and self-corrections. It is not a publication
-source.
+把 conversation 當成 execution context。裡面可能有 guesses、被拒絕的
+interpretations、abandoned edits 與 self-corrections；它不是 publication source。
 
-Build the artifact from the narrowest available set of authoritative inputs:
+用最小且 authoritative 的 input set 建立 artifact：
 
-1. the currently accepted task intent and acceptance criteria;
-2. current source and the final diff;
-3. direct validation evidence;
-4. repository or destination-specific templates.
+1. 目前 accepted task intent 與 acceptance criteria；
+2. current source 與 final diff；
+3. direct validation evidence；
+4. repository 或 destination-specific templates。
 
-If those inputs do not establish a claim, mark it `unverified` or omit it. Do
-not recover the claim from conversational history merely because it appeared
-there earlier.
+這些 inputs 無法建立的 claim，標記為 `unverified` 或省略。不要只因為 claim
+早先出現在 conversation history，就從那裡撿回來。
 
-## State normalization
+## 狀態正規化
 
-When a user correction changes the requested outcome, replace the affected
-field in the working state. Do not promote the correction into a new
-requirement or preserve the rejected interpretation in the final description.
+使用者 correction 改變 requested outcome 時，替換 working state 中受影響的
+field。不要把 correction 升格成新 requirement，也不要在 final description
+保留已拒絕的 interpretation。
 
-Describe the result positively and independently. A removed or rejected item
-belongs in the artifact only when its absence is an independent acceptance,
-safety, compatibility, legal, or domain constraint. Otherwise it is iteration
-residue.
+以正面且獨立的方式描述 result。Removed 或 rejected item 只有在其缺席本身是
+independent acceptance、safety、compatibility、legal 或 domain constraint 時，
+才寫入 artifact；否則就是 iteration residue。
 
-## Publication rules
+## 發布規則
 
-- State what the change does now.
-- Include only rationale that affects maintenance, operation, review, or
-  acceptance and cannot be recovered from the diff.
-- Omit prior attempts, correction steps, abandoned approaches, removed content,
-  and explanations of what the work is not.
-- Do not invent a fixed section set. Use the destination template and the
-  smallest structure that communicates the final result.
-- Keep routine process narration out of PRs, comments, summaries, and memory.
+- 說明 change 現在會做什麼。
+- 只保留會影響 maintenance、operation、review 或 acceptance，且無法從 diff
+  直接讀出的 rationale。
+- 省略 prior attempts、correction steps、abandoned approaches、removed content，
+  以及解釋工作「不是什麼」的內容。
+- 不要發明固定 section set；使用 destination template 與能表達 final result
+  的最小結構。
+- PRs、comments、summaries 與 memory 不要放 routine process narration。
 
-Before publishing, apply this test:
+發布前套用這個 test：
 
-> Could a reader understand and review this artifact without seeing the
-> conversation?
+> 讀者不看 conversation，也能理解並 review 這份 artifact 嗎？
 
-If no, replace historical narration with the current accepted state, or mark
-the missing fact as unknown. For every negative statement, verify that it is a
-durable constraint rather than evidence of a previous correction.
+如果答案是 no，就用 current accepted state 取代 historical narration，或把
+missing fact 標為 unknown。每個 negative statement 都要確認它是 durable
+constraint，而不是 previous correction 的 evidence。
 
-## Context isolation
+## Context 隔離
 
-When possible, use a fresh publication context containing only the authoritative
-inputs above. Do not paste the full transcript into a PR or summary writer.
-When a fresh context is unavailable, mentally apply the same boundary and
-discard transcript-only material before drafting.
+可以時，使用只包含上述 authoritative inputs 的 fresh publication context。
+不要把完整 transcript 貼給 PR 或 summary writer。沒有 fresh context 時，撰寫
+前仍要套用相同 boundary，丟掉只存在於 transcript 的 material。

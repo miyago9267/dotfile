@@ -1,6 +1,6 @@
 ---
 name: strategic-compact
-description: "Suggest manual /compact at logical breakpoints to avoid mid-task auto-compaction context loss. Fired by a PreToolUse hook; no manual trigger."
+description: "在 logical breakpoints 建議手動 /compact，避免 task 中途 auto-compaction 遺失 context。由 PreToolUse hook 觸發，不需手動 trigger。"
 when_to_use: "邏輯斷點時建議手動 /compact，避免任務中途自動壓縮丟失 context"
 tags: [compact, context, checkpoint]
 effort: low
@@ -9,7 +9,7 @@ runtime-scope: claude-native
 alwaysApply: false
 ---
 
-# Strategic Compact Skill
+# Strategic Compact Skill（策略性 compact）
 
 在工作流程的邏輯斷點建議手動 `/compact`，而非依賴任意觸發的 auto-compaction。
 

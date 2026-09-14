@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Implementation planning -- restate requirements, assess risk, break down steps. Code only after confirmation.
+description: Implementation planning；重述 requirements、評估 risk、拆解 steps。確認後才寫 code。
 ---
 
 # /plan [描述]

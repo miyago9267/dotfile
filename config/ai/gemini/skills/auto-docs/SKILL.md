@@ -4,7 +4,7 @@ description: 自動文檔歸檔（全域版，模型無關）
 alwaysApply: true
 ---
 
-# Auto Documentation Skill
+# Auto Documentation Skill（自動文件歸檔）
 
 ## 核心規則
 

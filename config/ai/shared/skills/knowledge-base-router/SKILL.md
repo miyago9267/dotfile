@@ -1,93 +1,89 @@
 ---
 name: knowledge-base-router
-description: Automatically route project, architecture, implementation, spec, incident, deployment, business-logic, and historical-decision questions to Miyago's local Obsidian knowledge bases. Use when a task names or occurs inside a known project, asks what was decided before or why, references specs, architecture, SOPs, infra, PMS, or RiceCall, requests a knowledge-base lookup or update, or when existing project knowledge could prevent rediscovery. Invoke proactively even when Miyago does not explicitly mention a knowledge base; follow the selected vault's local AGENTS.md for writes.
+description: 自動將 project、architecture、implementation、spec、incident、deployment、business-logic 與 historical-decision 問題 route 到 Miyago 的 local Obsidian knowledge bases。Task 位於已知 project、詢問過去的決策或原因、提到 specs、architecture、SOPs、infra、PMS、RiceCall、要求 knowledge-base lookup/update，或既有 project knowledge 能避免重新探索時使用。即使 Miyago 沒明說 knowledge base，也要主動 invoke；寫入時遵守選定 vault 的 local AGENTS.md。
 ---
 
-# Knowledge Base Router
+# Knowledge Base Router（知識庫路由）
 
-Consult the relevant local vault before answering or changing a project when
-existing decisions, specs, architecture, operations knowledge, or domain rules
-could affect the work. Do not wait for Miyago to provide a vault path.
+回答或修改 project 前，只要既有 decisions、specs、architecture、operations
+knowledge 或 domain rules 可能影響工作，就先查相關的 local vault。不要等 Miyago
+提供 vault path。
 
-## Route the Task
+## 路由任務
 
-| Need | Vault | Access |
+| 需求 | Vault | Access |
 | --- | --- | --- |
-| Miyago-owned projects, specs, architecture, patterns, tools, workflows, and personal engineering decisions | `/Users/miyago/Project/Note/miyago-knowledge-base` | Read and write through its `AGENTS.md` |
-| Service configuration, infrastructure, deployment, SOPs, incidents, and ADRs | `/Users/miyago/Project/Note/sre-knowledge-base` | Read and write through its `AGENTS.md` |
-| PMS business logic, DB schema, and application-layer triage | `/Users/miyago/Project/Note/itrd-knowledge-base` | Read-only; never write |
-| RiceCall product, architecture, operations, and project-specific knowledge | `/Users/miyago/Project/Note/ricecall-knowledge-base` | Read and write through its `AGENTS.md` |
+| Miyago 擁有的 projects、specs、architecture、patterns、tools、workflows 與個人工程決策 | `/Users/miyago/Project/Note/miyago-knowledge-base` | 透過其 `AGENTS.md` 讀寫 |
+| Service configuration、infrastructure、deployment、SOPs、incidents 與 ADRs | `/Users/miyago/Project/Note/sre-knowledge-base` | 透過其 `AGENTS.md` 讀寫 |
+| PMS business logic、DB schema 與 application-layer triage | `/Users/miyago/Project/Note/itrd-knowledge-base` | Read-only；永遠不寫入 |
+| RiceCall product、architecture、operations 與 project-specific knowledge | `/Users/miyago/Project/Note/ricecall-knowledge-base` | 透過其 `AGENTS.md` 讀寫 |
 
-Use more than one vault when the task crosses boundaries. Prefer the RiceCall
-vault for RiceCall details; treat any node in another vault as a routing index,
-not the canonical content.
+Task 跨越 boundaries 時使用多個 vault。RiceCall details 優先使用 RiceCall vault；
+其他 vault 的 node 只當 routing index，不當 canonical content。
 
-## Identify the Project
+## 辨識專案
 
-1. Inspect the current working directory, Git root, repository name, remote, or
-   path already supplied by the user.
-2. For personal project work, open the Miyago vault `INDEX.md`, then locate the
-   matching project node under `wiki/projects/`.
-3. Route by the subject matter when no repository is present: infra to SRE,
-   PMS domain questions to ITRD, and RiceCall work to its canonical vault.
-4. Ask only when multiple plausible vaults would materially change the answer
-   and local evidence cannot resolve the ambiguity.
+1. 檢查 current working directory、Git root、repository name、remote，或使用者
+   已提供的 path。
+2. Personal project work 先開 Miyago vault 的 `INDEX.md`，再到 `wiki/projects/`
+   找 matching project node。
+3. 沒有 repository 時依 subject matter route：infra 到 SRE、PMS domain questions
+   到 ITRD、RiceCall work 到它的 canonical vault。
+4. 只有多個 plausible vault 會實質改變答案，且 local evidence 無法消除歧義時，
+   才提問。
 
-## Query Workflow
+## 查詢流程
 
-1. For project, architecture, history, routing, configuration, or next-step
-   questions, first ask the installed Factory for a bounded RoutePlan:
+1. 對 project、architecture、history、routing、configuration 或 next-step questions，
+   先向已安裝的 Factory 要 bounded RoutePlan：
 
    ```bash
    agent-workflow route --cwd "$PWD" --query "<the user's question>"
    ```
 
-   Use its `retrieval_order` and selected evidence as the search boundary. If
-   the command is unavailable, report the bootstrap gap and use the manual
-   process below; do not scan every vault.
-2. Read the selected vault's `AGENTS.md` if it is not already loaded.
-3. Read `INDEX.md` first when present; use its MOCs to select candidates.
-4. Search narrowly with `rg` across titles, aliases, tags, frontmatter,
-   wikilinks, `_MOC.md`, and relevant project nodes.
-5. Read only the nodes needed for the current decision. Follow `## Related`
-   links only when they resolve a concrete gap.
-6. State which node supplied a decision or rule. Separate verified facts,
-   inferences, conflicts, and missing knowledge.
-7. If the vault has no relevant evidence, say so and continue from repository
-   facts; do not invent a knowledge-base conclusion.
+   使用它的 `retrieval_order` 與 selected evidence 作為搜尋邊界。Command unavailable
+   時回報 bootstrap gap，再使用下方 manual process；不要掃描每個 vault。
+2. 如果 selected vault 的 `AGENTS.md` 尚未載入，先讀它。
+3. 存在時先讀 `INDEX.md`，用它的 MOCs 選 candidates。
+4. 使用 `rg` 對 titles、aliases、tags、frontmatter、wikilinks、`_MOC.md` 與相關
+   project nodes 做 narrow search。
+5. 只讀 current decision 所需的 nodes。只有能補上 concrete gap 時，才追 `## Related`
+   links。
+6. 說明是哪個 node 提供 decision 或 rule；分開 verified facts、inferences、
+   conflicts 與 missing knowledge。
+7. Vault 沒有 relevant evidence 時明說，接著使用 repository facts；不要捏造
+   knowledge-base conclusion。
 
-## Consult Proactively
+## 主動查詢
 
-Look up knowledge before implementation, diagnosis, planning, or review when
-any of these apply:
+符合以下任一情況時，在 implementation、diagnosis、planning 或 review 前查 knowledge：
 
-- The current repo has a project node or recorded spec history.
-- The request asks about prior decisions, architecture, conventions, trade-offs,
-  incidents, deployment, business rules, or why something works this way.
-- A completed or archived spec may already have promoted canonical knowledge.
-- Re-discovering the answer from code would duplicate recorded project context.
-- Infra, PMS, or RiceCall domain knowledge could change the safe next action.
+- Current repo 有 project node 或 recorded spec history。
+- Request 詢問 prior decisions、architecture、conventions、trade-offs、incidents、
+  deployment、business rules，或某件事為何如此運作。
+- Completed 或 archived spec 可能已 promotion 成 canonical knowledge。
+- 從 code 重新發現答案會重複已記錄的 project context。
+- Infra、PMS 或 RiceCall domain knowledge 可能改變安全的 next action。
 
-Skip the vault lookup for trivial text edits, self-contained local facts, or
-tasks whose answer cannot depend on stored project knowledge.
+Trivial text edits、self-contained local facts，或答案不可能依賴 stored project
+knowledge 的 tasks，可跳過 vault lookup。
 
-## Write Safely
+## 安全寫入
 
-Do not write merely because a query occurred. Write only when Miyago asks to
-record or update knowledge, or when an authorized workflow explicitly includes
-spec promotion or knowledge maintenance.
+不要因為發生 query 就寫入。只有 Miyago 要求記錄／更新 knowledge，或 authorized
+workflow 明確包含 spec promotion／knowledge maintenance 時才寫。
 
-For an allowed write:
+允許寫入時：
 
-1. Follow the target vault's `AGENTS.md`, schema, templates, deduplication, MOC,
-   index, and log rules.
-2. Prefer updating an existing canonical node over creating a duplicate.
-3. Use Obsidian wikilinks inside vaults.
-4. Never write to `itrd-knowledge-base`.
-5. Never store credentials, secrets, personal data, or unverified claims.
-6. Run the target vault's lint command and report the result.
+1. 遵守 target vault 的 `AGENTS.md`、schema、templates、deduplication、MOC、
+   index 與 log rules。
+2. 優先更新 existing canonical node，不要建立 duplicate。
+3. 在 vault 內使用 Obsidian wikilinks。
+4. 永遠不要寫入 `itrd-knowledge-base`。
+5. 永遠不要儲存 credentials、secrets、personal data 或 unverified claims。
+6. 執行 target vault 的 lint command 並回報結果。
 
-## Trigger Examples
+## 觸發範例
 
 - 「這個專案之前為什麼選這個架構？」
 - 「幫我修 Monika 的 session 問題。」

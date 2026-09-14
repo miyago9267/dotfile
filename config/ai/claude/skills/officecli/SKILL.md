@@ -1,15 +1,15 @@
 ---
 name: officecli
-description: Create, analyze, proofread, and modify Office documents (.docx, .xlsx, .pptx) using the officecli CLI tool. Use when the user wants to create, inspect, check formatting, find issues, add charts, or modify Office documents.
+description: 使用 officecli CLI 工具建立、分析、校閱與修改 Office 文件（.docx、.xlsx、.pptx）。使用者要建立、檢查格式、找問題、加圖表或修改 Office 文件時使用。
 ---
 
-# officecli
+# officecli 文件工具
 
-AI-friendly CLI for .docx, .xlsx, .pptx. Single binary, no dependencies, no Office installation needed.
+適合 AI 使用的 .docx、.xlsx、.pptx CLI。單一 binary，沒有 dependencies，也不需要安裝 Office。
 
-## Install
+## 安裝
 
-If `officecli` is not installed:
+如果尚未安裝 `officecli`：
 
 ```bash
 # macOS / Linux
@@ -19,23 +19,23 @@ curl -fsSL https://d.officecli.ai/install.sh | bash
 irm https://d.officecli.ai/install.ps1 | iex
 ```
 
-Verify with `officecli --version`. If still not found after install, open a new terminal.
+用 `officecli --version` 驗證。安裝後仍找不到時，開新的 terminal。
 
 ---
 
-## Strategy
+## 策略
 
-**L1 (read) → L2 (DOM edit) → L3 (raw XML)**. Always prefer higher layers. Add `--json` for structured output.
+**L1（read）→ L2（DOM edit）→ L3（raw XML）**。優先使用較高層級；需要結構化輸出時加上 `--json`。
 
-**Before doc work, check Specialized Skills** (bottom of this file). Fundraising decks, academic papers, financial models, dashboards, and Morph animations need their own skill loaded first — `load_skill` once, then proceed.
+**開始文件工作前，先檢查本檔案底部的 Specialized Skills**。Fundraising deck、academic paper、financial model、dashboard 與 Morph animation 必須先載入對應 skill；只執行一次 `load_skill`，再繼續工作。
 
 ---
 
-## Help System (IMPORTANT)
+## Help System（重要）
 
-**When unsure about property names, value formats, or command syntax, ALWAYS run help instead of guessing.** One help query beats guess-fail-retry loops.
+**不確定 property name、value format 或 command syntax 時，一律先跑 help，不要猜。** 一次 help query 比猜錯、失敗、重試的循環可靠。
 
-`officecli help` ≡ `officecli --help`, and `officecli <cmd> --help` ≡ `officecli help <cmd>` — same content.
+`officecli help` ≡ `officecli --help`；`officecli <cmd> --help` ≡ `officecli help <cmd>`，兩者內容相同。
 
 ```bash
 officecli help                                  # All commands + global options + schema entry points
@@ -45,42 +45,42 @@ officecli help docx set paragraph               # Verb-filtered: only props usab
 officecli help docx paragraph --json            # Structured schema (machine-readable)
 ```
 
-Format aliases: `word`→`docx`, `excel`→`xlsx`, `ppt`/`powerpoint`→`pptx`. Verbs: `add`, `set`, `get`, `query`, `remove`. MCP exposes the same schema via the single `command` string param: `{"command":"help docx paragraph"}` (not a structured `{"format":...,"type":...}` object — the MCP tool has exactly one param, `command`, and passes it through to the CLI verbatim).
+Format aliases：`word`→`docx`、`excel`→`xlsx`、`ppt`/`powerpoint`→`pptx`。Verbs：`add`、`set`、`get`、`query`、`remove`。MCP 透過單一 `command` string param 提供相同 schema：`{"command":"help docx paragraph"}`。這不是 structured `{"format":...,"type":...}` object；MCP tool 只有一個 `command` param，並原樣傳給 CLI verb。
 
 ---
 
-## Performance: Resident Mode
+## 效能：Resident Mode
 
-**Every command auto-starts a resident on first access** (60s idle timeout) — file-lock conflicts are automatically avoided. Explicit `open`/`close` is still recommended for longer sessions (12min idle):
+**每個 command 第一次存取時都會自動啟動 resident**（60s idle timeout），會自動避免 file-lock conflict。較長的 session（12min idle）仍建議明確使用 `open`/`close`：
 ```bash
 officecli open report.docx       # explicitly keep in memory
 officecli set report.docx ...    # no file I/O overhead
 officecli close report.docx      # save and release
 ```
 
-Opt out of auto-start: `OFFICECLI_NO_AUTO_RESIDENT=1`.
+停用 auto-start：`OFFICECLI_NO_AUTO_RESIDENT=1`。
 
-**Flush only at the non-officecli boundary.** officecli's own reads (`get`/`query`/`view`/`dump`) always see your latest edits, so you never need to save mid-workflow. Run `save` (keeps the resident) or `close` (flush + release) only **before a non-officecli program reads the file** — python-docx/openpyxl, Word, a renderer, delivery/upload. (Idle sessions auto-flush within seconds; `OFFICECLI_RESIDENT_FLUSH=each` makes every mutation flush before returning.)
+**只在離開 officecli 的邊界 flush。** officecli 自己的 reads（`get`/`query`/`view`/`dump`）永遠看得到最新 edits，所以 workflow 中間不用 save。只有在 **non-officecli program 要讀檔案前**，才執行 `save`（保留 resident）或 `close`（flush + release）；例如 python-docx/openpyxl、Word、renderer 或 delivery/upload。（Idle session 會在數秒內 auto-flush；`OFFICECLI_RESIDENT_FLUSH=each` 會讓每次 mutation return 前都 flush。）
 
 ---
 
-## Quick Start
+## 快速開始
 
-**PPT:**
+**PPT：**
 ```bash
 officecli create slides.pptx
 officecli add slides.pptx / --type slide --prop title="Q4 Report" --prop background=1A1A2E
 officecli add slides.pptx '/slide[1]' --type shape --prop text="Revenue grew 25%" --prop x=2cm --prop y=5cm --prop font=Arial --prop size=24 --prop color=FFFFFF
 ```
 
-**Word:**
+**Word：**
 ```bash
 officecli create report.docx
 officecli add report.docx /body --type paragraph --prop text="Executive Summary" --prop style=Heading1
 officecli add report.docx /body --type paragraph --prop text="Revenue increased by 25% year-over-year."
 ```
 
-**Excel:**
+**Excel：**
 ```bash
 officecli create data.xlsx
 officecli set data.xlsx /Sheet1/A1 --prop value="Name" --prop bold=true
@@ -89,7 +89,7 @@ officecli set data.xlsx /Sheet1/A2 --prop value="Alice"
 
 ---
 
-## L1: Create, Read & Inspect
+## L1：建立、讀取與檢查
 
 ```bash
 officecli create <file>               # Create blank .docx/.xlsx/.pptx (type from extension)
@@ -101,21 +101,21 @@ officecli validate <file>             # Validate against OpenXML schema
 
 ### view modes
 
-| Mode | Description | Useful flags |
+| Mode | 說明 | 常用 flags |
 |------|-------------|-------------|
-| `outline` | Document structure | |
-| `stats` | Statistics (pages, words, shapes) | |
-| `issues` | Formatting/content/structure problems | `--type format\|content\|structure`, `--limit N` |
-| `text` | Plain text extraction | `--start N --end N`, `--max-lines N` |
-| `annotated` | Text with formatting annotations | |
-| `html` | Static HTML snapshot — same renderer as `watch`, no server needed | `--browser`, `--page N` (docx), `--start N --end N` (pptx) |
-| `screenshot` / `svg` / `pdf` / `forms` | PNG via headless browser / SVG (pptx slide) / PDF via exporter plugin / form-fields JSON via format-handler plugin | `-o`, `--screenshot-width/-height`, pptx `--grid N` |
+| `outline` | 文件結構 | |
+| `stats` | 統計資料（頁數、字數、shape） | |
+| `issues` | 格式、內容與結構問題 | `--type format\|content\|structure`、`--limit N` |
+| `text` | 純文字擷取 | `--start N --end N`、`--max-lines N` |
+| `annotated` | 附格式標註的文字 | |
+| `html` | 靜態 HTML snapshot；與 `watch` 使用相同 renderer，不需要 server | `--browser`、`--page N`（docx）、`--start N --end N`（pptx） |
+| `screenshot` / `svg` / `pdf` / `forms` | 透過 headless browser 產生 PNG／pptx slide 的 SVG／exporter plugin 產生 PDF／format-handler plugin 產生 form-fields JSON | `-o`、`--screenshot-width/-height`、pptx `--grid N` |
 
-Use `view html` for one-shot snapshots (CI artifacts, archival, diffing); use `watch` when you need live refresh or browser-side click-to-select.
+一次性 snapshot（CI artifact、封存、diff）使用 `view html`；需要 live refresh 或在 browser 點選時使用 `watch`。
 
 ### get
 
-Any XML path via element localName. Use `--depth N` to expand children. Add `--json` for structured output. Default text output is grep-friendly: `path (type) "text" key=val key=val ...`
+可用 element localName 指定任何 XML path。用 `--depth N` 展開 children；需要結構化輸出時加 `--json`。預設文字輸出方便 grep：`path (type) "text" key=val key=val ...`
 
 ```bash
 officecli get report.docx '/body/p[3]' --depth 2 --json
@@ -123,9 +123,9 @@ officecli get slides.pptx '/slide[1]' --depth 1          # list all shapes on sl
 officecli get data.xlsx '/Sheet1/B2' --json
 ```
 
-### Stable ID Addressing
+### Stable ID 尋址
 
-Elements with stable IDs return `@attr=value` paths instead of positional indices. Prefer these in multi-step workflows — positional indices shift on insert/delete, stable IDs do not.
+有 stable ID 的 elements 會回傳 `@attr=value` path，而非 positional index。多步驟 workflow 優先使用這種 path；insert/delete 會讓 positional index 位移，stable ID 不會。
 
 ```
 /slide[1]/shape[@id=550950021]                    # PPT shape
@@ -134,11 +134,11 @@ Elements with stable IDs return `@attr=value` paths instead of positional indice
 /comments/comment[@commentId=1]                    # Word comment
 ```
 
-PPT also accepts `@name=` (e.g. `shape[@name=Title 1]`), with morph `!!` prefix awareness. Elements without stable IDs (slide, run, tr/tc, row) fall back to positional indices.
+PPT 也接受 `@name=`（例如 `shape[@name=Title 1]`），並能辨識 morph 的 `!!` prefix。沒有 stable ID 的 elements（slide、run、tr/tc、row）會 fallback 到 positional index。
 
 ### query
 
-CSS-like selectors: `[attr=value]`, `[attr!=value]`, `[attr~=text]`, `[attr>=value]`, `[attr<=value]`, `:contains("text")`, `:empty`, `:has(formula)`, `:no-alt`. Boolean `and`/`or` supported across `query`/`set`/`remove`: `cell[value>5000 or value<100]`, `cell[(type=Number or type=Date) and value>0]`. Excel row-by-column-name: `Sheet1!row[Salary>5000]`. `set` accepts selectors and Excel-native paths (parity with `get`/`query`). Bare unscoped selectors rejected on `set`/`remove`.
+支援 CSS-like selector：`[attr=value]`、`[attr!=value]`、`[attr~=text]`、`[attr>=value]`、`[attr<=value]`、`:contains("text")`、`:empty`、`:has(formula)`、`:no-alt`。`query`/`set`/`remove` 都支援 Boolean `and`/`or`：`cell[value>5000 or value<100]`、`cell[(type=Number or type=Date) and value>0]`。Excel 可用欄名查詢列：`Sheet1!row[Salary>5000]`。`set` 接受 selector 與 Excel-native path，行為和 `get`/`query` 一致。`set`/`remove` 拒絕沒有 scope 的 bare selector。
 
 ```bash
 officecli query report.docx 'paragraph[style=Normal] > run[font!=Arial]'
@@ -147,9 +147,9 @@ officecli query slides.pptx 'shape[fill=FF0000]'
 
 ---
 
-## Watch & Interactive Selection
+## Watch 與互動選取
 
-Live HTML preview that auto-refreshes on every file change. Browsers can click / shift-click / box-drag to select shapes; the CLI can read the current browser selection and act on it.
+Live HTML preview 會在每次檔案變更時自動 refresh。可以在 browser click、shift-click 或 box-drag 選取 shapes，再由 CLI 讀取目前 browser selection 並套用操作。
 
 ```bash
 officecli watch <file> [--port N]      # Start preview server (default port 26315)
@@ -157,33 +157,33 @@ officecli unwatch <file>               # Stop
 officecli goto <file> <path>           # Scroll watching browser(s) to element (docx: p / table / tr / tc)
 ```
 
-Open the printed `http://localhost:N` URL. Click to select; shift/cmd/ctrl+click to multi-select; drag from empty space to box-select. PPT/Word use blue outline; Excel uses native-style green selection (double-click cell to edit inline; drag a chart to reposition).
+開啟輸出的 `http://localhost:N` URL。click 可選取，shift/cmd/ctrl+click 可多選，從空白處拖曳可框選。PPT/Word 使用藍色外框；Excel 使用原生風格的綠色選取（double-click cell 可 inline edit；拖曳 chart 可 reposition）。
 
-### `get <file> selected` — read what the user clicked
+### `get <file> selected` — 讀取使用者點選的內容
 
 ```bash
 officecli get <file> selected [--json]
 ```
 
-Returns DocumentNodes for whatever is currently selected. Empty result if nothing selected. Exit code != 0 if no watch is running.
+回傳目前選取內容的 DocumentNodes。沒有選取內容時回傳空結果；沒有執行 watch 時 exit code != 0。
 
 ```bash
-# User clicks shapes in the browser, then asks "make these red"
+# 使用者在 browser 點選 shapes，再要求「把這些變成紅色」
 PATHS=$(officecli get deck.pptx selected --json | jq -r '.data.Results[].path')
 for p in $PATHS; do officecli set deck.pptx "$p" --prop fill=FF0000; done
 ```
 
-### Key properties
+### 重要特性
 
-- **Selection survives file edits.** Paths use stable `@id=` form.
-- **All connected browsers share one selection.** Last-write-wins.
-- **Same-file single-watch.** A given file can have only one watch process at a time.
-- **Group shapes select as a whole.** Drilling into individual children of a group is not supported in v1.
-- **Coverage:** `.pptx` shapes/pictures/tables/charts/connectors/groups; `.docx` top-level paragraphs and tables. Inherited layout/master decorations and Word nested elements (table cells, run-level) are not addressable. **`.xlsx` does not emit `data-path`** — `mark`/`selection` on xlsx always resolve `stale=true` (v2 candidate).
+- **Selection 會跨檔案編輯保留。** Paths 使用 stable `@id=` 格式。
+- **所有連線中的 browser 共用一個 selection。** 採 Last-write-wins。
+- **同一檔案只能 single-watch。** 一個檔案同時只能有一個 watch process。
+- **Group shapes 會整組選取。** v1 不支援深入選取 group 的個別 children。
+- **支援範圍：** `.pptx` 的 shapes/pictures/tables/charts/connectors/groups；`.docx` 的 top-level paragraphs 與 tables。Inherited layout/master decorations 和 Word nested elements（table cells、run-level）無法尋址。**`.xlsx` 不會產生 `data-path`**，所以 xlsx 的 `mark`/`selection` 永遠解析成 `stale=true`（v2 candidate）。
 
-### Marks — edit proposals waiting for review
+### Marks — 等待 review 的編輯提案
 
-Use `mark` when changes need human review BEFORE they hit the file. Marks live in the watch process only; a separate `set` pipeline applies accepted ones. For one-shot changes use `set` directly; for permanent file annotations use `add --type comment` (Word native).
+變更需要在人為套用到檔案前 review 時使用 `mark`。Marks 只存在 watch process；另一個 `set` pipeline 會套用已接受的 marks。一次性變更直接使用 `set`；要建立永久檔案註記則使用 `add --type comment`（Word native）。
 
 ```bash
 officecli mark <file> <path> [--prop find=... color=... note=... tofix=... regex=true] [--json]
@@ -191,33 +191,33 @@ officecli unmark <file> [--path <p> | --all] [--json]
 officecli get-marks <file> [--json]
 ```
 
-Props: `find` (literal or regex when `regex=true`; raw form `find='r"[abc]"'`), `color` (hex / `rgb(...)` / 22 named whitelist), `note`, `tofix` (drives apply pipeline). **Path** must be `data-path` format from watch HTML — see subskills for full pipeline.
+Props：`find`（literal；`regex=true` 時為 regex；raw form `find='r"[abc]"'`）、`color`（hex／`rgb(...)`／22 個 named whitelist）、`note`、`tofix`（驅動 apply pipeline）。**Path** 必須使用 watch HTML 產生的 `data-path` 格式；完整 pipeline 見 subskills。
 
 ---
 
-## L2: DOM Operations
+## L2：DOM Operations
 
-### set — modify properties
+### set — 修改 properties
 
 ```bash
 officecli set <file> <path> --prop key=value [--prop ...]
 ```
 
-**Any XML attribute is settable** via element path (found via `get --depth N`) — even attributes not currently present. Without `find=`, `set` applies format to the entire element.
+透過 element path（用 `get --depth N` 找到）可以設定 **任何 XML attribute**，包括目前不存在的 attribute。沒有 `find=` 時，`set` 會把格式套用到整個 element。
 
-**Value formats:**
+**Value formats：**
 
-| Type | Format | Examples |
+| Type | 格式 | 範例 |
 |------|--------|---------|
-| Colors | Hex (with/without `#`), named, RGB, theme | `FF0000`, `#FF0000`, `red`, `rgb(255,0,0)`, `accent1`..`accent6` |
-| Spacing | Unit-qualified | `12pt`, `0.5cm`, `1.5x`, `150%` |
-| Dimensions | EMU or suffixed | `914400`, `2.54cm`, `1in`, `72pt`, `96px` |
+| Colors | Hex（可含或不含 `#`）、named、RGB、theme | `FF0000`、`#FF0000`、`red`、`rgb(255,0,0)`、`accent1`..`accent6` |
+| Spacing | 帶 unit 的數值 | `12pt`、`0.5cm`、`1.5x`、`150%` |
+| Dimensions | EMU 或帶 suffix 的數值 | `914400`、`2.54cm`、`1in`、`72pt`、`96px` |
 
-**Dotted-attr aliases** — `font.<attr>` forms accepted on shape/run/paragraph/table/row/cell/section/styles, e.g. `--prop font.color=red --prop font.bold=true --prop font.size=14pt`. Run `officecli help <fmt> <element>` for the full list.
+**Dotted-attr aliases**：shape/run/paragraph/table/row/cell/section/styles 都接受 `font.<attr>` 形式，例如 `--prop font.color=red --prop font.bold=true --prop font.size=14pt`。完整清單執行 `officecli help <fmt> <element>`。
 
-### find — format or replace matched text
+### find — 格式化或取代符合的文字
 
-Use top-level `--find` / `--replace` on `set` (and `--find` on `query`). Legacy `--prop find=X` still works but emits a hint.
+在 `set` 使用 top-level `--find`／`--replace`（`query` 使用 `--find`）。Legacy `--prop find=X` 仍可用，但會輸出提示。
 
 ```bash
 # Format matched text (auto-splits runs)
@@ -236,15 +236,15 @@ officecli set doc.docx / --find draft --replace final --prop revision.author=Ali
 officecli set slides.pptx / --find draft --replace final
 ```
 
-**Path controls search scope:** `/` = whole document, `/body/p[1]` or `/slide[N]/shape[M]` = specific element, `/header[1]` / `/footer[1]` = headers/footers.
+**Path 會控制搜尋範圍：** `/` = 整份文件，`/body/p[1]` 或 `/slide[N]/shape[M]` = 指定 element，`/header[1]`／`/footer[1]` = headers/footers。
 
-**Notes:**
-- Case-sensitive by default. Case-insensitive: `--prop 'find=(?i)error' --prop regex=true`
-- Matches work across run boundaries
-- No match = silent success. `--json` includes `"matched": N`
-- **Excel:** only `find` + `replace` supported (no find + format props)
+**注意：**
+- 預設區分大小寫。不分大小寫使用：`--prop 'find=(?i)error' --prop regex=true`
+- Matches 可以跨越 run boundary。
+- 沒有 match = 靜默成功；`--json` 會包含 `"matched": N`。
+- **Excel：** 只支援 `find` + `replace`，不支援 find + format props。
 
-### add — add elements or clone
+### add — 新增 elements 或 clone
 
 ```bash
 officecli add <file> <parent> --type <type> [--prop ...]
@@ -254,11 +254,11 @@ officecli add <file> <parent> --type <type> --index N [--prop ...]        # 0-ba
 officecli add <file> <parent> --from <path>                               # clone existing element
 ```
 
-`--after`, `--before`, `--index` are mutually exclusive. No position flag = append to end.
+`--after`、`--before`、`--index` 互斥。沒有 position flag = append 到結尾。
 
-**Element types (with aliases):**
+**Element types（含 aliases）：**
 
-| Format | Types |
+| Format | 支援的 types |
 |--------|-------|
 | **pptx** | slide (incl. hidden), shape (font.latin/ea/cs, direction=rtl, underline.color, highlight=COLOR (Add/Set/Get/HTML preview), effective.X+effective.X.src; arrow alias for rightArrow; slideMaster/slideLayout typed add/set/remove), picture (SVG, brightness/contrast/glow/shadow, rotation, link, tooltip), chart (direction=rtl, pieOfPie, barOfPie, axisLine/gridline per-attr setters, animation+chartBuild=byCategory|bySeries, line dropLines/hiLowLines/upDownBars, anchor=x,y,w,h shorthand), table (cell direction=rtl, fill/background, built-in PowerPoint style catalogue, /col[C] get + swap/copyFrom, row/col Move/CopyFrom), row (tr), connector (from/to accept full-path `@name=`/`@id=` forms — bare `@name=Foo` is rejected, must be `/slide[N]/shape[@name=Foo]` — startshape/endshape SetByPath; edge-to-edge anchoring by default, fromSide/toSide to force an edge, fromIdx/toIdx for raw cxn index), group (link, tooltip, deep walk by get/query/add/remove, ungroup=true dissolves back to slide-absolute), align/distribute (targets= accepts shape[@id=N] paths, not just positional), video/audio (loop, autoStart alias), equation, notes (direction=rtl, lang), comment (legacy + modern p188 threaded round-trip), animation (15 emphasis + 16 exit presets, multi-effect chains, motion-path presets, repeat/restart/autoReverse, chart animations), transition (12 p15 presets + morph/p14), paragraph (para), run, zoom, ole (preview=, full dump round-trip via add-part+raw-set), placeholder (phType=...), model3d (rotation=ax,ay,az; full dump round-trip), smartart (dump round-trip via add-part), diagram (add-only mermaid → native shapes or rendered image, `--type diagram`/`flowchart`). |
 | **docx** | paragraph (direction/font.latin/ea/cs, bold.cs/italic.cs/size.cs, lang.latin/ea/cs, wordWrap, framePr.\*, tabs shorthand), run (lang slots, direction, underline.color, position half-pts, **revision.type=ins\|del\|format\|moveFrom\|moveTo + revision.action=accept\|reject** with .author/.date — bare `@author=`/`@type=` selector on `set /revision[...]` for filtered accept/reject, but `query 'revision[...]'` needs the dotted `revision.author=`/`revision.type=` form; move+revision is run-level paths only, not paragraph-level; **range=START:END** on a paragraph/shape path formats a char span by explicit 0-based half-open offset instead of addressing a run — the offset sibling of find=), table (direction=rtl, hMerge, cantSplit on row/nowrap on cell (both add+set), **virtual column ops**: add/remove/move/copyfrom on /body/tbl[N]/col), row (tr), cell (td), image, header/footer (direction), section (pageNumFmt full enum, direction=rtl, rtlGutter, pgBorders=box), bookmark, comment, footnote, endnote, formfield, sdt, chart, equation, field (28 types), hyperlink, style (direction, indents, pbdr, lineSpacing on Add/Set), toc, watermark, break, ole, **num/abstractNum/lvl**, **tab**, **textbox/shape** (add-mostly — Get returns raw XML preview only, no structured readback; Set is limited to width/height/geometry/fill/line.\*; position is `anchor.x`/`anchor.y` not bare x/y; **textbox-only** `textDirection`/rotation/gradient/shadow — docx shape itself has neither rotation nor gradient), embedded **OLE round-trip on dump→batch**, **diagram** (add-only mermaid → native shapes or rendered image, `--type diagram`/`flowchart`, no x/y at add-time — reposition via `set /body/group[N]`). docDefaults.rtl, autoHyphenation, `get /` exposes locale + /comments /footnotes /endnotes. `create --minimal` for raw OOXML scaffolding. |
@@ -273,9 +273,9 @@ officecli add data.xlsx /Sheet1 --type pivottable \
   --prop grandTotals=rows --prop subtotals=off --prop sort=asc
 ```
 
-Key props: `rows`, `cols`, `values` (Field:func[:showDataAs]), `filters`, `source`, `position`, `layout` (compact/outline/tabular), `repeatLabels`, `blankRows`, `aggregate`, `showDataAs` (percent_of_total/row/col, running_total), `grandTotals`, `subtotals`, `sort`. Aggregators: sum, count, average, max, min, product, stdDev, stdDevp, var, varp, countNums. Date columns auto-group. Run `officecli help xlsx pivottable` for full schema.
+Key props：`rows`、`cols`、`values`（Field:func[:showDataAs]）、`filters`、`source`、`position`、`layout`（compact/outline/tabular）、`repeatLabels`、`blankRows`、`aggregate`、`showDataAs`（percent_of_total/row/col、running_total）、`grandTotals`、`subtotals`、`sort`。Aggregators：sum、count、average、max、min、product、stdDev、stdDevp、var、varp、countNums。Date columns 會自動分組。完整 schema 執行 `officecli help xlsx pivottable`。
 
-### Document-level properties (all formats)
+### 文件層級 properties（所有 formats）
 
 ```bash
 officecli set doc.docx / --prop docDefaults.font=Arial --prop docDefaults.fontSize=11pt
@@ -284,34 +284,34 @@ officecli set data.xlsx / --prop calc.mode=manual --prop calc.refMode=r1c1
 officecli set slides.pptx / --prop defaultFont=Arial --prop show.loop=true --prop print.what=handouts
 ```
 
-Run `officecli help <format> /` for all document-level properties (docDefaults, docGrid, CJK spacing, calc, print, show, theme, extended).
+所有 document-level properties（docDefaults、docGrid、CJK spacing、calc、print、show、theme、extended）執行 `officecli help <format> /` 查詢。
 
-### Sort (xlsx)
+### Sort（xlsx）
 
 ```bash
 officecli set data.xlsx /Sheet1 --prop sort="C desc" --prop sortHeader=true
 officecli set data.xlsx '/Sheet1/A1:D100' --prop sort="A asc" --prop sortHeader=true
 ```
 
-Format: `COL DIR[, COL DIR ...]`. Rejects ranges with merged cells or formulas. Sidecar metadata (hyperlinks, comments, conditional formatting, drawings) follows rows automatically.
+Format：`COL DIR[, COL DIR ...]`。含 merged cells 或 formulas 的 ranges 會被拒絕。Sidecar metadata（hyperlinks、comments、conditional formatting、drawings）會自動跟隨 rows。
 
-### Text-anchored insert (`--after find:X` / `--before find:X`)
+### 以文字錨點插入（`--after find:X`／`--before find:X`）
 
-Locate an insertion point by text match within a paragraph. Inline types (run, picture, hyperlink) insert within the paragraph; block types (table, paragraph) auto-split it. PPT only supports inline.
+用 paragraph 內的文字 match 找到插入點。Inline types（run、picture、hyperlink）會插入 paragraph 內；block types（table、paragraph）會自動切開 paragraph。PPT 只支援 inline。
 
 ```bash
-# Word: inline run after matched text
+# Word：在符合文字後插入 inline run
 officecli add doc.docx '/body/p[1]' --type run --after find:weather --prop text=" (sunny)"
 
-# Word: block table after matched text (auto-splits paragraph)
+# Word：在符合文字後插入 block table（自動切開 paragraph）
 officecli add doc.docx '/body/p[1]' --type table --after "find:First sentence." --prop rows=2 --prop cols=2
 ```
 
 ### Clone
 
-`officecli add <file> / --from '/slide[1]'` — copies with all cross-part relationships.
+`officecli add <file> / --from '/slide[1]'` 會連同所有 cross-part relationships 一起複製。
 
-### move, swap, remove
+### move、swap、remove
 
 ```bash
 officecli move <file> <path> [--to <parent>] [--index N] [--after <path>] [--before <path>]
@@ -319,13 +319,13 @@ officecli swap <file> <path1> <path2>
 officecli remove <file> '/body/p[4]'
 ```
 
-When using `--after` or `--before`, `--to` can be omitted — the target container is inferred from the anchor.
+使用 `--after` 或 `--before` 時可以省略 `--to`；target container 會從 anchor 推導。
 
-### batch — multiple operations in one save cycle
+### batch — 一個 save cycle 執行多個 operations
 
-**Atomic by default (v1.0.137+):** every item still runs and is reported (so `N succeeded, M failed` stays meaningful and every failure surfaces), but if *any* item fails the whole batch rolls back — the file on disk is left byte-identical to before the batch ran (confirmed live in both standalone and resident mode). Use `--best-effort` to restore the old apply-what-succeeds behavior (useful for lossy `dump→batch` replays where losing the whole thing over one unsupported item is worse than a partial result). `--stop-on-error` only changes how early the run stops (remaining items are `skipped`), not whether what ran gets kept — combine it with `--best-effort` if you want "stop at first failure but keep what already succeeded." `--force` is unrelated — it's only the docx-protection bypass. Failed items carry a machine-readable `code` field (same list as `error.code`); a rolled-back batch's JSON summary carries `"atomicRolledBack": true`.
+**預設 Atomic（v1.0.137+）：**每個 item 都會執行並回報（所以 `N succeeded, M failed` 仍有意義，每個 failure 都會浮出來），但只要任一 item 失敗，整個 batch 就 rollback；disk 上的檔案會和 batch 執行前 byte-identical（standalone 與 resident mode 都已 live 確認）。使用 `--best-effort` 可恢復舊的「成功多少套用多少」行為，適合 lossy `dump→batch` replay：一個不支援的 item 若讓整批丟失，代價可能比 partial result 更高。`--stop-on-error` 只改變停止時機（剩餘 items 會是 `skipped`），不改變已執行內容是否保留；要「第一個 failure 就停，但保留已成功內容」時，和 `--best-effort` 一起使用。`--force` 無關，它只用來 bypass docx protection。Failed item 會帶 machine-readable `code` field（和 `error.code` 使用同一份清單）；rollback 的 batch JSON summary 會帶 `"atomicRolledBack": true`。
 
-`officecli dump <file> [<path>]` emits a replayable batch JSON for round-trip — `.docx` (full coverage), `.pptx` (text/tables/pictures/charts/notes/theme + OLE/3D/video/audio/SmartArt/morph/p15 transitions via raw-set passthrough), and `.xlsx` (cells/formulas/styles + tables, conditional formatting, validations, comments, charts, sparklines, pictures, shapes, pivot tables; slicers/chartEx/OLE via verbatim carrier). Path defaults to `/` (whole document); pass a subtree path (docx: `/body`, `/body/p[N]`, `/body/tbl[N]`, `/theme`, `/settings`, `/numbering`, `/styles`; xlsx: `/SheetName`, `/sheet[N]`) to scope the dump. `officecli refresh <file.docx>` recalculates TOC page numbers / PAGE / cross-references after replay (Word backend on Windows; headless-HTML fallback elsewhere). `officecli plugins list` extends support to `.doc`, `.hwpx`, `.pdf` export.
+`officecli dump <file> [<path>]` 會輸出可 replay 的 batch JSON，供 round-trip 使用：`.docx`（full coverage）、`.pptx`（text/tables/pictures/charts/notes/theme + OLE/3D/video/audio/SmartArt/morph/p15 transitions，透過 raw-set passthrough），以及 `.xlsx`（cells/formulas/styles + tables、conditional formatting、validations、comments、charts、sparklines、pictures、shapes、pivot tables；slicers/chartEx/OLE 透過 verbatim carrier）。Path 預設是 `/`（整份文件）；傳入 subtree path（docx：`/body`、`/body/p[N]`、`/body/tbl[N]`、`/theme`、`/settings`、`/numbering`、`/styles`；xlsx：`/SheetName`、`/sheet[N]`）可限制 dump 範圍。`officecli refresh <file.docx>` 會在 replay 後重新計算 TOC page numbers／PAGE／cross-references（Windows 使用 Word backend；其他平台使用 headless-HTML fallback）。`officecli plugins list` 會把 export 支援擴充到 `.doc`、`.hwpx`、`.pdf`。
 
 ```bash
 echo '[
@@ -334,16 +334,16 @@ echo '[
 ]' | officecli batch data.xlsx --json
 
 officecli batch data.xlsx --commands '[{"op":"set","path":"/Sheet1/A1","props":{"value":"Done"}}]' --json
-officecli batch data.xlsx --input updates.json --best-effort --json   # keep whatever succeeds even if some items fail
+officecli batch data.xlsx --input updates.json --best-effort --json   # 某些 items 失敗時仍保留成功項目
 ```
 
-Supports: `add`, `set`, `get`, `query`, `remove`, `move`, `swap`, `view`, `raw`, `raw-set`, `validate`. Fields: `command` (or `op`), `path`, `parent`, `type`, `from`, `to`, `index`, `after`, `before`, `props`, `selector`, `mode`, `depth`, `part`, `xpath`, `action`, `xml`.
+支援：`add`、`set`、`get`、`query`、`remove`、`move`、`swap`、`view`、`raw`、`raw-set`、`validate`。Fields：`command`（或 `op`）、`path`、`parent`、`type`、`from`、`to`、`index`、`after`、`before`、`props`、`selector`、`mode`、`depth`、`part`、`xpath`、`action`、`xml`。
 
 ---
 
-## L3: Raw XML
+## L3：Raw XML
 
-Use when L2 cannot express what you need. No xmlns declarations needed — prefixes auto-registered.
+L2 無法表達需求時才使用。無需 `xmlns` declarations；prefixes 會自動註冊。
 
 ```bash
 officecli raw <file> <part>                          # view raw XML
@@ -351,67 +351,67 @@ officecli raw-set <file> <part> --xpath "..." --action replace --xml '<w:p>...</
 officecli add-part <file> <parent>                   # create new document part (returns rId)
 ```
 
-`raw-set` actions: `append`, `prepend`, `insertbefore`, `insertafter`, `replace`, `remove`, `setattr`. Run `officecli help <format> raw` for available parts.
+`raw-set` actions：`append`、`prepend`、`insertbefore`、`insertafter`、`replace`、`remove`、`setattr`。可用 parts 執行 `officecli help <format> raw` 查詢。
 
 ---
 
-## Common Pitfalls
+## 常見陷阱
 
-| Pitfall | Correct Approach |
+| 陷阱 | 正確作法 |
 |---------|-----------------|
-| `--name "foo"` | Use `--prop name="foo"` — all attributes go through `--prop` |
-| Unquoted `[N]` paths in zsh/bash | Always quote: `'/slide[1]'` or `"/slide[1]"` (shell glob-expands brackets) |
-| PPT `shape[1]` for content | `shape[1]` is typically the title placeholder. Use `shape[2]+` for content shapes |
-| `/shape[myname]` | Name indexing not supported. Use numeric index or `@name=` (PPT only) |
-| Guessing property names | Run `officecli help <format> <element>` to see exact names |
-| Modifying an open file | Close the file in PowerPoint/WPS first |
-| `\n` in shell strings | Use `\\n` for newlines in `--prop text="..."` |
-| `$` in shell text | `--prop text="$15M"` strips `$15`. Use single quotes: `--prop text='$15M'`, or heredoc batch |
+| `--name "foo"` | 使用 `--prop name="foo"`；所有 attributes 都要經過 `--prop` |
+| zsh/bash 中未加引號的 `[N]` paths | 一律加引號：`'/slide[1]'` 或 `"/slide[1]"`（shell 會對 brackets 做 glob expansion） |
+| 用 PPT `shape[1]` 當 content | `shape[1]` 通常是 title placeholder；content shapes 使用 `shape[2]+` |
+| `/shape[myname]` | 不支援 name indexing；使用 numeric index 或 `@name=`（只限 PPT） |
+| 猜 property names | 執行 `officecli help <format> <element>` 查看 exact names |
+| 修改已開啟的檔案 | 先在 PowerPoint/WPS 關閉檔案 |
+| shell string 中的 `\n` | `--prop text="..."` 的 newline 使用 `\\n` |
+| shell text 中的 `$` | `--prop text="$15M"` 會剝掉 `$15`；使用 single quotes：`--prop text='$15M'`，或用 heredoc batch |
 
 ---
 
 ## Specialized Skills
 
-`officecli load_skill <name>` — output is a SKILL.md, follow its rules.
+`officecli load_skill <name>` 會輸出一份 SKILL.md，必須遵守其中規則。
 
-**Loading rule**:
-- Pick the most specific match in "When to use"; if none fits, load the format default (`word` / `pptx` / `excel`).
-- Scenes already contain the format default's rules — load **one** skill per artifact, never stack.
-- Loaded rules persist across turns; don't re-load each reply.
-- Two distinct artifacts → two separate loads.
+**Loading rule：**
+- 從「When to use」選最具體的 match；沒有符合時，載入 format default（`word`／`pptx`／`excel`）。
+- Scenes 已包含 format default 的規則；每個 artifact 只載入 **一個** skill，不要疊加。
+- 已載入的規則會跨 turns 保留，不要每次 reply 重載。
+- 兩個不同 artifacts → 分別載入兩次。
 
-### Word (.docx)
+### Word（.docx）
 
-| Name | When to use |
+| Name | 使用時機 |
 |------|-------------|
-| `word` | Reports, letters, memos, proposals, generic documents |
-| `academic-paper` | Journal / conference / thesis: APA / Chicago / IEEE / MLA citations, equations, SEQ + PAGEREF cross-refs, multi-column journal layout, bibliography. NOT for business reports or letters (route those to `word`) |
+| `word` | Reports、letters、memos、proposals、一般文件 |
+| `academic-paper` | Journal／conference／thesis：APA／Chicago／IEEE／MLA citations、equations、SEQ + PAGEREF cross-refs、multi-column journal layout、bibliography。Business reports 或 letters 請 route 到 `word` |
 
-### PowerPoint (.pptx)
+### PowerPoint（.pptx）
 
-| Name | When to use |
+| Name | 使用時機 |
 |------|-------------|
-| `pptx` | Generic decks: board reviews, sales decks, all-hands, product launches |
-| `pitch-deck` | **Fundraising only** — seed / Series A-C / SAFE / convertible / strategic raise. NOT for sales / product / board decks (route those to `pptx`) |
-| `morph-ppt` | Cinematic Morph-animated presentations. NOT for static decks (route those to `pptx`) |
-| `morph-ppt-3d` | 3D Morph: GLB models, camera moves, depth. NOT for 2D-only Morph (route those to `morph-ppt`) |
+| `pptx` | 一般 decks：board reviews、sales decks、all-hands、product launches |
+| `pitch-deck` | **只限 Fundraising**：seed／Series A-C／SAFE／convertible／strategic raise。Sales／product／board decks 請 route 到 `pptx` |
+| `morph-ppt` | Cinematic Morph-animated presentations。Static decks 請 route 到 `pptx` |
+| `morph-ppt-3d` | 3D Morph：GLB models、camera moves、depth。只有 2D 的 Morph 請 route 到 `morph-ppt` |
 
-### Excel (.xlsx)
+### Excel（.xlsx）
 
-| Name | When to use |
+| Name | 使用時機 |
 |------|-------------|
-| `excel` | Generic workbooks, formulas, pivots, trackers |
-| `financial-model` | Financial models, scenarios, projections. NOT for general data analysis (route those to `excel`) |
-| `data-dashboard` | CSV/tabular data → KPI / analytics / executive dashboards with charts and sparklines. NOT for raw data tracking (route those to `excel`) |
+| `excel` | 一般 workbooks、formulas、pivots、trackers |
+| `financial-model` | Financial models、scenarios、projections。一般 data analysis 請 route 到 `excel` |
+| `data-dashboard` | CSV/tabular data → KPI／analytics／executive dashboards，含 charts 與 sparklines。Raw data tracking 請 route 到 `excel` |
 
-Example: a fundraising deck task → `officecli load_skill pitch-deck` → use the printed rules.
+例如：fundraising deck task → `officecli load_skill pitch-deck` → 遵守輸出的規則。
 
 ---
 
 ## Notes
 
-- Paths are **1-based** (XPath convention): `'/body/p[3]'` = third paragraph
-- `--index` is **0-based** (array convention): `--index 0` = first position
-- **Excel exception**: for `add --type row` and `add --type col`, `--index N` is **1-based** (matches OOXML RowIndex / column letter index). `--index 5` inserts at row 5 / column 5.
-- After modifications, verify with `validate` and/or `view issues`
-- **When unsure**, run `officecli help <format> <element>` instead of guessing
+- Paths 是 **1-based**（XPath convention）：`'/body/p[3]'` = 第三個 paragraph。
+- `--index` 是 **0-based**（array convention）：`--index 0` = 第一個 position。
+- **Excel exception：** `add --type row` 與 `add --type col` 的 `--index N` 是 **1-based**（對應 OOXML RowIndex／column letter index）。`--index 5` 會插入 row 5／column 5。
+- 修改後使用 `validate` 和／或 `view issues` 驗證。
+- **不確定時**執行 `officecli help <format> <element>`，不要猜。

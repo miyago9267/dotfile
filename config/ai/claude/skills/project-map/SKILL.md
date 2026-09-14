@@ -1,8 +1,8 @@
 ---
 name: project-map
-description: Auto-read the project map at session start to learn the directory layout. Always on.
+description: Session start 時自動讀取 project map，了解 directory layout。永遠生效。
 alwaysApply: true
-when_to_use: "Entering a new repo, switching cwd, or re-orienting after compact."
+when_to_use: "進入新 repo、切換 cwd，或 compact 後重新定位時。"
 tags: [project-map, repo, structure, bootstrap, context]
 effort: low
 shell: optional

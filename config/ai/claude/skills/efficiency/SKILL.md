@@ -1,9 +1,9 @@
 ---
 name: efficiency
-description: "Efficiency discipline -- audit the current session for efficiency violations. Always on."
+description: "Efficiency discipline：audit current session 是否違反效率規則。永遠生效。"
 alwaysApply: true
 user-invocable: true
-when_to_use: "Check the session for repeated reads, verbose replies, futile retries, or other waste."
+when_to_use: "檢查 session 是否有 repeated reads、verbose replies、futile retries 或其他浪費。"
 tags: [efficiency, session, audit, verbosity, workflow]
 effort: low
 shell: none

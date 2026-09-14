@@ -1,4 +1,4 @@
-# Miyago's Custom Policy - Allow common commands and redirection
+# Miyago 的 Custom Policy - 允許常用 commands 與 redirection
 [[rule]]
 toolName = "run_shell_command"
 commandPrefix = ["ls", "pwd", "date", "cat", "echo", "mv", "find", "head", "grep", "rm"]

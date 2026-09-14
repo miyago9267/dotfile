@@ -1,6 +1,6 @@
 ---
 name: safe-ops
-description: Safety confirmation before dangerous operations. Always on.
+description: Dangerous operations 前的 safety confirmation。永遠生效。
 when_to_use: "執行破壞性或高風險操作前的確認閘門"
 tags: [safety, destructive, confirm, guard]
 effort: low

@@ -43,7 +43,7 @@ Sandbox 的 shell 繼承了使用者完整的 PATH（透過 zsh profile）。
   -> 都找不到? 才告知使用者，並建議安裝方式
 ```
 
-## Anti-patterns
+## 反模式（Anti-patterns）
 
 - 不要在沒跑 `command -v` 的情況下說「請先安裝 X」
 - 不要因為上一個 session 找不到就假設這次也找不到

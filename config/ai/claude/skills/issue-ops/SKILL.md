@@ -1,8 +1,8 @@
 ---
 name: issue-ops
-description: "Issue-to-PR lifecycle -- triggers: issue, PR, MR, what to work on, find bugs, open PR, review replies, CI status. Enter at any stage and continue downstream. Platform detection relies on repo-status; deep CI analysis hands off to cicd-watch."
+description: "Issue-to-PR lifecycle；觸發詞：issue、PR、MR、what to work on、find bugs、open PR、review replies、CI status。可從任一階段進入並繼續往下游處理。Platform detection 依賴 repo-status；deep CI analysis 交給 cicd-watch。"
 alwaysApply: false
-when_to_use: "Work involving issues, PRs, MRs, reviews, CI status, or the full discovery-to-submit/track flow."
+when_to_use: "涉及 issues、PRs、MRs、reviews、CI status，或完整 discovery-to-submit/track flow 的工作。"
 tags: [issue, pr, mr, review, ci, workflow]
 effort: high
 shell: required
@@ -122,7 +122,7 @@ glab ci get
 - cicd-watch 3 輪修不好 -> 切 `log-analysis`（帶 `BRANCH` + run ID + failed job -> log-analysis Step 2，TIME_RANGE = CI run 時間）
 - pending -> 回報等待中
 
-### 4b. Review
+### 4b. Review（審查）
 
 ```bash
 # GitHub

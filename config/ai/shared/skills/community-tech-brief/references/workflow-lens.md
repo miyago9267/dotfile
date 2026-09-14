@@ -1,4 +1,4 @@
-# Workflow lens
+# Workflow lens（工作流評估鏡頭）
 
 給 `community-tech-brief` 用的打分鏡頭。不是技術百科。
 改工作流時才改這份檔，不要從 Discord 熱詞自動更新。

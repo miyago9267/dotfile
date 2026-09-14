@@ -1,8 +1,8 @@
 ---
 name: repo-status
-description: Detect the Git remote platform (GitHub/GitLab), check repo & pipeline status, prompt on missing auth. Always on.
+description: 偵測 Git remote platform（GitHub/GitLab），檢查 repo 與 pipeline status，缺少 auth 時提示。永遠生效。
 alwaysApply: true
-when_to_use: "Entering a repo with a remote, after git push, or when asked about PR/MR/pipeline/CI status."
+when_to_use: "進入有 remote 的 repo、git push 後，或被詢問 PR/MR/pipeline/CI status 時。"
 tags: [git, github, gitlab, ci, pr, repo]
 effort: low
 shell: required

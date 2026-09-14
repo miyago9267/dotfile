@@ -1,6 +1,6 @@
 ---
 name: cicd-watch
-description: "CI/CD watch -- track the latest pipeline status; on failure, fix locally and push again."
+description: "CI/CD watch：追蹤最新 pipeline status；失敗時 local fix，再次 push。"
 when_to_use: "push 後追蹤最新 pipeline，失敗時讀 log、本地修復再 push"
 tags: [ci, cd, pipeline, gh, fix]
 effort: medium

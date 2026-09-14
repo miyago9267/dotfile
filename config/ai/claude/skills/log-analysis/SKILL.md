@@ -1,8 +1,8 @@
 ---
 name: log-analysis
-description: "Log analysis methodology -- triggers: shared logs, error logs, debugging production, log digging. Extract patterns systematically; separate signal from noise."
+description: "Log analysis methodology；觸發詞：shared logs、error logs、debugging production、log digging。系統性提取 patterns，分開 signal 與 noise。"
 alwaysApply: false
-when_to_use: "Analyzing error logs, production logs, stack traces, or locating root cause from logs."
+when_to_use: "分析 error logs、production logs、stack traces，或從 logs 定位 root cause 時。"
 tags: [logs, incident, production, root-cause, debugging, sre]
 effort: medium
 shell: required

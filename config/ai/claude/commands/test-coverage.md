@@ -1,6 +1,6 @@
 ---
 name: test-coverage
-description: Analyze and raise test coverage -- find low-coverage files and backfill tests to 80%+.
+description: 分析並提升 test coverage；找出低 coverage files，補 tests 到 80%+。
 ---
 
 # /test-coverage
@@ -33,7 +33,7 @@ description: Analyze and raise test coverage -- find low-coverage files and back
 
 ## 測試重點
 
-- Happy path
+- 正常路徑（Happy path）
 - 錯誤處理
 - Edge case（null、undefined、空值）
 - 邊界條件

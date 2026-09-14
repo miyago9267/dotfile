@@ -3,7 +3,7 @@
 這份 skill 是專案查詢入口，不保存完整的 project catalog 或固定路徑清單。
 完整的專案背景、決策與 current local path 由 personal knowledge base 維護。
 
-## Source of Truth
+## 來源真相（Source of Truth）
 
 依序查閱：
 
@@ -13,7 +13,7 @@
 4. `[[wiki/projects/_MOC|Projects MOC]]`：專案節點入口
 5. 對應的 `wiki/projects/<project>.md`：專案背景、證據與相關連結
 
-## Lookup Rules
+## 查詢規則（Lookup Rules）
 
 - Miyago 提到專案名稱、要求找專案或需要選擇工作目錄時，先查 personal vault，再搜尋 filesystem。
 - 路徑以 `workspace-directory-layout` 與當前 filesystem / Git 驗證為準；本 skill 不保存搬移前的 path。

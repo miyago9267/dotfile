@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Full verification -- run build / type check / lint / test in order and report PR readiness.
+description: 完整 verification；依序執行 build / type check / lint / test，回報 PR readiness。
 ---
 
 # /verify [模式]

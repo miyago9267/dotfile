@@ -1,6 +1,6 @@
 ---
 name: auto-docs
-description: Automatic doc archiving (global, model-agnostic)
+description: 自動歸檔文件（global、model-agnostic）
 when_to_use: "文件或規格變更後，自動歸檔開發/維運文件"
 tags: [docs, archive, automation]
 effort: low
@@ -9,7 +9,7 @@ runtime-scope: shared-core
 alwaysApply: true
 ---
 
-# Auto Documentation Skill
+# Auto Documentation Skill（自動文件歸檔）
 
 ## 核心規則
 

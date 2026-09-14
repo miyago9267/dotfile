@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: Multi-agent chained workflow -- chain agents by task type to complete complex tasks in sequence.
+description: Multi-agent chained workflow；依 task type 串接 agents，按順序完成複雜任務。
 ---
 
 # /orchestrate [工作流類型] [任務描述]

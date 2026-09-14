@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Export the full current-session state as a handoff so the next session inherits with zero re-explaining.
+description: 將完整 current-session state 匯出成 handoff，讓下一個 session 繼承時不必重新說明。
 command: /handoff
 ---
 

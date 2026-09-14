@@ -1,6 +1,6 @@
 ---
 name: eval
-description: Eval-driven development -- define, run, and report feature pass criteria (pass@N).
+description: Eval-driven development；定義、執行並回報 feature pass criteria（pass@N）。
 ---
 
 # /eval [動作] [功能名稱]

@@ -1,6 +1,6 @@
 ---
 name: sdd
-description: "Spec-Driven Development (SDD) v2 -- manually start or resume the spec-driven flow. /sdd enters SDD mode explicitly; day-to-day tracking is handled by auto-spec."
+description: "Spec-Driven Development (SDD) v2：手動開始或恢復 spec-driven flow。/sdd 明確進入 SDD mode；日常追蹤由 auto-spec 處理。"
 when_to_use: "手動啟動或恢復 spec-driven 流程(日常追蹤由 auto-spec 負責)"
 tags: [sdd, spec, planning, tdd]
 effort: medium

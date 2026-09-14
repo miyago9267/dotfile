@@ -4,7 +4,7 @@ description: "stdin proxy -- Bash tool 需要使用者輸入時（sudo、ssh、y
 alwaysApply: true
 ---
 
-# ask-tty -- stdin proxy (v2)
+# ask-tty -- stdin proxy（v2）
 
 Bash tool 不支援互動式 stdin。當指令需要使用者輸入（密碼、確認、passphrase），使用 ask-tty + background 模式完成。
 

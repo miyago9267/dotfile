@@ -1,6 +1,6 @@
 ---
 name: update-codemaps
-description: Update architecture maps -- scan code structure and refresh codemaps/ docs.
+description: 更新 architecture maps；掃描 code structure，刷新 codemaps/ docs。
 ---
 
 # /update-codemaps

@@ -1,6 +1,6 @@
 ---
 name: learn
-description: "Extract reusable patterns -- analyze the current session and save keep-worthy solutions as skills."
+description: "提取可重用 patterns；分析 current session，將值得保留的 solutions 存成 skills。"
 ---
 
 # /learn
@@ -79,8 +79,8 @@ source: "<觀察來源>"
 
 - **Atomic** -- 一個 trigger + 一個 action，不要塞多個行為
 - **Confidence** -- 0.3 = 初步觀察，0.5 = 多次觀察，0.7 = 強烈建議，0.9 = 幾乎確定
-- **Domain** -- code-style / testing / git / debugging / workflow / performance / security
-- **Source** -- session-observation / user-correction / error-resolution
+- **領域** -- code-style / testing / git / debugging / workflow / performance / security
+- **來源** -- session-observation / user-correction / error-resolution
 
 ### Confidence 調整規則
 
