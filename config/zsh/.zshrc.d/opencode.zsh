@@ -118,5 +118,5 @@ ocds() {
 }
 
 ocop() {
-  opencode --model github-copilot/claude-opus-4.5 "$@"
+  opencode --model github-copilot/gpt-4.1 "$@"
 }

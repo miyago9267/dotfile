@@ -11,8 +11,8 @@ opencode
 Daily path:
 
 - default agent: `monika`
-- model: `openai/gpt-5.6`
-- small model: `openai/gpt-5.6-luna`
+- model: `openai/gpt-5.5`
+- small model: `openai/gpt-5.5`
 - no `oh-my-openagent`
 - no MCP servers
 - bounded daily subagents: built-in `@explore` / `@scout`, plus `@quick-explorer` / `@quick-reviewer`
@@ -106,7 +106,7 @@ DeepSeek v4 Flash benchmark path:
 ocds
 ```
 
-Copilot Opus emergency fallback, only after GPT and DeepSeek are exhausted or explicitly requested:
+Copilot `gpt-4.1` emergency fallback, only after GPT and DeepSeek are exhausted or explicitly requested:
 
 ```sh
 ocop

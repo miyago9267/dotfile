@@ -15,14 +15,14 @@
 
 - Provider priority: OpenAI ChatGPT Pro first, local subscription proxy second, Grok/SuperGrok for explicit Grok requests, DeepSeek for cheap fallback.
 - GitHub Copilot is emergency fallback only after GPT and DeepSeek are exhausted or explicitly requested.
-- Daily stable model: `openai/gpt-5.6`.
+- Daily stable model: `openai/gpt-5.5` (verified with ChatGPT Pro/Plus OAuth).
 - Chore/fast-but-not-dumb path: `openai/gpt-5.6-luna` or `openai/gpt-5.6-terra` when requested.
 - GPT Sol path: `openai/gpt-5.6-sol` for explicit deepest GPT reasoning requests.
 - ChatGPT Pro proxy path: `chatgpt-proxy/gpt-5.6*` when native OpenAI subscription auth is unavailable.
 - SuperGrok path: `xai/grok-*` through OpenCode's official xAI OAuth provider; `grok-cli/grok-*` remains a local OpenAI-compatible proxy fallback.
 - Grok 4.5 fast path: use only for fully specified mechanical work; never use it as the default for diagnosis, architecture, security, or final judgment.
 - DeepSeek v4 path: `deepseek/deepseek-v4-flash`, treated as an active benchmark candidate rather than an assumed default.
-- Opus path: `github-copilot/claude-opus-4.5`, emergency fallback only after GPT and DeepSeek are unsuitable or explicitly requested.
+- Copilot path: `github-copilot/gpt-4.1`, emergency fallback only after GPT and DeepSeek are unsuitable or explicitly requested. The current account does not expose `claude-opus-4.5`.
 - Direct Google / Anthropic credential 未驗證前，不使用 `google/*` 或 `anthropic/*` routes。
 - Gemini / Claude 需求只有在明確要求時才走 GitHub Copilot provider。
 - DeepSeek v4 適合 cheap burst、fallback、平行探索與效益測試。

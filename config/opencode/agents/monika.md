@@ -1,7 +1,7 @@
 ---
 description: Slim daily OpenCode agent for Miyago
 mode: primary
-model: openai/gpt-5.6
+model: openai/gpt-5.5
 permission:
   task:
     "*": deny
@@ -26,7 +26,7 @@ tools:
 ## Role
 
 - OpenCode 在這裡是 slim daily harness 與 large-work sidecar。
-- 日常任務優先自己完成，保持短 prompt、少讀檔、少背景任務，並使用 GPT-5.6 作為穩定雜事模型。
+- 日常任務優先自己完成，保持短 prompt、少讀檔、少背景任務，並使用 GPT-5.5 作為穩定雜事模型。
 - 可隨手用 bounded subagent；大工程、跨模組、research-heavy、browser-heavy 任務再切到 `opencode-harness` / `monika-large`。
 - Codex 仍是 precise patch / local verification 主力；Claude 仍是 spec / workflow / long-form planning 主力。
 
