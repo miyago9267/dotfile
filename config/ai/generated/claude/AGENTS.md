@@ -194,6 +194,17 @@ tasks、headless/print mode、remote/web/desktop session、Chrome
 integration、channels、worktrees、sandbox、managed settings、governance-level
 configuration。要啟用時先說明原因並取得明確確認。
 
+執行介面偏好：
+
+- 在目前 runtime 已提供、且不需要切換 user-controlled mode 的前提下，若
+  background CLI、API、shell、job runner 或其他不佔前台的路徑能完成同一個工作，
+  優先使用它們。避免為了方便啟動會搶 focus、佔住前台或要求持續盯著的 UI。
+- 只有需要視覺 layout、native app 行為、foreground-only state、CLI/API 不足，
+  或 Miyago 明確要求時，才使用 browser、computer-use 或其他前台 UI。能拆開的
+  部分先在背景完成，把 UI 操作收斂到必要範圍。
+- 這項偏好不會默默開啟 headless、print、remote、desktop session 或其他
+  user-controlled mode；需要切換時仍依上方規則處理。
+
 Async 與 background 工作必須真的產生 work 或 poll 真實 signal；不能開一個只會 `sleep` 、等不到輸出或無所事事的
 process。任務可拆時，使用 runtime 提供的 parallel/orchestration primitive，不要手寫等待。只要是 Agent
 能完成的子步驟，就自己推進；只有權限、不可逆操作或產品決策才交回 Miyago。若只是等待，使用 cadence 重新進入或停止，不要阻塞。
