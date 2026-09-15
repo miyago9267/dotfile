@@ -8,6 +8,23 @@
 
 Raw `codex` is intentionally untouched because `~/.codex/config.toml` carries desktop, project trust, MCP, and plugin state. Use `cxh` when that heavy surface is desired.
 
+## Cross-runtime runner
+
+For a bounded background read-only call to either runtime, use:
+
+```bash
+agent-call run --runtime agy --cwd /absolute/workspace \
+  --prompt-file /absolute/prompt.txt --background
+agent-call wait --job-dir /absolute/job-dir
+```
+
+把 `agy` 換成 `codex` 即可呼叫另一個 runtime。
+
+The runner records structured metadata and provider stdout/stderr, enforces a
+timeout, and never enables a permission or sandbox bypass. Keep write,
+commit, push, credential, production, and other high-side-effect work on a
+native gated session.
+
 ## Approval gate
 
 `codex-approval-gate` is an independent opt-in wrapper around the local Codex

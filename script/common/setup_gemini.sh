@@ -15,6 +15,10 @@ ACTIVE_RULES_SRC="$ACTIVE_RULES_DIR/GEMINI.md"
 SHARED_SKILL_SRC="$DOTFILE_DIR/config/ai/shared/skills"
 GEMINI_SKILL_SRC="$DOTFILE_DIR/config/ai/gemini/skills"
 GEMINI_POLICIES_SRC="$DOTFILE_DIR/config/ai/gemini/policies"
+AGY_SETTINGS_SRC="$GEMINI_SRC/antigravity-cli/settings.json"
+AGY_SETTINGS_DST="$GEMINI_DST/antigravity-cli/settings.json"
+GEMINI_HOOKS_SRC="$GEMINI_SRC/hooks.json"
+GEMINI_HOOKS_DST="$GEMINI_DST/config/hooks.json"
 
 Y='\033[1;33m'
 G='\033[1;32m'
@@ -87,12 +91,14 @@ compose_active_rules() {
 
 printf "${Y}=== Gemini CLI 設定 Symlink ===${N}\n"
 
-mkdir -p "$GEMINI_DST" "$GEMINI_DST/skills"
+mkdir -p "$GEMINI_DST" "$GEMINI_DST/skills" "$(dirname "$AGY_SETTINGS_DST")" "$(dirname "$GEMINI_HOOKS_DST")"
 
 compose_active_rules
 link_item "$ACTIVE_RULES_SRC" "$GEMINI_DST/GEMINI.md" "GEMINI.md"
 link_item "$SHARED_RULES_SRC" "$GEMINI_DST/AGENTS.shared.md" "shared agent contract"
 link_item "$GEMINI_POLICIES_SRC" "$GEMINI_DST/policies" "policies"
+link_item "$AGY_SETTINGS_SRC" "$AGY_SETTINGS_DST" "antigravity CLI settings"
+link_item "$GEMINI_HOOKS_SRC" "$GEMINI_HOOKS_DST" "hooks.json"
 
 printf "\n${Y}--- Shared Core Skills ---${N}\n"
 for name in "${SHARED_CORE_SKILLS[@]}"; do

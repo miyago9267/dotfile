@@ -14,5 +14,6 @@
 | `yt` | yt-dlp wrapper，預設 Premiere 友善 MP4，可切音源 | `yt URL`、`yt -a URL`、`yt --mp3 URL`、`yt --webm URL` |
 | `extract` | 智能解壓縮（tar/zip/rar/7z/bz2...） | `extract archive.tar.gz` |
 | `runcpp.sh` | C++ 編譯執行（支援 GDB, 最佳化旗標） | `runcpp.sh main.cpp` |
+| `agent-call` | background read-only calls | `agent-call --help` |
 | `cfupdate.py` | CloudFlare DNS 動態更新 | 需設定 API token |
 | `init-project` | 專案初始化（Python/Node/Go） | `init-project` |

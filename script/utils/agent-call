@@ -1,0 +1,603 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2016
+set -euo pipefail
+
+# Bounded, non-interactive cross-runtime calls. The first contract is
+# deliberately read-only; write-capable workers stay on native gated paths.
+umask 077
+
+DEFAULT_TIMEOUT_SECONDS=120
+MAX_TIMEOUT_SECONDS=900
+MAX_PROMPT_BYTES=65536
+DEFAULT_WAIT_SECONDS=900
+
+SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+JQ_BIN="${AGENT_CALL_JQ_BIN:-$(command -v jq 2>/dev/null || true)}"
+
+die() {
+  printf 'agent-call: %s\n' "$1" >&2
+  exit 2
+}
+
+usage() {
+  cat <<'EOF'
+Usage:
+  agent-call run --runtime agy|codex --cwd DIR --prompt-file FILE [options]
+  agent-call status --job-dir DIR
+  agent-call wait --job-dir DIR [--wait-seconds N]
+  agent-call cancel --job-dir DIR
+
+Run options:
+  --output-file FILE       Capture provider stdout at FILE; it must not exist.
+  --timeout-seconds N      Provider timeout, 1-900 seconds (default: 120).
+  --state-dir DIR          Job state directory (default: $TMPDIR/miyago-agent-call).
+  --background             Return a job record without waiting for the provider.
+
+The runner always uses read-only provider modes and never enables a bypass flag.
+EOF
+}
+
+require_jq() {
+  [ -n "$JQ_BIN" ] && [ -x "$JQ_BIN" ] || die 'jq is required'
+}
+
+require_absolute_path() {
+  case "$1" in
+    /*) ;;
+    *) die "path must be absolute: $1" ;;
+  esac
+}
+
+require_integer() {
+  case "$1" in
+    ''|*[!0-9]*) die "expected a non-negative integer: $1" ;;
+  esac
+}
+
+validate_timeout() {
+  require_integer "$1"
+  [ "$1" -ge 1 ] && [ "$1" -le "$MAX_TIMEOUT_SECONDS" ] || \
+    die "timeout must be between 1 and $MAX_TIMEOUT_SECONDS seconds"
+}
+
+validate_job_dir() {
+  local job_dir="$1"
+  require_absolute_path "$job_dir"
+  [ -d "$job_dir" ] || die "job directory does not exist: $job_dir"
+  [ -f "$job_dir/config.json" ] || die "job config is missing: $job_dir"
+  [ -f "$job_dir/metadata.json" ] || die "job metadata is missing: $job_dir"
+}
+
+timestamp() {
+  date -u '+%Y-%m-%dT%H:%M:%SZ'
+}
+
+load_job_config() {
+  local job_dir="$1"
+  CONFIG_FILE="$job_dir/config.json"
+  METADATA_FILE="$job_dir/metadata.json"
+  RUNTIME="$($JQ_BIN -r '.runtime' "$CONFIG_FILE")"
+  CWD="$($JQ_BIN -r '.cwd' "$CONFIG_FILE")"
+  PROMPT_FILE="$($JQ_BIN -r '.prompt_file' "$CONFIG_FILE")"
+  OUTPUT_FILE="$($JQ_BIN -r '.output_file' "$CONFIG_FILE")"
+  ERROR_FILE="$($JQ_BIN -r '.error_file' "$CONFIG_FILE")"
+  TIMEOUT_SECONDS="$($JQ_BIN -r '.timeout_seconds' "$CONFIG_FILE")"
+}
+
+write_metadata() {
+  local job_dir="$1"
+  local runtime="$2"
+  local cwd="$3"
+  local prompt_file="$4"
+  local output_file="$5"
+  local error_file="$6"
+  local timeout_seconds="$7"
+  local prompt_bytes="$8"
+  local job_id
+  local created_at
+
+  job_id="$(basename "$job_dir")"
+  created_at="$(timestamp)"
+  "$JQ_BIN" -n \
+    --arg job_id "$job_id" \
+    --arg runtime "$runtime" \
+    --arg cwd "$cwd" \
+    --arg prompt_file "$prompt_file" \
+    --arg output_file "$output_file" \
+    --arg error_file "$error_file" \
+    --arg timeout_seconds "$timeout_seconds" \
+    --arg prompt_bytes "$prompt_bytes" \
+    --arg created_at "$created_at" \
+    '{schema_version: 1, job_id: $job_id, runtime: $runtime, mode: "read-only",
+      cwd: $cwd, prompt_file: $prompt_file, prompt_bytes: ($prompt_bytes|tonumber),
+      output_file: $output_file, error_file: $error_file,
+      timeout_seconds: ($timeout_seconds|tonumber), status: "queued",
+      worker_pid: null, provider_pid: null, exit_code: null, reason: null,
+      created_at: $created_at, started_at: null, finished_at: null}' \
+    >"$job_dir/metadata.json"
+}
+
+metadata_update_running() {
+  local worker_pid="$1"
+  local provider_pid="$2"
+  local started_at="$3"
+  local temp_file="$METADATA_FILE.tmp.$$"
+
+  "$JQ_BIN" \
+    --arg worker_pid "$worker_pid" \
+    --arg provider_pid "$provider_pid" \
+    --arg started_at "$started_at" \
+    '.status = "running" |
+     .worker_pid = ($worker_pid|tonumber) |
+     .provider_pid = ($provider_pid|tonumber) |
+     .started_at = $started_at |
+     .reason = null' \
+    "$METADATA_FILE" >"$temp_file"
+  mv "$temp_file" "$METADATA_FILE"
+}
+
+metadata_update_final() {
+  local status="$1"
+  local exit_code="$2"
+  local reason="$3"
+  local finished_at
+  local temp_file="$METADATA_FILE.tmp.$$"
+
+  finished_at="$(timestamp)"
+  "$JQ_BIN" \
+    --arg status "$status" \
+    --arg exit_code "$exit_code" \
+    --arg reason "$reason" \
+    --arg finished_at "$finished_at" \
+    '.status = $status |
+     .exit_code = (if $exit_code == "" then null else ($exit_code|tonumber) end) |
+     .reason = (if $reason == "" then null else $reason end) |
+     .finished_at = $finished_at' \
+    "$METADATA_FILE" >"$temp_file"
+  mv "$temp_file" "$METADATA_FILE"
+}
+
+resolve_provider() {
+  local requested
+  case "$RUNTIME" in
+    agy) requested="${AGENT_CALL_AGY_BIN:-agy}" ;;
+    codex) requested="${AGENT_CALL_CODEX_BIN:-codex}" ;;
+    *) return 2 ;;
+  esac
+
+  case "$requested" in
+    /*) PROVIDER_BIN="$requested" ;;
+    *) PROVIDER_BIN="$(command -v "$requested" 2>/dev/null || true)" ;;
+  esac
+  [ -n "${PROVIDER_BIN:-}" ] && [ -x "$PROVIDER_BIN" ]
+}
+
+run_provider() {
+  local prompt
+  prompt="$(<"$PROMPT_FILE")"
+
+  case "$RUNTIME" in
+    agy)
+      "$PROVIDER_BIN" -p "$prompt" --output-format json --mode plan \
+        --print-timeout "${TIMEOUT_SECONDS}s"
+      ;;
+    codex)
+      printf '%s\n' "$prompt" | "$PROVIDER_BIN" exec \
+        --ignore-user-config \
+        -p fast \
+        -c 'approval_policy="never"' \
+        --sandbox read-only \
+        --ephemeral \
+        --json \
+        --color never
+      ;;
+    *)
+      return 2
+      ;;
+  esac
+}
+
+PROVIDER_PID=''
+
+on_signal() {
+  if [ -n "$PROVIDER_PID" ] && kill -0 "$PROVIDER_PID" 2>/dev/null; then
+    kill -TERM "$PROVIDER_PID" 2>/dev/null || true
+    sleep 1
+    kill -KILL "$PROVIDER_PID" 2>/dev/null || true
+  fi
+  if [ -n "$PROVIDER_PID" ]; then
+    wait "$PROVIDER_PID" 2>/dev/null || true
+  fi
+  metadata_update_final cancelled 130 cancelled
+  exit 130
+}
+
+run_worker() {
+  local job_dir="$1"
+  local started_at
+  local deadline
+  local now
+  local provider_rc
+
+  load_job_config "$job_dir"
+  [ -d "$CWD" ] || {
+    metadata_update_final failed 2 invalid_cwd
+    return 2
+  }
+  [ -f "$PROMPT_FILE" ] && [ -r "$PROMPT_FILE" ] || {
+    metadata_update_final failed 2 invalid_prompt_file
+    return 2
+  }
+  if ! resolve_provider; then
+    metadata_update_final failed 127 provider_not_found
+    return 127
+  fi
+
+  trap on_signal TERM INT HUP
+  started_at="$(timestamp)"
+  set +e
+  (
+    cd "$CWD"
+    run_provider
+  ) >"$OUTPUT_FILE" 2>"$ERROR_FILE" &
+  PROVIDER_PID=$!
+  set -e
+  metadata_update_running "$$" "$PROVIDER_PID" "$started_at"
+
+  deadline=$(( $(date +%s) + TIMEOUT_SECONDS ))
+  while kill -0 "$PROVIDER_PID" 2>/dev/null; do
+    now="$(date +%s)"
+    if [ "$now" -ge "$deadline" ]; then
+      kill -TERM "$PROVIDER_PID" 2>/dev/null || true
+      sleep 1
+      kill -KILL "$PROVIDER_PID" 2>/dev/null || true
+      wait "$PROVIDER_PID" 2>/dev/null || true
+      metadata_update_final timed_out 124 provider_timeout
+      return 124
+    fi
+    sleep 1
+  done
+
+  set +e
+  wait "$PROVIDER_PID"
+  provider_rc=$?
+  set -e
+  if [ "$provider_rc" -eq 0 ]; then
+    if [ "$RUNTIME" = 'agy' ] && "$JQ_BIN" -e \
+      '(.denied_actions // []) | length > 0' "$OUTPUT_FILE" >/dev/null 2>&1; then
+      metadata_update_final failed 126 provider_denied_action
+      return 126
+    fi
+    metadata_update_final succeeded 0 ''
+  else
+    metadata_update_final failed "$provider_rc" provider_exit
+  fi
+  return "$provider_rc"
+}
+
+create_job() {
+  local runtime="$1"
+  local cwd="$2"
+  local prompt_file="$3"
+  local output_file="$4"
+  local timeout_seconds="$5"
+  local state_dir="$6"
+  local prompt_bytes
+  local error_file
+
+  require_jq
+  case "$runtime" in
+    agy|codex) ;;
+    *) die "unsupported runtime: $runtime" ;
+  esac
+  require_absolute_path "$cwd"
+  [ -d "$cwd" ] || die "cwd does not exist: $cwd"
+  require_absolute_path "$prompt_file"
+  [ -f "$prompt_file" ] && [ -r "$prompt_file" ] || die "prompt file is not readable: $prompt_file"
+  prompt_bytes="$(wc -c <"$prompt_file" | tr -d '[:space:]')"
+  [ "$prompt_bytes" -le "$MAX_PROMPT_BYTES" ] || die "prompt file exceeds $MAX_PROMPT_BYTES bytes"
+  validate_timeout "$timeout_seconds"
+  require_absolute_path "$state_dir"
+  mkdir -p "$state_dir"
+
+  if [ -n "$output_file" ]; then
+    require_absolute_path "$output_file"
+    [ -d "$(dirname "$output_file")" ] || die "output directory does not exist: $(dirname "$output_file")"
+    [ ! -e "$output_file" ] && [ ! -L "$output_file" ] || die "output file already exists: $output_file"
+  fi
+
+  JOB_DIR="$(mktemp -d "$state_dir/job.XXXXXX")"
+  if [ -z "$output_file" ]; then
+    output_file="$JOB_DIR/provider.stdout"
+  fi
+  error_file="$JOB_DIR/provider.stderr"
+  "$JQ_BIN" -n \
+    --arg runtime "$runtime" \
+    --arg cwd "$cwd" \
+    --arg prompt_file "$prompt_file" \
+    --arg output_file "$output_file" \
+    --arg error_file "$error_file" \
+    --arg timeout_seconds "$timeout_seconds" \
+    '{schema_version: 1, runtime: $runtime, cwd: $cwd, prompt_file: $prompt_file,
+      output_file: $output_file, error_file: $error_file,
+      timeout_seconds: ($timeout_seconds|tonumber)}' \
+    >"$JOB_DIR/config.json"
+  write_metadata "$JOB_DIR" "$runtime" "$cwd" "$prompt_file" "$output_file" \
+    "$error_file" "$timeout_seconds" "$prompt_bytes"
+}
+
+run_command() {
+  local runtime=''
+  local cwd=''
+  local prompt_file=''
+  local output_file=''
+  local timeout_seconds="$DEFAULT_TIMEOUT_SECONDS"
+  local state_dir="${AGENT_CALL_STATE_DIR:-${TMPDIR:-/tmp}/miyago-agent-call}"
+  local background=0
+  local worker_rc
+  local worker_pid
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --runtime)
+        [ "$#" -ge 2 ] || die 'missing value for --runtime'
+        runtime="$2"
+        shift 2
+        ;;
+      --cwd)
+        [ "$#" -ge 2 ] || die 'missing value for --cwd'
+        cwd="$2"
+        shift 2
+        ;;
+      --prompt-file)
+        [ "$#" -ge 2 ] || die 'missing value for --prompt-file'
+        prompt_file="$2"
+        shift 2
+        ;;
+      --output-file)
+        [ "$#" -ge 2 ] || die 'missing value for --output-file'
+        output_file="$2"
+        shift 2
+        ;;
+      --timeout-seconds)
+        [ "$#" -ge 2 ] || die 'missing value for --timeout-seconds'
+        timeout_seconds="$2"
+        shift 2
+        ;;
+      --state-dir)
+        [ "$#" -ge 2 ] || die 'missing value for --state-dir'
+        state_dir="$2"
+        shift 2
+        ;;
+      --background)
+        background=1
+        shift
+        ;;
+      --help|-h)
+        usage
+        return 0
+        ;;
+      *)
+        die "unknown option: $1"
+        ;;
+    esac
+  done
+
+  [ -n "$runtime" ] || die '--runtime is required'
+  [ -n "$cwd" ] || die '--cwd is required'
+  [ -n "$prompt_file" ] || die '--prompt-file is required'
+  create_job "$runtime" "$cwd" "$prompt_file" "$output_file" "$timeout_seconds" "$state_dir"
+
+  if [ "$background" -eq 1 ]; then
+    nohup "$SCRIPT_PATH" __worker --job-dir "$JOB_DIR" \
+      </dev/null >"$JOB_DIR/worker.log" 2>&1 &
+    worker_pid=$!
+    "$JQ_BIN" --arg worker_pid "$worker_pid" \
+      '.worker_pid = ($worker_pid|tonumber)' \
+      "$JOB_DIR/metadata.json" >"$JOB_DIR/metadata.json.tmp.$$"
+    mv "$JOB_DIR/metadata.json.tmp.$$" "$JOB_DIR/metadata.json"
+    touch "$JOB_DIR/launch.ready"
+    "$JQ_BIN" -c --arg job_dir "$JOB_DIR" \
+      '{job_id, job_dir: $job_dir, runtime, mode, status, timeout_seconds,
+       output_file, error_file, worker_pid}' "$JOB_DIR/metadata.json"
+    return 0
+  fi
+
+  if run_worker "$JOB_DIR"; then
+    worker_rc=0
+  else
+    worker_rc=$?
+  fi
+  cat "$JOB_DIR/metadata.json"
+  return "$worker_rc"
+}
+
+reconcile_job() {
+  local job_dir="$1"
+  local status
+  local worker_pid
+  local provider_pid
+
+  load_job_config "$job_dir"
+  status="$($JQ_BIN -r '.status' "$METADATA_FILE")"
+  case "$status" in
+    queued|running)
+      worker_pid="$($JQ_BIN -r '.worker_pid // empty' "$METADATA_FILE")"
+      if [ -z "$worker_pid" ] || ! kill -0 "$worker_pid" 2>/dev/null; then
+        provider_pid="$($JQ_BIN -r '.provider_pid // empty' "$METADATA_FILE")"
+        if [ -n "$provider_pid" ] && kill -0 "$provider_pid" 2>/dev/null; then
+          return 0
+        fi
+        sleep 1
+        status="$($JQ_BIN -r '.status' "$METADATA_FILE")"
+        case "$status" in
+          queued|running) metadata_update_final failed 125 worker_process_lost ;;
+        esac
+      fi
+      ;;
+  esac
+}
+
+status_command() {
+  local job_dir="$1"
+  validate_job_dir "$job_dir"
+  reconcile_job "$job_dir"
+  cat "$job_dir/metadata.json"
+}
+
+wait_command() {
+  local job_dir=''
+  local wait_seconds="$DEFAULT_WAIT_SECONDS"
+  local started
+  local status
+  local exit_code
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --job-dir)
+        [ "$#" -ge 2 ] || die 'missing value for --job-dir'
+        job_dir="$2"
+        shift 2
+        ;;
+      --wait-seconds)
+        [ "$#" -ge 2 ] || die 'missing value for --wait-seconds'
+        wait_seconds="$2"
+        shift 2
+        ;;
+      --help|-h)
+        usage
+        return 0
+        ;;
+      *)
+        die "unknown option: $1"
+        ;;
+    esac
+  done
+
+  [ -n "$job_dir" ] || die '--job-dir is required'
+  require_integer "$wait_seconds"
+  [ "$wait_seconds" -le "$MAX_TIMEOUT_SECONDS" ] || die "wait must be <= $MAX_TIMEOUT_SECONDS seconds"
+  validate_job_dir "$job_dir"
+  require_jq
+  started="$(date +%s)"
+
+  while :; do
+    reconcile_job "$job_dir"
+    status="$($JQ_BIN -r '.status' "$job_dir/metadata.json")"
+    case "$status" in
+      succeeded|failed|timed_out|cancelled)
+        cat "$job_dir/metadata.json"
+        exit_code="$($JQ_BIN -r '.exit_code // 0' "$job_dir/metadata.json")"
+        return "$exit_code"
+        ;;
+    esac
+    if [ "$(( $(date +%s) - started ))" -ge "$wait_seconds" ]; then
+      cat "$job_dir/metadata.json"
+      return 124
+    fi
+    sleep 1
+  done
+}
+
+cancel_command() {
+  local job_dir="$1"
+  local status
+  local worker_pid
+  local provider_pid
+  local deadline
+
+  validate_job_dir "$job_dir"
+  require_jq
+  load_job_config "$job_dir"
+  status="$($JQ_BIN -r '.status' "$METADATA_FILE")"
+  case "$status" in
+    succeeded|failed|timed_out|cancelled)
+      cat "$METADATA_FILE"
+      return 0
+      ;;
+  esac
+
+  worker_pid="$($JQ_BIN -r '.worker_pid // empty' "$METADATA_FILE")"
+  provider_pid="$($JQ_BIN -r '.provider_pid // empty' "$METADATA_FILE")"
+  if [ -n "$worker_pid" ] && kill -0 "$worker_pid" 2>/dev/null; then
+    kill -TERM "$worker_pid" 2>/dev/null || true
+  elif [ -n "$provider_pid" ] && kill -0 "$provider_pid" 2>/dev/null; then
+    kill -TERM "$provider_pid" 2>/dev/null || true
+  fi
+
+  deadline=$(( $(date +%s) + 5 ))
+  while :; do
+    reconcile_job "$job_dir"
+    status="$($JQ_BIN -r '.status' "$METADATA_FILE")"
+    case "$status" in
+      succeeded|failed|timed_out|cancelled) break ;;
+    esac
+    [ "$(date +%s)" -ge "$deadline" ] && break
+    sleep 1
+  done
+
+  status="$($JQ_BIN -r '.status' "$METADATA_FILE")"
+  case "$status" in
+    succeeded|failed|timed_out|cancelled) ;;
+    *)
+      worker_pid="$($JQ_BIN -r '.worker_pid // empty' "$METADATA_FILE")"
+      provider_pid="$($JQ_BIN -r '.provider_pid // empty' "$METADATA_FILE")"
+      [ -z "$worker_pid" ] || kill -KILL "$worker_pid" 2>/dev/null || true
+      [ -z "$provider_pid" ] || kill -KILL "$provider_pid" 2>/dev/null || true
+      metadata_update_final cancelled 130 cancel_timeout
+      ;;
+  esac
+  cat "$METADATA_FILE"
+}
+
+worker_command() {
+  local job_dir=''
+  local worker_rc
+  local wait_attempt=0
+  [ "$#" -eq 2 ] && [ "$1" = '--job-dir' ] || die '__worker requires --job-dir'
+  job_dir="$2"
+  validate_job_dir "$job_dir"
+  require_jq
+  trap 'metadata_update_final cancelled 130 cancelled; exit 130' TERM INT HUP
+  while [ ! -f "$job_dir/launch.ready" ]; do
+    wait_attempt=$((wait_attempt + 1))
+    [ "$wait_attempt" -le 100 ] || {
+      metadata_update_final failed 125 launch_not_released
+      return 125
+    }
+    sleep 0.1
+  done
+  trap - TERM INT HUP
+  if run_worker "$job_dir"; then
+    worker_rc=0
+  else
+    worker_rc=$?
+  fi
+  return "$worker_rc"
+}
+
+main() {
+  local command="${1:-run}"
+  if [ "$#" -gt 0 ]; then
+    shift
+  fi
+
+  case "$command" in
+    run) run_command "$@" ;;
+    status)
+      [ "$#" -eq 2 ] && [ "$1" = '--job-dir' ] || die 'status requires --job-dir DIR'
+      status_command "$2"
+      ;;
+    wait) wait_command "$@" ;;
+    cancel)
+      [ "$#" -eq 2 ] && [ "$1" = '--job-dir' ] || die 'cancel requires --job-dir DIR'
+      cancel_command "$2"
+      ;;
+    __worker) worker_command "$@" ;;
+    --help|-h) usage ;;
+    --*) run_command "$command" "$@" ;;
+    *) die "unknown command: $command" ;;
+  esac
+}
+
+main "$@"

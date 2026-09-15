@@ -8,7 +8,6 @@ if [ -f "$HOME/.local/bin/env" ]; then
 fi
 __zshrc_prepend_path_if_dir "$HOME/.local/bin"
 __zshrc_prepend_path_if_dir "$HOME/.opencode/bin"
-__zshrc_prepend_path_if_dir "$HOME/.antigravity/antigravity/bin"
 export PATH
 
 gitlab_token() {

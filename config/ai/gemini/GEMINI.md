@@ -25,3 +25,12 @@
 - 遇到 GCP、Google Workspace、Firebase、BigQuery、Google APIs 或 Gemini APIs，
   先使用 Google-first terminology、sources 與 tools。
 - 先縮小問題範圍，再向 Miyago 詢問決策。
+
+## Cross-runtime calls
+
+- 需要 bounded、background 的 read-only second opinion 時，使用
+  `/Users/miyago/dotfile/script/utils/agent-call`，不要開 foreground TUI。
+- `agent-call` 會固定使用 agy `--mode plan` 或 Codex `--sandbox read-only`，並
+  回傳 job metadata；使用 `status`、`wait`、`cancel` 管理長工作。
+- Runner 不處理 write、commit、push、credential、production 或其他 high-side-effect
+  動作；這些操作留在 native permission gate。

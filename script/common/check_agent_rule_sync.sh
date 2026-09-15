@@ -131,6 +131,8 @@ test -x "$dotfile_dir/script/common/setup_astra.sh"
 grep -Fq 'canonical_name: Astra' "$dotfile_dir/config/ai/AGENT-ENTRY.md"
 grep -Fq 'canonical_name: Astra' "$dotfile_dir/config/ai/runtime-bindings.yaml"
 grep -Fq 'gpt-6-astra' "$dotfile_dir/config/ai/astra/AGENTS.md"
+test -L "$HOME/.codex/skills/knowledge-base-router"
+test -f "$HOME/.codex/skills/knowledge-base-router/SKILL.md"
 test -L "$HOME/.codex/hooks/experience-observe.py" || {
   echo "Codex experience hook is not linked" >&2
   exit 1

@@ -168,6 +168,7 @@ compose_active_rules() {
 }
 
 SHARED_CORE_SKILLS=(
+  knowledge-base-router
   final-state-publication
   community-tech-brief
 )
@@ -227,7 +228,6 @@ ensure_experience_hook() {
 }
 
 ensure_experience_hook
-link_item "$SHARED_SKILL_SRC/knowledge-base-router" "$CODEX_DST/skills/knowledge-base-router" "skills/knowledge-base-router"
 
 for profile in fast code heavy; do
   link_item "$CODEX_SRC/$profile.config.toml" "$CODEX_DST/$profile.config.toml" "$profile.config.toml"

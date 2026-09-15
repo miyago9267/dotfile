@@ -1,0 +1,71 @@
+{
+  "permissions": {
+    "allow": [
+      "command(git status)",
+      "command(git log)",
+      "command(git diff)",
+      "command(git show)",
+      "command(git rev-parse)",
+      "command(git branch --show-current)",
+      "command(git ls-files)",
+      "command(git grep)",
+      "command(git remote -v)",
+      "command(git commit -m)",
+      "command(orca status)",
+      "command(orca terminal list)",
+      "command(orca orchestration check)",
+      "command(orca orchestration send)",
+      "command(orca orchestration reply)",
+      "command(orca orchestration ask)",
+      "command(orca orchestration run-show)",
+      "command(orca orchestration task-list)",
+      "command(orca orchestration dispatch-show)",
+      "command(orca orchestration worker-show)",
+      "command(agent-workflow route)",
+      "command(agy --version)",
+      "command(/Users/miyago/dotfile/script/utils/agent-call run)",
+      "command(/Users/miyago/dotfile/script/utils/agent-call status)",
+      "command(/Users/miyago/dotfile/script/utils/agent-call wait)"
+    ],
+    "deny": [
+      "read_file(/Users/miyago/.ssh)",
+      "write_file(/Users/miyago/.ssh)",
+      "read_file(/Users/miyago/.aws)",
+      "write_file(/Users/miyago/.aws)",
+      "read_file(/Users/miyago/.config/gcloud)",
+      "write_file(/Users/miyago/.config/gcloud)",
+      "read_file(/Users/miyago/.config/gh)",
+      "write_file(/Users/miyago/.config/gh)"
+    ],
+    "ask": [
+      "command(git add)",
+      "command(git push)",
+      "command(git reset)",
+      "command(git clean)",
+      "command(git branch -D)",
+      "command(rm -rf)",
+      "command(sudo)",
+      "command(orca orchestration run-create)",
+      "command(orca orchestration task-create)",
+      "command(orca orchestration dispatch)",
+      "command(orca orchestration worker-start)",
+      "command(orca orchestration worker-stop)",
+      "command(orca orchestration worker-release)",
+      "command(orca orchestration reset)",
+      "command(orca terminal send)",
+      "command(orca terminal create)",
+      "command(orca worktree create)",
+      "command(orca worktree delete)",
+      "read_url(*)",
+      "execute_url(*)",
+      "schedule(*)",
+      "mcp(*)"
+    ]
+  },
+  "trustedWorkspaces": [
+    "/Users/miyago/dotfile",
+    "/Users/miyago/Project/AI/agent-workspace",
+    "/Users/miyago/Project/AI/Skills/anti-ai-writing",
+    "/Users/miyago/Project/Note/itrd-knowledge-base"
+  ]
+}

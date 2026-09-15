@@ -128,7 +128,7 @@ runtimes:
       entry_mode: link
       shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
       shared_mode: generated_composition
-      status: phase_0_active
+      status: phase_1_active
     target:
       shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
       shared_target: /Users/miyago/.codex/AGENTS.shared.md
@@ -194,20 +194,27 @@ runtimes:
       entry_mode: link
       shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
       shared_mode: generated_composition
-      status: phase_0_active
+      status: phase_1_active
     target:
       shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
       shared_target: /Users/miyago/.gemini/AGENTS.shared.md
       adapter_load: generate
       generated_entry: /Users/miyago/.gemini/GEMINI.md
       entry_mode: link
+      permissions_source: /Users/miyago/dotfile/config/ai/gemini/antigravity-cli/settings.json
+      permissions_target: /Users/miyago/.gemini/antigravity-cli/settings.json
+      hooks_source: /Users/miyago/dotfile/config/ai/gemini/hooks.json
+      hooks_target: /Users/miyago/.gemini/config/hooks.json
     evidence:
       - /Users/miyago/dotfile/script/common/setup_gemini.sh
       - /Users/miyago/dotfile/config/ai/gemini/GEMINI.md
+      - /Users/miyago/dotfile/config/ai/gemini/antigravity-cli/settings.json
+      - /Users/miyago/dotfile/config/ai/gemini/hooks.json
     shared_capability: include_not_verified
     notes:
       - "Gemini has a native GEMINI.md and policies path; no shared instruction include was verified."
       - "The setup script currently names Claude skills as SHARED_SKILL_SRC and must be corrected later."
+      - "The host-side agent-call runner is read-only by default; high-side-effect work stays on native gates."
 
   grok:
     family: grok-cli
