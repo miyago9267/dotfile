@@ -1,12 +1,12 @@
 ---
 name: path-aware
-description: Sandbox PATH awareness；未驗證前絕不宣稱 tool missing。永遠生效。
+description: "需要判斷 CLI 是否存在，或準備回報工具缺失時，先驗證 PATH。"
 when_to_use: "宣稱工具不存在前，先確認 PATH 或 source ~/.zshrc"
 tags: [path, shell, tooling, env]
 effort: low
 shell: optional
 runtime-scope: shared-core
-alwaysApply: true
+alwaysApply: false
 ---
 
 # 環境感知 -- 工具存在性驗證

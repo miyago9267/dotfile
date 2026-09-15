@@ -1,80 +1,20 @@
 ---
 name: search-discipline
-description: "Search efficiency discipline：限制 Agent/Explore 過度使用，優先直接 Grep/Glob/Read。永遠生效。"
-alwaysApply: true
-when_to_use: "找 files、keywords、functions、imports 或可先用 Grep/Glob/Read 解決的 code paths 時。"
-tags: [search, grep, glob, read, efficiency, codebase]
+description: "在需要搜尋未知 code path 或可能產生大量 context 時，選最小的 rg/find/read 方法並限制輸出。"
+when_to_use: "未知路徑、跨目錄探索、large logs/transcripts 或可能超過 context budget 的搜尋。"
+tags: [search, rg, find, context, budget]
 effort: low
 shell: none
 runtime-scope: shared-core
+alwaysApply: false
 ---
 
-# search-discipline -- 搜索效率紀律
+# Search Discipline
 
-控制搜索行為的 token 消耗。Agent(Explore) 一次呼叫可能消耗 50-100+ tool calls 和 80k+ tokens。大多數搜索用 Grep + Read 在 10 個 tool calls 內就能完成。
+- 已知檔名或 pattern：直接 `rg --files`；已知 keyword：`rg -n`；已知檔案：讀相關區間。
+- 先做一輪 bounded anchor search，再讀會改變決策的片段；不要反覆掃同一棵樹。
+- 大輸出先做 count、top-N 或 summary；排除 cache、generated、node_modules、logs 和不相關 project。
+- 只有單純工具無法收斂 3+ 輪搜尋時才用 Explore/scout，brief 必須寫 scope、stop、output cap。
 
-## 搜索工具選擇順序
-
-```text
-搜索需求
-  ├─ 知道檔名或 pattern → Glob（1 call）
-  ├─ 知道關鍵字 → Grep（1 call）→ Read 結果檔案（N calls）
-  ├─ 知道目標在 2-3 個檔案內 → 直接 Read
-  └─ 以上都不行，需要跨多目錄探索 → Agent(Explore)（最後手段）
-```
-
-## 規則
-
-1. **Grep 優先**：找關鍵字、函數名、class 名、import 路徑 → 用 Grep，不要 Agent
-2. **Glob 優先**：找檔案 pattern（`**/*.ts`、`src/**/index.*`）→ 用 Glob，不要 Agent
-3. **Read 優先**：已知檔案路徑 → 直接 Read，不要 Agent
-4. **Agent(Explore) 是最後手段**：只在需要 3+ 輪搜索、跨多目錄、命名規則不確定時才用
-5. **Agent prompt 要具體**：給明確的關鍵字和預期檔案位置，不要「找出所有相關的」
-6. **限制 Agent 搜索範圍**：指定具體目錄，不要搜整個 home directory
-
-## Agent(Explore) prompt 寫法
-
-### 壞的 prompt（會消耗 40+ tool calls）
-
-```text
-在 ~/dotfile 和 ~/.claude 下找出所有跟 ask-tty、interactive-bash、
-tty-respond 相關的檔案，讀取它們的完整內容。
-```
-
-問題：範圍太廣、「所有相關的」太模糊、要求讀「完整內容」。
-
-### 好的 prompt（10 tool calls 內完成）
-
-```text
-在 /Users/miyago/dotfile/config/ai/claude/ 下：
-1. grep "ask-tty" 找到相關檔案路徑
-2. 讀取 skills/ask-tty/SKILL.md 和 hooks/tty-respond.sh
-回報路徑和關鍵段落，不需要完整內容。
-```
-
-### 更好的做法（不用 Agent，自己做）
-
-```text
-直接 Grep "ask-tty" path=/Users/miyago/dotfile
-→ 找到 3 個檔案
-→ Read 這 3 個檔案
-= 4 tool calls, < 5k tokens
-```
-
-## 反模式
-
-| 行為 | 消耗 | 正確做法 |
-|------|------|----------|
-| 用 Agent 找已知檔名 | 20+ calls | Glob 或直接 Read |
-| 用 Agent 搜關鍵字 | 30+ calls | Grep files_with_matches → Read |
-| Agent prompt 寫「找出所有相關的」 | 40+ calls | 列出具體要找的 2-3 個東西 |
-| Agent 搜整個 home directory | 50+ calls | 指定具體子目錄 |
-| Agent 要求讀完整檔案內容 | 大量 token | 只讀需要的段落 |
-
-## 成本意識
-
-- Grep: ~200 tokens/call
-- Read: ~500-2000 tokens/call（取決於檔案大小）
-- Glob: ~200 tokens/call
-- Agent(Explore): ~2000 tokens overhead + 所有子 tool calls 的總和
-- 一次浪費的 Agent 呼叫 = 10-20 次精準搜索的預算
+這是搜尋方法，不負責 completion、efficiency audit 或提問決策；那些規則各由 shared contract 與對應 skill
+處理。

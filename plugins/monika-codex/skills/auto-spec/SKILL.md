@@ -1,31 +1,32 @@
 ---
 name: auto-spec
-description: "Codex spec gate -- only use spec tracking for large, cross-module, or architecture-changing tasks."
+description: "Codex spec gate：只在 large、cross-module 或 architecture-changing task 使用 spec tracking。"
 user-invocable: true
-when_to_use: "Use when the task clearly needs a committed docs/specs plan before implementation."
+when_to_use: "Task 明確需要在 implementation 前提交 docs/specs plan 時使用。"
 tags: [codex, spec, sdd, budget]
 effort: low
 shell: optional
 runtime-scope: codex-native
 ---
 
-# Codex Spec Gate
+# Codex Spec Gate（規格閘門）
 
-Codex should not create or scan specs for routine implementation work.
+Routine implementation work 不應由 Codex 建立或掃描 specs。
 
-## Use spec only when
+## 只有這些情況使用 spec
 
-- The task is large, cross-module, architecture-changing, or product-behavior-changing.
-- Miyago explicitly asks for SDD/spec/planning.
-- An existing active spec is already named or clearly relevant.
+- Task 是 large、cross-module、architecture-changing 或 product-behavior-changing。
+- Miyago 明確要求 SDD/spec/planning。
+- 已經指定或明確相關的 existing active spec。
 
-## Skip spec when
+## 這些情況跳過 spec
 
-- The task is a small/medium patch, review, refactor, config edit, text edit, or single-file change.
-- The invocation is `codex exec` second opinion or snippet review.
-- The runtime budget is Fast or Medium.
+- Task 是 small/medium patch、review、refactor、config edit、text edit 或
+  single-file change。
+- Invocation 是 `codex exec` second opinion 或 snippet review。
+- Runtime budget 是 Fast 或 Medium。
 
-## Budget
+## 預算（Budget）
 
-- Search `docs/specs` at most once before deciding.
-- If no obvious active spec is found, proceed without spec and mention that no spec was used.
+- 決定前最多搜尋一次 `docs/specs`。
+- 找不到明顯的 active spec 時，不使用 spec 繼續，並說明本次沒有使用 spec。

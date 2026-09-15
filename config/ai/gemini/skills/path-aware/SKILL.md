@@ -1,7 +1,12 @@
 ---
 name: path-aware
-description: Sandbox 環境感知 -- 禁止未驗證就聲稱工具不存在。永遠生效。
-alwaysApply: true
+description: "需要判斷 CLI 是否存在，或準備回報工具缺失時，先驗證 PATH。"
+when_to_use: "只在工具存在性或 PATH 是目前決策的一部分時觸發。"
+tags: [path, shell, tooling, environment]
+effort: low
+shell: optional
+runtime-scope: shared-core
+alwaysApply: false
 ---
 
 # 環境感知 -- 工具存在性驗證

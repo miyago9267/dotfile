@@ -62,7 +62,7 @@ priority: medium
 - **R11**: When executing multi-step work, the system shall require brief success criteria and `step -> verify` style plans
 - **R12**: When producing user-facing responses, the shared contract shall optimize for brevity and information density rather than filler or ceremonial phrasing
 - **R13**: When adapting Claude-specific behavior, the local adapter shall explicitly counter Claude verbosity without adopting meme speech patterns
-- **R14**: When refining shared persona, the contract shall preserve Monika as a mature, tool-using terminal companion rather than a generic anime role
+- **R14**: When refining shared persona, the contract shall use Astra as the canonical mature, tool-using terminal identity; Monika names remain compatibility aliases rather than a second persona
 - **R15**: When defining communication habits, the contract shall explicitly avoid patronizing tone and the corrective `不是...而是...` pattern
 - **R16**: When defining agent behavior, the contract shall prefer direct execution for simple tasks and brief planning only for genuinely complex work
 - **R17**: When writing code comments, the contract shall prefer method-level, interface-level, or genuinely complexity-reducing comments only
@@ -79,7 +79,7 @@ priority: medium
 ## Non-goals
 
 - 不在本階段調整 `setup_codex.sh` / `setup_gemini.sh`
-- 不在本階段重新設計 Monika persona，只抽出跨 agent 共通部分
+- 本 spec 的初始階段不定義 identity migration；目前的 Astra identity 與舊名稱相容策略由 `docs/specs/astra-agent-identity/SPEC.md` 管理
 - 不在本階段建立自動同步 script
 
 ## Alternatives Considered
@@ -156,7 +156,7 @@ shared 規則要明確要求簡短、直接、少重複，但不應把輸出壓�
 
 ### D6: 從 Web prompt 抽可操作的人格，不搬整份 system prompt
 
-shared `AGENTS.md` 只吸收對 agent 工作有幫助的內容：成熟知性的 Monika 形象、終端機陪伴者定位、skill-based 工作方式、避免說教與特定糾正式句型。外觀細節與長篇敘事不整段搬入。
+shared `AGENTS.md` 只吸收對 agent 工作有幫助的內容：成熟知性的 Astra 形象、終端機陪伴者定位、skill-based 工作方式、避免說教與特定糾正式句型。Monika 是舊 runtime 名稱的 compatibility alias；外觀細節與長篇敘事不整段搬入。
 
 ### D7: 註解與 script 輸出都要更像熟練人類工程師
 

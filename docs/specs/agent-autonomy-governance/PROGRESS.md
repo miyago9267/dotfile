@@ -22,7 +22,7 @@ created: 2026-05-12
 
 ## Phase 3: Runtime 與 Skill 對齊
 
-> Status: in_progress
+> Status: completed
 
 - 目標：讓 Claude / Codex / Gemini adapter 與高頻 skills 一致採用同一條 pre-ask gate
-- Batch 2：shared contract + 三個 runtime adapter + Claude feedback memory 已對齊；高頻 skills wording audit 尚未完成
+- Batch 2：shared contract、三個 runtime adapter 與高頻 skills 已收斂；低風險 local task 不再因常駐 skill 觸發重複檢查或確認

@@ -1,12 +1,12 @@
 ---
 name: markdown-lint
-description: 撰寫 Markdown 時自動套用 markdownlint rules。永遠生效，且是 hard rule。
+description: 撰寫或修改 Markdown 時套用 markdownlint rules。
 when_to_use: "撰寫或修改 Markdown 時，自動套用 markdownlint 規則"
 tags: [markdown, lint, format, docs]
 effort: low
 shell: none
 runtime-scope: shared-core
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Markdown Lint -- 硬規則
@@ -27,7 +27,8 @@ alwaysApply: true
 
 ## 全域豁免規則
 
-MD014, MD028, MD036, MD043, MD044, MD049, MD050, MD051, MD052, MD053, MD054, MD059, MD060
+MD014, MD028, MD036, MD043, MD044, MD049, MD050, MD051, MD052, MD053,
+MD054, MD059, MD060
 
 理由：專案自定義或不影響 parse 的風格偏好，不跨文件強制。
 

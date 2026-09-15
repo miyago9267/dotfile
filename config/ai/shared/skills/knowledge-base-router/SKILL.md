@@ -1,13 +1,13 @@
 ---
 name: knowledge-base-router
-description: 自動將 project、architecture、implementation、spec、incident、deployment、business-logic 與 historical-decision 問題 route 到 Miyago 的 local Obsidian knowledge bases。Task 位於已知 project、詢問過去的決策或原因、提到 specs、architecture、SOPs、infra、PMS、RiceCall、要求 knowledge-base lookup/update，或既有 project knowledge 能避免重新探索時使用。即使 Miyago 沒明說 knowledge base，也要主動 invoke；寫入時遵守選定 vault 的 local AGENTS.md。
+description: 當使用者詢問既有 project location、architecture/history、SOP、infra、PMS、RiceCall 或明確要求 knowledge-base lookup/update 時，將問題 route 到對應的 local vault。Self-contained 的 local code、config、prompt 或 spec edit 不觸發；寫入時遵守選定 vault 的 local AGENTS.md。
 ---
 
 # Knowledge Base Router（知識庫路由）
 
-回答或修改 project 前，只要既有 decisions、specs、architecture、operations
-knowledge 或 domain rules 可能影響工作，就先查相關的 local vault。不要等 Miyago
-提供 vault path。
+只有 prompt 明確指向既有 decisions、project location、architecture/history、operations
+knowledge 或 domain rules，且 repo source 不足以回答時，才查相關的 local vault。Self-contained
+的 local code、config、prompt 與 spec edit 直接使用 repo source，不因「可能有 knowledge」而讀 vault。
 
 ## 路由任務
 
@@ -34,7 +34,7 @@ Task 跨越 boundaries 時使用多個 vault。RiceCall details 優先使用 Ric
 
 ## 查詢流程
 
-1. 對 project、architecture、history、routing、configuration 或 next-step questions，
+1. 對 prior decision、project location、architecture/history 或跨 workspace routing questions，
    先向已安裝的 Factory 要 bounded RoutePlan：
 
    ```bash
@@ -58,15 +58,15 @@ Task 跨越 boundaries 時使用多個 vault。RiceCall details 優先使用 Ric
 
 符合以下任一情況時，在 implementation、diagnosis、planning 或 review 前查 knowledge：
 
-- Current repo 有 project node 或 recorded spec history。
+- Prompt 明確要求 prior decision、project node、recorded spec history 或「為什麼這樣做」。
 - Request 詢問 prior decisions、architecture、conventions、trade-offs、incidents、
   deployment、business rules，或某件事為何如此運作。
 - Completed 或 archived spec 可能已 promotion 成 canonical knowledge。
 - 從 code 重新發現答案會重複已記錄的 project context。
 - Infra、PMS 或 RiceCall domain knowledge 可能改變安全的 next action。
 
-Trivial text edits、self-contained local facts，或答案不可能依賴 stored project
-knowledge 的 tasks，可跳過 vault lookup。
+Trivial text edits、self-contained local facts、dotfile/rules maintenance，或 repo source
+已經足夠回答的 tasks，跳過 vault lookup。
 
 ## 安全寫入
 
@@ -86,7 +86,7 @@ workflow 明確包含 spec promotion／knowledge maintenance 時才寫。
 ## 觸發範例
 
 - 「這個專案之前為什麼選這個架構？」
-- 「幫我修 Monika 的 session 問題。」
+- 「幫我修 Astra 的 session 問題。」
 - 「這個 service 怎麼部署？」
 - 「PMS 這張表的業務規則是什麼？」
 - 「把完成的 spec 整理進知識庫。」

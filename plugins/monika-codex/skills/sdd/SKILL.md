@@ -1,26 +1,26 @@
 ---
 name: sdd
-description: "Codex SDD adapter -- explicit SDD mode only; routine coding should not enter full SDD."
+description: "Codex SDD adapter：只在明確指定時進入 SDD mode；routine coding 不進入完整 SDD。"
 user-invocable: true
-when_to_use: "Use only when Miyago explicitly asks for SDD/spec-driven work or a large task needs design approval."
+when_to_use: "只有 Miyago 明確要求 SDD/spec-driven work，或 large task 需要 design approval 時使用。"
 tags: [codex, sdd, spec]
 effort: medium
 shell: optional
 runtime-scope: codex-native
 ---
 
-# Codex SDD Adapter
+# Codex SDD Adapter（規格驅動開發）
 
-Use SDD as an explicit large-task workflow, not as the default coding path.
+SDD 是明確指定的 large-task workflow，不是 default coding path。
 
-## Flow
+## 流程（Flow）
 
-1. Search for a directly relevant `docs/specs/<slug>/SPEC.md` once.
-2. If found, read only the relevant `SPEC.md` / `TASKS.md` sections.
-3. If missing and the task is large, draft a compact spec and stop for Miyago confirmation.
-4. Do not create `.ai/` working-memory files from Codex unless Miyago explicitly asks.
+1. 搜尋一次直接相關的 `docs/specs/<slug>/SPEC.md`。
+2. 找到後只讀相關的 `SPEC.md`／`TASKS.md` sections。
+3. Task 很大且找不到時，草擬 compact spec，停下等待 Miyago confirmation。
+4. 除非 Miyago 明確要求，不要從 Codex 建立 `.ai/` working-memory files。
 
-## Non-goals
+## 不在目標內（Non-goals）
 
-- Do not create specs for small/medium implementation tasks.
-- Do not run Claude bootstrap, handoff, snapshot, or log scripts.
+- 不要為 small/medium implementation tasks 建立 specs。
+- 不要執行 Claude bootstrap、handoff、snapshot 或 log scripts。

@@ -16,6 +16,16 @@ canonical:
     - /Users/miyago/dotfile/config/ai/memories
     - /Users/miyago/Project/AI/agent-workspace/personal-model
 
+identity:
+  canonical_name: Astra
+  source: /Users/miyago/dotfile/config/ai/AGENTS.md
+  legacy_aliases:
+    - Monika
+    - monika
+    - monika-large
+    - studio-monika
+  compatibility: "舊 runtime entry、plugin name 與 agent ID 保留；它們只提供 adapter，不提供第二套 persona"
+
 audit_state:
   audited_at: 2026-08-19
   source_structure: phase_0_verified
@@ -142,6 +152,36 @@ runtimes:
       - "Current setup links the generated Codex entry to both ~/.codex and Orca's Codex-only managed home."
       - "The Codex UserPromptSubmit hook captures only explicit preference markers; it does not persist raw prompts."
       - "Target keeps an independently inspectable generated Codex entry and forbids Codex-to-other-runtime references."
+
+  astra:
+    family: codex-model-profile
+    source_root: /Users/miyago/dotfile/config/ai/astra
+    adapter_source: /Users/miyago/dotfile/config/ai/astra/AGENTS.md
+    target_root: "explicit ASTRA_TARGET_ROOT"
+    entry_file: AGENTS.md
+    current:
+      entry_target: /Users/miyago/dotfile/config/ai/generated/astra/AGENTS.md
+      entry_mode: generated_composition
+      status: profile_source_ready
+    target:
+      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      adapter_load: generated_composition
+      generated_entry: /Users/miyago/dotfile/config/ai/generated/astra/AGENTS.md
+      activation: explicit_main_session_only
+      model: gpt-6-astra
+      effort_recommendation: low_for_routine_work
+      context_policy: "API-backed Astra: aim below 260K input tokens; >272K changes pricing for the full request; 1.05M is capacity, not a target"
+    skills:
+      allowlist: /Users/miyago/dotfile/config/ai/astra/skills-allowlist.txt
+      policy: "預設只載入 shared contract；需要時最多加一個 task skill，safe-ops 保留為 always-on guard"
+    legacy_compatibility:
+      - "不自動切換 normal Luna/Sol session"
+      - "不建立 Astra child；既有 named roles 維持原 model binding"
+      - "Monika 舊名稱與 plugin IDs 保留為 alias"
+    evidence:
+      - /Users/miyago/dotfile/script/common/setup_astra.sh
+      - /Users/miyago/dotfile/config/ai/astra/AGENTS.md
+      - /Users/miyago/dotfile/config/ai/astra/skills-allowlist.txt
 
   gemini:
     family: gemini-cli
@@ -440,5 +480,9 @@ verification_plan:
       - "是否違反 Personal Model 的明文偏好或 shared contract 硬規則"
     pass_rule: "允許 provider 的文風與能力差異；上述四個維度不得出現明文違反，能力差異必須記為 capability gap"
     evaluator: "固定 rubric + Miyago 抽查；不由同一 provider 自評"
+  - id: astra-compatibility
+    check: "Astra profile 只組合 shared contract、Personal Model、Codex adapter 與 compact Astra overlay；舊 entry IDs 保留且不載入第二套 persona"
+    scope: "source composition、skill allowlist、legacy runtime adapters"
+    pass_rule: "generated Astra entry 可重建；always-on skill 只有 safe-ops；normal runtime setup 不被改寫"
 
-next_step: "先完成 Phase 1 的 behavioral-parity 隔離測試，再決定是否進入 task context 與 context assembly。"
+next_step: "以 ASTRA_TARGET_ROOT 執行隔離 runtime smoke，確認生成 entry、allowlist 與舊 runtime 不互相覆寫。"

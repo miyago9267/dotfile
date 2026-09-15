@@ -47,7 +47,7 @@
       "/Users/miyago/Project/Note/itrd-knowledge-base"
     ]
   },
-  "model": "claude-opus-4-6",
+  "model": "opus",
   "fallbackModel": [
     "sonnet"
   ],

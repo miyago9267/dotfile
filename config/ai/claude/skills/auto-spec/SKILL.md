@@ -1,78 +1,31 @@
 ---
 name: auto-spec
-description: "自動追蹤 spec 與 progress；在 background 判斷 task 是否需要 spec、追蹤 TASKS.md checkboxes 並連結 commits。無需手動觸發；完整手動 SDD flow 使用 /sdd。"
-alwaysApply: true
-when_to_use: "Task 超過 trivial fix，或進入需要 spec/TASKS/PROGRESS sync 的 mid/large implementation、feature change 或 cross-file edit 時。"
-tags: [spec, sdd, progress, tasks, planning, tracking]
-effort: medium
-shell: preferred
+description: "在 cross-module、architecture-changing、product-behavior-changing 或明確要求 spec 的工作中，建立最小規格與進度追蹤。"
+when_to_use: "需要設計決策、跨檔案 acceptance 或 spec/progress gate 時。"
+tags: [spec, sdd, progress, architecture]
+effort: low
+shell: optional
 runtime-scope: shared-core
+alwaysApply: false
+user-invocable: true
 ---
 
-# 自動規格追蹤
+# Auto Spec
 
-## 觸發決策樹（不需使用者提醒）
+## 觸發邊界
 
-```text
-任務進來
-  |
-是否為 trivial fix？（單行修正、typo、明確的 one-liner）
-  |- 是 -> 直接執行，完成後 log.sh
-  +- 否 -> 找 active spec
-              |
-         docs/specs/ 下有相關 spec？
-           |- 有 -> 讀 spec，確認設計，照 TASKS.md / PROGRESS.md 追蹤進度
-           |     （TASKS.md 有多個彼此獨立、皆已就緒的項目時，用 Workflow 或並行 Agent 同時推進，不要逐項串行、也不要把工作丟回給 Miyago）
-           +- 沒有 -> 先建 spec（從 _templates/ 複製），等 Miyago 確認，再實作
-```
+- 觸發：cross-module、architecture-changing、product-behavior-changing，或
+  Miyago 明確要求 SDD/spec。
+- 跳過：單一、局部、可逆的 code/config/docs/prompt edit；不要因 file count 或「中型」標籤單獨觸發。
 
-## 職責分離（硬規則）
+觸發後只讀與目前 task 相關的 active spec sections。沒有 spec 時建立最小 `docs/specs/<slug>/SPEC.md`，
+再依現有 host 的 material approval gate 執行；明確的 user request 已經授權的 local repository scope
+不需再次確認。
 
-- **Spec** (`docs/specs/<slug>/SPEC.md`)：只放設計文件（需求、ADR、架構決策）
-- **Tasks** (`docs/specs/<slug>/TASKS.md`)：只放當前 batch 的 checkbox
-- **Tests** (`docs/specs/<slug>/TESTS.md`)：只放驗收條件（EARS 語法）
-- **Progress** (`docs/specs/<slug>/PROGRESS.md`)：只放 Phase 級追蹤
-- 不得在 Spec 中放 checkbox，不得在 TASKS.md 中放設計決策
+## Tracking
 
-## Commit 連動規則（硬規則）
-
-每次 git commit 前，必須確認：
-
-- 修改了對應 spec 的功能 -> 更新 `TASKS.md` 的 checkbox
-- 新增功能但沒有 spec -> 先建 spec 和 TASKS.md 再 commit
-- Commit message 格式預設為 `<type>: <中文簡短說明>`；scope 只有能提升辨識度時才加成 `<type>(<scope>): <中文簡短說明>`，不加 AI 署名
-- `.ai/` 不加入 commit（changelog、lessons 等是 AI 工作記錄，不上版控）
-- commit 後不再修改任何檔案
-
-## 工作流程
-
-### 開始任務時
-
-1. 讀取 `.ai/HANDOFF.md`（如有）
-2. 讀取 `.ai/changelog.md` 最近記錄
-3. 掃描 `docs/specs/` 找 active spec
-4. 確認當前任務與已有進度的關係
-5. 更新 `.ai/CURRENT.md` 記錄當前任務
-
-### 執行任務中
-
-- 重大決策立即記錄到 spec 的 ADR 區
-- 遇到阻礙記錄到 `.ai/CURRENT.md`
-
-### 完成任務後
-
-1. 更新 `TASKS.md` checkbox（`- [ ]` -> `- [x]`）
-2. 更新 `.ai/changelog.md`（透過 log.sh）
-3. Spec 只在設計有變更時更新 `updated` 日期
-4. Batch 完成 -> `spec-archive.sh tasks <slug>`
-5. Phase 完成 -> `spec-archive.sh phase <slug>`
-
-## Context Compact 恢復
-
-被 compact 後，按此順序重建 context：
-
-1. 讀 `.ai/HANDOFF.md`
-2. 讀 `.ai/changelog.md` 最近 20 行
-3. 讀 `.ai/lessons.md`
-4. 掃描 `docs/specs/` 找 active spec
-5. 讀取當前任務相關的 TASKS.md
+- spec 放需求、決策與 acceptance；`PROGRESS.md` 只記 phase 狀態。只有 repo 已採用 `TASKS.md`／`TESTS.md`
+  時才同步它們。
+- 只在 design change、phase milestone 或 user 要求時更新 progress；不要每個 operation 寫 `.ai/`。
+- commit 前檢查對應 spec 是否已反映 final state、`.ai/` 是否未被加入，以及 commit message 是否符合
+  `git-workflow` 的格式。

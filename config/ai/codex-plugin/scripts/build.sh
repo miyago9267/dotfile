@@ -12,6 +12,7 @@ copy_skill() {
 
   for candidate in \
     "${ROOT_DIR}/config/ai/codex/skills/${skill_name}" \
+    "${ROOT_DIR}/config/ai/astra/skills/${skill_name}" \
     "${ROOT_DIR}/config/ai/claude/skills/${skill_name}" \
     "${ROOT_DIR}/config/ai/gemini/skills/${skill_name}"; do
     if [[ -d "${candidate}" ]]; then
@@ -40,6 +41,26 @@ compose_agents() {
   } > "${output_file}"
 }
 
+merge_marketplace() {
+  ruby -rjson - "${MARKETPLACE_DIR}/marketplace.json" "${PLUGIN_SOURCE_DIR}/marketplace.json" <<'RUBY'
+target_path, source_path = ARGV
+source = JSON.parse(File.read(source_path))
+target = File.exist?(target_path) ? JSON.parse(File.read(target_path)) : source.dup
+target["plugins"] ||= []
+entry = source.fetch("plugins").find { |plugin| plugin["name"] == "monika-codex" }
+raise "marketplace source missing monika-codex" unless entry
+
+index = target["plugins"].index { |plugin| plugin["name"] == entry["name"] }
+if index
+  target["plugins"][index] = entry
+else
+  target["plugins"] << entry
+end
+
+File.write(target_path, JSON.pretty_generate(target) + "\n")
+RUBY
+}
+
 rm -rf "${PLUGIN_DIR}"
 mkdir -p \
   "${PLUGIN_DIR}/.codex-plugin" \
@@ -49,7 +70,7 @@ mkdir -p \
   "${MARKETPLACE_DIR}"
 
 cp "${PLUGIN_SOURCE_DIR}/plugin.json" "${PLUGIN_DIR}/.codex-plugin/plugin.json"
-cp "${PLUGIN_SOURCE_DIR}/marketplace.json" "${MARKETPLACE_DIR}/marketplace.json"
+merge_marketplace
 
 while IFS= read -r skill_name; do
   [[ -z "${skill_name}" ]] && continue

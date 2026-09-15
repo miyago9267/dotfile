@@ -1,8 +1,8 @@
 ---
 name: docker-k8s
-description: "Docker 與 Kubernetes ops guide；觸發詞：k8s、kubectl、pod、container、deploy、namespace。行動前先探索 context，不執行 blind commands。"
+description: "Docker 或 Kubernetes ops guide；僅在出現 docker、Dockerfile、image、buildx、k8s、kubectl、pod、namespace、helm、deployment、service 或 ingress 的具體上下文時觸發。"
 alwaysApply: false
-when_to_use: "docker/k8s/kubectl/pod/deploy/namespace task 需要先 discovery cluster 或 container context 時。"
+when_to_use: "具體 Docker/Kubernetes 操作或部署上下文需要先 discovery cluster/container context 時；單獨的 deploy 一字不觸發。"
 tags: [docker, kubernetes, k8s, pod, deploy, namespace]
 effort: medium
 shell: required

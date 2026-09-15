@@ -1,6 +1,6 @@
 ---
 name: sre-locate
-description: "跨 clusters/projects/VMs 定位 services 與 logs。觸發：cannot find it、which cluster/namespace/project、locate service、where is X。Read-only，不修改任何內容。"
+description: "在 service、infra、cluster、namespace、project、VM 或 logs 上下文中，跨環境定位資源。單獨的 where is X 不觸發。Read-only。"
 when_to_use: "跨 cluster / project / VM 定位服務與 log(read-only)"
 tags: [sre, locate, cluster, namespace, service]
 effort: medium
@@ -13,7 +13,8 @@ alwaysApply: false
 
 ## 何時觸發
 
-使用者表達「不知道要去哪找」的場景：
+使用者表達「不知道要去哪找」，且問題帶有 service、infra、cluster、namespace、project、VM
+或 logs 上下文時：
 
 - 「這個 service 部署在哪？」
 - 「告警寫 X 服務有問題，可是我不知道在哪個 cluster」

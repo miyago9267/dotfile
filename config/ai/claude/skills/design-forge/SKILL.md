@@ -18,6 +18,8 @@ alwaysApply: false
 - 使用者說「幫我設計 X」「做個 UI / 介面 / 登入頁」「做一張圖 / 生成素材」「做個 icon / 插畫 / 海報 / banner」「同步設計系統 / 元件庫」「畫個流程圖 / 架構圖」
 - 需要產出可重用的視覺或設計成品，且要決定後端與存放位置
 
+純 Mermaid、ASCII 或 Markdown diagram 不觸發；這類內容直接在目前文件或回覆中完成。
+
 **邊界**：
 
 - 要寫 prompt 文案 / 角色設定 → `prompt-smith`（但圖片類的 image prompt 可由本 skill 借它生）

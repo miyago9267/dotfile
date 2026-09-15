@@ -1,12 +1,18 @@
 ---
 name: search-discipline
-description: 搜索效率紀律 -- 限制 codebase_investigator 的濫用，優先使用 grep_search、glob 和 read_file 進行外科手術式搜索。永遠生效。
-alwaysApply: true
+description: "需要搜尋 codebase 或 logs 時，限制輸出並優先使用精確的 grep、glob、read。"
+when_to_use: "只在 research、diagnostics 或可能拉入大量 context 的搜尋前觸發。"
+tags: [search, grep, glob, context, tokens]
+effort: low
+shell: optional
+runtime-scope: gemini-native
+alwaysApply: false
 ---
 
 # search-discipline -- 搜索效率紀律
 
-控管搜索行為的 token 消耗與回合數 (turns)。`codebase_investigator` 是一個重量級的架構分析工具，雖然強大但消耗較多 context。大多數日常搜尋任務應優先使用精確、快速的工具組合。
+控管搜索行為的 token 消耗與回合數。`codebase_investigator` 是重量級的架構分析工具，
+大多數日常搜尋任務應優先使用精確、快速的工具組合。
 
 ## 搜索工具選擇順序
 
@@ -21,11 +27,15 @@ alwaysApply: true
 
 ## 規則
 
-1. **grep_search 優先**：找關鍵字、函數、class 名、import 路徑。利用 `context`、`before`、`after` 參數一次取得足夠資訊，減少後續 `read_file` 的依賴。必須指定 `include_pattern` (e.g., `*.ts`) 或 `dir_path`。
+1. **grep_search 優先**：找關鍵字、函數、class 名、import 路徑。利用 `context`、
+   `before`、`after` 參數一次取得足夠資訊，減少後續 `read_file` 的依賴。必須指定
+   `include_pattern`（例如 `*.ts`）或 `dir_path`。
 2. **glob 優先**：尋找特定副檔名或路徑結構（`**/*.ts`、`src/**/index.*`）。
 3. **read_file 外科手術**：已知路徑時，強制使用 `start_line` 和 `end_line` 讀取特定片段，嚴禁無差別載入完整大檔案。
-4. **平行化搜索**：能同時執行的 `glob` 與 `grep_search` 必須在同一回合 (turn) 平行呼叫（不設定 `wait_for_previous`）。
-5. **限制 generalist 與 codebase_investigator**：這兩個工具會啟動獨立的 session 進行運算，雖然能保護主 session 的 context，但本身執行成本較高。只在單純工具無法勝任時才使用。
+4. **平行化搜索**：不相依的搜尋可在同一回合平行呼叫；避免為了形式拆回合。
+5. **限制 generalist 與 codebase_investigator**：這兩個工具會啟動獨立的 session
+   進行運算，雖然能保護主 session 的 context，但本身執行成本較高。只在單純工具
+   無法勝任時才使用。
 
 ## 反模式與正確做法
 

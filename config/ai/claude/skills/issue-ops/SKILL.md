@@ -11,7 +11,9 @@ runtime-scope: claude-native
 
 # Issue-to-PR 全流程
 
-任意階段可當進入點，**每個進入點先過 Stage 0 認證 + 前置檢查**。
+只有需要 remote API、push、PR/MR、review、CI 或 issue lifecycle 時才進入本 skill。
+單純閱讀 issue 內容、檢查 local diff 或一般 local Git 操作不觸發認證流程。
+進入後，從對應階段開始做一次必要的 platform/auth 檢查。
 
 ```text
 任意進入 -> Stage 0 (認證) -> 前置檢查 -> 目標 Stage -> 往下接

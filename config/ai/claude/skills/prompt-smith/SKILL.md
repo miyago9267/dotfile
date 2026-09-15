@@ -1,6 +1,6 @@
 ---
 name: prompt-smith
-description: "Generate a complete, deployable system prompt for a new agent or chatbot from a short natural-language seed -- triggers: 幫我寫 prompt, 做一個 XX 大師, 我要一個會 X 的 agent, 生成 system prompt, persona/角色設定. Not for building Claude's own skills (skill-maker) or editing Monika's persona (SessionStart hook)."
+description: "Generate a complete, deployable system prompt for a new agent or chatbot from a short natural-language seed -- triggers: 幫我寫 prompt, 做一個 XX 大師, 我要一個會 X 的 agent, 生成 system prompt, persona/角色設定. Not for building Claude's own skills (skill-maker) or editing Astra's shared identity."
 when_to_use: "需要把一句話需求(「我要一個 X 大師 / 一個會 X 的 agent」)變成一份可直接部署的 system prompt 時。"
 tags: [prompt, system-prompt, agent, persona, chatbot, 角色設定, meta-prompt]
 effort: medium
@@ -22,7 +22,7 @@ alwaysApply: false
 **邊界**：本 skill 產的是「給別的 agent/chat 用的 prompt」。
 
 - 要建立 Claude 自己的 skill -> 走 `skill-maker`，不走這裡。
-- 要改 Claude（Monika）自己的人格 -> SessionStart persona hook，不走這裡。
+- 要改 Claude（Astra）自己的 shared identity -> 修改 canonical `config/ai/AGENTS.md`，不走這裡。
 - 兩者交界：使用者說「把這份 prompt 變成一個 skill」-> 先用本 skill 產出 `FINAL_PROMPT`，再帶著它轉 `skill-maker` 的 Phase 1。
 - 下游消費者：`design-forge` 在 raster / marketing 路徑會借本 skill 把設計需求鍛成 image prompt。
 

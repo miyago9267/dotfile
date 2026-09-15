@@ -13,7 +13,7 @@ priority: high
 
 ## Background
 
-The Monika identity and several communication rules already exist in `config/ai/AGENTS.md`, Claude's SessionStart persona hook, and runtime adapters. The same ideas are duplicated with different coverage, and recap behavior currently conflicts: the shared contract says no trailing recap while Claude and other adapters request one.
+The Astra identity and several communication rules already exist in `config/ai/AGENTS.md`, Claude's SessionStart persona hook, and runtime adapters. The same ideas are duplicated with different coverage, and recap behavior currently conflicts: the shared contract says no trailing recap while Claude and other adapters request one. Legacy Monika names remain runtime compatibility aliases.
 
 The external `ayghri/i-have-adhd` project is useful research for reducing filler and improving scanability, but its always-on and action-first rules are too rigid for our persona, autonomy, and task ownership model. This spec defines an owned delivery-shaping layer. Claude Phase 1 validated the semantic source and recap fallback; Phase 2 distributes a Codex-native adapter and installs the xAI Grok CLI while keeping Grok auth, host recap, and post-login behavior explicitly gated.
 
@@ -41,7 +41,7 @@ The layer preserves evidence, assumptions, uncertainty, limitations, test state,
 - **R9**: When meaningful execution, research, modification, or multi-step work completes, the system shall ensure Miyago receives a concise recap of outcome, verification, and remaining work.
 - **R10**: When the host reliably renders an equivalent lifecycle recap, the agent shall not duplicate it; if the host does not or its capability is unknown, the agent final delivery shall include it.
 - **R11**: When the response is a direct question or simple status reply without meaningful work, the system shall not force a recap.
-- **R12**: When the human-voice layer is loaded, it shall shape delivery only and shall not redefine Monika identity, runtime ownership, permissions, safety rules, or SDD/TDD requirements.
+- **R12**: When the human-voice layer is loaded, it shall shape delivery only and shall not redefine Astra identity, runtime ownership, permissions, safety rules, or SDD/TDD requirements.
 - **R13**: When Claude loads the layer, the SessionStart reminder shall remain concise and shall not duplicate the full skill body.
 - **R14**: When recap semantics change, existing runtime adapters shall preserve the same fallback contract; Grok remains unverified until its runtime behavior is validated.
 - **R15**: When Codex loads the human-voice layer, it shall use a Codex-native skill source with the same delivery semantics without copying Claude hooks or memories.
@@ -60,7 +60,7 @@ The layer preserves evidence, assumptions, uncertainty, limitations, test state,
 
 ## Non-goals
 
-- Replacing or rewriting Monika persona identity.
+- Replacing or rewriting the Astra identity; identity compatibility is specified separately.
 - Installing, forking, syncing, or depending on `ayghri/i-have-adhd`.
 - Adding a new hook or automatic per-prompt formatter.
 - Shipping the full human-voice skill to Gemini or OpenCode in this Phase 2 batch.
@@ -139,7 +139,7 @@ Chosen. It reuses the useful intent, keeps source-of-truth control, limits blast
 
 ### ADR-1: Delivery shaping stays separate from persona
 
-- Decision: Keep Monika identity in the persona layer; put response-mode selection in `human-voice`.
+- Decision: Keep Astra identity in the persona layer; put response-mode selection in `human-voice`. Retain Monika names only as compatibility aliases.
 - Reason: Identity answers who is speaking; delivery shaping answers how this task should be communicated. Combining them increases drift and makes runtime adaptation harder.
 
 ### ADR-2: Baseline compact is contextual, not rigid

@@ -19,3 +19,10 @@ created: 2026-05-12
 > Status: completed
 
 - 目標：補高價值事件 hooks，減少手動提醒
+
+## Phase 3: High-frequency trigger hardening
+
+> Status: completed
+
+- 目標：縮小常駐 skill 與 broad trigger，保留 `safe-ops` 作為安全底線
+- Batch 3：Claude、Gemini、Codex 與 Zed 的 routing metadata 已對齊；domain skills 改為語意邊界觸發

@@ -1,7 +1,7 @@
 ---
 name: context-prompt-discipline
 description: "Codex context/prompt engineering guardrail：避免 broad searches、large logs、oversized tool output 與 vague delegation prompts 造成 token 使用失控。進行 research、diagnostics、log/session analysis、subagent prompts、second opinions，或任何可能產生大量 context 的 task 時使用。"
-alwaysApply: true
+alwaysApply: false
 user-invocable: true
 when_to_use: "在可能拉入 large context 或 delegate open-ended analysis 的 commands/prompts 前套用。"
 tags: [codex, context, prompt, tokens, usage, discipline]

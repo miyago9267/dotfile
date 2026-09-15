@@ -1,36 +1,20 @@
 ---
 name: efficiency
-description: "Efficiency discipline：audit current session 是否違反效率規則。永遠生效。"
-alwaysApply: true
-user-invocable: true
-when_to_use: "檢查 session 是否有 repeated reads、verbose replies、futile retries 或其他浪費。"
-tags: [efficiency, session, audit, verbosity, workflow]
+description: "在 session 出現重複讀取、無效 retry、冗長輸出或過度確認時，做一次有界的效率檢查。"
+when_to_use: "Miyago 明確要求 efficiency audit，或同一類浪費已重複出現並影響目前 task 時。"
+tags: [efficiency, audit, context, retries]
 effort: low
 shell: none
 runtime-scope: shared-core
+alwaysApply: false
+user-invocable: true
 ---
 
-# /efficiency
+# Efficiency Audit
 
-檢查目前 session 是否有違反效率紀律的行為：
+只檢查目前 task 的直接浪費：重複讀取、沒有策略改變的 retry、可平行卻串行的獨立操作、無效確認和超出
+需求的輸出。不要重新審查整個 session，也不要複製 `search-discipline` 或 `context-prompt-discipline`
+的規則。
 
-## 檢查項目
-
-1. **重複讀取**：同一檔案讀取超過 1 次？
-2. **無效重試**：同一指令 retry 超過 1 次而未改變策略？
-3. **串行浪費**：可平行的操作串行執行？
-4. **冗長回覆**：回覆超過實際需要的長度？
-5. **過度確認**：不必要地反覆詢問已知的事情？
-6. **遺忘 Context**：忘記之前已經討論或決定的事情？
-7. **殭屍等待**：開了 background shell 只為「等」一個不會來的輸出（sleep / tail 空檔 / 空轉輪詢）？該用 ScheduleWakeup / `/loop` / `/goal` 重新進場，或直接做事。
-8. **把工可分解卻丟回**：明明可拆解平行處理，卻停下來請 Miyago 自己跑子步驟？該用 Workflow（ultracode 開時）或平行 Agent 自己 drive，只把真正的決策（權限、破壞性操作、產品意圖）升級給他。
-
-## 改善建議格式
-
-列出違規項目，附帶具體改善建議。例如：
-
-```text
-- [重複讀取] 讀取 src/main.ts 3 次 -> 第一次讀完就應記住內容
-- [串行浪費] 三個獨立檔案的讀取可平行執行
-- [冗長回覆] 格式化結果不需要逐行解釋
-```
+輸出最多五個 findings，每項包含 evidence 和一個可立即採用的修正。沒有 finding 就回報 clean，不要
+為了湊清單添加建議。

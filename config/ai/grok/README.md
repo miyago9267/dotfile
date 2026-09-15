@@ -31,7 +31,7 @@ into the root `AGENTS.md`.
 
 The native adapter is required because Grok does not execute Claude's
 SessionStart hooks. The Claude-compatible `~/.claude/Claude.md` therefore
-cannot be the only source of Monika's identity.
+cannot be the only source of Astra's identity.
 
 ## Claude compatibility boundary
 

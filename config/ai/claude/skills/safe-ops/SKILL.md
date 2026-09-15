@@ -1,50 +1,23 @@
 ---
 name: safe-ops
-description: Dangerous operations 前的 safety confirmation。永遠生效。
-when_to_use: "執行破壞性或高風險操作前的確認閘門"
-tags: [safety, destructive, confirm, guard]
+description: 危險或不可逆操作前的 safety confirmation；普通 local edit、Git read 與測試不觸發額外確認。
+when_to_use: "執行 destructive、privileged、production/shared、credential、external 或 irreversible 操作前。"
+tags: [safety, destructive, privilege, production, credential]
 effort: low
 shell: none
 runtime-scope: shared-core
 alwaysApply: true
 ---
 
-# 安全操作守則
+# Safe Ops
 
-## 必須確認才能執行的操作
+以下操作在執行前必須說明 target、blast radius、rollback，並取得 Miyago 明確確認：
 
-以下操作在執行前**必須先告知 Miyago 並取得確認**：
+- `rm -rf` 非 `/tmp/` 目標、`git reset --hard`、`git clean -fd`、force push、遠端分支刪除。
+- `DROP`、無條件大量 `DELETE/UPDATE`、destructive schema migration。
+- production/shared infrastructure、cloud resource、IAM、DNS、namespace/deployment deletion。
+- sudo/root、credentials、`.env` 或其他 secret-bearing file；外部、付費、發布或不可逆操作。
 
-### 資料庫
-
-- DROP TABLE / DROP DATABASE
-- 大量 DELETE / UPDATE（超過 100 筆）
-- Schema migration（特別是 destructive migration）
-
-### 檔案系統
-
-- `rm -rf` 任何非 `/tmp/` 的目錄
-- 覆寫 config 檔（`.env`、`docker-compose.yaml` 等）
-- 修改 `.gitignore` 導致追蹤中的檔案被排除
-
-### Git
-
-- `git push --force`（任何分支）
-- `git reset --hard`
-- `git clean -fd`
-- 刪除遠端分支
-
-### 雲端 / 基礎設施
-
-- 刪除 GCP 資源（VM、Cloud SQL、GKE cluster）
-- 修改 IAM 權限
-- 修改 DNS 記錄
-- kubectl delete namespace / deployment
-
-## 安全模式
-
-遇到不確定的操作時，優先選擇：
-
-1. **先查後改**：先用唯讀指令確認狀態，再執行修改
-2. **先備後改**：先備份，再修改
-3. **小範圍測試**：先在單一資源上測試，確認無誤再擴大
+普通 repo code/config/docs edit、`git status/diff/add/commit`、lint/test/build 與可逆的
+local generation 不需要額外確認。不要用 `docker run` 手動建立 CI/CD 管理的 container。
+遇到不確定 target，先用 read-only check；確認 alias 與 environment 後才執行寫入。

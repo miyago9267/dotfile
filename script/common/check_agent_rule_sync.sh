@@ -10,6 +10,7 @@ codex_active_file="$dotfile_dir/config/ai/generated/codex/AGENTS.md"
 claude_active_file="$dotfile_dir/config/ai/generated/claude/AGENTS.md"
 gemini_active_file="$dotfile_dir/config/ai/generated/gemini/GEMINI.md"
 grok_active_file="$dotfile_dir/config/ai/generated/grok/AGENTS.md"
+astra_active_file="$dotfile_dir/config/ai/generated/astra/AGENTS.md"
 claude_settings_file="$dotfile_dir/config/ai/claude/settings.json"
 claude_file="$dotfile_dir/config/ai/claude/CLAUDE.md"
 grok_file="$dotfile_dir/config/ai/grok/AGENTS.md"
@@ -21,6 +22,7 @@ test -s "$codex_active_file"
 test -s "$claude_active_file"
 test -s "$gemini_active_file"
 test -s "$grok_active_file"
+test -s "$astra_active_file"
 
 language_files=(
   "$source_file"
@@ -28,6 +30,7 @@ language_files=(
   "$claude_file"
   "$dotfile_dir/config/ai/gemini/GEMINI.md"
   "$grok_file"
+  "$dotfile_dir/config/ai/astra/AGENTS.md"
   "$dotfile_dir/config/ai/codex/skills/human-voice/SKILL.md"
   "$dotfile_dir/config/ai/claude/skills/human-voice/SKILL.md"
 )
@@ -49,6 +52,7 @@ grep -Fq 'User-facing output 預設使用台灣繁體中文' "$dotfile_dir/confi
 grep -Fq 'User-facing output 預設使用台灣繁體中文' "$dotfile_dir/config/ai/claude/CLAUDE.md"
 grep -Fq 'User-facing output 預設使用台灣繁體中文' "$dotfile_dir/config/ai/gemini/GEMINI.md"
 grep -Fq 'user-facing prose 預設使用台灣繁體中文' "$grok_file"
+grep -Fq 'Astra 是唯一 identity' "$dotfile_dir/config/ai/astra/AGENTS.md"
 grep -Fq '預設使用台灣繁體中文' "$dotfile_dir/config/ai/codex/skills/human-voice/SKILL.md"
 grep -Fq '預設使用台灣繁體中文' "$dotfile_dir/config/ai/claude/skills/human-voice/SKILL.md"
 grep -Fq '完成宣告規則' "$dotfile_dir/config/ai/codex/skills/human-voice/SKILL.md"
@@ -78,6 +82,10 @@ if ! cmp -s <(head -n "$shared_line_count" "$grok_active_file") "$source_file"; 
   printf '%s\n' 'Grok composed rules do not start with canonical shared rules' >&2
   exit 1
 fi
+if ! cmp -s <(head -n "$shared_line_count" "$astra_active_file") "$source_file"; then
+  printf '%s\n' 'Astra composed rules do not start with canonical shared rules' >&2
+  exit 1
+fi
 
 for opencode_config in \
   "$dotfile_dir/config/opencode/opencode.json" \
@@ -91,8 +99,7 @@ test -L "${XDG_CONFIG_HOME:-$HOME/.config}/miyago-agent/personal-model/PROFILE.m
 test -s "${XDG_CONFIG_HOME:-$HOME/.config}/miyago-agent/AGENTS.md"
 test -s "${XDG_CONFIG_HOME:-$HOME/.config}/miyago-agent/personal-model/PROFILE.md"
 
-for active_file in "$claude_active_file" "$codex_active_file" "$gemini_active_file" "$grok_active_file"; do
-  grep -Fq 'miyago-context-harness' "$active_file"
+for active_file in "$claude_active_file" "$codex_active_file" "$gemini_active_file" "$grok_active_file" "$astra_active_file"; do
   grep -Fq 'Miyago Personal Model' "$active_file"
   grep -Fq '<!-- miyago-personal-model:begin -->' "$active_file"
   grep -Fq '<!-- miyago-personal-model:end -->' "$active_file"
@@ -103,6 +110,27 @@ for active_file in "$claude_active_file" "$codex_active_file" "$gemini_active_fi
     exit 1
   fi
 done
+while IFS= read -r skill_file; do
+  case "$skill_file" in
+    "$dotfile_dir/config/ai/claude/skills/safe-ops/SKILL.md"|"$dotfile_dir/config/ai/gemini/skills/safe-ops/SKILL.md"|"$dotfile_dir/config/ai/astra/skills/safe-ops/SKILL.md") ;;
+    *)
+      printf '%s\n' "unexpected alwaysApply skill: $skill_file" >&2
+      exit 1
+      ;;
+  esac
+done < <(rg -l '^alwaysApply: true$' \
+  "$dotfile_dir/config/ai/claude/skills" \
+  "$dotfile_dir/config/ai/codex/skills" \
+  "$dotfile_dir/config/ai/gemini/skills" \
+  "$dotfile_dir/config/ai/astra/skills" 2>/dev/null || true)
+
+for skill_name in safe-ops tdd diagnose architecture-review reverse-skill-router final-state-publication; do
+  grep -Fxq "$skill_name" "$dotfile_dir/config/ai/astra/skills-allowlist.txt"
+done
+test -x "$dotfile_dir/script/common/setup_astra.sh"
+grep -Fq 'canonical_name: Astra' "$dotfile_dir/config/ai/AGENT-ENTRY.md"
+grep -Fq 'canonical_name: Astra' "$dotfile_dir/config/ai/runtime-bindings.yaml"
+grep -Fq 'gpt-6-astra' "$dotfile_dir/config/ai/astra/AGENTS.md"
 test -L "$HOME/.codex/hooks/experience-observe.py" || {
   echo "Codex experience hook is not linked" >&2
   exit 1
