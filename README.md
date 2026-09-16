@@ -1,101 +1,63 @@
 # Dotfile
 
-Miyago 的個人開發環境 playbook。除了保存 dotfiles，也統一管理
-macOS / Linux 工具安裝、AI CLI 設定、runtime 與常用開發工具。
+Miyago 的可攜式開發環境設定，支援 macOS、Linux、WSL 與 Windows。
 
-這個 repo 很雜，基本上就是我平常會用到的設定和安裝腳本，想到什麼就慢慢補進來。
+## 咋用
 
-## 怎麼用
-
-給 Agent 執行時，先閱讀 [INSTALL.md](INSTALL.md)；它會分開處理 config sync、
-environment install 與 optional mobile tools。
-
-先把 repo clone 下來，然後跑 setup：
+macOS / Linux / WSL：
 
 ```bash
-git clone https://github.com/miyago9267/dotfile.git
-cd dotfile
+curl -fsSL \
+  https://raw.githubusercontent.com/miyago9267/dotfile/main/install.sh \
+  | bash
+```
+
+已有 checkout：
+
+```bash
 bash setup.sh
 ```
 
-只安裝環境（不碰 config symlink）可以用：
+Windows：
 
-```bash
-bash setup.sh --environment
+```powershell
+setup.bat
 ```
 
-一般 `bash setup.sh` 只預選 config；環境項目會列在同一個 TUI 中，但不會自動勾選。
+## 有啥
 
-若要執行所有非 optional 項目：
+`config/` 是設定來源，以下只列實際可攜式的入口和檔案。
 
-```bash
-bash setup.sh --all
-```
-
-Android SDK、Flutter、FVM 屬於 optional mobile 工具，不會被 `--all` 安裝；真的需要
-時才使用：
-
-```bash
-bash setup.sh --everything
-```
-
-日常從 remote 更新設定時，只同步 config、generated entries 與 runtime
-symlink，不安裝或升級套件：
-
-```bash
-git pull --ff-only
-bash setup.sh --config-only
-```
-
-互動式安裝會優先使用已安裝的 `fzf` 提供搜尋、多選與 checkbox 操作；沒有
-`fzf` 時會使用內建零依賴選單。`Space` 切換、`Ctrl-A` 全選、`Ctrl-N` 清除、
-`Enter` 套用、`Esc` 取消。非互動環境請使用 `--all` 或 `--config-only`。
-
-安裝失敗的 component 會把輸出和 exit code 記到根目錄的 `error.log`，方便之後回頭看。
-
-## 裡面大概有什麼
-
-- macOS、Ubuntu/Debian、Arch Linux 的安裝腳本
-- Windows PowerShell 設定
-- Vim、Neovim、Tmux 和 shell 設定
-- Claude Code、Codex、Gemini CLI 的設定與 skills
-- Node、Python、Go、Rust、Bun 等 runtime
-- Kubernetes、cloud CLI、Android、Flutter 和一些平常會用的 TUI 工具
-
-## Agent Workflow Factory 的邊界
-
-這個 repo 只保存 runtime 設定與 adapter：例如 generated instruction、skills、hooks、MCP 設定、CLI bootstrap 與 symlink setup。它不保存 Context Harness 本體、task/experience 資料、benchmark 結果或 Factory 的安裝入口。
-
-那些內容由獨立的 `Agent Workflow Factory` repository 管理。Factory 安裝時透過 `MIYAGO_AGENT_WORKSPACE_ROOT` 與 `MIYAGO_DOTFILE_ROOT` 把這個設定來源接上；因此換 Factory 版本不會複製或接管 dotfile，換 runtime 也不需要把經驗資料塞進設定 repo。
-
-日常接入 Factory 的入口是：
-
-```bash
-agent-workflow runtime sync --all
-agent-workflow runtime doctor
-```
-
-runtime-specific 的 hook 與設定仍由本 repo 負責；Factory 只使用它們提供的 bootstrap contract，不把 runtime 實作混進核心 Harness。
-
-## AI skills
-
-Codex 的 native skills 放在 `config/ai/codex/skills/`，Claude 共用的 skills 放在
-`config/ai/claude/skills/`。另外有一個獨立的 [`build-install`](https://github.com/miyago9267/build-install) skill，專門幫其他專案產生兩種安裝入口：
-
-- 給 agent 讀的 `INSTALL.md` 和安裝 prompt
-- 給人直接 `curl | bash` 使用的 `install.sh`
-
-## 目錄看不懂也沒關係
-
-大概可以先看這幾個地方：
-
-```text
-config/ai/    AI CLI 設定和 skills
-script/       各種安裝腳本
-powershell/   Windows 設定
-nvim/         Neovim 設定
-tmux/         Tmux 設定
-setup.sh      macOS/Linux 的入口
-```
-
-這份設定主要是給我自己用的，直接拿去別台機器跑之前，建議先看一下腳本會改哪些檔案。
+- `config/`
+  - `ai/`
+    - `AGENT-ENTRY.md`、`AGENTS.md`、`runtime-bindings.yaml`
+    - `shared/`、`astra/`、`generated/`、`memories/`
+    - `claude/`：agents、commands、hooks、MCP、skills、Coralline
+    - `codex/`：runtime config、hooks、skills、Coralline
+    - `gemini/`、`grok/`、`zed/`
+    - `claude-plugin/`、`codex-plugin/`
+  - `bash/.bashrc`
+  - `zsh/`：`.zshrc`、`.zshenv`、`.p10k.zsh`、`alias.sh`、`.zshrc.d/`
+  - `vim/`：`.vimrc`、`base.vim`、`init.vim`
+  - `nvim/`：`init.lua`、`lua/config/`、`lua/plugins.lua`、`lazy-lock.json`、`pack/`
+  - `git/.gitconfig`
+  - `ssh/config`
+  - `tmux/`：`base.conf`、`nvim-extension.conf`
+  - `ghostty/config`
+  - `fastfetch/`：`config.jsonc`、`logo.txt`
+  - `vscode/`：`settings.json`、`keybindings.json`、`mcp.json`
+  - `opencode/`：runtime、agents、skills、plugins、MCP 和 TUI 設定
+  - `opencode-harness/`：harness、agents、package 和 migration 設定
+  - `opencode-studio/`：Studio、agents、prompts、toolchain 和 package 設定
+  - `windows-terminal/settings.json`
+  - `wsl/.wslconfig`
+- `script/`
+  - `common/`：setup、install、check、test 和 config update scripts
+  - `linux/`：Linux 專用 scripts
+  - `windows/`：PowerShell profile 和 setup scripts
+  - `utils/`：日常 CLI helpers
+- `install.sh`、`setup.sh`、`setup.ps1`、`setup.bat`：安裝入口
+- `plugins/`：`monika-claude/`、`monika-codex/`、`pilotfish-grok/`
+- `template/`、`tools/`、`docs/specs/`：template、獨立工具和 specs
+- `INSTALL.md`、`INSTALL_PROMPT.md`、`.env.example`：安裝說明和環境範例
+- `secrets/`：受保護資料，不放實際 secret 值
