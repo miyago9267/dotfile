@@ -44,6 +44,13 @@
 
 ## Pilotfish
 
-Pilotfish 是可選的 orchestration layer，負責 bounded routing、approval、security、
-isolation 與 verification。task 需要這些 controls 時才使用它的 skill；它不會
-取代 shared contract 或這份 adapter。
+Pilotfish orchestration 對這份 Codex adapter 是 active 的。遇到清楚的
+bounded workstream 或必要 review 時，主動 dispatch 最合適且成本最低的
+native typed role，並把使用者要求的 outcome 跑到 acceptance。單一緊密的
+local action 留在 parent；不要每個 command 都建立 child，也不要在 outcome
+phase 之間停下來等使用者批准或指定下一步。
+
+Native roles 從 `<CODEX_HOME>/agents/` 載入；matching role 不可用時，留在
+parent 內完成可安全處理的工作並明確回報限制。保留既有 role 的 model
+bindings、approval、security 與 release gates。`gpt-6-astra` 仍是明確的
+main-session／candidate route，不因任務變難自動切換 root model。
