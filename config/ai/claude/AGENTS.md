@@ -1,9 +1,7 @@
 # Claude Runtime Adapter -- Miyago
 
-@AGENTS.md
-
-> 共用身份、溝通、truthfulness、安全與一般 engineering rules 由 `@AGENTS.md`
-> 載入。這份檔案只放 Claude runtime workflow。
+> 這份檔案由 `script/common/setup_claude.sh` 附加在 canonical shared contract
+> 與 Miyago Personal Model 之後，只放 Claude runtime workflow。
 
 ## Runtime 角色
 

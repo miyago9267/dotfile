@@ -109,7 +109,7 @@ update_pilotfish() {
   done
   block="$tmp/block"
   cp "$root/templates/claude-md.orchestration.md" "$block"
-  python3 - "$cfg/CLAUDE.md" "$block" <<'PY'
+  python3 - "$cfg/AGENTS.md" "$block" <<'PY'
 import pathlib
 import sys
 

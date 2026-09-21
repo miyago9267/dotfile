@@ -93,29 +93,32 @@ runtimes:
   claude:
     family: claude-code
     source_root: /Users/miyago/dotfile/config/ai/claude
-    adapter_source: /Users/miyago/dotfile/config/ai/claude/CLAUDE.md
+    adapter_source: /Users/miyago/dotfile/config/ai/claude/AGENTS.md
     target_root: /Users/miyago/.claude
-    entry_file: CLAUDE.md
+    entry_file: AGENTS.md
     current:
-      entry_target: /Users/miyago/.claude/CLAUDE.md
-      entry_mode: link
+      entry_target: /Users/miyago/.claude/AGENTS.md
+      entry_mode: generated_link
       shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
       shared_target: /Users/miyago/.claude/AGENTS.md
-      shared_mode: link_and_include
-      status: phase_0_active
+      shared_mode: generated
+      instruction_files: claude-md-and-agents-md
+      status: phase_2_agents_md_primary
     target:
       shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
       shared_target: /Users/miyago/.claude/AGENTS.md
-      adapter_load: include
-      expected_include: "@AGENTS.md"
+      instruction_files: claude-md-and-agents-md
+      adapter_load: generated_after_shared_and_personal_model
       entry_mode: link
     evidence:
       - /Users/miyago/dotfile/script/common/setup_claude.sh
-      - /Users/miyago/dotfile/config/ai/claude/CLAUDE.md
-    shared_capability: confirmed_include
+      - /Users/miyago/dotfile/config/ai/claude/AGENTS.md
+      - /Users/miyago/dotfile/config/ai/claude/settings.json
+      - /Users/miyago/dotfile/config/ai/generated/claude/AGENTS.md
+    shared_capability: configured_agents_md_primary_entry
     notes:
-      - "Claude source currently includes a file named AGENT_RULES_SHARED.md."
-      - "The include mechanism is confirmed locally; canonical source ownership must change."
+      - "Claude Code 2.1.277+ supports AGENTS.md; the managed global entry is now one generated AGENTS.md file."
+      - "CLAUDE.md is no longer a managed Claude entry; project-level legacy files remain governed by Claude's instructionFiles setting."
 
   codex:
     family: codex-cli

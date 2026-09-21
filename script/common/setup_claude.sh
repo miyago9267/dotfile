@@ -12,6 +12,8 @@ PERSONAL_MODEL_SRC="${PERSONAL_MODEL_SRC:-$DOTFILE_DIR/../Project/AI/agent-works
 SHARED_RULES_DST="$CLAUDE_DST/AGENTS.md"
 ACTIVE_RULES_DIR="$DOTFILE_DIR/config/ai/generated/claude"
 ACTIVE_RULES_SRC="$ACTIVE_RULES_DIR/AGENTS.md"
+LEGACY_ENTRY_SRC="$CLAUDE_SRC/CLAUDE.md"
+LEGACY_ENTRY_DST="$CLAUDE_DST/CLAUDE.md"
 LEGACY_SHARED_DST="$CLAUDE_DST/AGENT_RULES_SHARED.md"
 KB_ROUTER_SRC="$DOTFILE_DIR/config/ai/shared/skills/knowledge-base-router"
 KB_ROUTER_DST="$CLAUDE_DST/skills/knowledge-base-router"
@@ -28,7 +30,6 @@ N='\033[0m'
 # 需要 symlink 的項目（檔案與目錄）
 ITEMS=(
   "settings.json"
-  "CLAUDE.md"
   "loop.md"
   "hooks"
   "commands"
@@ -72,6 +73,13 @@ link_item() {
   printf "${G}  [LINK] %s -> %s${N}\n" "$name" "$src"
 }
 
+remove_legacy_entry() {
+  if [ -L "$LEGACY_ENTRY_DST" ] && [ "$(readlink "$LEGACY_ENTRY_DST")" = "$LEGACY_ENTRY_SRC" ]; then
+    rm -f "$LEGACY_ENTRY_DST"
+    printf '%s\n' "[REMOVE] legacy Claude entry link"
+  fi
+}
+
 link_external_item() {
   local src="$1"
   local dst="$2"
@@ -111,6 +119,9 @@ compose_active_rules() {
       printf '%s\n' 'Personal Model unavailable; use shared contract only.' >&2
     fi
     printf '\n<!-- miyago-personal-model:end -->\n'
+    printf '\n\n<!-- claude-runtime-adapter:begin -->\n\n'
+    cat "$CLAUDE_SRC/AGENTS.md"
+    printf '\n<!-- claude-runtime-adapter:end -->\n'
   } > "$tmp_file"
   mv "$tmp_file" "$ACTIVE_RULES_SRC"
 }
@@ -124,8 +135,9 @@ for item in "${ITEMS[@]}"; do
   link_item "$item"
 done
 
+remove_legacy_entry
 compose_active_rules
-link_external_item "$ACTIVE_RULES_SRC" "$SHARED_RULES_DST" "shared agent contract + personal model"
+link_external_item "$ACTIVE_RULES_SRC" "$SHARED_RULES_DST" "shared agent contract + personal model + Claude adapter"
 link_external_item "$KB_ROUTER_SRC" "$KB_ROUTER_DST" "knowledge-base-router skill"
 link_external_item "$TECH_BRIEF_SRC" "$TECH_BRIEF_DST" "community-tech-brief skill"
 

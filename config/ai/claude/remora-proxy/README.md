@@ -54,7 +54,7 @@ attestation 驗證 Remora 與 Calico artifacts，再進行安裝。
 
 ## Pilotfish 對應
 
-不釘版本，一律跟 latest：pilotfish（global agents + CLAUDE.md block）照上游
+不釘版本，一律跟 latest：pilotfish（global agents + AGENTS.md block）照上游
 `install/AGENT-INSTALL.md` 更新到最新 tag；remora 裝最新 release 即可。
 `remora.config.toml` 的 role keys 對應 pilotfish 目前的 roster（v1.2.0 起為八個
 roles，新增 read-only 的 `plan-verifier` / `security-reviewer`）。remora >= 0.1.10

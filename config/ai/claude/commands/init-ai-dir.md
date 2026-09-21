@@ -50,11 +50,11 @@ mkdir -p .ai/specs
 
 ## 步驟 3：生成 `.ai/RULES.md`
 
-從 `~/.claude/CLAUDE.md` 提取與本專案相關的規則，轉換成 LLM-agnostic 格式（去掉 Claude 特定語法）。
+從 `~/.claude/AGENTS.md` 提取與本專案相關的規則，轉換成 LLM-agnostic 格式（去掉 Claude 特定語法）。
 
 ## 步驟 4：生成各 LLM 入口
 
-### `.claude/CLAUDE.md`（若不存在）
+### `AGENTS.md`（若不存在）
 
 ```markdown
 # Project Rules

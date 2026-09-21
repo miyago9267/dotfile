@@ -5,11 +5,11 @@ $ErrorActionPreference = 'Stop'
 
 $DotfileRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..\..') | Select-Object -ExpandProperty Path
 $ClaudeSrc = Join-Path $DotfileRoot 'config' 'ai' 'claude'
+$ActiveRulesSrc = Join-Path $DotfileRoot 'config' 'ai' 'generated' 'claude' 'AGENTS.md'
 $ClaudeDst = Join-Path $env:USERPROFILE '.claude'
 
 $Items = @(
     'settings.json'
-    'CLAUDE.md'
     'hooks'
     'commands'
     'scripts'
@@ -20,9 +20,15 @@ $Items = @(
 )
 
 function Link-Item {
-    param([string]$Name)
+    param(
+        [string]$Name,
+        [string]$Source
+    )
 
-    $src = Join-Path $ClaudeSrc $Name
+    if ([string]::IsNullOrEmpty($Source)) {
+        $Source = Join-Path $ClaudeSrc $Name
+    }
+    $src = $Source
     $dst = Join-Path $ClaudeDst $Name
 
     if (-not (Test-Path $src)) {
@@ -61,6 +67,18 @@ if (-not (Test-Path $ClaudeDst)) {
 
 foreach ($item in $Items) {
     Link-Item -Name $item
+}
+
+Link-Item -Name 'AGENTS.md' -Source $ActiveRulesSrc
+
+$legacyEntry = Join-Path $ClaudeDst 'CLAUDE.md'
+$legacySource = Join-Path $ClaudeSrc 'CLAUDE.md'
+if (Test-Path $legacyEntry) {
+    $legacyItem = Get-Item $legacyEntry -Force
+    if ($legacyItem.LinkType -eq 'SymbolicLink' -and $legacyItem.Target -eq $legacySource) {
+        Remove-Item $legacyEntry -Force
+        Write-Host '  [REMOVE] legacy Claude entry link' -ForegroundColor Yellow
+    }
 }
 
 Write-Host "=== Done ===" -ForegroundColor Green

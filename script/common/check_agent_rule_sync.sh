@@ -12,7 +12,7 @@ gemini_active_file="$dotfile_dir/config/ai/generated/gemini/GEMINI.md"
 grok_active_file="$dotfile_dir/config/ai/generated/grok/AGENTS.md"
 astra_active_file="$dotfile_dir/config/ai/generated/astra/AGENTS.md"
 claude_settings_file="$dotfile_dir/config/ai/claude/settings.json"
-claude_file="$dotfile_dir/config/ai/claude/CLAUDE.md"
+claude_adapter_file="$dotfile_dir/config/ai/claude/AGENTS.md"
 grok_file="$dotfile_dir/config/ai/grok/AGENTS.md"
 pilotfish_dir="$dotfile_dir/plugins/pilotfish-grok"
 
@@ -27,7 +27,7 @@ test -s "$astra_active_file"
 language_files=(
   "$source_file"
   "$dotfile_dir/config/ai/codex/AGENTS.md"
-  "$claude_file"
+  "$claude_adapter_file"
   "$dotfile_dir/config/ai/gemini/GEMINI.md"
   "$grok_file"
   "$dotfile_dir/config/ai/astra/AGENTS.md"
@@ -49,7 +49,7 @@ for anchor in \
   grep -Fq "$anchor" "$source_file"
 done
 grep -Fq 'User-facing output 預設使用台灣繁體中文' "$dotfile_dir/config/ai/codex/AGENTS.md"
-grep -Fq 'User-facing output 預設使用台灣繁體中文' "$dotfile_dir/config/ai/claude/CLAUDE.md"
+grep -Fq 'User-facing output 預設使用台灣繁體中文' "$claude_adapter_file"
 grep -Fq 'User-facing output 預設使用台灣繁體中文' "$dotfile_dir/config/ai/gemini/GEMINI.md"
 grep -Fq 'user-facing prose 預設使用台灣繁體中文' "$grok_file"
 grep -Fq 'Astra 是唯一 identity' "$dotfile_dir/config/ai/astra/AGENTS.md"
@@ -63,6 +63,18 @@ if jq -e '
   ((.extraKnownMarketplaces // {}) | has("dev-discipline"))
 ' "$claude_settings_file" >/dev/null; then
   printf '%s\n' 'dev-discipline must remain detached from Claude runtime settings' >&2
+  exit 1
+fi
+if ! jq -e '
+  .pluginConfigs["agents-md@builtin"].options.instructionFiles == "claude-md-and-agents-md"
+' "$claude_settings_file" >/dev/null; then
+  printf '%s\n' 'Claude AGENTS.md instruction loading mode is not configured' >&2
+  exit 1
+fi
+grep -Fq '# Claude Runtime Adapter -- Miyago' "$claude_adapter_file"
+grep -Fq '# Claude Runtime Adapter -- Miyago' "$claude_active_file"
+if [ -e "$dotfile_dir/config/ai/claude/CLAUDE.md" ] || rg -n '^@AGENTS\.md$|`@AGENTS\.md`|config/ai/claude/CLAUDE\.md' "$claude_adapter_file" >/dev/null; then
+  printf '%s\n' 'Claude legacy CLAUDE.md entry must not remain managed' >&2
   exit 1
 fi
 shared_line_count=$(wc -l < "$source_file" | tr -d ' ')
@@ -155,7 +167,6 @@ jq -e --arg command "$HOME/.codex/hooks/experience-observe.py" \
   echo "Codex experience hook is not enabled in hooks.json" >&2
   exit 1
 }
-grep -Fq '@AGENTS.md' "$claude_file"
 grep -Fq 'rules come from `config/ai/AGENTS.md`' "$grok_file"
 test "$(cat "$pilotfish_dir/VERSION")" = "1.0.6"
 test -f "$pilotfish_dir/install/AGENT-INSTALL.md"
@@ -172,7 +183,7 @@ for root_adapter in "$source_file" "$grok_file"; do
 done
 
 if rg -n 'config/ai/codex/AGENT_RULES_SHARED\.md' \
-  "$dotfile_dir/config/ai/claude/CLAUDE.md" \
+  "$claude_adapter_file" \
   "$dotfile_dir/config/ai/codex/AGENTS.md" \
   "$dotfile_dir/config/ai/grok/AGENTS.md" >/dev/null; then
   printf '%s\n' 'Codex-owned shared contract reference remains' >&2
