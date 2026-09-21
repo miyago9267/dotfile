@@ -1,7 +1,7 @@
 ---
 description: Bounded browser and web research crawler
 mode: subagent
-model: github-copilot/gemini-3.1-pro-preview
+model: google/gemini-2.5-flash
 permission:
   edit: deny
   task: deny

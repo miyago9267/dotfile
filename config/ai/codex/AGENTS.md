@@ -45,19 +45,22 @@
 ## Pilotfish
 
 Pilotfish orchestration 對這份 Codex adapter 是 active 的。第一次 action 前
-先自動分流：一個 command／一個 action 留在便宜的 Luna parent 或
-`mech-executor`；設計、工具選擇、結果解讀、多步驟或不確定工作，自動
-dispatch 綁定的 strong `executor`，不等 Miyago 口頭要求 multi-role。
+先自動分流：一個 command／一個 action、普通工具與不確定工作留在便宜的
+Luna parent 或 `mech-executor`；一般設計、工具選擇、解讀、QA 與 bounded
+implementation 使用 Sol `sol-executor`。只有高信心的架構、跨系統權衡、
+衝突證據、進階工具編排，或 Sol 明確回報 deep boundary 時，才 dispatch
+strong `executor`，不等 Miyago 口頭要求 multi-role。
 清楚的 bounded workstream 或必要 review 也主動 dispatch 最合適且成本最低的
 native typed role，並把使用者要求的 outcome 跑到 acceptance。單一緊密的
 local action 留在 parent；不要每個 command 都建立 child，也不要在 outcome
 phase 之間停下來等使用者批准或指定下一步。cheap path 遇到 unexpected result、
-error、retry、target change 或 unlisted next action 時，只升級一次到
-`executor`，先補齊 `goal -> target -> exact action -> expected signal -> stop`。
+error、retry、target change 或 unlisted next action 時，先升級一次到
+`sol-executor`；Sol 回報 deep boundary 才升級 `executor`，先補齊
+`goal -> target -> exact action -> expected signal -> stop`。
 
 Native roles 從 `<CODEX_HOME>/agents/` 載入；matching role 不可用時，留在
 parent 內完成可安全處理的工作並明確回報限制。保留 installed role 的 model
 bindings、approval、security 與 release gates；自動升級只切換 typed role，
-不切換 root model。`executor`／`verifier` 可使用安裝的 Astra binding，
-`mech-executor`／`scout` 維持便宜 Luna，`plan-verifier` 與 security review
-維持 Sol。
+不切換 root model。`sol-executor`／`verifier`／`plan-verifier` 與 security
+review 維持 Sol；`executor` 只用於深層 Astra route，`mech-executor`／`scout`
+維持便宜 Luna。

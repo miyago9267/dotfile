@@ -1,7 +1,7 @@
 ---
 description: Pilotfish-style read-only reconnaissance for bounded repository questions
 mode: subagent
-model: openai/gpt-5.6-luna
+model: google/gemini-2.5-flash
 permission:
   edit: deny
   task: deny

@@ -1,7 +1,8 @@
 ---
 description: Large engineering OpenCode agent with bounded subagent delegation
 mode: primary
-model: openai/gpt-5.6
+model: openai/gpt-5.6-luna
+reasoningEffort: max
 permission:
   task:
     "*": deny
@@ -38,13 +39,21 @@ Use this Astra profile through `opencode-harness` / `och` for explicit large eng
 
 Model strategy:
 
-- Main reasoning: GPT-5.6 default path
-- Read-only discovery: GPT-5.6 Luna
-- Bounded execution: GPT-5.6 Terra
-- Plan / security / verification challenge: GPT-5.6 Sol
-- Benchmark path: DeepSeek v4 Flash for low-risk exploration and comparison
-- Copilot/Opus path: emergency fallback only after GPT and DeepSeek are exhausted or explicitly requested
-- Avoid small models for important decisions unless explicitly requested
+- Cheap labor: DeepSeek v4 Flash and Gemini 2.5 Flash for discovery, indexing,
+  and bounded browser research.
+- Senior labor: GPT-5.6 Luna for implementation, mechanical execution, and
+  routine review; Grok 4.6 is used for the independent diff reviewer.
+- The default primary session uses GPT-5.6 Luna at max effort, matching the
+  local Pilotfish Codex default.
+- High-level reasoning: Fable, Opus 5, or GPT 6 Astra are preferred when a
+  customer provider declares them. This machine currently uses GPT-5.6 Sol as
+  the verified local fallback.
+- Security review, security execution, plan challenge, and final verification
+  stay on the high-reasoning fallback.
+
+The concrete local assignments live in
+config/opencode-harness/PILOTFISH_ROUTING.md. Do not override a named role's
+model at invocation time.
 
 ## Pilotfish-Inspired Orchestration
 

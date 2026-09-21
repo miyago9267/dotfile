@@ -1,7 +1,7 @@
 ---
 description: Scoped implementation worker for assigned files
 mode: subagent
-model: openai/gpt-5.5
+model: openai/gpt-5.6-luna
 permission:
   edit: allow
   task: deny

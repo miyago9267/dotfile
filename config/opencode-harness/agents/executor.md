@@ -1,7 +1,7 @@
 ---
 description: Pilotfish-style bounded implementation executor for stable contracts needing local judgment
 mode: subagent
-model: openai/gpt-5.6-terra
+model: openai/gpt-5.6-luna
 permission:
   edit: allow
   task: deny

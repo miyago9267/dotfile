@@ -19,8 +19,10 @@
 - provider、model、subscription、API key 與 OAuth state 是使用者管理的 runtime state。
   用 Pi 的 `/login`、environment variables 或既有 `~/.pi/agent/auth.json` 管理；
   dotfile 不寫入 credential、token、session 或 provider catalog。
-- `~/.pi/agent/settings.json` 只由 repository-managed safe defaults 管理；project
-  `.pi/settings.json` 與 project-local extensions/skills 仍由 project owner 管理。
+- `config/ai/pi/settings.json` 只提供可版本控管的 safe defaults；
+  `~/.pi/agent/settings.json` 是 Pi 可更新的 mutable runtime state，setup 只 merge
+  defaults，不把它 symlink 回 repo。project `.pi/settings.json` 與 project-local
+  extensions/skills 仍由 project owner 管理。
 - `~/.pi/agent/sessions/`、`auth.json`、`models-store.json` 與既有 extensions 不納入
   dotfile sync，也不因 setup 重新建立或覆寫。
 

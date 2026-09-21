@@ -15,8 +15,8 @@
 
 - Provider priority: OpenAI ChatGPT Pro first, local subscription proxy second, Grok/SuperGrok for explicit Grok requests, DeepSeek for cheap fallback.
 - GitHub Copilot is emergency fallback only after GPT and DeepSeek are exhausted or explicitly requested.
-- Daily stable model: `openai/gpt-5.5` (verified with ChatGPT Pro/Plus OAuth).
-- Chore/fast-but-not-dumb path: `openai/gpt-5.6-luna` or `openai/gpt-5.6-terra` when requested.
+- Daily default model: `openai/gpt-5.6-luna` with `reasoningEffort: max`.
+- Chore/fast-but-not-dumb path: `openai/gpt-5.6-terra` when requested.
 - GPT Sol path: `openai/gpt-5.6-sol` for explicit deepest GPT reasoning requests.
 - ChatGPT Pro proxy path: `chatgpt-proxy/gpt-5.6*` when native OpenAI subscription auth is unavailable.
 - SuperGrok path: `xai/grok-*` through OpenCode's official xAI OAuth provider; `grok-cli/grok-*` remains a local OpenAI-compatible proxy fallback.

@@ -1,7 +1,7 @@
 ---
 description: Read-only diff and risk reviewer
 mode: subagent
-model: openai/gpt-5.5
+model: xai/grok-4.6
 permission:
   edit: deny
   task: deny
