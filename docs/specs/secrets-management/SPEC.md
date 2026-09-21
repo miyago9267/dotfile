@@ -10,6 +10,7 @@ tags: [secrets, age, sops, security, cross-platform]
 priority: high
 ---
 
+<!-- markdownlint-disable-next-line MD025 -->
 # Dotfile Secret 管理（age + sops）
 
 ## Background
@@ -23,7 +24,7 @@ Miyago 目前沒有專門的密碼管理器，token 散落各處，常常忘記�
 
 1. Token/API key 加密後可安全 commit 進 dotfile repo
 2. 換機器時只需攜帶一把 age private key 即可解密所有 secret
-3. 日常使用無感 -- shell 啟動自動載入解密後的環境變數
+3. 日常使用低摩擦 -- 可由使用者顯式載入解密後的環境變數
 4. 支援 macOS 和 Linux（Windows 為 nice-to-have）
 5. 新增/修改 secret 的操作簡單直覺
 
@@ -31,14 +32,14 @@ Miyago 目前沒有專門的密碼管理器，token 散落各處，常常忘記�
 
 - 不做團隊多人共享 secret（只有 Miyago 自用）
 - 不整合雲端密碼管理服務
-- 不取代 macOS Keychain（那邊放密碼，這邊放 dev token）
+- 不取代既有 KeePassXC；高權限或正式環境 secret 不放進本機開發 bundle
 
 ## Architecture
 
 ### 工具選擇
 
 | 工具 | 用途 |
-|------|------|
+| --- | --- |
 | `age` | 加密/解密引擎，取代 GPG |
 | `sops` | 結構化 secret 編輯器，支援 yaml/json/env |
 
@@ -58,22 +59,27 @@ secrets/
 
 ### 檔案格式
 
-`tokens.enc.yaml`（sops 加密後的樣子）：
+`tokens.enc.yaml` 解密後的邏輯結構：
 
 ```yaml
-# 分類管理 token
 github:
-  GITHUB_TOKEN: ENC[AES256_GCM,data:...,type:str]
-  GH_PACKAGES_TOKEN: ENC[AES256_GCM,data:...,type:str]
+  token: <encrypted value>
+  packages_token: <encrypted value>
 openai:
-  OPENAI_API_KEY: ENC[AES256_GCM,data:...,type:str]
-cloud:
-  GCLOUD_SERVICE_KEY: ENC[AES256_GCM,data:...,type:str]
-  AWS_ACCESS_KEY_ID: ENC[AES256_GCM,data:...,type:str]
-  AWS_SECRET_ACCESS_KEY: ENC[AES256_GCM,data:...,type:str]
-sops:
-  # ... sops metadata
+  api_key: <encrypted value>
+typesafe:
+  api_key: <encrypted value>
 ```
+
+`sops` 的 metadata 會由工具放在加密檔案中，不列入這個邏輯 schema。
+
+Export contract：
+
+- `github.token` 變成 `GITHUB_TOKEN`。
+- `openai.api_key` 變成 `OPENAI_API_KEY`。
+- `typesafe.api_key` 變成 `TYPESAFE_API_KEY`。
+- 目前 parser 只支援兩層 YAML 和單行 scalar value。
+- 第二層不要重複第一層前綴，例如不要寫 `github.github_token`。
 
 ### 工作流程
 
@@ -81,34 +87,36 @@ sops:
 
 ```text
 1. brew install age sops
-2. age-keygen -o ~/.age/key.txt       # 產生 key pair
-3. 把 public key 寫進 secrets/.sops.yaml
-4. 建立 secrets/tokens.enc.yaml（空模板）
-5. .gitignore 加入 ~/.env.secrets 相關 pattern
+2. sec init
+3. 用 `sec edit` 編輯 `secrets/tokens.enc.yaml`
+4. 確認 `.gitignore` 排除 `~/.env.secrets`
 ```
 
 #### 新增/編輯 secret
 
 ```bash
-sops secrets/tokens.enc.yaml
-# -> 自動解密開啟 $EDITOR，存檔時自動加密
+sec edit
 ```
 
 #### Shell 載入
 
-```text
-.zshrc.d/secrets.zsh:
-  1. 檢查 ~/.age/key.txt 存在
-  2. sops -d secrets/tokens.enc.yaml -> 解析 yaml -> export 環境變數
-  3. 或：解密輸出到 ~/.env.secrets，再 source 它（效能較好）
+顯式載入：
+
+```bash
+sec reload
+source ~/.env.secrets
 ```
+
+不要在每個 shell 啟動時無條件 source 全部 secret；需要最小權限時，改用
+KeePassXC 的 `agent-secret` process injection。
 
 #### 換機器
 
 ```text
 1. git clone dotfile repo
 2. 從安全管道（AirDrop / USB / 1Password）複製 ~/.age/key.txt
-3. 跑 setup script -> 自動解密 -> 環境變數就位
+3. 跑 setup script
+4. 執行 `sec reload`，只在需要的 shell 內 source `~/.env.secrets`
 ```
 
 ## ADR
@@ -124,9 +132,9 @@ sops secrets/tokens.enc.yaml
 shell 啟動時每次跑 `sops -d` 會有約 200-300ms 延遲。
 採用快取策略：
 
-- 首次 source 時解密寫入 `~/.env.secrets`
-- 後續啟動直接 source 快取檔
-- 提供 `secrets-reload` 指令手動刷新
+- `sec reload` 時解密寫入 `~/.env.secrets`
+- 由使用者在需要的 shell 內 source 快取檔
+- 提供 `sec reload` 手動刷新
 - 快取檔權限設為 `600`
 
 ### ADR-3: 加密檔案格式選 YAML
@@ -134,6 +142,13 @@ shell 啟動時每次跑 `sops -d` 會有約 200-300ms 延遲。
 - YAML 支援巢狀分類（github/openai/cloud）
 - sops 對 YAML 的支援最成熟
 - 比 .env 格式更有組織性
+
+### ADR-4: Bundle 與 KeePassXC 的分工
+
+- 本機開發、低風險、需要多個 key 的工作使用 age + sops bundle。
+- 高權限、正式環境或需要 process-level injection 的 key 使用 KeePassXC
+  `agent-secret`。
+- 同一把 key 不同時放在兩個來源，避免 rotation 後不同步。
 
 ## Phase 計畫
 
@@ -148,7 +163,7 @@ shell 啟動時每次跑 `sops -d` 會有約 200-300ms 延遲。
 
 - `secrets.zsh` 載入模組
 - 解密快取機制
-- `secrets-reload` / `secrets-edit` helper function
+- `sec reload` / `sec edit` command workflow
 
 ### Phase 3: Setup 整合
 
@@ -159,7 +174,7 @@ shell 啟動時每次跑 `sops -d` 會有約 200-300ms 延遲。
 ## Risks
 
 | 風險 | 影響 | 緩解 |
-|------|------|------|
+| --- | --- | --- |
 | age key 遺失 | 所有 secret 無法解密 | key 備份到 macOS Keychain 或實體 USB |
 | 不小心 commit 解密後的檔案 | secret 外洩 | `.gitignore` + git hook 檢查 |
 | sops 版本升級改格式 | 無法解密舊檔案 | pin sops 版本，定期驗證 |
