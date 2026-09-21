@@ -50,6 +50,41 @@ Get-Command pwsh, fzf, scoop, winget -ErrorAction SilentlyContinue
 不要因為 README、歷史文件或其他 checkout 的內容推測目前入口；以目前檔案與
 `--help` 輸出為準。
 
+## Remote bootstrap
+
+macOS、Linux 與 WSL 可以不先建立 git checkout，直接從 GitHub 下載 source
+archive：
+
+```bash
+curl -fsSL \
+  https://raw.githubusercontent.com/miyago9267/dotfile/main/install.sh \
+  | bash -s -- --config-only
+```
+
+執行前先讀取實際 installer：
+
+```bash
+curl -fsSL \
+  https://raw.githubusercontent.com/miyago9267/dotfile/main/install.sh \
+  | sed -n '1,260p'
+```
+
+installer 預設把 source 放到 `~/dotfile`，已有的同名目錄會先移到帶時間戳的
+`.backup` 目錄。它使用 HTTPS archive，不需要 `git clone`，也不會自行使用
+`sudo`。第一次接入建議用 `--config-only`；環境工具要逐項確認後再安裝。
+
+要固定 branch、tag 或 commit，installer URL 和 `--ref` 要使用同一個值：
+
+```bash
+ref=main
+curl -fsSL \
+  "https://raw.githubusercontent.com/miyago9267/dotfile/$ref/install.sh" \
+  | bash -s -- --ref "$ref" --config-only
+```
+
+可用 `--dry-run` 先確認 ref、目標目錄和 setup mode；Windows 請下載 repository
+後使用 `setup.bat`，不走這個 Unix remote bootstrap。
+
 ## Recommended path: config sync
 
 日常更新 remote 設定時，只做 config sync：
