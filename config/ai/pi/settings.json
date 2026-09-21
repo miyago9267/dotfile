@@ -1,0 +1,5 @@
+{
+  "enableSkillCommands": true,
+  "defaultProjectTrust": "ask",
+  "defaultThinkingLevel": "medium"
+}

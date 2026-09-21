@@ -14,6 +14,7 @@ CONFIG_SETUP_SCRIPTS=(
   setup_codex.sh
   setup_gemini.sh
   setup_grok.sh
+  setup_pi.sh
 )
 
 for name in "${CONFIG_SETUP_SCRIPTS[@]}"; do
