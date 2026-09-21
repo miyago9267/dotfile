@@ -41,11 +41,11 @@ for language_file in "${language_files[@]}"; do
   fi
 done
 for anchor in \
-  '## 語言政策' \
+  '## 語言與溝通' \
   '預設使用台灣繁體中文' \
-  '平實用語規則' \
-  '完成宣告規則' \
-  '語言政策'; do
+  '## Truthfulness' \
+  '## Safety and verification' \
+  '## Runtime boundary'; do
   grep -Fq "$anchor" "$source_file"
 done
 grep -Fq 'User-facing output 預設使用台灣繁體中文' "$dotfile_dir/config/ai/codex/AGENTS.md"
@@ -191,10 +191,10 @@ if rg -n 'config/ai/codex/AGENT_RULES_SHARED\.md' \
 fi
 
 for anchor in \
-  'Fact-check' \
+  'not enough data' \
   'goal -> in-scope -> stop condition' \
-  'Completion claim gate' \
-  'Do not call work complete while any in-scope action'; do
+  'low-risk、local、可逆' \
+  '只有 in-scope actions 與 acceptance checks 都通過'; do
   grep -Fq "$anchor" "$source_file"
 done
 
@@ -203,7 +203,7 @@ for anchor in \
   '完成但尚未驗證'; do
   grep -Fq "$anchor" "$dotfile_dir/config/ai/claude/hooks/persona-reminder.sh"
 done
-grep -Fq 'Apply the shared completion claim gate' "$codex_active_file"
+grep -Fq '只有 in-scope actions 與 acceptance checks 都通過' "$codex_active_file"
 
 for anchor in \
   'Runtime integration' \

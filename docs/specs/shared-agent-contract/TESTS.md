@@ -132,6 +132,21 @@ created: 2026-05-12
 
 - [x] **When** ambiguity remains after local search, **the system shall** require a concrete option-based question instead of a silent choice
 
+### Compact Invariant Layer
+
+- [x] **When** `config/ai/AGENTS.md` is loaded, **the system shall** find only
+  cross-runtime identity, truthfulness, authority, safety, scope, delivery and
+  verification principles
+- [x] **When** a rule names a fixed path, provider, hook, memory source,
+  credential alias or vendor workflow, **the system shall** keep it outside the
+  shared contract
+- [x] **When** a task is low-risk, local and reversible, **the system shall** use
+  a targeted main-agent check without requiring an independent verifier
+- [x] **When** a task is security-sensitive, irreversible or externally mutating,
+  **the system shall** retain the applicable approval and specialized review
+- [x] **When** shared rules change, **the system shall** regenerate and validate
+  each runtime's shared prefix without requiring identical adapter text
+
 ## 非功能性驗證
 
 - [x] 文件應可被人類直接閱讀，不依賴特定 agent parser

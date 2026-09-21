@@ -21,6 +21,18 @@
         "timeout": 10
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/Users/miyago/.orca/agent-hooks/antigravity-hook.sh' ] && [ -r '/Users/miyago/.orca/agent-hooks/antigravity-hook.sh' ] && [ -x '/Users/miyago/.orca/agent-hooks/antigravity-hook.sh' ]; then ORCA_ANTIGRAVITY_EVENT='PreToolUse' /bin/sh '/Users/miyago/.orca/agent-hooks/antigravity-hook.sh'; else printf '%s\\n' '{\"decision\":\"ask\"}'; { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "*",

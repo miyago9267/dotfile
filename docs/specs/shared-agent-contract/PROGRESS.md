@@ -51,3 +51,10 @@ created: 2026-05-12
 
 - [x] 補入語義同步原則
 - [x] 補入無直接對應格式時的落點規則
+
+## Active: Phase 11 -- Compact invariant layer
+
+- [x] 移除容易隨環境變化的 path、provider、hook、memory、credential 與 vendor 細節
+- [x] 保留跨 runtime 的基本 identity、truthfulness、authority、safety、scope 與 delivery 原則
+- [x] 將 verification 改成 risk-proportional，避免低風險工作預設建立 verifier
+- [x] 重新生成並驗證各 runtime entries

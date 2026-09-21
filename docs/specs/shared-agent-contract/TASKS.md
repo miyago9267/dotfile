@@ -85,6 +85,13 @@ created: 2026-05-12
 - [x] 明確規定同步的是語義與邊界，不是字面格式
 - [x] 規定修改共用 skill 時要主動檢查其他 runtime adapter
 
+### Phase 11: Compact invariant layer
+
+- [x] 移除固定機器路徑、provider、hook、memory、credential alias 與 vendor workflow
+- [x] 保留跨 runtime 的 identity、truthfulness、authority、safety、scope 與 delivery 原則
+- [x] 將 verification 改為 risk-proportional，低風險工作不強制獨立 verifier
+- [x] 重新生成各 runtime entry，並確認 shared prefix 與 adapter 邊界
+
 ## 驗證
 
 - [x] `config/ai/AGENTS.md` 存在且內容為 LLM-agnostic
@@ -98,3 +105,5 @@ created: 2026-05-12
 - [x] skill 聚焦與 delegation 邊界已被制度化
 - [x] skill authoring 規則已制度化並同步到建立工具
 - [x] 跨 runtime skill 同步原則已制度化
+- [x] shared contract 已收斂為 compact invariant layer
+- [x] low-risk verification 不再預設派獨立 verifier

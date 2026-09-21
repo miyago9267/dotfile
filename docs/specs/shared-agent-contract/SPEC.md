@@ -3,7 +3,7 @@ id: spec-shared-agent-contract
 title: Shared AGENTS.md for Multi-Agent AI Configs
 status: draft
 created: 2026-05-12
-updated: 2026-05-12
+updated: 2026-09-21
 author: Codex
 tags: [agents, ai-config, docs, codex, claude, gemini]
 priority: medium
@@ -40,19 +40,13 @@ priority: medium
 - **R1**: When a shared agent contract is introduced, the system shall store it at `config/ai/AGENTS.md` so multiple agent configs can reference the same source
 - **R2**: When `config/ai/AGENTS.md` is written, the document shall contain only cross-agent rules extracted from existing `CLAUDE.md`, `config/ai/codex/AGENTS.md`, and `config/ai/gemini/GEMINI.md`
 - **R3**: While defining the shared contract, the document shall exclude agent-specific bootstrap commands, tool names, and vendor-specific adapter syntax unless clearly marked as agent-specific extension points
-- **R4**: When shared rules are extracted, the document shall preserve the currently enforced constraints:
-  - 繁體中文（台灣）回應、編輯與註解
-  - 文件與註解預設不使用表情符號
-  - 回應開頭先交代結果或當前進度
-  - 回應結尾附簡短 recap
-  - 回答前進行 fact-check thinking
-  - 資訊不足時不得臆測或補完
-  - Search Before Ask
-  - 非 trivial 任務先建 spec，中大型實作前等確認
-  - TDD 優先與回報測試狀態
-  - AI 不做 sudo/root 操作
-  - CI/CD 管理的 container 不用 `docker run`
-  - CLI 前先 `source ~/.zshrc 2>/dev/null`
+- **R4**: When shared rules are extracted, the document shall preserve stable
+  cross-runtime constraints:
+  - 繁體中文（台灣）回應、docs 與 comments 預設不使用 emoji
+  - 回應先交代結果，並說明重要 assumptions、uncertainty 與 limitations
+  - fact-check、anti-hallucination 與 Search Before Ask
+  - risk-proportional verification，不對低風險工作強制獨立 verifier
+  - privileged、production、credential、destructive 與不可逆操作需要明確 authority
 - **R5**: When the shared contract is written, the document shall exclude runtime-specific workflow rules such as context compaction, bootstrap/handoff/snapshot flow, and vendor-specific memory loading
 - **R6**: When agent-specific entry files remain in use, the shared contract shall state that local `CLAUDE.md` / `GEMINI.md` / `AGENTS.md` files may extend or override the shared rules for their own runtime needs
 - **R7**: While implementing the shared contract, the change shall avoid editing files that already contain unrelated user changes unless the edit is necessary and can be merged safely
@@ -178,6 +172,17 @@ skill 的 `description` 首要用途是幫系統匹配觸發，因此應優先�
 
 Claude、Gemini、Codex 的入口形態不同，因此同步時以「能力、觸發、邊界、核心流程」對齊為目標，必要時改寫成各自可消化的格式。
 
+### D12: shared layer 維持 compact invariant layer
+
+shared `AGENTS.md` 只保留跨 runtime 穩定的 identity、truthfulness、authority、
+safety、scope、delivery 與 verification 原則。固定機器路徑、provider、hook、
+memory、credential alias、shell prerequisite、vault、vendor workflow 與 skill
+authoring checklist 不放入 shared；這些內容由 `AGENT-ENTRY.md`、runtime adapter
+或 skill 管理。
+
+Verification 採風險比例：低風險工作由 main agent 做 targeted check；高風險或不可逆
+工作保留適用 gate，但避免重複的 generic verifier。
+
 ## Files
 
 - Create: `config/ai/AGENTS.md`
@@ -195,7 +200,7 @@ Claude、Gemini、Codex 的入口形態不同，因此同步時以「能力、�
 
 | Risk | Severity | Mitigation |
 |------|----------|------------|
-| 共用檔抽得太薄，失去實際約束力 | medium | 明確保留硬規則與操作禁令，只移除 vendor-specific 部分 |
+| 共用檔抽得太薄，失去實際約束力 | medium | 保留 invariant 與 risk boundary，並用 generated-entry sync check 驗證 |
 | 共用檔抽得太厚，混入 Claude 專屬流程 | medium | 以「其他 agent 是否可直接遵守」作為收錄門檻 |
 | 觸碰 dirty 的 `CLAUDE.md` 造成衝突 | high | 只做 adapter 化，保留 Claude 專屬段落，不硬改 runtime 內容 |
 
