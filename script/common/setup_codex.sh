@@ -12,6 +12,8 @@ ORCA_CODEX_RUNTIME_HOME="${ORCA_CODEX_RUNTIME_HOME:-$HOME/Library/Application Su
 CODEX_SKILL_SRC="$DOTFILE_DIR/config/ai/codex/skills"
 CODEX_HOOK_SRC="$DOTFILE_DIR/config/ai/codex/hooks/experience-observe.py"
 CODEX_HOOK_DST="$HOME/.codex/hooks/experience-observe.py"
+COMPACTION_SHADOW_SRC="$DOTFILE_DIR/config/ai/shared/jev/compaction-shadow.py"
+COMPACTION_SHADOW_DST="$HOME/.codex/hooks/jev-compaction-shadow.py"
 SHARED_SKILL_SRC="$DOTFILE_DIR/config/ai/shared/skills"
 SHARED_RULES_SRC="$DOTFILE_DIR/config/ai/AGENTS.md"
 PERSONAL_MODEL_SRC="${PERSONAL_MODEL_SRC:-$DOTFILE_DIR/../Project/AI/agent-workspace/personal-model/PROFILE.md}"
@@ -171,6 +173,7 @@ SHARED_CORE_SKILLS=(
   knowledge-base-router
   final-state-publication
   community-tech-brief
+  jev-tools
 )
 
 EXTERNAL_CODEX_SKILLS=(
@@ -228,6 +231,32 @@ ensure_experience_hook() {
 }
 
 ensure_experience_hook
+
+ensure_compaction_shadow_hook() {
+  local hooks_file="$CODEX_DST/hooks.json"
+  local tmp_file
+  chmod 755 "$COMPACTION_SHADOW_SRC"
+  link_item "$COMPACTION_SHADOW_SRC" "$COMPACTION_SHADOW_DST" "hooks/jev-compaction-shadow.py"
+  [ -f "$hooks_file" ] || return
+  command -v jq >/dev/null 2>&1 || return
+  tmp_file="$hooks_file.tmp.$$"
+  if jq --arg command "$COMPACTION_SHADOW_DST" '
+    .hooks //= {}
+    | .hooks.PostToolUse //= []
+    | if any(.hooks.PostToolUse[]?.hooks[]?; .command == $command)
+      then .
+      else .hooks.PostToolUse += [{hooks: [{type: "command", command: $command, timeout: 3}]}]
+      end
+  ' "$hooks_file" > "$tmp_file"; then
+    mv "$tmp_file" "$hooks_file"
+    printf "${G}[OK]   hooks.json -- Jev compaction shadow enabled${N}\n"
+  else
+    rm -f "$tmp_file"
+    printf "${Y}[SKIP] hooks.json -- cannot add Jev compaction shadow${N}\n"
+  fi
+}
+
+ensure_compaction_shadow_hook
 
 for profile in fast code heavy; do
   link_item "$CODEX_SRC/$profile.config.toml" "$CODEX_DST/$profile.config.toml" "$profile.config.toml"

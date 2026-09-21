@@ -1,13 +1,15 @@
 #!/bin/bash
-# Pi 全域設定 symlink 建立腳本
-# 將 canonical shared contract、Pi adapter、safe settings 與 shared-core skills
-# 接到 ~/.pi/agent/；保留 auth、sessions、model catalog 與既有 extensions。
+# Pi 全域設定安裝腳本
+# 將 canonical shared contract、Pi adapter、safe settings defaults 與 shared-core
+# skills 接到 ~/.pi/agent/；保留 auth、sessions、model catalog 與既有 extensions。
 
 set -euo pipefail
 
 DOTFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PI_SRC="$DOTFILE_DIR/config/ai/pi"
 PI_DST="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
+PI_EXTENSION_SRC="$DOTFILE_DIR/config/ai/pi/extensions/jev-compaction-shadow.ts"
+PI_EXTENSION_DST="$PI_DST/extensions/jev-compaction-shadow.ts"
 SHARED_RULES_SRC="$DOTFILE_DIR/config/ai/AGENTS.md"
 PERSONAL_MODEL_SRC="${PERSONAL_MODEL_SRC:-$DOTFILE_DIR/../Project/AI/agent-workspace/personal-model/PROFILE.md}"
 SHARED_SKILL_SRC="$DOTFILE_DIR/config/ai/shared/skills"
@@ -23,6 +25,7 @@ SHARED_CORE_SKILLS=(
   final-state-publication
   knowledge-base-router
   community-tech-brief
+  jev-tools
 )
 
 link_managed() {
@@ -52,6 +55,49 @@ link_managed() {
   printf "${G}[LINK] %s${N}\n" "$label"
 }
 
+sync_runtime_settings() {
+  local dst="$PI_DST/settings.json"
+  local tmp_file="$PI_DST/.settings.json.tmp.$$"
+  local existing_kind="missing"
+
+  if [ -L "$dst" ]; then
+    if [ "$(readlink "$dst")" != "$PI_SRC/settings.json" ]; then
+      printf "${R}[SKIP] settings.json -- unmanaged symlink: %s${N}\n" "$dst" >&2
+      return 1
+    fi
+    existing_kind="managed-link"
+  elif [ -e "$dst" ]; then
+    existing_kind="regular"
+  fi
+
+  if command -v jq >/dev/null 2>&1; then
+    if [ "$existing_kind" = "missing" ]; then
+      jq '.' "$PI_SRC/settings.json" > "$tmp_file"
+    elif jq -e 'type == "object"' "$dst" >/dev/null 2>&1; then
+      jq -s '
+        .[0] as $defaults |
+        .[1] as $runtime |
+        ($defaults * $runtime) |
+        if ($defaults | has("skills")) then .skills = $defaults.skills else . end
+      ' "$PI_SRC/settings.json" "$dst" > "$tmp_file"
+    else
+      rm -f "$tmp_file"
+      printf "${R}[SKIP] settings.json -- existing file is not a JSON object${N}\n" >&2
+      return 1
+    fi
+  elif [ "$existing_kind" = "regular" ]; then
+    printf "${Y}[KEEP] settings.json -- jq unavailable; existing runtime settings preserved${N}\n" >&2
+    return 0
+  else
+    cp "$PI_SRC/settings.json" "$tmp_file"
+  fi
+
+  [ "$existing_kind" = "managed-link" ] && rm -f "$dst"
+  mv "$tmp_file" "$dst"
+  chmod 644 "$dst"
+  printf "${G}[SYNC] settings.json -- mutable runtime copy${N}\n"
+}
+
 compose_active_rules() {
   mkdir -p "$ACTIVE_RULES_DIR"
   local tmp_file="$ACTIVE_RULES_SRC.tmp.$$"
@@ -78,13 +124,14 @@ if [ ! -f "$SHARED_RULES_SRC" ] || [ ! -f "$PI_SRC/AGENTS.md" ] || [ ! -f "$PI_S
   exit 1
 fi
 
-printf "${Y}=== Pi 設定 Symlink ===${N}\n"
+printf "${Y}=== Pi 設定 ===${N}\n"
 
-mkdir -p "$PI_DST" "$PI_DST/skills"
+mkdir -p "$PI_DST" "$PI_DST/skills" "$PI_DST/extensions"
 compose_active_rules
 link_managed "$ACTIVE_RULES_SRC" "$PI_DST/AGENTS.md" "AGENTS.md"
 link_managed "$SHARED_RULES_SRC" "$PI_DST/AGENTS.shared.md" "shared agent contract"
-link_managed "$PI_SRC/settings.json" "$PI_DST/settings.json" "settings.json"
+sync_runtime_settings
+link_managed "$PI_EXTENSION_SRC" "$PI_EXTENSION_DST" "extensions/jev-compaction-shadow.ts"
 
 printf "\n${Y}--- Shared Core Skills ---${N}\n"
 for name in "${SHARED_CORE_SKILLS[@]}"; do

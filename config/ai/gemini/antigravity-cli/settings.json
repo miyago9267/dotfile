@@ -25,7 +25,9 @@
       "command(agy --version)",
       "command(/Users/miyago/dotfile/script/utils/agent-call run)",
       "command(/Users/miyago/dotfile/script/utils/agent-call status)",
-      "command(/Users/miyago/dotfile/script/utils/agent-call wait)"
+      "command(/Users/miyago/dotfile/script/utils/agent-call wait)",
+      "mcp(jev-browser/*)",
+      "mcp(reticle/*)"
     ],
     "deny": [
       "read_file(/Users/miyago/.ssh)",

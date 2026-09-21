@@ -1,5 +1,11 @@
 {
   "enableSkillCommands": true,
   "defaultProjectTrust": "ask",
-  "defaultThinkingLevel": "medium"
+  "defaultThinkingLevel": "medium",
+  "skills": [
+    "!skills/**",
+    "+skills/final-state-publication",
+    "+skills/knowledge-base-router",
+    "+skills/community-tech-brief"
+  ]
 }

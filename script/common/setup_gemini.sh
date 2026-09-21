@@ -55,6 +55,7 @@ link_item() {
 SHARED_CORE_SKILLS=(
   knowledge-base-router
   community-tech-brief
+  jev-tools
 )
 
 should_install_gemini_skill() {
