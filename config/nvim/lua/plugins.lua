@@ -41,6 +41,47 @@ return {
     },
   },
   {
+    "folke/which-key.nvim",
+    event = "VeryLazy",
+    opts = {
+      preset = "helix",
+      delay = 200,
+      spec = {
+        { "<leader>a", group = "Agent" },
+        { "<leader>b", group = "Buffer" },
+        { "<leader>t", group = "Terminal" },
+        { "<leader>u", group = "UI toggle" },
+        { "<leader>w", group = "Window alias" },
+      },
+    },
+  },
+  {
+    "akinsho/bufferline.nvim",
+    event = "VeryLazy",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    opts = {
+      options = {
+        mode = "buffers",
+        numbers = "ordinal",
+        diagnostics = "nvim_lsp",
+        separator_style = "slant",
+        always_show_bufferline = true,
+        show_buffer_close_icons = true,
+        show_close_icon = false,
+        right_mouse_command = "bdelete %d",
+        middle_mouse_command = "bdelete %d",
+        offsets = {
+          {
+            filetype = "NvimTree",
+            text = "File Tree",
+            text_align = "left",
+            separator = true,
+          },
+        },
+      },
+    },
+  },
+  {
     "nvim-tree/nvim-tree.lua",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     opts = {
@@ -96,11 +137,8 @@ return {
   },
   {
     "coder/claudecode.nvim",
+    lazy = false,
     cond = function() return vim.fn.executable("claude") == 1 end,
-    keys = {
-      { "<leader>aa", "<cmd>ClaudeCode<CR>", desc = "AI: Claude toggle" },
-      { "<leader>as", "<cmd>ClaudeCodeSend<CR>", mode = "v", desc = "AI: send selection" },
-    },
-    opts = { terminal = { split_side = "right", split_width_percentage = 30 } },
+    opts = { terminal = { split_side = "right", split_width_percentage = 0.30 } },
   },
 }

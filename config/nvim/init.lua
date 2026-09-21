@@ -24,3 +24,4 @@ else
 end
 
 require("config.keymaps").setup()
+require("config.agent").setup()

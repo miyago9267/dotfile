@@ -64,9 +64,36 @@ F1 / F3 / F4 也分別對應透明背景、行數、file tree；F12 對應原生
 | `Space bn` / `Space bp` | 下一個／上一個 buffer |
 | `Ctrl-Left` / `Ctrl-Right` | 左／右切換 buffer（當作檔案 tab 使用） |
 | `Space bc` / `Space bx` | 建立／關閉 buffer |
-| `Ctrl-w` | Vim window prefix |
-| `Space wv` / `Space ws` | Vertical／horizontal split |
-| `Ctrl-h/j/k/l` | 切換 Neovim 或 tmux pane |
+| `Space b?` / `Space bq` | 快速挑選／挑選後關閉 buffer |
+| `Space b<` / `Space b>` | 移動目前 buffer 順序 |
+| `Space bo` / `Space bl` / `Space br` | 關閉其他／左側／右側 buffer |
+| `Space bP` | 固定／取消固定目前 buffer |
+| `Space bd` / `Space be` | 按 directory／extension 排序 |
+
+上方 buffer tab bar 由 `bufferline.nvim` 提供；可直接點選切換，中鍵關閉。它顯示的是 buffer，不是 Vim tabpage。
+
+Space prefix 也遵循 tmux 的 pane 操作邏輯：
+
+| 快捷鍵 | 功能 |
+| --- | --- |
+| `Space -` / `Space \|` | Horizontal／vertical split |
+| `Space h/j/k/l` | 切換 window 或 tmux pane |
+| `Space H/J/K/L` | 調整 window 大小 |
+| `Space =` | 平均所有 window |
+| `Space z` | 最大化／還原目前 window |
+| `Ctrl-w` | Vim 原生 window prefix |
+| `Space wv` / `Space ws` | 舊的 split aliases |
+| `Ctrl-h/j/k/l` | 快速切換 Neovim 或 tmux pane |
+
+## Tab
+
+| 快捷鍵 | 功能 |
+| --- | --- |
+| `Space c` | 開新 tab |
+| `Space [` / `Space ]` | 上一個／下一個 tab |
+| `Space Tab` | 回到上一個 tab |
+| `Space x` | 關閉目前 tab |
+| `Space 1..9` | 跳到指定 tab |
 
 ## Terminal / Agent
 
@@ -76,8 +103,15 @@ F1 / F3 / F4 也分別對應透明背景、行數、file tree；F12 對應原生
 | `Ctrl-,` | 開關 terminal（舊習慣相容入口） |
 | `Space ts` | 開啟 shell terminal |
 | `:Shell <command>` | 在 terminal split 執行 shell command |
-| `Space aa` | 開關 Claude Code |
-| `Space as` | 將 visual selection 傳給 Claude Code |
+| `Space aa` | 開關 Claude Code panel |
+| `Space ac` | 開關 Codex panel |
+| `Space ao` | 開關 OpenCode panel |
+| `Space ag` | 開關 Gemini panel |
+| Visual `Space as/ac/ao/ag` | 將選取內容傳給 Claude/Codex/OpenCode/Gemini |
+
+四個 Agent 都使用相同的右側互動 terminal panel。Claude 額外保留 IDE protocol、diff 與檔案同步；其他 Agent 使用原生 Neovim terminal。也可以用 `:Agent claude|codex|opencode|gemini` 開關指定 panel。
+
+Agent panel 開啟後會進入 terminal input mode，這是為了可以直接輸入 prompt。要使用 `Space a*` 或其他 Neovim 快捷鍵，先按 `Esc`；也可以按 `<C-\\><C-n>` 回到 Normal mode。
 
 ## Git 視覺提示
 
