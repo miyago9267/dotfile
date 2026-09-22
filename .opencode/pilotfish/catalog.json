@@ -4,8 +4,8 @@
       "mode": "subagent",
       "available": true,
       "model": {
-        "provider": "google",
-        "model": "gemini-2.5-flash"
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash"
       }
     },
     "executor": {

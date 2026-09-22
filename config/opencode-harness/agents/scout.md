@@ -1,7 +1,7 @@
 ---
 description: Pilotfish-style read-only reconnaissance for bounded repository questions
 mode: subagent
-model: google/gemini-2.5-flash
+model: deepseek/deepseek-v4-flash
 permission:
   edit: deny
   task: deny

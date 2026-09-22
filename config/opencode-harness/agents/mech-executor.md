@@ -1,7 +1,7 @@
 ---
 description: Pilotfish-style mechanical executor for fully specified repetitive edits
 mode: subagent
-model: openai/gpt-5.6-luna
+model: deepseek/deepseek-v4-flash
 permission:
   edit: allow
   task: deny

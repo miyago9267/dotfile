@@ -10,6 +10,8 @@ PI_SRC="$DOTFILE_DIR/config/ai/pi"
 PI_DST="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
 PI_EXTENSION_SRC="$DOTFILE_DIR/config/ai/pi/extensions/jev-compaction-shadow.ts"
 PI_EXTENSION_DST="$PI_DST/extensions/jev-compaction-shadow.ts"
+PILOTFISH_EXTENSION_SRC="$DOTFILE_DIR/config/ai/pi/extensions/pilotfish-routing.ts"
+PILOTFISH_EXTENSION_DST="$PI_DST/extensions/pilotfish-routing.ts"
 SHARED_RULES_SRC="$DOTFILE_DIR/config/ai/AGENTS.md"
 PERSONAL_MODEL_SRC="${PERSONAL_MODEL_SRC:-$DOTFILE_DIR/../Project/AI/agent-workspace/personal-model/PROFILE.md}"
 SHARED_SKILL_SRC="$DOTFILE_DIR/config/ai/shared/skills"
@@ -132,6 +134,7 @@ link_managed "$ACTIVE_RULES_SRC" "$PI_DST/AGENTS.md" "AGENTS.md"
 link_managed "$SHARED_RULES_SRC" "$PI_DST/AGENTS.shared.md" "shared agent contract"
 sync_runtime_settings
 link_managed "$PI_EXTENSION_SRC" "$PI_EXTENSION_DST" "extensions/jev-compaction-shadow.ts"
+link_managed "$PILOTFISH_EXTENSION_SRC" "$PILOTFISH_EXTENSION_DST" "extensions/pilotfish-routing.ts"
 
 printf "\n${Y}--- Shared Core Skills ---${N}\n"
 for name in "${SHARED_CORE_SKILLS[@]}"; do
