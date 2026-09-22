@@ -141,6 +141,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "MIYAGO_RUNTIME=claude python3 ~/dotfile/config/ai/shared/hooks/factory-session-start.py",
+            "timeout": 8
+          },
+          {
+            "type": "command",
             "command": "bash ~/dotfile/config/ai/claude/hooks/experience-observe.sh",
             "timeout": 5
           },

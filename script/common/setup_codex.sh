@@ -12,6 +12,8 @@ ORCA_CODEX_RUNTIME_HOME="${ORCA_CODEX_RUNTIME_HOME:-$HOME/Library/Application Su
 CODEX_SKILL_SRC="$DOTFILE_DIR/config/ai/codex/skills"
 CODEX_HOOK_SRC="$DOTFILE_DIR/config/ai/codex/hooks/experience-observe.py"
 CODEX_HOOK_DST="$HOME/.codex/hooks/experience-observe.py"
+FACTORY_SESSION_SRC="$DOTFILE_DIR/config/ai/shared/hooks/factory-session-start.py"
+FACTORY_SESSION_DST="$HOME/.codex/hooks/factory-session-start.py"
 COMPACTION_SHADOW_SRC="$DOTFILE_DIR/config/ai/shared/jev/compaction-shadow.py"
 COMPACTION_SHADOW_DST="$HOME/.codex/hooks/jev-compaction-shadow.py"
 SHARED_SKILL_SRC="$DOTFILE_DIR/config/ai/shared/skills"
@@ -201,6 +203,32 @@ link_item "$SHARED_MEMORY_SRC" "$CODEX_DST/memories" "shared memories"
 mkdir -p "$CODEX_DST/hooks"
 chmod 755 "$CODEX_HOOK_SRC"
 link_item "$CODEX_HOOK_SRC" "$CODEX_HOOK_DST" "hooks/experience-observe.py"
+chmod 755 "$FACTORY_SESSION_SRC"
+link_item "$FACTORY_SESSION_SRC" "$FACTORY_SESSION_DST" "hooks/factory-session-start.py"
+
+ensure_factory_session_hook() {
+  local hooks_file="$CODEX_DST/hooks.json"
+  local tmp_file
+  [ -f "$hooks_file" ] || return
+  command -v jq >/dev/null 2>&1 || return
+  tmp_file="$hooks_file.tmp.$$"
+  if jq --arg command "$FACTORY_SESSION_DST" '
+    .hooks //= {}
+    | .hooks.UserPromptSubmit //= []
+    | if any(.hooks.UserPromptSubmit[]?.hooks[]?; .command == $command)
+      then .
+      else .hooks.UserPromptSubmit += [{hooks: [{type: "command", command: $command, timeout: 8}]}]
+      end
+  ' "$hooks_file" > "$tmp_file"; then
+    mv "$tmp_file" "$hooks_file"
+    printf "${G}  [OK]   hooks.json -- Factory session-start enabled${N}\n"
+  else
+    rm -f "$tmp_file"
+    printf "${Y}  [SKIP] hooks.json -- cannot add Factory session-start${N}\n"
+  fi
+}
+
+ensure_factory_session_hook
 
 ensure_experience_hook() {
   local hooks_file="$CODEX_DST/hooks.json"
