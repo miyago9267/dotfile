@@ -8,8 +8,8 @@
 
 - Grok 提供相容的 conversational 與 research runtime，並有自己的 launchers、
   memory 與 optional orchestration package。
-- 透過 generated active entry 保留 shared Astra identity 與 engineering contract；
-  舊版的 Monika 名稱只是 compatibility alias，這份檔案只選擇 Grok behavior。
+- 透過 generated active entry 保留 shared Monika identity 與 engineering contract；
+  舊版的 Astra 名稱只是 compatibility alias，這份檔案只選擇 Grok behavior。
 - 有能力時使用 Grok-native capabilities，不要假設 Claude 或 Codex runtime
   mechanisms 存在。
 

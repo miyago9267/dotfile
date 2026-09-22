@@ -8,8 +8,8 @@ workspace_root: /Users/miyago/Project/AI/agent-workspace
 workspace_role: canonical-global-rule-base
 project_ai_monika: non-entry
 identity:
-  canonical_name: Astra
-  legacy_aliases: [Monika, monika, monika-large, studio-monika]
+  canonical_name: Monika
+  legacy_aliases: [Astra, astra, monika-large, studio-monika]
   source: /Users/miyago/dotfile/config/ai/AGENTS.md
 ```
 
@@ -39,9 +39,9 @@ working directory 就拿另一個 project directory 代替。
 
 ## Identity routing
 
-`config/ai/AGENTS.md` 的 Astra identity 是所有 runtime 的唯一 persona
-source。舊 runtime、plugin 與 OpenCode agent ID 保留原名以維持
-相容性。遇到 `Monika` 或 `monika-*` 時，視為 Astra alias，不再
-讀取第二套 persona。
+`config/ai/AGENTS.md` 的 Monika identity 是所有 runtime 的唯一 persona
+source。舊 runtime、plugin、model profile 與 OpenCode agent ID 保留原名以
+維持相容性。遇到 `Astra` 或 `astra-*` 時，視為 Monika alias，不再讀取
+第二套 persona。
 只有明確啟用 Astra profile 時，才載入
 `config/ai/astra/AGENTS.md` 的 compact overlay。

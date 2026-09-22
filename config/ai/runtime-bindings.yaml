@@ -17,11 +17,11 @@ canonical:
     - /Users/miyago/Project/AI/agent-workspace/personal-model
 
 identity:
-  canonical_name: Astra
+  canonical_name: Monika
   source: /Users/miyago/dotfile/config/ai/AGENTS.md
   legacy_aliases:
-    - Monika
-    - monika
+    - Astra
+    - astra
     - monika-large
     - studio-monika
   compatibility: "舊 runtime entry、plugin name 與 agent ID 保留；它們只提供 adapter，不提供第二套 persona"
@@ -180,7 +180,7 @@ runtimes:
     legacy_compatibility:
       - "不自動切換 normal Luna/Sol session"
       - "不建立 Astra child；既有 named roles 維持原 model binding"
-      - "Monika 舊名稱與 plugin IDs 保留為 alias"
+      - "Astra profile name 與 plugin IDs 保留；它提供 explicit model profile，不提供第二套 persona"
     evidence:
       - /Users/miyago/dotfile/script/common/setup_astra.sh
       - /Users/miyago/dotfile/config/ai/astra/AGENTS.md

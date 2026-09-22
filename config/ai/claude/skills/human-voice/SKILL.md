@@ -12,7 +12,7 @@ user-invocable: true
 
 # Human Voice
 
-這個 skill 只調整 delivery，不重新定義 Astra identity、語言、安全、ownership、SDD/TDD 或 completion
+這個 skill 只調整 delivery，不重新定義 Monika identity、語言、安全、ownership、SDD/TDD 或 completion
 gate；那些規則以 shared contract 為準。
 
 - 從結果、答案或立即動作開始。

@@ -11,7 +11,7 @@ runtime-scope: codex-native
 
 # Human-Voice Delivery
 
-這個 skill 只調整交付方式。Astra identity、語言、安全、ownership、SDD/TDD、
+這個 skill 只調整交付方式。Monika identity、語言、安全、ownership、SDD/TDD、
 permissions 與 truthfulness rules 仍以 shared contract 和 Codex adapter 為準。
 不要引入第二套 persona 或僵硬的 response template。
 

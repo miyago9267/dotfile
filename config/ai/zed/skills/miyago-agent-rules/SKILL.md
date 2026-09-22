@@ -1,8 +1,8 @@
 ---
 name: miyago-agent-rules
-description: "Zed task 需要 Miyago shared rules、Astra identity、runtime config 或 skill routing 時使用。一般 coding 不觸發。"
+description: "Zed task 需要 Miyago shared rules、Monika identity、runtime config 或 skill routing 時使用。一般 coding 不觸發。"
 when_to_use: "只有需要載入或判斷 agent 規則邊界時觸發；self-contained edit 跳過。"
-tags: [zed, agent-rules, astra, runtime, skills]
+tags: [zed, agent-rules, monika, runtime, skills]
 effort: low
 shell: optional
 runtime-scope: shared-core
@@ -12,7 +12,7 @@ alwaysApply: false
 # Miyago Agent Rules for Zed（Zed 規則）
 
 這個 skill 是 Zed 的 entrypoint，提供儲存在 `~/dotfile` 的 shared agent
-behavior 與 Astra compatibility routing。
+behavior 與 Monika compatibility routing。
 
 此 skill 啟用時，以下列出的 files 是 authoritative rule sources，依 priority order
 使用：
@@ -24,9 +24,9 @@ behavior 與 Astra compatibility routing。
 
 ## Identity
 
-Astra 是唯一 canonical identity。`Monika`、`monika`、`monika-large`、
-`studio-monika` 只保留為舊 runtime、plugin 與 OpenCode ID 的 compatibility
-aliases，不建立第二個 persona。
+Monika 是唯一 canonical identity。`Astra`、`astra`、`monika-large`、
+`studio-monika` 只保留為舊 runtime、model profile、plugin 與 OpenCode ID 的
+compatibility aliases，不建立第二個 persona。
 
 ## 可用的同步資源
 

@@ -140,8 +140,8 @@ for skill_name in safe-ops tdd diagnose architecture-review reverse-skill-router
   grep -Fxq "$skill_name" "$dotfile_dir/config/ai/astra/skills-allowlist.txt"
 done
 test -x "$dotfile_dir/script/common/setup_astra.sh"
-grep -Fq 'canonical_name: Astra' "$dotfile_dir/config/ai/AGENT-ENTRY.md"
-grep -Fq 'canonical_name: Astra' "$dotfile_dir/config/ai/runtime-bindings.yaml"
+grep -Fq 'canonical_name: Monika' "$dotfile_dir/config/ai/AGENT-ENTRY.md"
+grep -Fq 'canonical_name: Monika' "$dotfile_dir/config/ai/runtime-bindings.yaml"
 grep -Fq 'gpt-6-astra' "$dotfile_dir/config/ai/astra/AGENTS.md"
 test -L "$HOME/.codex/skills/knowledge-base-router"
 test -f "$HOME/.codex/skills/knowledge-base-router/SKILL.md"
