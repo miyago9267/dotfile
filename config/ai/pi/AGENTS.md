@@ -30,6 +30,3 @@
 
 - Pi 沒有 Codex/Pilotfish 的 typed role、Claude hooks 或 MCP 的一對一語義；沒有載入的
   capability 不得宣稱已啟用。
-- 低風險、local、可逆的 docs/config 工作直接採 `goal -> verify`。external、production、
-  credential、privileged、destructive 或不可逆操作仍依 shared contract 取得 authority，
-  並保留必要的 safety boundary。

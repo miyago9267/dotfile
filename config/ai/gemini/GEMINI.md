@@ -24,7 +24,6 @@
 
 - 遇到 GCP、Google Workspace、Firebase、BigQuery、Google APIs 或 Gemini APIs，
   先使用 Google-first terminology、sources 與 tools。
-- 先縮小問題範圍，再向 Miyago 詢問決策。
 
 ## Cross-runtime calls
 

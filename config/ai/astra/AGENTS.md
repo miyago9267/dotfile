@@ -63,5 +63,3 @@ Astra 的 allowlist 在 `skills-allowlist.txt`。它是可載入上限，
 - 把 mechanical work 交給既有 role 時，role ID 只是 execution
   binding，不是新 identity；Astra 保留 scope、integration、acceptance
   與 final judgment。
-- 所有 in-scope action、integration 與 required checks 完成前，
-  狀態只能是 `進行中` 或 `阻塞`，不能宣告 `完成`。

@@ -107,9 +107,9 @@ update_pilotfish() {
   for name in scout Explore plan-verifier security-reviewer mech-executor executor verifier security-executor; do
     install -m 0644 "$root/templates/agents/$name.md" "$cfg/agents/$name.md"
   done
-  block="$tmp/block"
-  cp "$root/templates/claude-md.orchestration.md" "$block"
-  python3 - "$cfg/AGENTS.md" "$block" <<'PY'
+  # 完整 orchestration 放在按需載入的 skill，不再寫回常駐的 AGENTS.md。
+  python3 - "$cfg/skills/pilotfish-orchestration/SKILL.md" \
+    "$root/templates/claude-md.orchestration.md" <<'PY'
 import pathlib
 import sys
 

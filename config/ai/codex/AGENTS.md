@@ -22,9 +22,6 @@
 - 短時間的 read-only checks 使用 `fast`；browser、GUI、document 或真正大型的
   工作使用 `heavy`。
 - 限制 searches 與 tool output；在宣告完成前，先於本機驗證要求的 behavior。
-- 對整個 task 套用共用完成宣告規則（Apply the shared completion claim gate）：
-  只要仍有 in-scope action 或 acceptance check，intermediate worker result、
-  passing check 或 ready plan 都不能算完成。
 - project、architecture、incident、deployment、business-logic 或
   historical-decision lookup 使用 `$knowledge-base-router`。
 
@@ -44,23 +41,13 @@
 
 ## Pilotfish
 
-Pilotfish orchestration 對這份 Codex adapter 是 active 的。第一次 action 前
-先自動分流：一個 command／一個 action、普通工具與不確定工作留在便宜的
-Luna parent 或 `mech-executor`；一般設計、工具選擇、解讀、QA 與 bounded
-implementation 使用 Sol `sol-executor`。只有高信心的架構、跨系統權衡、
-衝突證據、進階工具編排，或 Sol 明確回報 deep boundary 時，才 dispatch
-strong `executor`，不等 Miyago 口頭要求 multi-role。
-清楚的 bounded workstream 或必要 review 也主動 dispatch 最合適且成本最低的
-native typed role，並把使用者要求的 outcome 跑到 acceptance。單一緊密的
-local action 留在 parent；不要每個 command 都建立 child，也不要在 outcome
-phase 之間停下來等使用者批准或指定下一步。cheap path 遇到 unexpected result、
-error、retry、target change 或 unlisted next action 時，先升級一次到
-`sol-executor`；Sol 回報 deep boundary 才升級 `executor`，先補齊
-`goal -> target -> exact action -> expected signal -> stop`。
+Pilotfish orchestration 是 active 的。第一次 action 前自動分流：單一 command、
+普通工具與不確定工作留在 Luna parent 或 `mech-executor`；一般設計、工具選擇、
+QA 與 bounded implementation 用 Sol `sol-executor`；只有高信心的架構、跨系統
+權衡、衝突證據，或 Sol 回報 deep boundary 時才用 strong `executor`。cheap path
+遇到 unexpected result、error、retry 或 target change 時先升級一次到
+`sol-executor`。
 
-Native roles 從 `<CODEX_HOME>/agents/` 載入；matching role 不可用時，留在
-parent 內完成可安全處理的工作並明確回報限制。保留 installed role 的 model
-bindings、approval、security 與 release gates；自動升級只切換 typed role，
-不切換 root model。`sol-executor`／`verifier`／`plan-verifier` 與 security
-review 維持 Sol；`executor` 只用於深層 Astra route，`mech-executor`／`scout`
-維持便宜 Luna。
+Native roles 從 `<CODEX_HOME>/agents/` 載入；role 不可用時留在 parent 做可安全
+處理的部分並回報限制。保留 installed role 的 model bindings 與 approval、
+security、release gates；自動升級只切換 typed role，不切換 root model。
