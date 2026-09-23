@@ -2,11 +2,16 @@
 
 這裡只放跨 runtime 的薄 adapter，不放 API key，也不把 Jev 判斷硬編進工作流。
 
+agent 安裝、設定、驗證與停用流程見 [INSTALL.md](INSTALL.md)。
+
 ## Capabilities
 
 - `jev-browser`: LLM 提供目標，Jev 選擇頁面元素與動作；遇到不確定或不可逆操作時回傳狀態。
 - `Reticle`: 讀取自己開發中的 app 的 DOM、network、console 與 runtime state，
   回傳 verification evidence。
+- `codex-jev-compaction`: 獨立、可選的第三方 Codex plugin；用 Jev 選擇工具證據，
+  並在 Codex 原生 compaction 後補回。它不由 `setup_jev.sh` 安裝，不會刪除即時
+  context，也不保證節省 token。安裝與資料流見 [INSTALL.md](INSTALL.md)。
 - `fast-jev-compaction`: 目前只保留為研究項目；尚未接入自動刪除上下文。
   四個 runtime 都先使用 shadow/dry-run 邊界。
 
@@ -55,7 +60,12 @@ JEV_CONTEXT_SHADOW=1 claude
 需要逐項判斷 compaction candidates 時，仍須由 runtime 提供候選項和來源指標。
 目前的 compaction shadow 只記錄 event、tool 與 input/output 大小，並記下
 `keep_first: 4`、`keep_recent: 8`、`drop_stale: false` 的候選政策；它不讀取
-候選語意，也不會刪除 context。先用 replay 樣本校準 retention 判斷，不沿用
+候選語意，不呼叫 Jev，也不會刪除 context。Codex 的
+`config/ai/shared/jev/compaction-shadow.py` 由 `setup_codex.sh` 連結到
+`~/.codex/hooks/jev-compaction-shadow.py`，在 `PostToolUse` 記錄 metadata；預設
+記錄於 `~/.local/state/miyago/jev/compaction-shadow.jsonl`。新 process 設定
+`JEV_COMPACTION_SHADOW=0` 可略過。要做語意選擇需另裝第三方
+`codex-jev-compaction` plugin；先用 replay 樣本校準 retention 判斷，不沿用
 Stingray 的 benchmark。
 
 ## Pilotfish route advisory
@@ -101,19 +111,22 @@ AGENTS.md 的 gate 與 dispatch brake 優先。Jev 只能建議 role，或把流
 | Runtime | jev-browser | Reticle | compaction |
 | --- | --- | --- | --- |
 | Claude | MCP | MCP | 既有 hooks；Jev shadow only |
-| Codex | MCP | MCP | 既有 hooks；Jev shadow only |
+| Codex | MCP | MCP | 內部 metadata shadow；可選第三方 checkpoint plugin |
 | AGY | MCP | MCP | 既有 hooks；Jev shadow only |
 | Pi | CLI/library skill | CLI/library skill | extension 後續接入 |
 
 ## Requirements
 
 - Node.js 20.11+；Reticle 官方目前要求此版本。
+- 第三方 `codex-jev-compaction` plugin 另需 Node.js 22+ 與支援 `codex plugin` 的 CLI。
 - AGY 需支援 `agy mcp add/list`；MCP registry 由 `setup_jev.sh` 管理。
 - `jev-browser-mcp.sh` 只把 `TYPESAFE_API_KEY` 注入 MCP child；Claude Stop shadow
   則使用 Claude process 繼承的環境變數。Stop hook 本身不讀取 secret store。
 - Reticle 另需在每個要驗證的 web/desktop project 執行 `npx @reticlehq/server init`。
 
 ## Apply
+
+完整 agent 安裝與驗收步驟見 [INSTALL.md](INSTALL.md)。
 
 先看變更：
 

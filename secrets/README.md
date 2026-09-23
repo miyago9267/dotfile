@@ -101,8 +101,33 @@ source ~/.env.secrets
 | `sec list` | 只列出 secret 名稱，不顯示 value |
 | `sec status` | 檢查 age、sops、key、cache 與加密檔狀態 |
 
+`sec reload` 是獨立程序，只負責重建 cache，不能修改呼叫它的 shell。Zsh
+使用者可在目前 shell 執行 `source ~/.env.secrets`，或使用載入後提供的
+`secrets-reload` function 同時重建並載入。
+
 ## 快取機制
 
 解密後的明文快取在 `~/.env.secrets`（權限 600），不會進版控。
-只在需要使用開發 key 的 shell 內執行 `source ~/.env.secrets`，不要把所有
-secret 無條件注入每個 shell。
+
+dotfile 管理的互動式 Zsh 會載入 `config/zsh/.zshrc.d/secrets.zsh`：有 age key、
+SOPS 和加密 bundle 時，它會 source 新鮮快取；快取過期時先重建，再 source
+到該 shell。這會把成功解析的 bundle entries 匯出給該 shell 和 child
+processes。key 不會以明文寫在 `.zshrc`，但目前載入範圍是整個互動式 Zsh。
+
+需要單一 child process 使用單一 secret 時，改用 KeePassXC broker，例如
+`agent-secret run typesafe-api -- <command>`。不要把同一把 key 同時放進 KeePassXC
+和 SOPS bundle；不要用 `sec show` 或 `sec export` 做一般診斷，兩者會輸出明文。
+
+## `sec` 的 PATH
+
+`sec` 是 repository 的 `script/utils/sec`。dotfile 的
+`config/zsh/.zshrc.d/utils.zsh` 會在目錄存在時，把 `$HOME/dotfile/script/utils`
+加到 `PATH`。在 Zsh 中，小寫 `path` 是與大寫 `PATH` 綁定的陣列，不是指令。
+
+```zsh
+whence -v sec
+print -rl -- $path
+```
+
+修改 PATH snippet 後，可重開 Terminal 或執行 `source ~/.zshrc` 載入設定；這也
+會重新執行上面的 secrets loader。
