@@ -96,25 +96,36 @@ update_calico() {
 }
 
 update_pilotfish() {
-  local tag tmp root cfg block
-  tag=$(git ls-remote --tags --refs --sort='-version:refname' \
-    https://github.com/Nanako0129/pilotfish.git 'v*' | sed -n '1s#.*refs/tags/##p') || return 1
-  [ -n "$tag" ] || return 1
+  # 從本機 pilotfish-claude 的 committed HEAD 安裝，不裝未 commit 的 WIP。
+  local src tmp root cfg skill
+  src="${PILOTFISH_CLAUDE_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/pilotfish-claude}"
+  git -C "$src" rev-parse --verify HEAD >/dev/null 2>&1 || return 1
   tmp=$(mktemp -d)
-  git clone --quiet --depth 1 --branch "$tag" https://github.com/Nanako0129/pilotfish.git "$tmp/repo"
-  root="$tmp/repo"
+  git -C "$src" archive HEAD templates | tar -x -C "$tmp" || return 1
+  root="$tmp"
   cfg="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+  skill="$cfg/skills/pilotfish-orchestration"
+  for name in scout Explore plan-verifier security-reviewer mech-executor executor verifier security-executor; do
+    [ -f "$root/templates/agents/$name.md" ] || return 1
+  done
   for name in scout Explore plan-verifier security-reviewer mech-executor executor verifier security-executor; do
     install -m 0644 "$root/templates/agents/$name.md" "$cfg/agents/$name.md"
   done
+  mkdir -p "$skill/references"
+  for ref in "$root"/templates/skills/pilotfish-orchestration/references/*.md; do
+    install -m 0644 "$ref" "$skill/references/$(basename "$ref")"
+  done
   # 完整 orchestration 放在按需載入的 skill，不再寫回常駐的 AGENTS.md。
-  python3 - "$cfg/skills/pilotfish-orchestration/SKILL.md" \
-    "$root/templates/claude-md.orchestration.md" <<'PY'
+  # 保留 dotfiles 自己的 frontmatter，只替換 marker 之間的內容。
+  python3 - "$skill/SKILL.md" \
+    "$root/templates/skills/pilotfish-orchestration/SKILL.md" <<'PY'
 import pathlib
 import sys
 
 target = pathlib.Path(sys.argv[1])
-replacement = pathlib.Path(sys.argv[2]).read_text()
+source = pathlib.Path(sys.argv[2]).read_text()
+body = source.split("---", 2)[2].strip("\n")
+replacement = "<!-- pilotfish:begin -->\n" + body + "\n<!-- pilotfish:end -->"
 text = target.read_text()
 begin = text.count("<!-- pilotfish:begin -->")
 end = text.count("<!-- pilotfish:end -->")
@@ -122,7 +133,7 @@ if begin != 1 or end != 1:
     raise SystemExit("pilotfish markers are not exactly one pair")
 start = text.index("<!-- pilotfish:begin -->")
 finish = text.index("<!-- pilotfish:end -->", start) + len("<!-- pilotfish:end -->")
-target.write_text(text[:start] + replacement.rstrip("\n") + text[finish:])
+target.write_text(text[:start] + replacement + text[finish:])
 PY
 }
 

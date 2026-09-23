@@ -164,7 +164,7 @@
 
 ## Orchestration
 
-- 完整 pilotfish 流程在 `pilotfish-orchestration` skill（hook 每日從上游同步）。
+- 完整 pilotfish 流程在 `pilotfish-orchestration` skill（hook 每日從本機 `pilotfish-claude` 同步）。
   large、architectural、risky 或 cross-surface task 決定 delegation、review 或
   approval 前先載入；與 shared contract 衝突時以 shared contract 為準。
 - Named roles（`scout`、`Explore`、`plan-verifier`、`security-reviewer`、
