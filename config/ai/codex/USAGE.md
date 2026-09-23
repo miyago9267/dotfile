@@ -2,11 +2,19 @@
 
 ## Daily entrypoints
 
-- `cxf <prompt>`: fast second opinion / short review, maps to `codex exec --ignore-user-config -p fast`
-- `cxc <prompt>` / `cxe <prompt>`: normal coding exec, maps to `codex exec --ignore-user-config -p code`
+- `cxf <prompt>`: fast second opinion / short review, maps to
+  `codex exec --ignore-user-config -p fast`
+- `cxc <prompt>` / `cxe <prompt>`: normal coding exec, maps to
+  `codex exec --ignore-user-config -p code`
 - `cxh <prompt>`: heavy exec, maps to `codex exec -p heavy`
 
-Raw `codex` is intentionally untouched because `~/.codex/config.toml` carries desktop, project trust, MCP, and plugin state. Use `cxh` when that heavy surface is desired.
+Raw `codex` keeps local desktop, project trust, MCP, and plugin state in each
+`config.toml`. The version-controlled
+[`model-defaults.toml`](model-defaults.toml) sets only the main-session model
+and reasoning effort; `bash setup.sh` merges those two root-level values into
+both native and Orca Codex homes, preserving the rest of each local config and
+backing up a file before changing it. Use `cxh` when the heavy profile surface
+is desired.
 
 ## Cross-runtime runner
 
@@ -61,11 +69,14 @@ cd ~/Project/Active/Tools/codex-approval-gate
 
 ## Profile intent
 
-- `fast`: shortest wall-clock; no base config, browser, document, spreadsheet, presentation, or computer-use plugins.
+- `fast`: shortest wall-clock; no base config, browser, document, spreadsheet,
+  presentation, or computer-use plugins.
 - `code`: normal coding; no base config and no heavy GUI/document plugins.
 - `heavy`: inherits base config for browser/document-heavy or large tasks.
 
-Warning: `heavy` uses `danger-full-access` with `approval_policy = "never"`. Use it only when the workspace is trusted and the task really needs the full heavy surface.
+Warning: `heavy` uses `danger-full-access` with
+`approval_policy = "never"`. Use it only in trusted workspaces when the task
+needs the full heavy surface.
 
 ## Benchmark
 
@@ -89,7 +100,8 @@ Validate that light profiles stay clean:
 bash ~/dotfile/script/utils/codex-profile-check.sh
 ```
 
-This checks that `fast` / `code` define no MCP servers, keep heavy plugins disabled, and parse under `--ignore-user-config --strict-config`.
+This checks that `fast` / `code` define no MCP servers, keep heavy plugins
+disabled, and parse under `--ignore-user-config --strict-config`.
 
 ## Focus output
 

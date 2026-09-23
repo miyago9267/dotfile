@@ -7,6 +7,8 @@ set -euo pipefail
 
 DOTFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CODEX_SRC="$DOTFILE_DIR/config/ai/codex"
+CODEX_MODEL_DEFAULTS="$CODEX_SRC/model-defaults.toml"
+CODEX_MODEL_SYNC="$DOTFILE_DIR/script/utils/codex_model_defaults.py"
 CODEX_DST="$HOME/.codex"
 ORCA_CODEX_RUNTIME_HOME="${ORCA_CODEX_RUNTIME_HOME:-$HOME/Library/Application Support/orca/codex-runtime-home/home}"
 CODEX_SKILL_SRC="$DOTFILE_DIR/config/ai/codex/skills"
@@ -53,6 +55,15 @@ link_item() {
 
   ln -s "$src" "$dst"
   printf "${G}  [LINK] %s${N}\n" "$label"
+}
+
+sync_model_defaults() {
+  local config_path="$1"
+  if [ ! -f "$CODEX_MODEL_DEFAULTS" ] || [ ! -f "$CODEX_MODEL_SYNC" ]; then
+    printf "${Y}  [SKIP] model defaults -- source missing${N}\n"
+    return
+  fi
+  python3 "$CODEX_MODEL_SYNC" "$config_path" "$CODEX_MODEL_DEFAULTS"
 }
 
 normalize_git_url() {
@@ -189,6 +200,7 @@ PINNED_EXTERNAL_CODEX_SKILLS=(
 printf "${Y}=== Codex CLI 設定 Symlink ===${N}\n"
 
 mkdir -p "$CODEX_DST" "$CODEX_DST/skills" "$CODEX_DST/vendor"
+sync_model_defaults "$CODEX_DST/config.toml"
 mkdir -p "$HOME/bin"
 
 compose_active_rules
@@ -196,6 +208,7 @@ link_item "$ACTIVE_RULES_SRC" "$CODEX_DST/AGENTS.md" "AGENTS.md"
 link_item "$SHARED_RULES_SRC" "$CODEX_DST/AGENTS.shared.md" "shared agent contract"
 if [ -d "$(dirname "$ORCA_CODEX_RUNTIME_HOME")" ]; then
   mkdir -p "$ORCA_CODEX_RUNTIME_HOME"
+  sync_model_defaults "$ORCA_CODEX_RUNTIME_HOME/config.toml"
   link_item "$ACTIVE_RULES_SRC" "$ORCA_CODEX_RUNTIME_HOME/AGENTS.md" "Orca Codex AGENTS.md"
   link_item "$SHARED_RULES_SRC" "$ORCA_CODEX_RUNTIME_HOME/AGENTS.shared.md" "Orca Codex shared agent contract"
 fi

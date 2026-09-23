@@ -1,0 +1,3 @@
+# Managed main-session defaults. setup_codex.sh syncs only these root keys.
+model = "gpt-6-sol"
+model_reasoning_effort = "medium"
