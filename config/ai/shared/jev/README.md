@@ -5,8 +5,58 @@
 ## Capabilities
 
 - `jev-browser`: LLM 提供目標，Jev 選擇頁面元素與動作；遇到不確定或不可逆操作時回傳狀態。
-- `Reticle`: 讀取自己開發中的 app 的 DOM、network、console 與 runtime state，回傳 verification evidence。
-- `fast-jev-compaction`: 目前只保留為研究項目；尚未接入自動刪除上下文。四個 runtime 都先使用 shadow/dry-run 邊界。
+- `Reticle`: 讀取自己開發中的 app 的 DOM、network、console 與 runtime state，
+  回傳 verification evidence。
+- `fast-jev-compaction`: 目前只保留為研究項目；尚未接入自動刪除上下文。
+  四個 runtime 都先使用 shadow/dry-run 邊界。
+
+## Context retention Stop shadow
+
+Claude 的 Stop hook 會把當輪最後一則 assistant 回覆當成單一 candidate，
+用 Jev `noul` 評估它是否含有續作線索。這只評估單輪回覆，不會讀取整份
+transcript 或逐段選 context。
+
+Hook 預設不呼叫 Jev。明確 opt-in 的 Claude session 設定
+`JEV_CONTEXT_SHADOW=1` 後，且 hook process 已取得 `TYPESAFE_API_KEY`，才會
+將遮罩後、最多 2400 bytes 的最後一則 assistant 回覆送至
+`https://api.typesafe.ai/v1/systemone`。Hook 不讀取 transcript、secret store，
+也不會彈出解鎖提示；缺少環境變數時直接略過。遮罩會移除部分程式碼、路徑、
+URL 與常見憑證格式，但不是完整 DLP：assistant 回覆若重述 user prompt、tool
+argument、file content、diff、command line 或其他私人資料，這些內容仍可能被
+送出。設定 `JEV_CONTEXT_SHADOW=1` 代表接受合格 assistant 回覆會外送給
+TypeSafe；請只在允許這項資料流的 session 啟用。
+
+Shadow hook 不攔截 Stop、不改寫或刪除 context。它只在
+`~/.local/state/miyago/jev/context-retention-shadow.jsonl` 記錄模型、question
+hash、candidate 大小、分數與 `would_keep` 建議，不記錄 candidate text。預設
+`tau` 是 `0.5`，僅供 shadow 比對，尚未校準，不可拿來自動刪除內容。timeout、
+缺少 key、錯誤回應或 log 失敗都會放行。
+
+### Claude CLI key loading
+
+Claude Stop hook 只讀取 Claude process 繼承的 `TYPESAFE_API_KEY`，不讀取 secret
+store，也不啟動互動式解鎖。使用 dotfile 設定的互動式 zsh 時，`.zshrc` 會載入
+`~/.zshrc.d/*.zsh`，其中的 `secrets.zsh` 會讀取 SOPS 產生的
+`~/.env.secrets`；cache 權限為 `0600`。因此從該 Terminal 啟動的 Claude CLI 會
+自動取得 key，不必把 key 值寫進 `.zshrc` 或 Claude `settings.json`。更新加密
+secret 後執行 `sec reload`，再開新 Terminal 套用。
+
+這是目前實際的 zsh 行為：整份 secrets bundle 會載入每個互動式 zsh；它比
+`docs/specs/secrets-management/SPEC.md` 描述的按需載入更廣。由 GUI 啟動的 Claude
+不一定會繼承 zsh 環境。
+
+```sh
+JEV_CONTEXT_SHADOW=1 claude
+```
+
+2026-09-23 已用實際 Claude CLI Stop event 驗證 Jev 呼叫與 metadata 寫入成功。
+單次測試的 score 只證明管線可用，不代表 retention threshold 已校準。
+
+需要逐項判斷 compaction candidates 時，仍須由 runtime 提供候選項和來源指標。
+目前的 compaction shadow 只記錄 event、tool 與 input/output 大小，並記下
+`keep_first: 4`、`keep_recent: 8`、`drop_stale: false` 的候選政策；它不讀取
+候選語意，也不會刪除 context。先用 replay 樣本校準 retention 判斷，不沿用
+Stingray 的 benchmark。
 
 ## Runtime mapping
 
@@ -21,8 +71,8 @@
 
 - Node.js 20.11+；Reticle 官方目前要求此版本。
 - AGY 需支援 `agy mcp add/list`；MCP registry 由 `setup_jev.sh` 管理。
-- `TYPESAFE_API_KEY` 優先由既有 `sec` 產生的 `~/.env.secrets` 讀取，只注入 MCP
-  child process；沒有 cache 時才 fallback 到 `agent-secret`。
+- `jev-browser-mcp.sh` 只把 `TYPESAFE_API_KEY` 注入 MCP child；Claude Stop shadow
+  則使用 Claude process 繼承的環境變數。Stop hook 本身不讀取 secret store。
 - Reticle 另需在每個要驗證的 web/desktop project 執行 `npx @reticlehq/server init`。
 
 ## Apply

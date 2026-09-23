@@ -1,13 +1,9 @@
 {
-  "pluginConfigs": {
-    "agents-md@builtin": {
-      "options": {
-        "instructionFiles": "claude-md-and-agents-md"
-      }
-    }
-  },
   "env": {
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "100"
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "100",
+    "CLAUDE_CODE_THISTLE_GREBE": "counter_steer",
+    "CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS": "1",
+    "STINGRAY_SHAPE3": "1"
   },
   "permissions": {
     "allow": [
@@ -312,6 +308,24 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/dotfile/config/ai/claude/hooks/zh-tw-guard.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/jev-context-shadow.sh",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "StopFailure": [
@@ -399,7 +413,8 @@
     "claude-hud@claude-hud": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
     "clangd-lsp@claude-plugins-official": true,
-    "i-have-adhd@i-have-adhd": true
+    "i-have-adhd@i-have-adhd": true,
+    "stingray@stingray": true
   },
   "extraKnownMarketplaces": {
     "claude-hud": {
@@ -413,9 +428,22 @@
         "source": "github",
         "repo": "ayghri/i-have-adhd"
       }
+    },
+    "stingray": {
+      "source": {
+        "source": "github",
+        "repo": "Nanako0129/stingray"
+      }
     }
   },
   "effortLevel": "medium",
+  "pluginConfigs": {
+    "agents-md@builtin": {
+      "options": {
+        "instructionFiles": "claude-md-and-agents-md"
+      }
+    }
+  },
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark-ansi",
   "agentPushNotifEnabled": true

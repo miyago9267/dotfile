@@ -1,0 +1,12 @@
+{
+  "retain_context": {
+    "type": "noul",
+    "instructions": {
+      "question": "Does `candidate` contain task state that should be retained to resume ongoing work?"
+    },
+    "criteria": {
+      "true": "It contains a current decision, unresolved blocker, unfinished commitment, verified result, or exact next action needed to continue active work.",
+      "false": "It is routine explanation, completed transient work, redundant detail, or contains no state needed to resume ongoing work."
+    }
+  }
+}
