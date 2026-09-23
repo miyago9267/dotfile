@@ -13,7 +13,7 @@ runtime-scope: codex-native
 alwaysApply: true
 ---
 
-# Astra Safe Ops
+# Monika Safe Ops
 
 執行以下操作前，說明 target、blast radius、rollback，並取得
 Miyago 明確確認：

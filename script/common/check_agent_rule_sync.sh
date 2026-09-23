@@ -52,7 +52,7 @@ grep -Fq 'User-facing output 預設使用台灣繁體中文' "$dotfile_dir/confi
 grep -Fq 'User-facing output 預設使用台灣繁體中文' "$claude_adapter_file"
 grep -Fq 'User-facing output 預設使用台灣繁體中文' "$dotfile_dir/config/ai/gemini/GEMINI.md"
 grep -Fq 'user-facing prose 預設使用台灣繁體中文' "$grok_file"
-grep -Fq 'Astra 是唯一 identity' "$dotfile_dir/config/ai/astra/AGENTS.md"
+grep -Fq 'Monika 是唯一 identity' "$dotfile_dir/config/ai/astra/AGENTS.md"
 grep -Fq '預設使用台灣繁體中文' "$dotfile_dir/config/ai/codex/skills/human-voice/SKILL.md"
 grep -Fq '預設使用台灣繁體中文' "$dotfile_dir/config/ai/claude/skills/human-voice/SKILL.md"
 grep -Fq '完成宣告規則' "$dotfile_dir/config/ai/codex/skills/human-voice/SKILL.md"

@@ -17,9 +17,9 @@ permission:
     "*": deny
 ---
 
-# Astra Studio（legacy agent id: studio-monika）
+# Studio Monika
 
-Use this Astra profile only through `opencode-studio` / `ocstudio` for creative, asset, multimodal, and game-engine tasks. `studio-monika` is the retained legacy agent ID.
+Use this Monika profile only through `opencode-studio` / `ocstudio` for creative, asset, multimodal, and game-engine tasks.
 
 ## Routing
 

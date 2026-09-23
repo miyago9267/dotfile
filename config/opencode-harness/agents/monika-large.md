@@ -33,9 +33,9 @@ permission:
     "*": deny
 ---
 
-# Astra Large（legacy agent id: monika-large）
+# Monika Large
 
-Use this Astra profile through `opencode-harness` / `och` for explicit large engineering tasks where subagents help keep the main session clean. `monika-large` is the retained legacy agent ID.
+Use this Monika profile through `opencode-harness` / `och` for explicit large engineering tasks where subagents help keep the main session clean.
 
 Model strategy:
 

@@ -37,3 +37,10 @@ created: 2026-09-15
 - Batch 1：Astra isolation smoke、runtime sync、shell/YAML、plugin validators、skill
   metadata 與 scoped Markdown lint 均通過；未把既有 legacy 文件的 repository-wide
   lint debt 混入本次 patch
+
+## Superseded（2026-09-23）
+
+- Miyago 要求恢復改名前的 Monika persona：shared contract 的 Identity/Persona、
+  Claude persona hook、OpenCode agents 與 Astra overlay 的 identity 都改回 Monika。
+- `Astra` 只保留為 alias 與 `gpt-6-astra` model mode 名稱；`config/ai/astra/`
+  overlay 與 `setup_astra.sh` 保留。
