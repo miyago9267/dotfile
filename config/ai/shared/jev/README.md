@@ -66,8 +66,10 @@ role，再注入一句固定格式的建議。這句建議只是 advisory：不�
 AGENTS.md 的 gate 與 dispatch brake 優先。Jev 只能建議 role，或把流程收緊成
 「寫入前先 explore_then_plan」，不能放寬 interaction shape。
 
-預設關閉。只有 session 環境變數 `PILOTFISH_JEV_MODE=active` 時才注入；
-`shadow` 只記錄、不注入；其他值或未設定時完全不呼叫 Jev。unset 即停用。
+只有環境變數 `PILOTFISH_JEV_MODE=active` 時才注入；`shadow` 只記錄、不注入；
+其他值或未設定時完全不呼叫 Jev。`config/zsh/.zshrc.d/claude.zsh` 預設匯出
+`active`，因此從互動式 zsh 啟動的 Claude 會開啟；單次停用可用
+`PILOTFISH_JEV_MODE=off claude`。
 
 以下情況在本機直接略過，不外送：
 
