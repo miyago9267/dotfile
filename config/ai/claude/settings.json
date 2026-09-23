@@ -154,6 +154,11 @@
             "type": "command",
             "command": "bash ~/dotfile/config/ai/claude/hooks/think-first-router.sh",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/jev-route.sh",
+            "timeout": 3
           }
         ]
       },

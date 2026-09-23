@@ -58,6 +58,42 @@ JEV_CONTEXT_SHADOW=1 claude
 候選語意，也不會刪除 context。先用 replay 樣本校準 retention 判斷，不沿用
 Stingray 的 benchmark。
 
+## Pilotfish route advisory
+
+Claude 的 `UserPromptSubmit` hook（`claude/hooks/jev-route.sh` ->
+`pilotfish_route.py`）會請 Jev 判斷 user prompt 最適合先派哪個 Pilotfish
+role，再注入一句固定格式的建議。這句建議只是 advisory：不構成 approval，
+AGENTS.md 的 gate 與 dispatch brake 優先。Jev 只能建議 role，或把流程收緊成
+「寫入前先 explore_then_plan」，不能放寬 interaction shape。
+
+預設關閉。只有 session 環境變數 `PILOTFISH_JEV_MODE=active` 時才注入；
+`shadow` 只記錄、不注入；其他值或未設定時完全不呼叫 Jev。unset 即停用。
+
+以下情況在本機直接略過，不外送：
+
+- subagent 的 prompt，或 cwd 路徑中有任何一段是 `ITRD`（不分大小寫）。
+  另可用 `PILOTFISH_JEV_DENY` 追加其他目錄，以冒號分隔。
+- 出現風險字眼：auth、token、key、password、login、ssh、remove、kill、push、
+  merge、deploy、prod、migration、刪、清空、部署、權限、個資、付錢等。
+  這類 prompt 交給既有的 risk policy 處理。
+- 含 code fence、超過 5 行或超過 1024 bytes。
+- 遮罩（email、URL、IP、hostname、路徑、token、引號內容）後仍殘留
+  `` ` ``、`{}`、`@`、路徑、URL 或長 opaque 字串。`@file` 引用因此一律不送。
+- `~/.config/typesafe/api_key` 不是本人擁有的 `0600` 一般檔，或所在目錄
+  不是私有目錄。這個 hook 不讀 `TYPESAFE_API_KEY` 環境變數。
+
+連線強制使用 HTTPS 送往 `api.typesafe.ai`：不跟隨 redirect、不走 proxy，
+整體時限 1.5 秒；連續失敗 3 次後停用 10 分鐘。任何錯誤都會放行 prompt，
+不注入任何內容。
+
+遮罩不是完整 DLP：通過檢查的 prompt 文字仍會送到 TypeSafe，其保留與訓練
+政策未經查證。只在允許這項資料流的 session 啟用。log 位於
+`~/.local/state/miyago/jev/pilotfish-route.jsonl`，只記錄判斷類別與分數，
+不記錄 prompt、ID 或回應原文。
+
+測試：`python3 -m unittest discover -s shared/jev/tests`，只使用本機 stub，
+不連網。
+
 ## Runtime mapping
 
 | Runtime | jev-browser | Reticle | compaction |
