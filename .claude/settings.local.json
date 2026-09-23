@@ -30,7 +30,9 @@
       "Bash(/usr/bin/grep -E 'verify|pixelWidth|pixelHeight|format')",
       "Bash(/usr/bin/head -n 20)",
       "mcp__interactive-bash__InteractiveBash",
-      "mcp__playwright__browser_tabs"
+      "mcp__playwright__browser_tabs",
+      "Read(//private/tmp/**)",
+      "Bash(agy agents *)"
     ]
   },
   "enabledMcpjsonServers": [
