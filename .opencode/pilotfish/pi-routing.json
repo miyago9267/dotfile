@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "roles": {
+    "scout": {
+      "candidates": [
+        { "provider": "deepseek", "model": "deepseek-v4-flash" }
+      ]
+    },
+    "mech-executor": {
+      "candidates": [
+        { "provider": "deepseek", "model": "deepseek-v4-flash" }
+      ]
+    },
+    "executor": {
+      "candidates": [
+        { "provider": "openai", "model": "gpt-6-luna" },
+        { "provider": "xai", "model": "grok-4.6" }
+      ]
+    },
+    "reviewer": {
+      "candidates": [
+        { "provider": "xai", "model": "grok-4.6" }
+      ]
+    },
+    "plan-verifier": {
+      "candidates": [
+        { "provider": "anthropic", "model": "claude-opus-5-5" },
+        { "provider": "openai", "model": "gpt-6-sol" }
+      ]
+    },
+    "verifier": {
+      "candidates": [
+        { "provider": "anthropic", "model": "claude-opus-5-5" },
+        { "provider": "openai", "model": "gpt-6-sol" },
+        { "provider": "xai", "model": "grok-4.6" }
+      ]
+    },
+    "security-reviewer": {
+      "candidates": [
+        { "provider": "openai", "model": "gpt-6-astra" }
+      ]
+    },
+    "security-executor": {
+      "candidates": [
+        { "provider": "openai", "model": "gpt-6-sol" },
+        { "provider": "openai", "model": "gpt-6-luna" }
+      ]
+    }
+  }
+}

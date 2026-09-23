@@ -12,11 +12,6 @@ const PROVIDER_ALIASES: Record<string, string> = { openai: "openai-codex" };
 const MODEL_ALIASES: Record<string, string> = {
   "deepseek/deepseek-v4-flash": "deepseek/deepseek-flash",
 };
-const STATIC_ROLES: Record<string, ModelRef[]> = {
-  "mech-executor": [{ provider: "deepseek", model: "deepseek-v4-flash" }],
-  reviewer: [{ provider: "xai", model: "grok-4.6" }],
-};
-
 async function readJson<T>(path: string): Promise<T> {
   return JSON.parse(await readFile(path, "utf8")) as T;
 }
@@ -42,9 +37,7 @@ function classify(prompt: string): string | undefined {
 }
 
 async function candidatesFor(role: string, cwd: string): Promise<ModelRef[]> {
-  const staticCandidates = STATIC_ROLES[role];
-  if (staticCandidates) return staticCandidates;
-  const path = process.env.PILOTFISH_ROUTING_PATH || join(resolve(cwd), ".opencode", "pilotfish", "routing.json");
+  const path = process.env.PILOTFISH_ROUTING_PATH || join(resolve(cwd), ".opencode", "pilotfish", "pi-routing.json");
   const routing = await readJson<RoutingConfig>(path);
   const candidates = routing.roles?.[role]?.candidates;
   if (!candidates?.length) throw new Error(`Pilotfish role has no route: ${role}`);
@@ -92,7 +85,7 @@ export default function (pi: ExtensionAPI) {
     label: "Pilotfish dispatch",
     description: "Dispatch a bounded task to an isolated Pi child session using the Pilotfish role model route.",
     parameters: Type.Object({
-      role: Type.String({ description: "Pilotfish role: scout, executor, mech-executor, verifier, reviewer, or security-reviewer" }),
+      role: Type.String({ description: "Pilotfish role: scout, executor, mech-executor, verifier, reviewer, plan-verifier, security-reviewer, or security-executor" }),
       task: Type.String({ description: "Complete bounded task for the child session" }),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
