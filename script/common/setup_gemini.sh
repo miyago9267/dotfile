@@ -19,6 +19,10 @@ AGY_SETTINGS_SRC="$GEMINI_SRC/antigravity-cli/settings.json"
 AGY_SETTINGS_DST="$GEMINI_DST/antigravity-cli/settings.json"
 GEMINI_HOOKS_SRC="$GEMINI_SRC/hooks.json"
 GEMINI_HOOKS_DST="$GEMINI_DST/config/hooks.json"
+# agy (Antigravity CLI) 的 global customization root 是 ~/.gemini/config/，skills 不讀 ~/.gemini/skills
+AGY_SKILL_DST="$GEMINI_DST/config/skills"
+AGY_AGENT_DST="$GEMINI_DST/config/agents"
+PILOTFISH_AGY_SRC="$DOTFILE_DIR/plugins/pilotfish-agy/templates"
 
 Y='\033[1;33m'
 G='\033[1;32m'
@@ -86,13 +90,17 @@ compose_active_rules() {
     printf '%s\n\n' '<!-- runtime-adapter:begin -->'
     cat "$GEMINI_SRC/GEMINI.md"
     printf '\n%s\n' '<!-- runtime-adapter:end -->'
+    if [ -f "$PILOTFISH_AGY_SRC/rules/pilotfish-agy.md" ]; then
+      printf '\n'
+      cat "$PILOTFISH_AGY_SRC/rules/pilotfish-agy.md"
+    fi
   } > "$tmp_file"
   mv "$tmp_file" "$ACTIVE_RULES_SRC"
 }
 
 printf "${Y}=== Gemini CLI 設定 Symlink ===${N}\n"
 
-mkdir -p "$GEMINI_DST" "$GEMINI_DST/skills" "$(dirname "$AGY_SETTINGS_DST")" "$(dirname "$GEMINI_HOOKS_DST")"
+mkdir -p "$GEMINI_DST" "$GEMINI_DST/skills" "$AGY_SKILL_DST" "$AGY_AGENT_DST" "$(dirname "$AGY_SETTINGS_DST")" "$(dirname "$GEMINI_HOOKS_DST")"
 
 compose_active_rules
 link_item "$ACTIVE_RULES_SRC" "$GEMINI_DST/GEMINI.md" "GEMINI.md"
@@ -105,6 +113,7 @@ printf "\n${Y}--- Shared Core Skills ---${N}\n"
 for name in "${SHARED_CORE_SKILLS[@]}"; do
   if [ -f "$SHARED_SKILL_SRC/$name/SKILL.md" ]; then
     link_item "$SHARED_SKILL_SRC/$name" "$GEMINI_DST/skills/$name" "skills/$name"
+    link_item "$SHARED_SKILL_SRC/$name" "$AGY_SKILL_DST/$name" "config/skills/$name (agy)"
   fi
 done
 
@@ -114,8 +123,21 @@ if [ -d "$GEMINI_SKILL_SRC" ]; then
     name=$(basename "$skill_dir")
     if [ -f "$skill_dir/SKILL.md" ] && should_install_gemini_skill "$name"; then
       link_item "$skill_dir" "$GEMINI_DST/skills/$name" "skills/$name"
+      link_item "${skill_dir%/}" "$AGY_SKILL_DST/$name" "config/skills/$name (agy)"
     fi
   done
+fi
+
+if [ -d "$PILOTFISH_AGY_SRC" ]; then
+  # 只裝給 agy：Gemini CLI 沒有這些 subagent 角色
+  printf "\n${Y}--- Pilotfish (agy) ---${N}\n"
+  for agent_dir in "$PILOTFISH_AGY_SRC"/agents/*/; do
+    name=$(basename "$agent_dir")
+    if [ -f "$agent_dir/agent.md" ]; then
+      link_item "${agent_dir%/}" "$AGY_AGENT_DST/$name" "config/agents/$name (agy)"
+    fi
+  done
+  link_item "$PILOTFISH_AGY_SRC/skills/pilotfish-orchestration" "$AGY_SKILL_DST/pilotfish-orchestration" "config/skills/pilotfish-orchestration (agy)"
 fi
 
 printf "${G}=== 完成 ===${N}\n"
