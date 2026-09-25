@@ -408,3 +408,7 @@ Android/
 tmp/
 temp/
 *.tmp
+
+# Claude 自動同步的 claude.ai skills 與刪除暫存（runtime state，不進版控）
+config/ai/claude/skills/synced/
+config/ai/claude/skills/.trash/
