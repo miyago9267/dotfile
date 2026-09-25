@@ -77,20 +77,52 @@ source ~/.env.secrets
 不要把同一把 key 同時放在 KeePassXC 和這個 bundle；選一個來源，避免
 rotation 後兩邊不同步。
 
-## 換機器
+## 換機或增加開發裝置（沿用同一把 age 私鑰）
+
+加密 bundle 的 `.sops.yaml` 保存 age **public recipient**；私鑰只留在裝置本機。
+以下流程是把既有 identity 安全複製到另一台受信任裝置，不會改寫加密 bundle。
+
+先在新裝置 clone dotfile repository，並在 repository root 安裝 age、SOPS
+與 dotfiles 設定；若工具尚未安裝，可執行：
 
 ```bash
-# 1. 將舊機器的 ~/.age/key.txt 複製到新機器
-scp old-machine:~/.age/key.txt ~/.age/key.txt
+bash script/common/install_sops.sh
+bash setup.sh --config-only
+```
+
+接著在新裝置建立私有目錄，再從舊裝置透過已驗證 SSH host identity 的連線傳送
+私鑰。先確認 SSH 已驗證新裝置的 host identity。`new-device` 是
+`~/.ssh/config` 中的新裝置 Host alias：
+
+```bash
+# 在新裝置執行
+mkdir -p ~/.age
+chmod 700 ~/.age
+
+# 在舊裝置執行；不要把 key 貼到 chat、issue 或一般雲端同步資料夾
+scp ~/.age/key.txt new-device:~/.age/key.txt
+
+# 回到新裝置執行
+chmod 700 ~/.age
 chmod 600 ~/.age/key.txt
 
-# 2. clone dotfile repo，執行安裝
-bash setup.sh
-
-# 3. 重新產生快取並載入
+# 回到新裝置的 dotfile repository root
+sec status
 sec reload
-source ~/.env.secrets
 ```
+
+`sec reload` 成功代表新裝置的私鑰可解開目前 bundle。之後執行
+`source ~/.env.secrets` 載入目前 shell；或在 dotfile 的 Zsh loader 已載入時，執行
+`secrets-reload` 重建快取並載入目前 shell。`setup.sh --config-only` 完成後先開新
+Terminal，讓 `sec` 的 PATH 與 Zsh loader 生效。保留舊裝置上的 key，直到新裝置
+驗證成功。沿用既有 key 時不要先跑
+`sec init`：沒有既有 key 時它會建立另一個 identity，並把共享 `.sops.yaml` 改成
+新 recipient；這不會自動讓新 key 解開舊 bundle。
+
+若想讓每台裝置使用不同私鑰，以便單獨撤銷存取，需在 `.sops.yaml` 維護多個 age
+public recipients，並同步更新加密檔的 key metadata；目前 `sec init` 會寫入單一
+recipient，不適合用來增加裝置。詳見 SOPS 的 [age recipient 設定](https://getsops.io/docs/reference/)
+與 [key management](https://getsops.io/docs/usage/key-management/)。
 
 ## 常用指令
 
