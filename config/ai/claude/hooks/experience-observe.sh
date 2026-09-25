@@ -4,7 +4,7 @@ set -euo pipefail
 # Only an explicit, structured user marker may create an observation. The raw
 # hook payload is never forwarded to the harness and no transcript is stored.
 input=$(cat)
-prompt=$(jq -r '.user_prompt // empty' <<<"$input")
+prompt=$(jq -r '.prompt // empty' <<<"$input")
 cwd=$(jq -r '.cwd // empty' <<<"$input")
 
 case "$prompt" in

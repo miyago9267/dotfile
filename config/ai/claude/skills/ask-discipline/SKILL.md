@@ -12,7 +12,7 @@ user-invocable: true
 
 # Ask Discipline
 
-這個 skill 只處理「是否真的需要問」。shared contract 與 `safe-ops` 仍是安全、完成宣告與權限邊界的
+這個 skill 只處理「是否真的需要問」。shared contract 與 `hooks/destructive-guard.sh` 仍是安全、完成宣告與權限邊界的
 唯一來源。
 
 ## 提問前

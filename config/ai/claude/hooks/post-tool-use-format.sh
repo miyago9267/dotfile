@@ -4,14 +4,18 @@
 
 set -euo pipefail
 
+# Claude Code 透過 stdin JSON 傳入 hook input，沒有 CLAUDE_TOOL_NAME / CLAUDE_FILE_PATH 環境變數
+command -v jq &>/dev/null || exit 0
+INPUT="$(cat)"
+
 # 只在 Write/Edit 工具後觸發
-TOOL_NAME="${CLAUDE_TOOL_NAME:-}"
+TOOL_NAME="$(jq -r '.tool_name // empty' <<<"$INPUT")"
 if [[ "$TOOL_NAME" != "Write" && "$TOOL_NAME" != "Edit" ]]; then
   exit 0
 fi
 
 # 取得被修改的檔案路徑
-FILE_PATH="${CLAUDE_FILE_PATH:-}"
+FILE_PATH="$(jq -r '.tool_input.file_path // empty' <<<"$INPUT")"
 if [[ -z "$FILE_PATH" || ! -f "$FILE_PATH" ]]; then
   exit 0
 fi
@@ -43,8 +47,13 @@ cd "$PROJECT_ROOT"
 # --- Markdown lint fix（無論專案有無 config 都跑，吃 ~/.markdownlint.json 全域設定）---
 fix_markdown() {
   local file="$1"
+  # 專案沒有自己的 markdownlint config 時，才套用全域偏好
+  local cfg=()
+  if ! compgen -G ".markdownlint*" >/dev/null && [[ -f "$HOME/.markdownlint.json" ]]; then
+    cfg=(--config "$HOME/.markdownlint.json")
+  fi
   if command -v markdownlint-cli2 &>/dev/null; then
-    markdownlint-cli2 --fix "$file" 2>/dev/null || true
+    markdownlint-cli2 ${cfg[@]+"${cfg[@]}"} --fix "$file" >/dev/null 2>&1 || true
   elif command -v markdownlint &>/dev/null; then
     markdownlint --fix "$file" 2>/dev/null || true
   elif command -v npx &>/dev/null; then
