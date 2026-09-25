@@ -1,0 +1,14 @@
+name = "Agent: Codex"
+title = "codex"
+color = "green"
+
+[params.repo]
+type = "repo"
+description = "要在哪個 repo 啟動 Agent: Codex"
+
+[[panes]]
+id = "agent"
+type = "terminal"
+directory = "{{repo}}"
+commands = ["codex --dangerously-bypass-approvals-and-sandbox"]
+is_focused = true

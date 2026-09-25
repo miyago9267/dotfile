@@ -32,6 +32,15 @@ link "$dotfile_dir/config/opencode"          "$config_root/opencode"
 link "$dotfile_dir/config/opencode-harness"  "$config_root/opencode-harness"
 link "$dotfile_dir/config/opencode-studio"   "$config_root/opencode-studio"
 
+# Warp (macOS): settings、Monika 主題與 tab configs（+ 選單直接在指定 repo 啟動各 agent CLI）
+if [ -d "$HOME/.warp" ]; then
+  mkdir -p "$HOME/.warp/themes"
+  link "$dotfile_dir/config/warp/settings.toml"      "$HOME/.warp/settings.toml"
+  link "$dotfile_dir/config/warp/themes/Monika.yaml" "$HOME/.warp/themes/Monika.yaml"
+  link "$dotfile_dir/config/warp/themes/Monika.png"  "$HOME/.warp/themes/Monika.png"
+  link "$dotfile_dir/config/warp/tab_configs"        "$HOME/.warp/tab_configs"
+fi
+
 # OpenCode reads these stable, runtime-neutral paths. The links preserve one
 # canonical source while keeping config files portable across machines.
 link "$dotfile_dir/config/ai/AGENTS.md" "$config_root/miyago-agent/AGENTS.md"

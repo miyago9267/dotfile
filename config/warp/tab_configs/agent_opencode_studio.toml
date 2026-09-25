@@ -1,0 +1,14 @@
+name = "Agent: OpenCode Studio"
+title = "studio"
+color = "yellow"
+
+[params.repo]
+type = "repo"
+description = "要在哪個 repo 啟動 Agent: OpenCode Studio"
+
+[[panes]]
+id = "agent"
+type = "terminal"
+directory = "{{repo}}"
+commands = ["opencode-studio --auto"]
+is_focused = true

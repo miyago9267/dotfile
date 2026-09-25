@@ -1,0 +1,14 @@
+name = "Agent: Claude Code"
+title = "claude"
+color = "magenta"
+
+[params.repo]
+type = "repo"
+description = "要在哪個 repo 啟動 Agent: Claude Code"
+
+[[panes]]
+id = "agent"
+type = "terminal"
+directory = "{{repo}}"
+commands = ["claude --dangerously-skip-permissions"]
+is_focused = true

@@ -1,0 +1,19 @@
+name = "Remote: Codex"
+title = "codex @ {{host}}"
+color = "green"
+
+[params.host]
+type = "text"
+description = "SSH host（miyago / Miyago-JP / Nyanako）"
+default = "miyago"
+
+[params.dir]
+type = "text"
+description = "遠端目錄"
+default = "~"
+
+[[panes]]
+id = "agent"
+type = "terminal"
+commands = ["ssh -t {{host}} 'cd {{dir}} && exec $SHELL -lic codex'"]
+is_focused = true
