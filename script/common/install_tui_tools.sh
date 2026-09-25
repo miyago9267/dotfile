@@ -24,9 +24,9 @@ _install() {
   fi
   echo "Installing $_name..."
   case "$_PLATFORM_PKG" in
-    brew)   brew install "$_brew" ;;
-    apt)    sudo apt-get install -y "$_apt" ;;
-    pacman) sudo pacman -S --noconfirm "$_pacman" ;;
+    brew)   brew install "$_brew" || echo "[WARN] $_name: 安裝失敗（套件庫可能沒有），跳過" ;;
+    apt)    sudo apt-get install -y "$_apt" || echo "[WARN] $_name: 安裝失敗（套件庫可能沒有），跳過" ;;
+    pacman) sudo pacman -S --noconfirm "$_pacman" || echo "[WARN] $_name: 安裝失敗（套件庫可能沒有），跳過" ;;
   esac
 }
 

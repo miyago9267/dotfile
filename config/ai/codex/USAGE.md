@@ -83,7 +83,7 @@ needs the full heavy surface.
 Run a small wall-clock benchmark:
 
 ```bash
-bash ~/dotfile/script/utils/codex-bench.sh
+bash ~/dotfile/script/common/codex-bench.sh
 ```
 
 Useful knobs:
@@ -97,7 +97,7 @@ Useful knobs:
 Validate that light profiles stay clean:
 
 ```bash
-bash ~/dotfile/script/utils/codex-profile-check.sh
+bash ~/dotfile/script/common/codex-profile-check.sh
 ```
 
 This checks that `fast` / `code` define no MCP servers, keep heavy plugins

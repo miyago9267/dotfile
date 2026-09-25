@@ -5,8 +5,8 @@ set -e
 platform_guard "Argo CD CLI" darwin linux
 is_installed argocd && skip_installed "Argo CD CLI"
 
-Y="\033[1;33m"
-N="\033[0m"
+Y="$(printf '\033[1;33m')"
+N="$(printf '\033[0m')"
 
 echo "${Y}Installing Argo CD CLI...${N}"
 

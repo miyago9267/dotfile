@@ -67,6 +67,7 @@ _ALL_ITEMS=(
   "install_gh.sh|Git CLI 工具 (gh + glab)|工具|0|0|environment|darwin linux:apt linux:pacman|0"
   "install_remora_proxy.sh|Remora + Calico Claude + Proxy|工具|0|0|environment|darwin|0"
   "install_yazi.sh|Yazi 檔案管理器 (+ zoxide, bat)|工具|0|0|environment|darwin linux:apt linux:pacman|0"
+  "install_tui_tools.sh|TUI 工具組 (lazygit, k9s, btop, glow 等)|工具|0|0|environment|darwin linux:apt linux:pacman|0"
   "install_node.sh|Node.js 生態 (nvm + v24 + npm/yarn/pnpm)|語言|0|0|environment|all|0"
   "install_bun.sh|Bun|語言|0|0|environment|all|0"
   "install_golang.sh|Go (g 版本管理)|語言|0|0|environment|all|0"
@@ -175,7 +176,8 @@ print_menu() {
 
   # 從 start 起算，在 budget 行內最多容納到哪個 index（分類標題各佔 1 行）
   fit_end() {
-    local start=$1 budget=$2 prev_cat="" lines=0 end=$((start - 1)) i cat add
+    local start=$1 budget=$2 prev_cat="" lines=0 end i cat add
+    end=$((start - 1))
     [ "$start" -gt 0 ] && prev_cat=$(get_field "$((start - 1))" cat)
     for i in $(seq "$start" $((TOTAL - 1))); do
       cat=$(get_field "$i" cat)

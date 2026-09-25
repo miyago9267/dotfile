@@ -24,9 +24,6 @@ case "$_PLATFORM_OS" in
     ;;
 esac
 
-# 向後相容：部分 script 內部邏輯使用 OS_NAME
-OS_NAME="$_PLATFORM_OS"
-
 # platform_supported tag1 tag2 ...
 # Tags: all, darwin, linux, linux:apt, linux:pacman
 platform_supported() {

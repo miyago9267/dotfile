@@ -5,8 +5,8 @@ set -e
 platform_guard "kubectl" darwin linux:apt linux:pacman
 is_installed kubectl && skip_installed "kubectl"
 
-Y="\033[1;33m"
-N="\033[0m"
+Y="$(printf '\033[1;33m')"
+N="$(printf '\033[0m')"
 
 echo "${Y}Installing kubectl...${N}"
 

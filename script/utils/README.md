@@ -17,3 +17,5 @@
 | `agent-call` | background read-only calls | `agent-call --help` |
 | `cfupdate.py` | CloudFlare DNS 動態更新 | 需設定 API token |
 | `init-project` | 專案初始化（Python/Node/Go） | `init-project` |
+| `sec` | Secret 管理（age + sops） | `sec status`、`sec edit`、`sec show` |
+| `utils` | 列出這些指令與用法 | `utils`、`utils gq` |

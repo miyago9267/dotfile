@@ -23,6 +23,8 @@ get_desc() {
     runcpp.sh)    echo "C++ 編譯執行（支援 GDB）" ;;
     sec)          echo "Secret 管理（init/edit/show/list/push/export/import/reload/status）" ;;
     si)           echo "系統資訊（OS, CPU, RAM, Disk, Network）" ;;
+    yt)           echo "下載影片（yt-dlp，預設剪輯友善 MP4）" ;;
+    agent-call)   echo "背景呼叫其他 agent 做唯讀查詢" ;;
     *)            sed -n '2,3s/^#\s*//p' "$SCRIPT_DIR/$1" 2>/dev/null | head -1 ;;
   esac
 }

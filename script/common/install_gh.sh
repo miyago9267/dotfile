@@ -6,7 +6,6 @@ platform_guard "Git CLI Tools (gh/glab)" darwin linux:apt linux:pacman
 
 Y="\033[1;33m"
 G="\033[1;32m"
-R="\033[1;31m"
 N="\033[0m"
 
 # --- GitHub CLI (gh) ---

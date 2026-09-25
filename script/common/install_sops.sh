@@ -3,9 +3,9 @@
 set -e
 . "$(dirname "$0")/_platform.sh"
 
-Y="\033[1;33m"
-G="\033[1;32m"
-N="\033[0m"
+Y="$(printf '\033[1;33m')"
+G="$(printf '\033[1;32m')"
+N="$(printf '\033[0m')"
 
 platform_guard "age + sops" darwin linux:apt linux:pacman
 { is_installed age && is_installed sops; } && skip_installed "age + sops"

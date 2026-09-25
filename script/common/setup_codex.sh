@@ -8,7 +8,7 @@ set -euo pipefail
 DOTFILE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CODEX_SRC="$DOTFILE_DIR/config/ai/codex"
 CODEX_MODEL_DEFAULTS="$CODEX_SRC/model-defaults.toml"
-CODEX_MODEL_SYNC="$DOTFILE_DIR/script/utils/codex_model_defaults.py"
+CODEX_MODEL_SYNC="$DOTFILE_DIR/script/common/codex_model_defaults.py"
 CODEX_DST="$HOME/.codex"
 ORCA_CODEX_RUNTIME_HOME="${ORCA_CODEX_RUNTIME_HOME:-$HOME/Library/Application Support/orca/codex-runtime-home/home}"
 CODEX_SKILL_SRC="$DOTFILE_DIR/config/ai/codex/skills"

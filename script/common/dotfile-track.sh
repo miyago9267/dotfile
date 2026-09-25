@@ -17,10 +17,10 @@
 
 set -e
 
-Y="\033[1;33m"
-G="\033[1;32m"
-R="\033[1;31m"
-N="\033[0m"
+Y="$(printf '\033[1;33m')"
+G="$(printf '\033[1;32m')"
+R="$(printf '\033[1;31m')"
+N="$(printf '\033[0m')"
 
 DOTFILE_DIR="$HOME/dotfile"
 SETUP_SCRIPT="$DOTFILE_DIR/script/common/setup_dotfiles.sh"
