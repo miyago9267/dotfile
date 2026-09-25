@@ -83,6 +83,13 @@ Space prefix 也遵循 tmux 的 pane 操作邏輯：
 | `Space z` | 最大化／還原目前 window |
 | `Ctrl-w` | Vim 原生 window prefix |
 | `Space wv` / `Space ws` | 舊的 split aliases |
+| `Space wh/wl/wk/wj` | 往左／右／上／下開新 split（VSCode Split Editor） |
+| `Space wH/wL/wK/wJ` | 把目前 window 搬到最左／右／上／下 |
+| `Space wx` | 和下一個 window 互換位置 |
+| `Space ←/→/↑/↓` | 切換 window（等同 `Space h/l/k/j`） |
+| `Space Shift+方向鍵` | 調整 window 大小 |
+| `Space w` + 方向鍵 | 往該方向開新 split |
+| `Space w` + `Shift+方向鍵` | 把 window 搬到該方向最邊邊 |
 | `Ctrl-h/j/k/l` | 快速切換 Neovim 或 tmux pane |
 
 ## Tab
@@ -113,6 +120,26 @@ Space prefix 也遵循 tmux 的 pane 操作邏輯：
 
 Agent panel 開啟後會進入 terminal input mode，這是為了可以直接輸入 prompt。要使用 `Space a*` 或其他 Neovim 快捷鍵，先按 `Esc`；也可以按 `<C-\\><C-n>` 回到 Normal mode。
 
+## 全域搜尋
+
+Nvim 用 `fzf-lua`，Vim 用 `fzf.vim`，兩者共用 `fzf` 與 `rg`。Vim 在沒有 `rg` 的舊系統會退回內建 `:grep` + quickfix。
+
+| 快捷鍵 | 功能 |
+| --- | --- |
+| `Ctrl-P` / `Space ff` | 搜尋檔名 |
+| `Space fg` | 全專案搜尋內容 |
+| `Space fw` | 搜尋游標下的字（Nvim visual 模式搜選取內容） |
+| `Space fb` | 已開啟的 buffer |
+| `Space fr` | 最近開過的檔案 |
+
 ## Git 視覺提示
 
-Git gutter signs 由 `gitsigns.nvim` 提供；實際 Git 操作使用 shell 與既有 script。
+Git gutter signs 與 inline blame 由 `gitsigns.nvim` 提供（Vim 用 vim-gitgutter + blamer.nvim + fugitive，快捷鍵相同）；branch 顯示在 statusline。實際 Git 操作使用 shell 與既有 script。
+
+| 快捷鍵 | 功能 |
+| --- | --- |
+| `Space gb` | 顯示目前這行的完整 blame（只限 Nvim） |
+| `Space gB` | 整份檔案的 blame panel |
+| `Space gp` | 預覽目前 hunk |
+| `Space gt` | 開關行尾的 inline blame |
+| `]h` / `[h` | 下一個 / 上一個 hunk |

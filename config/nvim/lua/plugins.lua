@@ -49,9 +49,11 @@ return {
       spec = {
         { "<leader>a", group = "Agent" },
         { "<leader>b", group = "Buffer" },
+        { "<leader>f", group = "Find" },
+        { "<leader>g", group = "Git" },
         { "<leader>t", group = "Terminal" },
         { "<leader>u", group = "UI toggle" },
-        { "<leader>w", group = "Window alias" },
+        { "<leader>w", group = "Window" },
       },
     },
   },
@@ -93,7 +95,40 @@ return {
       filters = { dotfiles = false },
     },
   },
-  { "lewis6991/gitsigns.nvim", opts = {} },
+  {
+    -- 全域搜尋：與 Vim 共用 fzf binary，內容搜尋走 rg
+    "ibhagwan/fzf-lua",
+    cmd = "FzfLua",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    opts = {},
+    keys = {
+      { "<C-p>", "<cmd>FzfLua files<CR>", desc = "Find files" },
+      { "<leader>ff", "<cmd>FzfLua files<CR>", desc = "Find files" },
+      { "<leader>fg", "<cmd>FzfLua live_grep<CR>", desc = "Search text in project" },
+      { "<leader>fw", "<cmd>FzfLua grep_cword<CR>", desc = "Search word under cursor" },
+      { "<leader>fw", "<cmd>FzfLua grep_visual<CR>", mode = "v", desc = "Search selection" },
+      { "<leader>fb", "<cmd>FzfLua buffers<CR>", desc = "Find buffers" },
+      { "<leader>fr", "<cmd>FzfLua oldfiles<CR>", desc = "Recent files" },
+    },
+  },
+  {
+    "lewis6991/gitsigns.nvim",
+    event = { "BufReadPre", "BufNewFile" },
+    opts = {
+      -- GitLens 風格：游標所在行尾顯示 blame
+      current_line_blame = true,
+      current_line_blame_opts = { delay = 300, virt_text_pos = "eol" },
+      current_line_blame_formatter = "   <author>, <author_time:%R> • <summary>",
+    },
+    keys = {
+      { "<leader>gb", "<cmd>Gitsigns blame_line full=true<CR>", desc = "Blame current line" },
+      { "<leader>gB", "<cmd>Gitsigns blame<CR>", desc = "Blame whole file" },
+      { "<leader>gp", "<cmd>Gitsigns preview_hunk<CR>", desc = "Preview hunk" },
+      { "<leader>gt", "<cmd>Gitsigns toggle_current_line_blame<CR>", desc = "Toggle inline blame" },
+      { "]h", "<cmd>Gitsigns next_hunk<CR>", desc = "Next git hunk" },
+      { "[h", "<cmd>Gitsigns prev_hunk<CR>", desc = "Prev git hunk" },
+    },
+  },
   {
     "hrsh7th/nvim-cmp",
     event = "InsertEnter",

@@ -18,7 +18,17 @@ call plug#begin('~/.vim/plugged')
 " lightline faq airline
 Plug 'itchyny/lightline.vim'
 Plug 'itchyny/vim-gitbranch'
-Plug 'mengelbrecht/lightline-bufferline'
+
+" Git: gutter signs、GitLens 風格 inline blame、完整 blame
+Plug 'airblade/vim-gitgutter'
+if has('textprop')
+  Plug 'APZelos/blamer.nvim'
+endif
+Plug 'tpope/vim-fugitive'
+" 新版用了 `..` 語法，Vim 8.1.1114 以前不支援
+if has('patch-8.1.1114')
+  Plug 'mengelbrecht/lightline-bufferline'
+endif
 Plug 'maximbaz/lightline-ale'
 Plug 'maximbaz/lightline-trailing-whitespace'
 
@@ -71,13 +81,6 @@ set t_Co=256
 let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
 let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
 
-" nvim hahapeeyen
-if has('nvim')
-    let s:editor_root=expand('~/.config/nvim')
-else
-    let s:editor_root=expand('~/.vim')
-endif
-
 
 " =====================
 "   VIM AutoCmd
@@ -103,7 +106,6 @@ let g:edge_disable_italic_comment = 1
 set fillchars+=vert:│
 let g:ci_dark_enable_bold = 1
 colorscheme ci_dark
-let g:airline_theme = 'edge'
 hi LineNr cterm=bold ctermfg=DarkGrey ctermbg=NONE
 hi CursorLinNr cterm=bold ctermfg=Green ctermbg=NONE
 
@@ -136,19 +138,6 @@ endf
 let g:indentLine_char_list=['|', '¦', '┆', '┊']
 set list lcs=tab:\|\ ,trail:·
 let g:indentLine_bufNameExclude=['_.*', 'NERD_tree.*']
-
-" scrooloose/syntastic
-
-" set statusline+=%#warningmsg#
-" set statusline+=%{SyntasticStatuslineFlag()}
-" set statusline+=%*
-
-" let g:syntastic_always_populate_loc_list = 1
-" let g:syntastic_auto_loc_list = 1
-" let g:syntastic_check_on_open = 1
-" let g:syntastic_check_on_wq = 0
-" let g:syntastic_cpp_compiler = 'g++'
-" let g:syntastic_cpp_compiler_options = ' -std=c++2a --stdlib=libc++'
 
 
 " NerdTree settings 
@@ -194,14 +183,8 @@ let g:NERDTreeGitStatusShowIgnored=1
 
 " vim-devicons
 let g:webdevicons_conceal_nerdtree_brackets=1
-if exists('g:loaded_webdevicons')
-    call webdevicons#refresh()
-endif
 
 
-if !has('gui_running')
-  set t_Co=256
-endif
 
 " itchyny/lightline.vim
 let g:lightline = {
@@ -211,7 +194,7 @@ let g:lightline = {
 \   'active': {
 \       'left': [
 \           ['mode', 'paste'],
-\           ['gitbranch', 'cocstatus', 'currentfu', 'readonly', 'filename', 'modified'],
+\           ['gitbranch', 'readonly', 'filename', 'modified'],
 \       ],
 \       'right': [
 \           ['percent', 'lineinfo'],
@@ -243,16 +226,18 @@ let g:lightline = {
 \       'linter_errors': 'error',
 \       'linter_ok': 'right'
 \   },
-\   'component_fu': {
+\   'component_function': {
 \       'readonly': 'LightlineReadonly',
-\       'gitbranch': 'gitbranch#name',
-\       'cocstatus': 'coc#status',
-\       'currentfu': 'CocCurrentfu'
+\       'gitbranch': 'gitbranch#name'
 \   },
 \   'component_raw': {
 \       'buffers': 1
 \   }
 \ }
+
+if !has('patch-8.1.1114')
+  call remove(g:lightline, 'tabline')
+endif
 
 fu! LightlineReadonly()
   return &readonly ? '' : ''
@@ -318,8 +303,6 @@ let g:rainbow_conf={
 let g:closetag_html_style='*.html,*.ejs,*.vue,*.blade.php'
 let g:closetag_filetypes='html,ejs,vue,blade'
 
-" editorconfig-vim
-au FileType gitcommit let b:EditorConfig_disable=1
 
 " cpp enhanced highlight
 let g:cpp_class_scope_highlight=1
@@ -370,13 +353,7 @@ let g:ale_close_preview_on_insert=1
 nmap <silent> <leader>j <Plug>(ale_next_wrap)
 
 
-" lint only on save
-let g:ale_lint_on_text_changed = 'never'
-let g:ale_lint_on_insert_leave = 0
-let g:ale_lint_on_enter = 0
-
 " for Vue
-let b:ale_linter_aliases = ['javascript', 'vue']
 let g:vue_pre_processors=['pug', 'scss']
 
 
@@ -388,33 +365,17 @@ let g:vim_vue_plugin_highlight_vue_keyword=1
 
 
 " Insert completion fallback
-" Enter 確認補全選項
-" inoremap <silent><expr> <CR> pumvisible() ? coc#_select_confirm()
-"                              \: \<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+" 只用 Vim 內建補全（不依賴 Node/coc）；新版自動彈出，舊版用 Ctrl-N 手動觸發
+set completeopt=menuone,noinsert
+set shortmess+=c
+if exists('+autocomplete')
+  set autocomplete
+endif
+
 
 " 上下鍵選擇補全項
 inoremap <silent><expr> <Up> pumvisible() ? "\<C-p>" : "\<Up>"
 inoremap <silent><expr> <Down> pumvisible() ? "\<C-n>" : "\<Down>"
-
-" 手動觸發補全
-" inoremap <silent><expr> <c-space> coc#refresh()
-
-" Copilot 設置 (舊版 copilot.vim，已改用 copilot.lua，見 init.lua)
-" imap <silent><script><expr> <Tab> copilot#Accept("\<CR>")
-" imap <silent><script><expr> <C-j> copilot#Accept("\<CR>")
-" let g:copilot_no_tab_map = v:true
-" let g:copilot_assume_mapped = v:true
-
-" majutsushi/tagbar - 已停用，避免與 Tab 衝突
-" let g:SuperTabMappingForward='<s-tab>'
-" let g:SuperTabMappingBackward='<tab>'
-
-" closetag 
-" inoremap ( ()<Esc>i
-" inoremap " ""<Esc>i
-" inoremap ' ''<Esc>i
-" inoremap [ []<Esc>i
-" inoremap { {}<Esc>i
 
 " execution/compilation utils
 fu! CompileRunGcc()
@@ -424,7 +385,6 @@ fu! CompileRunGcc()
     endif
 endf
 
-command W w
 command Q q!
 command Wq wq
 command WQ wq
@@ -506,6 +466,58 @@ nnoremap <leader>rr :%s/<C-r><C-w>//g<Left><Left>
 nnoremap <leader>gd <C-]>
 nnoremap <F12> <C-]>
 
+" Git（與 Nvim 的 <leader>g* 對齊）
+let g:blamer_enabled=1
+let g:blamer_delay=300
+let g:blamer_prefix='   '
+let g:blamer_template='<author>, <author-time> • <summary>'
+let g:blamer_relative_time=1
+" 全域搜尋（與 Nvim 的 <leader>f* 對齊）；沒有 rg 的舊系統退回內建 grep + quickfix
+nnoremap <leader>ff :Files<CR>
+nnoremap <leader>fb :Buffers<CR>
+nnoremap <leader>fr :History<CR>
+if executable('rg')
+  nnoremap <leader>fg :Rg<CR>
+  nnoremap <leader>fw :Rg <C-r><C-w><CR>
+else
+  nnoremap <leader>fg :grep! -rnI --exclude-dir=.git  .<Left><Left>
+  nnoremap <leader>fw :grep! -rnI --exclude-dir=.git <C-r><C-w> .<CR>:copen<CR>
+endif
+
+" 視窗：往指定方向 split、把視窗搬到邊上（與 Nvim 的 <leader>w* 對齊）
+nnoremap <leader>wh :leftabove vsplit<CR>
+nnoremap <leader>wl :rightbelow vsplit<CR>
+nnoremap <leader>wk :leftabove split<CR>
+nnoremap <leader>wj :rightbelow split<CR>
+nnoremap <leader>wH <C-w>H
+nnoremap <leader>wL <C-w>L
+nnoremap <leader>wK <C-w>K
+nnoremap <leader>wJ <C-w>J
+nnoremap <leader>wx <C-w>x
+" 方向鍵版本
+nnoremap <leader><Left> <C-w>h
+nnoremap <leader><Right> <C-w>l
+nnoremap <leader><Up> <C-w>k
+nnoremap <leader><Down> <C-w>j
+nnoremap <leader><S-Left> :vertical resize -2<CR>
+nnoremap <leader><S-Right> :vertical resize +2<CR>
+nnoremap <leader><S-Up> :resize -2<CR>
+nnoremap <leader><S-Down> :resize +2<CR>
+nnoremap <leader>w<Left> :leftabove vsplit<CR>
+nnoremap <leader>w<Right> :rightbelow vsplit<CR>
+nnoremap <leader>w<Up> :leftabove split<CR>
+nnoremap <leader>w<Down> :rightbelow split<CR>
+nnoremap <leader>w<S-Left> <C-w>H
+nnoremap <leader>w<S-Right> <C-w>L
+nnoremap <leader>w<S-Up> <C-w>K
+nnoremap <leader>w<S-Down> <C-w>J
+
+nnoremap <leader>gB :Git blame<CR>
+nnoremap <leader>gp :GitGutterPreviewHunk<CR>
+nnoremap <leader>gt :BlamerToggle<CR>
+nmap ]h <Plug>(GitGutterNextHunk)
+nmap [h <Plug>(GitGutterPrevHunk)
+
 " Sudo save when forgot to use sudo
 " Use :W! to save with sudo
 command! W w !sudo tee % > /dev/null
@@ -526,5 +538,3 @@ vmap <C-/> <Plug>NERDCommenterToggle
 vmap <D-/> <Plug>NERDCommenterToggle
 imap <C-/> <Esc><Plug>NERDCommenterToggle gi
 imap <D-/> <Esc><Plug>NERDCommenterToggle gi
-
-" SmartCursorMove 已移除 -- 與 Neovim 方向鍵衝突且 normal! <Down> 不會被解析

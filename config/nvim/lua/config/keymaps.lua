@@ -166,6 +166,31 @@ function M.setup()
   end
   map("n", "<leader>wv", "<cmd>vsplit<CR>", { desc = "Vertical split" })
   map("n", "<leader>ws", "<cmd>split<CR>", { desc = "Horizontal split" })
+  -- VSCode 的 Split Editor Left/Right/Up/Down：把目前 buffer 往指定方向開一個新視窗
+  map("n", "<leader>wh", "<cmd>leftabove vsplit<CR>", { desc = "Split to left" })
+  map("n", "<leader>wl", "<cmd>rightbelow vsplit<CR>", { desc = "Split to right" })
+  map("n", "<leader>wk", "<cmd>leftabove split<CR>", { desc = "Split above" })
+  map("n", "<leader>wj", "<cmd>rightbelow split<CR>", { desc = "Split below" })
+  -- 把目前視窗整個搬到最左/右/上/下
+  map("n", "<leader>wH", "<C-w>H", { desc = "Move window far left" })
+  map("n", "<leader>wL", "<C-w>L", { desc = "Move window far right" })
+  map("n", "<leader>wK", "<C-w>K", { desc = "Move window to top" })
+  map("n", "<leader>wJ", "<C-w>J", { desc = "Move window to bottom" })
+  map("n", "<leader>wx", "<C-w>x", { desc = "Swap with next window" })
+
+  -- 方向鍵版本（與 h/j/k/l 版本等價）
+  local arrows = {
+    { key = "Left", dir = "h", tmux = "TmuxNavigateLeft", split = "leftabove vsplit", resize = function() resize_width(-2) end },
+    { key = "Right", dir = "l", tmux = "TmuxNavigateRight", split = "rightbelow vsplit", resize = function() resize_width(2) end },
+    { key = "Up", dir = "k", tmux = "TmuxNavigateUp", split = "leftabove split", resize = function() resize_height(-2) end },
+    { key = "Down", dir = "j", tmux = "TmuxNavigateDown", split = "rightbelow split", resize = function() resize_height(2) end },
+  }
+  for _, a in ipairs(arrows) do
+    map("n", "<leader><" .. a.key .. ">", function() navigate_window(a.dir, a.tmux) end, { desc = "Focus window " .. a.key })
+    map("n", "<leader><S-" .. a.key .. ">", a.resize, { desc = "Resize window " .. a.key })
+    map("n", "<leader>w<" .. a.key .. ">", "<cmd>" .. a.split .. "<CR>", { desc = "Split " .. a.key })
+    map("n", "<leader>w<S-" .. a.key .. ">", "<C-w>" .. a.dir:upper(), { desc = "Move window far " .. a.key })
+  end
   map("n", "<C-h>", "<C-w>h", { desc = "Window left" })
   map("n", "<C-j>", "<C-w>j", { desc = "Window down" })
   map("n", "<C-k>", "<C-w>k", { desc = "Window up" })
