@@ -1,8 +1,6 @@
 {
   "permissions": {
     "allow": [
-      "mcp__pty-bridge__exec",
-      "mcp__pty-bridge__result",
       "Bash(ln -s /Users/miyago/dotfile/config/ai/claude/memories /Users/miyago/.claude/memories)",
       "Bash(/bin/ls -d ~/.claude/plugins/cache/everything-claude-code)",
       "Bash(/bin/ls)",
@@ -29,13 +27,10 @@
       "Bash(/usr/bin/sips --help)",
       "Bash(/usr/bin/grep -E 'verify|pixelWidth|pixelHeight|format')",
       "Bash(/usr/bin/head -n 20)",
-      "mcp__interactive-bash__InteractiveBash",
       "mcp__playwright__browser_tabs",
       "Read(//private/tmp/**)",
-      "Bash(agy agents *)"
+      "Bash(agy agents *)",
+      "Read(//Users/miyago/**)"
     ]
-  },
-  "enabledMcpjsonServers": [
-    "pty-bridge"
-  ]
+  }
 }
