@@ -3,6 +3,12 @@ if vim.fn.filereadable(vimrc) == 1 then
   vim.cmd("silent! source " .. vim.fn.fnameescape(vimrc))
 end
 
+-- 太舊的 Neovim（例如 apt 裝的 0.4~0.9）跑不動 plugin 層，只保留 base.vim 的基本設定
+if vim.fn.has("nvim-0.10") == 0 then
+  vim.api.nvim_echo({ { "Neovim < 0.10: plugins disabled, run setup_neovim.sh to upgrade", "WarningMsg" } }, true, {})
+  return
+end
+
 require("config.options").setup()
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"

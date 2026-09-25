@@ -25,6 +25,11 @@ print_error() {
     echo -e "${RED}✗${NC} $1"
 }
 
+# 設定需要的最低版本（lazy.nvim 與 plugin 需求）
+MIN_MINOR=10
+LOCAL_BIN="$HOME/.local/bin"
+LOCAL_OPT="$HOME/.local/opt"
+
 echo ""
 echo "╔════════════════════════════════════════════════╗"
 echo "║        Neovim Installation & Setup             ║"
@@ -51,36 +56,57 @@ detect_os() {
 detect_os
 print_info "Detected OS: $OS $OS_VERSION"
 
-# =====================
-#   Version Check
-# =====================
-check_system_capability() {
-    # 檢查系統是否支援 Neovim 11+
+nvim_minor() {
+    nvim --version 2>/dev/null | head -n1 | sed -E 's/^NVIM v?0\.([0-9]+).*/\1/'
+}
+
+# 系統套件庫能直接提供新版 Neovim 的平台
+has_modern_package() {
     case $OS in
-        macos)
-            # macOS 通常都支援最新版
+        macos|arch|manjaro)
             return 0
             ;;
-        ubuntu|debian)
-            # Ubuntu 22.04+ 和 Debian 12+ 支援
-            major_version=$(echo "$OS_VERSION" | cut -d. -f1)
-            if [ "$OS" = "ubuntu" ] && [ "$major_version" -ge 22 ]; then
-                return 0
-            elif [ "$OS" = "debian" ] && [ "$major_version" -ge 12 ]; then
-                return 0
-            else
-                return 1
-            fi
+        ubuntu)
+            [ "$(echo "$OS_VERSION" | cut -d. -f1)" -ge 22 ]
             ;;
-        arch|manjaro)
-            # Arch 系列通常都支援最新版
-            return 0
+        debian)
+            [ "$(echo "$OS_VERSION" | cut -d. -f1)" -ge 12 ]
             ;;
         *)
-            # 未知系統,保守起見使用舊版
             return 1
             ;;
     esac
+}
+
+# =====================
+#   Portable build（舊系統）
+# =====================
+# neovim/neovim-releases 以 glibc 2.17 編譯，Ubuntu 16.04+ / CentOS 7+ 都能跑，
+# 裝在 ~/.local 不需要 root。
+install_neovim_portable() {
+    case "$(uname -m)" in
+        x86_64|amd64) arch="x86_64" ;;
+        aarch64|arm64) arch="arm64" ;;
+        *)
+            print_warning "No portable Neovim build for $(uname -m); use Vim instead"
+            return 1
+            ;;
+    esac
+
+    url="https://github.com/neovim/neovim-releases/releases/latest/download/nvim-linux-${arch}.tar.gz"
+    tmp_dir="$(mktemp -d)"
+    print_info "Downloading portable Neovim ($arch, glibc 2.17 build)..."
+    curl -fL "$url" -o "$tmp_dir/nvim.tar.gz"
+    tar -xzf "$tmp_dir/nvim.tar.gz" -C "$tmp_dir"
+
+    mkdir -p "$LOCAL_OPT" "$LOCAL_BIN"
+    rm -rf "$LOCAL_OPT/nvim"
+    mv "$tmp_dir/nvim-linux-${arch}" "$LOCAL_OPT/nvim"
+    ln -sf "$LOCAL_OPT/nvim/bin/nvim" "$LOCAL_BIN/nvim"
+    rm -rf "$tmp_dir"
+
+    export PATH="$LOCAL_BIN:$PATH"
+    print_info "Installed to $LOCAL_OPT/nvim (make sure $LOCAL_BIN is in PATH)"
 }
 
 # =====================
@@ -89,34 +115,26 @@ check_system_capability() {
 install_neovim() {
     if command -v nvim >/dev/null 2>&1; then
         current_version=$(nvim --version | head -n1 | awk '{print $2}')
-        print_info "Neovim already installed: $current_version"
-        
-        # 詢問是否要重新安裝
-        read -p "Do you want to reinstall/upgrade? [y/N]: " choice
-        case "$choice" in 
-            y|Y ) 
-                print_info "Proceeding with installation..."
-                ;;
-            * ) 
-                print_info "Skipping installation"
-                return 0
-                ;;
-        esac
+        if [ "$(nvim_minor)" -lt "$MIN_MINOR" ] 2>/dev/null; then
+            print_warning "Neovim $current_version is older than 0.$MIN_MINOR, upgrading..."
+        else
+            print_info "Neovim already installed: $current_version"
+            read -p "Do you want to reinstall/upgrade? [y/N]: " choice
+            case "$choice" in
+                y|Y ) print_info "Proceeding with installation..." ;;
+                * ) print_info "Skipping installation"; return 0 ;;
+            esac
+        fi
     fi
-    
+
     print_info "Installing Neovim..."
-    
-    if check_system_capability; then
-        print_info "System supports Neovim 11+, installing latest version..."
-        USE_LATEST=true
-        
+
+    if has_modern_package; then
         case $OS in
             macos)
                 brew install neovim
                 ;;
             ubuntu|debian)
-                # 使用 unstable PPA 或 AppImage
-                print_info "Installing from unstable PPA..."
                 sudo add-apt-repository -y ppa:neovim-ppa/unstable
                 sudo apt-get update
                 sudo apt-get install -y neovim
@@ -125,24 +143,14 @@ install_neovim() {
                 sudo pacman -S --noconfirm neovim
                 ;;
         esac
+    elif [ "$(uname)" = "Linux" ]; then
+        install_neovim_portable || exit 0
     else
-        print_warning "System may not support Neovim 11+, installing stable version 0.9/0.10..."
-        USE_LATEST=false
-        
-        case $OS in
-            ubuntu|debian)
-                # 使用 stable PPA
-                sudo add-apt-repository -y ppa:neovim-ppa/stable
-                sudo apt-get update
-                sudo apt-get install -y neovim
-                ;;
-            *)
-                echo "[WARN] Neovim 不支援當前 OS ($OS)，跳過"
-                exit 0
-                ;;
-        esac
+        echo "[WARN] Neovim 不支援當前 OS ($OS)，跳過"
+        exit 0
     fi
-    
+
+    hash -r
     if command -v nvim >/dev/null 2>&1; then
         installed_version=$(nvim --version | head -n1 | awk '{print $2}')
         print_success "Neovim installed: $installed_version"
@@ -155,147 +163,74 @@ install_neovim() {
 # =====================
 #   Install Dependencies
 # =====================
-install_dependencies() {
-    print_info "Installing dependencies..."
-    
-    # ripgrep (for Telescope)
-    if ! command -v rg >/dev/null 2>&1; then
-        print_info "Installing ripgrep..."
-        case $OS in
-            macos)
-                brew install ripgrep
-                ;;
-            ubuntu|debian)
-                sudo apt-get install -y ripgrep
-                ;;
-            arch|manjaro)
-                sudo pacman -S --noconfirm ripgrep
-                ;;
-        esac
-        print_success "ripgrep installed"
-    else
-        print_success "ripgrep already installed"
-    fi
-    
-    # fd (for Telescope file finder)
-    if ! command -v fd >/dev/null 2>&1; then
-        print_info "Installing fd..."
-        case $OS in
-            macos)
-                brew install fd
-                ;;
-            ubuntu|debian)
-                sudo apt-get install -y fd-find
-                # 建立 symlink
-                sudo ln -sf $(which fdfind) /usr/local/bin/fd 2>/dev/null || true
-                ;;
-            arch|manjaro)
-                sudo pacman -S --noconfirm fd
-                ;;
-        esac
-        print_success "fd installed"
-    else
-        print_success "fd already installed"
-    fi
-    
-    # Node.js (for LSP servers)
-    if ! command -v node >/dev/null 2>&1; then
-        print_warning "Node.js not found. Some LSP features may not work."
-        print_info "Install with: brew install node (macOS) or apt install nodejs (Linux)"
-    else
-        node_version=$(node --version)
-        print_success "Node.js installed: $node_version"
-    fi
-    
-    # gcc/make (for building treesitter parsers)
-    if ! command -v gcc >/dev/null 2>&1; then
-        print_warning "gcc not found. Installing build tools..."
-        case $OS in
-            macos)
-                xcode-select --install 2>/dev/null || print_info "Xcode tools already installed"
-                ;;
-            ubuntu|debian)
-                sudo apt-get install -y build-essential
-                ;;
-            arch|manjaro)
-                sudo pacman -S --noconfirm base-devel
-                ;;
-        esac
-    else
-        print_success "gcc installed"
-    fi
+# 舊系統的套件庫可能沒有這些套件，失敗時只警告不中斷
+pkg_install() {
+    case $OS in
+        macos) brew install "$@" ;;
+        ubuntu|debian) sudo apt-get install -y "$@" ;;
+        arch|manjaro) sudo pacman -S --noconfirm "$@" ;;
+        *) return 1 ;;
+    esac
 }
 
-# =====================
-#   Configure Neovim
-# =====================
-configure_neovim() {
-    print_info "Configuring Neovim..."
-    
-    nvim_version=$(nvim --version | head -n1 | awk '{print $2}')
-    major_version=$(echo "$nvim_version" | cut -d. -f2)  # 0.11 -> 11
-    
-    # 檢查是否需要建立相容性設定
-    if [ "$major_version" -lt 11 ]; then
-        print_warning "Neovim version < 0.11 detected, creating compatibility config..."
-        
-        # 建立相容性設定檔
-        compat_file="$HOME/dotfile/config/nvim/lua/compat.lua"
-        mkdir -p "$(dirname "$compat_file")"
-        
-        cat > "$compat_file" <<'EOF'
--- Compatibility layer for Neovim < 0.11
-local M = {}
+install_dependencies() {
+    print_info "Installing dependencies..."
 
--- 檢測 Neovim 版本
-local function get_nvim_version()
-    local version = vim.version()
-    return version.major * 100 + version.minor
-end
-
-M.nvim_version = get_nvim_version()
-M.is_nvim_011_or_later = M.nvim_version >= 11
-
--- LSP 設定相容層
-M.setup_lsp = function()
-    local lspconfig = require('lspconfig')
-    local capabilities = vim.lsp.protocol.make_client_capabilities()
-    
-    if M.is_nvim_011_or_later then
-        -- Neovim 0.11+ 使用新 API
-        vim.lsp.config('*', {
-            capabilities = capabilities,
-        })
-        vim.lsp.enable({ 'lua_ls', 'ts_ls', 'pyright', 'gopls' })
+    # ripgrep（全域內容搜尋）
+    if command -v rg >/dev/null 2>&1; then
+        print_success "ripgrep already installed"
+    elif pkg_install ripgrep; then
+        print_success "ripgrep installed"
     else
-        -- Neovim 0.10- 使用舊 API
-        local servers = { 'lua_ls', 'ts_ls', 'pyright', 'gopls' }
-        for _, lsp in ipairs(servers) do
-            lspconfig[lsp].setup({
-                capabilities = capabilities,
-            })
-        end
-    end
-end
+        print_warning "ripgrep unavailable; Space fg falls back to grep"
+    fi
 
-return M
-EOF
-        
-        # 修改 init.lua 以使用相容層
-        init_file="$HOME/dotfile/config/nvim/init.lua"
-        if [ -f "$init_file" ]; then
-            # 備份原始檔案
-            cp "$init_file" "$init_file.backup.$(date +%Y%m%d_%H%M%S)"
-            
-            # 使用 sed 替換 LSP 設定部分
-            # 這裡我們建立一個標記,讓使用者知道需要手動調整
-            print_warning "Original init.lua backed up"
-            print_warning "Please update LSP config in init.lua to use: require('compat').setup_lsp()"
+    # fd（檔名搜尋；Debian/Ubuntu 套件名是 fd-find）
+    if command -v fd >/dev/null 2>&1 || command -v fdfind >/dev/null 2>&1; then
+        print_success "fd already installed"
+    else
+        case $OS in
+            ubuntu|debian) fd_pkg=fd-find ;;
+            *) fd_pkg=fd ;;
+        esac
+        if pkg_install "$fd_pkg"; then
+            print_success "fd installed"
+        else
+            print_warning "fd unavailable; file search falls back to find"
         fi
-        
-        print_success "Compatibility config created at: $compat_file"
+    fi
+
+    # fzf（fzf-lua 需要較新的 fzf；舊系統套件太舊，改用官方 binary）
+    if command -v fzf >/dev/null 2>&1; then
+        print_success "fzf already installed"
     else
-        print_success "Neovim 0.11+ detected, using modern API"
+        print_info "Installing fzf binary..."
+        if [ ! -d "$HOME/.fzf" ]; then
+            git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf"
+        fi
+        "$HOME/.fzf/install" --bin
+        mkdir -p "$LOCAL_BIN"
+        ln -sf "$HOME/.fzf/bin/fzf" "$LOCAL_BIN/fzf"
+        print_success "fzf installed"
+    fi
+
+    # Node.js (for LSP servers)
+    if command -v node >/dev/null 2>&1; then
+        print_success "Node.js installed: $(node --version)"
+    else
+        print_warning "Node.js not found. Some LSP servers and Copilot will not work."
+    fi
+
+    # gcc/make (for building treesitter parsers)
+    if command -v gcc >/dev/null 2>&1; then
+        print_success "gcc installed"
+    else
+        print_warning "gcc not found. Installing build tools..."
+        case $OS in
+            macos) xcode-select --install 2>/dev/null || print_info "Xcode tools already installed" ;;
+            ubuntu|debian) pkg_install build-essential || print_warning "build-essential unavailable" ;;
+            arch|manjaro) pkg_install base-devel || print_warning "base-devel unavailable" ;;
+        esac
     fi
 }
 
@@ -305,51 +240,13 @@ EOF
 main() {
     install_neovim
     install_dependencies
-    configure_neovim
-    
+
     echo ""
     print_success "Installation complete!"
     echo ""
     print_info "Next steps:"
-    echo ""
-    echo "1. Setup AI Provider (choose one):"
-    echo ""
-    echo "   Option A: GitHub Copilot (recommended)"
-    echo "   Start Neovim: nvim"
-    echo "   Authenticate: :Copilot auth"
-    echo ""
-    echo "   Option B: Claude or OpenAI"
-    echo "   Edit ~/dotfile/.env and add:"
-    echo "     AVANTE_ANTHROPIC_API_KEY='your-key'"
-    echo "     AVANTE_OPENAI_API_KEY='your-key'"
-    echo "   Then reload: source ~/.zshrc"
-    echo ""
-    echo "2. Start Neovim:"
-    echo "   nvim"
-    echo ""
-    echo "   First run will install all plugins automatically"
-    echo "   If issues occur: :Lazy sync"
-    echo ""
-    echo "3. Install LSP servers (run in Neovim):"
-    echo "   :Mason"
-    echo ""
-    echo "   Recommended LSPs:"
-    echo "   - lua_ls (Lua)"
-    echo "   - ts_ls (TypeScript/JavaScript)"
-    echo "   - pyright (Python)"
-    echo "   - gopls (Go)"
-    echo ""
-    
-    nvim_version=$(nvim --version | head -n1 | awk '{print $2}')
-    major_version=$(echo "$nvim_version" | cut -d. -f2)
-    
-    if [ "$major_version" -lt 11 ]; then
-        echo ""
-        print_warning "IMPORTANT: Neovim < 0.11 detected"
-        print_info "Compatibility layer created at: ~/dotfile/config/nvim/lua/compat.lua"
-        print_info "Update your LSP config to use: require('compat').setup_lsp()"
-    fi
-    
+    echo "  1. Start Neovim: nvim  (first run installs plugins; if issues occur: :Lazy sync)"
+    echo "  2. Copilot (optional): :Copilot auth"
     echo ""
 }
 
