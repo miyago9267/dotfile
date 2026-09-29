@@ -10,6 +10,8 @@
 | `Ctrl-z` | 復原 |
 | `Ctrl-f` | 目前檔案搜尋 |
 | `j` / `k` | 依 Miyago 習慣交換上下移動 |
+| `Ctrl-/` | 切換註解（normal／visual／insert；同內建 `gc`） |
+| `Alt-↑` / `Alt-↓` | 整行或選取範圍上下移動 |
 | `j`／`↑` 在第一行、`k`／`↓` 在最後一行 | 像 VSCode 一樣跳到行首／行尾（insert mode 也適用） |
 | `:find` | 找檔案 |
 | `:vimgrep` | 搜尋專案 |

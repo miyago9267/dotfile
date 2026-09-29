@@ -100,6 +100,19 @@ function M.setup()
   map({ "n", "v" }, "<Down>", edge_move("down", "<Down>", "$"), vim.tbl_extend("force", expr, { desc = "Move down" }))
   map({ "n", "i", "v" }, "<C-s>", "<cmd>write<CR>", { desc = "Save" })
   map("n", "<C-z>", "u", { desc = "Undo" })
+  -- VSCode Ctrl-/：切換註解（用內建 gc；多數 terminal 把 Ctrl-/ 送成 Ctrl-_）
+  for _, lhs in ipairs({ "<C-/>", "<C-_>" }) do
+    map("n", lhs, "gcc", { remap = true, desc = "Toggle comment" })
+    map("v", lhs, "gc", { remap = true, desc = "Toggle comment" })
+    map("i", lhs, "<C-o>gcc", { remap = true, desc = "Toggle comment" })
+  end
+  -- VSCode Alt-Up / Alt-Down：整行（或選取範圍）上下移動，不重新縮排
+  map("n", "<M-Up>", "<cmd>move .-2<CR>", { desc = "Move line up" })
+  map("n", "<M-Down>", "<cmd>move .+1<CR>", { desc = "Move line down" })
+  map("v", "<M-Up>", ":move '<-2<CR>gv", { silent = true, desc = "Move selection up" })
+  map("v", "<M-Down>", ":move '>+1<CR>gv", { silent = true, desc = "Move selection down" })
+  map("i", "<M-Up>", "<Esc><cmd>move .-2<CR>gi", { desc = "Move line up" })
+  map("i", "<M-Down>", "<Esc><cmd>move .+1<CR>gi", { desc = "Move line down" })
   map("i", "<C-z>", "<C-o>u", { desc = "Undo" })
   map("n", "<C-f>", "/", { desc = "Search in file" })
   map("n", "<D-f>", "/", { desc = "Search in file" })
