@@ -1,6 +1,7 @@
 # Monika Theme (Nord-based)
-background = #252933
+background = #1c1f26
 foreground = #e5e9f0
+minimum-contrast = 3
 
 term = "xterm-256color"
 
@@ -15,18 +16,18 @@ palette = 6=#88c0d0
 palette = 7=#e5e9f0
 
 # Bright colors
-palette = 8=#4c566a
+palette = 8=#7b88a1
 palette = 9=#d08770
-palette = 10=#3b4252
-palette = 11=#434c5e
-palette = 12=#d8dee9
-palette = 13=#eceff4
-palette = 14=#5e81ac
-palette = 15=#8fbcbb
+palette = 10=#b5d19c
+palette = 11=#f0d399
+palette = 12=#9ab5d3
+palette = 13=#c9a3c4
+palette = 14=#9fd4de
+palette = 15=#eceff4
 
 # Background image (Monika)
 background-image = /Users/miyago/.warp/themes/Monika.png
-background-image-opacity = 0.25
+background-image-opacity = 0.18
 background-image-position = center
 background-image-fit = cover
 
@@ -35,7 +36,9 @@ background-opacity = 0.96
 background-blur = true
 
 # Font
+font-family = "MesloLGS NF"
 font-size = 14
+font-thicken = true
 
 # IME: let Shift+Space pass through to OS for input method switching
 keybind = shift+space=ignore
@@ -55,6 +58,9 @@ quick-terminal-animation-duration = 0.15
 #
 # tmux: Ctrl+b then <key>
 # here: Cmd+<key>
+
+# -- Editor: Cmd+/ sends Ctrl-/ (0x1f) so Neovim toggles comments like VSCode --
+keybind = super+slash=text:\x1f
 
 # -- Splits (visual: - horizontal line, | vertical line) --
 # unbind default font-size keybind (Ghostty uses "super+-" internally)
