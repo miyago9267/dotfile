@@ -17,7 +17,8 @@
 
 ## P4a 後待辦
 
-- GitHub 改名 `pilotfish-codex` → `shoal` 與 push：external mutation，需 Miyago 確認。
+- 2026-09-29 已 push：`shoal` main（`7dae849`）推到 `miyago9267/pilotfish-codex`、dotfile main 推到 origin。GitHub repo 改名 `pilotfish-codex` → `shoal` 尚未執行，需 Miyago 確認。
+- 2026-09-30 驗證：auto-update 距上次（2026-09-29 12:31）滿 24 小時後的第一個 Claude session 會觸發；確認 `~/.local/state/miyago-agent-stack-updater/update.log` 出現新的 `pilotfish update check passed`，並跑 `check_agent_rule_sync.sh`。
 - grok：`shoal/hosts/grok/dist` 尚缺 rules 檔與 AGENT-INSTALL，安裝暫時仍走 `dotfile/plugins/pilotfish-grok`；P4b 前補齊。
 - `update_pilotfish` 的 `mktemp -d` 從未清理（P4a 前既有行為），補 trap。
 - golden `SOURCE` 的 `dirty: true` 表示匯入自尚未 commit 的 dist；內容已在 `7dae849` commit，verifier 確認不影響回歸測試。
