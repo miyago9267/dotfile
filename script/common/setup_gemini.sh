@@ -22,7 +22,8 @@ GEMINI_HOOKS_DST="$GEMINI_DST/config/hooks.json"
 # agy (Antigravity CLI) 的 global customization root 是 ~/.gemini/config/，skills 不讀 ~/.gemini/skills
 AGY_SKILL_DST="$GEMINI_DST/config/skills"
 AGY_AGENT_DST="$GEMINI_DST/config/agents"
-PILOTFISH_AGY_SRC="$DOTFILE_DIR/plugins/pilotfish-agy/templates"
+# agy 的 pilotfish 來源是 shoal 的 hosts/agy/dist；維持 symlink 到工作樹（spec R7 明列例外）。
+PILOTFISH_AGY_SRC="${PILOTFISH_AGY_SRC:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal/hosts/agy/dist}"
 
 Y='\033[1;33m'
 G='\033[1;32m'

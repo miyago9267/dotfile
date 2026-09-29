@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-source_dir="${PILOTFISH_OPENCODE_SOURCE:-/Users/miyago/Project/Active/Forks/Fork-Remaster-code/pilotfish-opencode}"
+# PILOTFISH_OPENCODE_SOURCE 沿用舊名，現在指向 shoal repo 根目錄。
+source_repo="${PILOTFISH_OPENCODE_SOURCE:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 target_file="$script_dir/plugins/pilotfish-opencode.js"
 
-if [[ ! -d "$source_dir" ]]; then
-  printf 'pilotfish-opencode source directory not found: %s\n' "$source_dir" >&2
+if ! git -C "$source_repo" rev-parse --verify HEAD >/dev/null 2>&1; then
+  printf 'shoal repository not found: %s\n' "$source_repo" >&2
   exit 1
 fi
 
@@ -15,10 +16,16 @@ if ! command -v bun >/dev/null 2>&1; then
   exit 1
 fi
 
+# 從 HEAD 取 hosts/opencode 到暫存目錄再 build，不吃未 commit 的 WIP，也不在 repo 內留下 node_modules / dist。
+tmp_dir="$(mktemp -d)"
+trap 'rm -rf "$tmp_dir"' EXIT
+git -C "$source_repo" archive HEAD hosts/opencode | tar -x -C "$tmp_dir"
+
 (
-  cd "$source_dir"
+  cd "$tmp_dir/hosts/opencode/plugin"
+  bun install --frozen-lockfile >/dev/null
   bun run build >/dev/null
 )
 
-install -m 0644 "$source_dir/dist/plugin/pilotfish-opencode.js" "$target_file"
+install -m 0644 "$tmp_dir/hosts/opencode/plugin/dist/plugin/pilotfish-opencode.js" "$target_file"
 printf 'installed %s\n' "$target_file"

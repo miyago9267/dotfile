@@ -15,6 +15,8 @@ claude_settings_file="$dotfile_dir/config/ai/claude/settings.json"
 claude_adapter_file="$dotfile_dir/config/ai/claude/AGENTS.md"
 grok_file="$dotfile_dir/config/ai/grok/AGENTS.md"
 pilotfish_dir="$dotfile_dir/plugins/pilotfish-grok"
+shoal_dir="${PILOTFISH_SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
+claude_skill_file="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/pilotfish-orchestration/SKILL.md"
 
 test -s "$source_file"
 test -s "$personal_model_file"
@@ -209,6 +211,33 @@ for anchor in \
   'Runtime integration' \
   'rules come from `config/ai/AGENTS.md`'; do
   grep -Fq "$anchor" "$grok_file"
+done
+
+# Pilotfish（shoal）：版本 marker 必須出現在「實際安裝處」，且與 shoal dist 記錄的版本一致。
+# claude 裝在 ~/.claude 的 skill（auto-update 寫入），agy 併入 generated GEMINI.md（setup_gemini.sh 產生）。
+check_pilotfish_marker() {
+  local host="$1" dist_file="$2" installed_file="$3" marker
+  marker=$(grep -m1 -E "^<!-- pilotfish-$host v[^ ]+ -->$" "$dist_file" || true)
+  if [ -z "$marker" ]; then
+    printf '%s\n' "pilotfish-$host marker missing in shoal dist: $dist_file" >&2
+    exit 1
+  fi
+  if ! grep -Fxq "$marker" "$installed_file"; then
+    printf '%s\n' "pilotfish-$host marker '$marker' missing in installed file: $installed_file" >&2
+    exit 1
+  fi
+}
+check_pilotfish_marker claude \
+  "$shoal_dir/hosts/claude/dist/skills/pilotfish-orchestration/SKILL.md" "$claude_skill_file"
+check_pilotfish_marker agy \
+  "$shoal_dir/hosts/agy/dist/rules/pilotfish-agy.md" "$gemini_active_file"
+
+# opencode 的輸出全是 JSON，沒有 marker；改成 dotfile 內的 catalog / routing 必須與 shoal dist 逐位元組相同。
+for opencode_json in catalog.json routing.json; do
+  if ! cmp -s "$dotfile_dir/.opencode/pilotfish/$opencode_json" "$shoal_dir/hosts/opencode/dist/$opencode_json"; then
+    printf '%s\n' ".opencode/pilotfish/$opencode_json differs from shoal hosts/opencode/dist/$opencode_json" >&2
+    exit 1
+  fi
 done
 
 printf '%s\n' 'agent rule sync: OK'

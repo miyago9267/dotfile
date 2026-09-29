@@ -10,12 +10,13 @@ opencode 不載入這份 plugin，也不共用這份 role model binding。
 所有 level 共用同一個 opencode-harness／och 入口；level 只影響 role
 到 model 的內部分配，不建立分級指令或分開的啟動流程。harness config
 會載入本機安裝的
-pilotfish-opencode plugin；目前安裝檔由 sibling project 的 source build
-產生，位置是 config/opencode-harness/plugins/pilotfish-opencode.js。
+pilotfish-opencode plugin；目前安裝檔由 shoal repo（本機
+Forks/Fork-Remaster-code/shoal）HEAD 的 hosts/opencode build 產生，位置是
+config/opencode-harness/plugins/pilotfish-opencode.js。
 
 需要重建 local plugin 時，執行
 config/opencode-harness/install-pilotfish.sh；可用
-PILOTFISH_OPENCODE_SOURCE 指定 sibling project 位置。
+PILOTFISH_OPENCODE_SOURCE 指定 shoal repo 位置。
 
 目前工作目錄若有 .opencode/pilotfish/catalog.json，plugin 會驗證
 provider、model、capability 與 authentication state；可選的

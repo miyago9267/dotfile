@@ -4,7 +4,7 @@ description: Pilotfish 完整 orchestration 流程：routing、plan/approval gat
 when_to_use: "large / architectural / risky / cross-surface task，或需要決定派哪個 named role、是否需要 plan-verifier / verifier 時"
 ---
 
-> 由 `config/ai/claude/hooks/agent-stack-auto-update.sh` 每日從本機 `pilotfish-claude` 的 committed HEAD 同步，
+> 由 `config/ai/claude/hooks/agent-stack-auto-update.sh` 每日從本機 `shoal` 的 committed HEAD（`hosts/claude/dist`）同步，
 > 不要手改。與 shared contract 衝突時以 shared contract 為準（例如 `/goal` 授權）。
 
 <!-- pilotfish:begin -->
