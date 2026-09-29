@@ -45,3 +45,9 @@ if [ -x "$HOME/.local/bin/tokenbar-remote-sync.sh" ]; then
     return $rc
   }
 fi
+
+# macOS 預設用 nvim；其他環境維持 .zshrc 的 vim
+if command -v nvim >/dev/null 2>&1; then
+  export EDITOR="nvim"
+  export VISUAL="nvim"
+fi
