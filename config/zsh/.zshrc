@@ -12,25 +12,10 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-source ~/.zplug/init.zsh
-
-# Zplug plugins
-zplug "romkatv/powerlevel10k", as:theme, depth:1
-zplug "zsh-users/zsh-completions"
-zplug "zsh-users/zsh-history-substring-search"
-zplug "zsh-users/zsh-autosuggestions"
-zplug "junegunn/fzf", from:github, as:command, hook-build:"./install --all"
-zplug "Aloxaf/fzf-tab"
-zplug "plugins/git", from:oh-my-zsh
-zplug "direnv/direnv"
-zplug "knqyf263/pet"
-zplug "zdharma/fast-syntax-highlighting"
-zplug "zpm-zsh/ls"
-zplug "plugins/docker", from:oh-my-zsh
-zplug "plugins/composer", from:oh-my-zsh
-zplug "plugins/extract", from:oh-my-zsh
-zplug "lib/completion", from:oh-my-zsh
-zplug "plugins/sudo", from:oh-my-zsh
+# Zplug plugins 宣告在 zplug-packages.zsh（init.zsh 會自動讀 ZPLUG_LOADFILE）
+export ZPLUG_LOADFILE="${${(%):-%x}:A:h}/zplug-packages.zsh"
+# /bin/zsh 預設 fpath 不含 Homebrew completions；要在 compinit 前加入
+[[ -d /opt/homebrew/share/zsh/site-functions ]] && fpath=(/opt/homebrew/share/zsh/site-functions $fpath)
 
 # Export config
 export TERM="xterm-256color"
@@ -71,16 +56,55 @@ HIST_STAMPS="yyyy-mm-dd"
 ZSH_DISABLE_COMPFIX=true
 skip_global_compinit=1
 
-# Configure
-# search keybind
-if zplug check zsh-users/zsh-history-substring-search; then
-  bindkey '^[[a' history-substring-search-up
-  bindkey '^[[b' history-substring-search-down
-fi
-# ...
-
 # Load plugins (run `zplug install` manually when adding new plugins)
-zplug load
+# 平常只 source 由 zplug cache 產生的 static loader，跳過 zplug 每次啟動的
+# 偵測與 parse（~250ms）；宣告檔或 zplug cache 較新時才走完整 zplug load 並重建。
+__zplug_static="$HOME/.zplug/static-load.zsh"
+__zplug_build_static() {
+  local k line tmp="$__zplug_static.$$"
+  local -a words
+  {
+    print -r -- "# Generated from ~/.zplug/cache by .zshrc; do not edit."
+    [[ -n $ZSH ]] && print -r -- "export ZSH=${(q)ZSH} ZSH_CACHE_DIR=${(q)ZSH_CACHE_DIR}"
+    print -r -- "fpath=(${(j: :)${(@qf)"$(<$_zplug_cache[fpath])"}} \$fpath)"
+    # 同 zplug init：先用既有 dump 讓 compdef 可用，defer 點再完整 compinit
+    print -r -- "autoload -Uz compinit && compinit -C -d ${(q)ZPLUG_HOME}/zcompdump"
+    for k in plugin lazy_plugin theme command defer_1_plugin compinit defer_2_plugin defer_3_plugin; do
+      if [[ $k == compinit ]]; then
+        print -r -- "setopt prompt_subst"
+        print -r -- "compinit -d ${(q)ZPLUG_HOME}/zcompdump"
+        continue
+      fi
+      for line in "${(@f)"$(<$_zplug_cache[$k])"}"; do
+        [[ -z $line ]] && continue
+        [[ $line == *--hook* || $line == *--lazy* ]] && return 1
+        words=(${(z)line})
+        case $words[1] in
+          __zplug::core::load::as_plugin|__zplug::core::load::as_theme)
+            print -r -- "source ${words[-1]}" ;;
+          __zplug::core::load::as_command) ;;  # symlink 已由 zplug load 建好
+          *) return 1 ;;
+        esac
+      done
+    done
+  } >| "$tmp" && mv -f "$tmp" "$__zplug_static"
+}
+if [[ -r $__zplug_static && $__zplug_static -nt $ZPLUG_LOADFILE && $__zplug_static -nt ${${(%):-%x}:A} \
+   && $__zplug_static -nt $HOME/.zplug/cache/plugin.zsh ]]; then
+  source "$__zplug_static"
+  zplug() { unfunction zplug; source ~/.zplug/init.zsh && zplug "$@" }
+else
+  source ~/.zplug/init.zsh
+  zplug load && { __zplug_build_static || rm -f "$__zplug_static" "$__zplug_static".* }
+fi
+unset -f __zplug_build_static
+unset __zplug_static
+
+# search keybind
+if (( $+widgets[history-substring-search-up] )); then
+  bindkey '^[[A' history-substring-search-up
+  bindkey '^[[B' history-substring-search-down
+fi
 
 # Load p10k
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
