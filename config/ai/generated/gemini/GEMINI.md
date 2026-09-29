@@ -183,6 +183,7 @@
 
 <!-- runtime-adapter:end -->
 
+<!-- pilotfish-agy v0.1.0 -->
 <!-- pilotfish-agy:begin -->
 ## Pilotfish orchestration (agy only)
 
