@@ -38,6 +38,17 @@ local function on_attach(client, bufnr)
   map("n", "[d", function() vim.diagnostic.jump({ count = -1, float = true }) end, "Prev diagnostic")
   map("n", "]d", function() vim.diagnostic.jump({ count = 1, float = true }) end, "Next diagnostic")
 
+  -- VSCode 的同名反白：游標停住時標出同一個 symbol 的其他位置
+  if client:supports_method("textDocument/documentHighlight") then
+    local group = vim.api.nvim_create_augroup("miyago_lsp_highlight_" .. bufnr, { clear = true })
+    vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+      group = group, buffer = bufnr, callback = vim.lsp.buf.document_highlight,
+    })
+    vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "BufLeave" }, {
+      group = group, buffer = bufnr, callback = vim.lsp.buf.clear_references,
+    })
+  end
+
   if client:supports_method("textDocument/inlayHint") then
     vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
     map("n", "<leader>uh", function()

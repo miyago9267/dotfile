@@ -68,6 +68,7 @@ Copilot 未登入、沒有 Node 或 credentials 時會靜默跳過，不影響�
 | `Space ub` | 開關透明背景 |
 | `Space uc` | 開關 cursorline |
 | `Space uh` | 開關 inlay hints |
+| `Space ut` | 開關 sticky scroll（捲動時把所在 function／class 標頭釘在頂端） |
 | `Space uF` | 開關存檔自動 format |
 
 F1 / F3 / F4 也分別對應透明背景、行數、file tree；F12 對應原生 tag jump。
@@ -162,6 +163,12 @@ Agent panel 開啟後會進入 terminal input mode，這是為了可以直接輸
 由 [archipelago.nvim](https://github.com/miyago9267/archipelago.nvim) 提供。workspace 檔存放在 `~/.local/share/nvim/archipelago/`。開啟後 cwd 會切到 hub（`~/.local/state/nvim/archipelago/<name>`，裡面只有 symlink），
 file tree、搜尋和 agent 都能看到所有 folder；buffer 和複製出來的路徑一律是真實路徑。
 
+## Markdown
+
+| 快捷鍵 | 功能 |
+| --- | --- |
+| `Space mp` / `:Leaf` | 用 Leaf 在浮動視窗預覽目前的 Markdown（存檔後自動重新載入，`q` 關閉） |
+
 ## 全域搜尋
 
 Nvim 用 `fzf-lua`，Vim 用 `fzf.vim`，兩者共用 `fzf` 與 `rg`。Vim 在沒有 `rg` 的舊系統會退回內建 `:grep` + quickfix。
@@ -173,6 +180,9 @@ Nvim 用 `fzf-lua`，Vim 用 `fzf.vim`，兩者共用 `fzf` 與 `rg`。Vim 在�
 | `Space fw` | 搜尋游標下的字（Nvim visual 模式搜選取內容） |
 | `Space fb` | 已開啟的 buffer |
 | `Space fr` | 最近開過的檔案 |
+| `Space p` | Command palette：列出所有有說明的快捷鍵，Enter 直接執行（Nvim） |
+| `Space :` | 列出所有指令（Nvim） |
+| `Space fs` / `Space fS` | 目前檔案的 symbols／整個專案的 symbols（Nvim） |
 
 ## Git 視覺提示
 

@@ -223,6 +223,15 @@ install_dependencies() {
         print_warning "tree-sitter CLI unavailable; only Neovim built-in parsers will highlight"
     fi
 
+    # leaf（Markdown 預覽 TUI，leaf.nvim 用）
+    if command -v leaf >/dev/null 2>&1; then
+        print_success "leaf already installed"
+    elif pkg_install leaf-markdown-viewer || npm install -g @rivolink/leaf; then
+        print_success "leaf installed"
+    else
+        print_warning "leaf unavailable; Space mp (Markdown preview) will not work"
+    fi
+
     # Node.js (for LSP servers)
     if command -v node >/dev/null 2>&1; then
         print_success "Node.js installed: $(node --version)"

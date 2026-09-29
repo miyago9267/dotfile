@@ -38,6 +38,7 @@ return {
         { "<leader>a", group = "Agent" },
         { "<leader>b", group = "Buffer" },
         { "<leader>d", group = "Diagnostics" },
+        { "<leader>m", group = "Markdown" },
         { "<leader>f", group = "Find" },
         { "<leader>g", group = "Git" },
         { "<leader>t", group = "Terminal" },
@@ -114,6 +115,12 @@ return {
       { "<leader>fw", function() require("archipelago.integrations.fzf-lua").grep_visual() end, mode = "v", desc = "Search selection" },
       { "<leader>fb", "<cmd>FzfLua buffers<CR>", desc = "Find buffers" },
       { "<leader>fr", "<cmd>FzfLua oldfiles<CR>", desc = "Recent files" },
+      -- VSCode Ctrl-Shift-P：列出所有有描述的快捷鍵，Enter 直接執行；<leader>: 列出所有指令
+      { "<leader>p", "<cmd>FzfLua keymaps<CR>", desc = "Command palette" },
+      { "<leader>:", "<cmd>FzfLua commands<CR>", desc = "Commands" },
+      -- VSCode Ctrl-Shift-O / Ctrl-T
+      { "<leader>fs", "<cmd>FzfLua lsp_document_symbols<CR>", desc = "Symbols in file" },
+      { "<leader>fS", "<cmd>FzfLua lsp_live_workspace_symbols<CR>", desc = "Symbols in workspace" },
     },
   },
   {
@@ -299,6 +306,28 @@ return {
       { "<leader>yp", ":CopyPath<CR>", mode = "v", desc = "Copy absolute path:lines" },
       { "<leader>yr", ":CopyRelativePath<CR>", mode = "v", desc = "Copy relative path:lines" },
     },
+  },
+  {
+    -- VSCode sticky scroll：捲動時把所在的 function / class 標頭釘在頂端
+    "nvim-treesitter/nvim-treesitter-context",
+    event = { "BufReadPost", "BufNewFile" },
+    opts = { max_lines = 3, multiline_threshold = 1, trim_scope = "inner" },
+    keys = {
+      { "<leader>ut", "<cmd>TSContext toggle<CR>", desc = "Toggle sticky scroll" },
+    },
+  },
+  {
+    -- Markdown 預覽：在浮動視窗跑 Leaf TUI（需要 leaf 執行檔，setup_neovim.sh 會裝）
+    "charliie-dev/leaf.nvim",
+    dependencies = { "folke/snacks.nvim" },
+    cmd = "Leaf",
+    keys = {
+      { "<leader>mp", "<cmd>Leaf<CR>", desc = "Markdown preview (Leaf)" },
+    },
+    config = function()
+      -- 插件在 lf 沒被佔用時會自己綁 lf；l 是移動鍵，綁了會讓每次按 l 都要等 timeout
+      pcall(vim.keymap.del, "n", "lf")
+    end,
   },
   {
     "coder/claudecode.nvim",
