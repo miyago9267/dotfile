@@ -30,7 +30,8 @@
       "mcp__playwright__browser_tabs",
       "Read(//private/tmp/**)",
       "Bash(agy agents *)",
-      "Read(//Users/miyago/**)"
+      "Read(//Users/miyago/**)",
+      "Bash(pkill *)"
     ]
   }
 }

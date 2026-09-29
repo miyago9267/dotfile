@@ -87,7 +87,7 @@ enabled = true
 [appearance.window]
 override_blur = 64
 open_windows_at_custom_size = false
-zoom_level = 100
+zoom_level = 110
 override_opacity = 94
 
 [appearance.themes]
