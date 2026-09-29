@@ -156,6 +156,26 @@ class RouteHookTests(unittest.TestCase):
 
     # Active routing
 
+    def turn_file(self, sid: str = "sess-1") -> Path:
+        return self.home / ".local/state/miyago/jev/turns" / f"{sid}.json"
+
+    def test_active_emit_writes_turn_file(self) -> None:
+        self.stub.body = scores(judgment=0.95)
+        out, _ = self.run_hook("tidy this", session_id="sess-1", prompt_id="p-1")
+        self.assertIn("`executor`", self.context(out))
+        f = self.turn_file()
+        self.assertEqual(json.loads(f.read_text()), {"prompt_id": "p-1", "role": "judgment"})
+        self.assertEqual(stat.S_IMODE(f.stat().st_mode), 0o600)
+        self.assertEqual(stat.S_IMODE(f.parent.stat().st_mode), 0o700)
+
+    def test_turn_file_not_written_without_emit_or_with_bad_ids(self) -> None:
+        self.stub.body = scores(judgment=0.95)
+        self.run_hook("tidy this", mode="shadow", session_id="sess-1", prompt_id="p-1")
+        self.run_hook("tidy this", session_id="../evil", prompt_id="p-1")
+        self.run_hook("tidy this", session_id="sess-1", prompt_id="p/1")
+        self.run_hook("tidy this")
+        self.assertFalse((self.home / ".local/state/miyago/jev/turns").exists())
+
     def test_active_high_confidence_emits_fixed_directive(self) -> None:
         out, _ = self.run_hook("幫我找出 routing 相關的程式在哪裡")
         text = self.context(out)

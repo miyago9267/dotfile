@@ -120,6 +120,16 @@
         ]
       },
       {
+        "matcher": "Edit|Write|NotebookEdit|MultiEdit|Agent|Workflow",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/dotfile/config/ai/claude/hooks/pilotfish-dispatch-guard.py",
+            "timeout": 3
+          }
+        ]
+      },
+      {
         "matcher": "*",
         "hooks": [
           {
@@ -178,6 +188,11 @@
           {
             "type": "command",
             "command": "bash ~/dotfile/config/ai/claude/hooks/jev-route.sh",
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/dotfile/config/ai/claude/hooks/pilotfish-dispatch-guard.py",
             "timeout": 3
           }
         ]

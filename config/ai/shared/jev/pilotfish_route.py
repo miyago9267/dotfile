@@ -289,6 +289,33 @@ def append_log(home: Path, record: dict[str, Any]) -> None:
         return
 
 
+ID_RE = re.compile(r"^[A-Za-z0-9-]{1,64}$")
+
+
+def write_turn(home: Path, payload: dict[str, Any], role: str) -> None:
+    """Advisory 已注入時，記下本輪 role 供 dispatch guard 讀取；失敗一律靜默。"""
+    sid, pid = payload.get("session_id"), payload.get("prompt_id")
+    if not (isinstance(sid, str) and isinstance(pid, str) and ID_RE.match(sid) and ID_RE.match(pid)):
+        return
+    try:
+        state = _state_dir(home)
+        if state is None:
+            return
+        turns = state / "turns"
+        turns.mkdir(mode=0o700, exist_ok=True)
+        if turns.is_symlink() or turns.stat().st_uid != os.getuid() or stat.S_IMODE(turns.stat().st_mode) & 0o077:
+            return
+        fd = _open_private(turns / f"{sid}.json", os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+        if fd is None:
+            return
+        try:
+            os.write(fd, json.dumps({"prompt_id": pid, "role": role}).encode())
+        finally:
+            os.close(fd)
+    except OSError:
+        return
+
+
 def _breaker_path(home: Path) -> Path | None:
     state = _state_dir(home)
     return None if state is None else state / "pilotfish-route.breaker.json"
@@ -480,6 +507,8 @@ def run(payload: dict[str, Any], env: dict[str, str]) -> str | None:
     if output:
         emitted = next(name for name, value in ROLE_TEXT.items() if value in output)
     log("sent", scores={k: round(v, 3) for k, v in scores.items()}, emitted=emitted)
+    if emitted:
+        write_turn(home, payload, emitted)
     return output
 
 

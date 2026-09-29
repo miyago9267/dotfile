@@ -106,6 +106,17 @@ AGENTS.md 的 gate 與 dispatch brake 優先。Jev 只能建議 role，或把流
 測試：`python3 -m unittest discover -s shared/jev/tests`，只使用本機 stub，
 不連網。
 
+## Pilotfish dispatch guard
+
+`claude/hooks/pilotfish-dispatch-guard.py` 在 UserPromptSubmit 與 PreToolUse 兩個事件強制
+main session 派工：route 判定 `judgment` / `mechanical` 時（`turns/<session_id>.json`），
+main 直接 Edit/Write 會被 deny（R1）；沒有派任何 Agent 就改超過 `PILOTFISH_GUARD_MAX_FILES`
+（預設 2）個不同檔案也會 deny（R2）。派出 Agent/Workflow 後本輪放行；subagent 永遠放行；
+`/tmp`、`$TMPDIR`、`.claude/projects/`、`.ai/` 路徑不計。Miyago 在 prompt 加獨立 token
+`#direct` 即整輪放行。模式由 `PILOTFISH_GUARD` 控制：`enforce`（預設）、`shadow`（只記
+`would_deny`）、`off`。任何錯誤 fail-open。log：`~/.local/state/miyago/jev/pilotfish-guard.jsonl`
+（只記 basename，1MB 上限）。hook 註冊在 settings.json，不在此處。
+
 ## Runtime mapping
 
 | Runtime | jev-browser | Reticle | compaction |
