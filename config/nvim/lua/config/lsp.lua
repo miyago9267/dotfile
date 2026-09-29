@@ -24,7 +24,7 @@ local function executable(cmd)
   return vim.fn.executable(cmd) == 1
 end
 
-local function on_attach(_, bufnr)
+local function on_attach(client, bufnr)
   local map = function(mode, lhs, rhs, desc)
     vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, desc = desc })
   end
@@ -35,12 +35,35 @@ local function on_attach(_, bufnr)
   map("n", "K", vim.lsp.buf.hover, "LSP: hover")
   map("n", "<F2>", vim.lsp.buf.rename, "LSP: rename")
   map({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, "LSP: code action")
-  map("n", "<leader>cf", function()
-    vim.lsp.buf.format({ async = true })
-  end, "LSP: format")
+  map("n", "[d", function() vim.diagnostic.jump({ count = -1, float = true }) end, "Prev diagnostic")
+  map("n", "]d", function() vim.diagnostic.jump({ count = 1, float = true }) end, "Next diagnostic")
+
+  if client:supports_method("textDocument/inlayHint") then
+    vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+    map("n", "<leader>uh", function()
+      vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
+    end, "Toggle inlay hints")
+  end
+end
+
+-- VSCode 風格：行尾顯示訊息、波浪底線、嚴重度排序
+local function setup_diagnostics()
+  local S = vim.diagnostic.severity
+  vim.diagnostic.config({
+    severity_sort = true,
+    update_in_insert = false,
+    underline = true,
+    virtual_text = { spacing = 2, prefix = "●", source = "if_many" },
+    float = { border = "rounded", source = true },
+    signs = {
+      text = { [S.ERROR] = "\u{f057} ", [S.WARN] = "\u{f071} ", [S.INFO] = "\u{f05a} ", [S.HINT] = "\u{f0335} " },
+    },
+  })
 end
 
 function M.setup()
+  setup_diagnostics()
+
   local capabilities = vim.lsp.protocol.make_client_capabilities()
   local ok, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
   if ok then

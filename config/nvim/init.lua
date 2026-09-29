@@ -31,3 +31,4 @@ end
 
 require("config.keymaps").setup()
 require("config.agent").setup()
+require("config.workspace").setup()

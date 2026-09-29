@@ -214,6 +214,15 @@ install_dependencies() {
         print_success "fzf installed"
     fi
 
+    # tree-sitter CLI（nvim-treesitter main branch 用它編 parser）
+    if command -v tree-sitter >/dev/null 2>&1; then
+        print_success "tree-sitter CLI already installed"
+    elif pkg_install tree-sitter-cli || npm install -g tree-sitter-cli; then
+        print_success "tree-sitter CLI installed"
+    else
+        print_warning "tree-sitter CLI unavailable; only Neovim built-in parsers will highlight"
+    fi
+
     # Node.js (for LSP servers)
     if command -v node >/dev/null 2>&1; then
         print_success "Node.js installed: $(node --version)"

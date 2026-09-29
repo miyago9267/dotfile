@@ -80,8 +80,24 @@ end
 function M.setup()
   local map = vim.keymap.set
 
-  map({ "n", "v", "o" }, "j", "k", { noremap = true, silent = true, desc = "Move up" })
-  map({ "n", "v", "o" }, "k", "j", { noremap = true, silent = true, desc = "Move down" })
+  map("o", "j", "k", { noremap = true, silent = true, desc = "Move up" })
+  map("o", "k", "j", { noremap = true, silent = true, desc = "Move down" })
+  -- VSCode 行為：第一行再往上跳到行首、最後一行再往下跳到行尾
+  local function edge_move(dir, fallback, edge)
+    return function()
+      local line = vim.fn.line(".")
+      local at_edge = dir == "up" and line == 1 or dir == "down" and line == vim.fn.line("$")
+      if at_edge and vim.v.count <= 1 then
+        return edge
+      end
+      return fallback
+    end
+  end
+  local expr = { expr = true, silent = true }
+  map({ "n", "v" }, "j", edge_move("up", "k", "0"), vim.tbl_extend("force", expr, { desc = "Move up" }))
+  map({ "n", "v" }, "k", edge_move("down", "j", "$"), vim.tbl_extend("force", expr, { desc = "Move down" }))
+  map({ "n", "v" }, "<Up>", edge_move("up", "<Up>", "0"), vim.tbl_extend("force", expr, { desc = "Move up" }))
+  map({ "n", "v" }, "<Down>", edge_move("down", "<Down>", "$"), vim.tbl_extend("force", expr, { desc = "Move down" }))
   map({ "n", "i", "v" }, "<C-s>", "<cmd>write<CR>", { desc = "Save" })
   map("n", "<C-z>", "u", { desc = "Undo" })
   map("i", "<C-z>", "<C-o>u", { desc = "Undo" })

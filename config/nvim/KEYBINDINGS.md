@@ -10,6 +10,7 @@
 | `Ctrl-z` | 復原 |
 | `Ctrl-f` | 目前檔案搜尋 |
 | `j` / `k` | 依 Miyago 習慣交換上下移動 |
+| `j`／`↑` 在第一行、`k`／`↓` 在最後一行 | 像 VSCode 一樣跳到行首／行尾（insert mode 也適用） |
 | `:find` | 找檔案 |
 | `:vimgrep` | 搜尋專案 |
 | `:%s` | 取代文字 |
@@ -40,6 +41,18 @@ Copilot 未登入、沒有 Node 或 credentials 時會靜默跳過，不影響�
 | `K` | 顯示 hover documentation |
 | `F2` | Rename symbol |
 | `Space ca` / `Space cf` | Code action／format |
+| `[d` / `]d` | 上一個／下一個 diagnostic |
+
+## Problems（Trouble）
+
+| 快捷鍵 | 功能 |
+| --- | --- |
+| `Space dd` / `Space db` | 整個 project／目前 buffer 的 Problems 面板 |
+| `Space ds` | Symbols outline |
+| `Space dr` | LSP references 面板 |
+| `Space dl` | 顯示游標所在行的 diagnostic |
+
+存檔時會自動 format（conform.nvim）：有對應 formatter（stylua、ruff、prettier、gofmt、rustfmt 等）就用，沒有就退回 LSP format。
 
 目前涵蓋 C/C++、Lua、Go、Rust、Python、TypeScript、Vue、HTML、CSS、YAML、JSON、TOML、XML、Markdown、Bash、Terraform 與 Dockerfile。
 每個 server 都會先檢查 executable；沒有安裝時只失去該語言的智慧功能，不影響 Neovim 啟動。
@@ -52,6 +65,8 @@ Copilot 未登入、沒有 Node 或 credentials 時會靜默跳過，不影響�
 | `Ctrl-e` / `Space uf` | 開關 file tree |
 | `Space ub` | 開關透明背景 |
 | `Space uc` | 開關 cursorline |
+| `Space uh` | 開關 inlay hints |
+| `Space uF` | 開關存檔自動 format |
 
 F1 / F3 / F4 也分別對應透明背景、行數、file tree；F12 對應原生 tag jump。
 它們只是有實體 F-key 或 SSH/WSL 環境時的相容入口，MacBook 以 `Space` 入口為準。
@@ -119,6 +134,21 @@ Space prefix 也遵循 tmux 的 pane 操作邏輯：
 四個 Agent 都使用相同的右側互動 terminal panel。Claude 額外保留 IDE protocol、diff 與檔案同步；其他 Agent 使用原生 Neovim terminal。也可以用 `:Agent claude|codex|opencode|gemini` 開關指定 panel。
 
 Agent panel 開啟後會進入 terminal input mode，這是為了可以直接輸入 prompt。要使用 `Space a*` 或其他 Neovim 快捷鍵，先按 `Esc`；也可以按 `<C-\\><C-n>` 回到 Normal mode。
+
+## Workspace（multi-root）
+
+| 指令 | 功能 |
+| --- | --- |
+| `nvim foo.code-workspace` | 直接以 workspace 開啟（VSCode 同格式） |
+| `:Workspace open [name]` | 開啟 workspace；不給名稱時用 fzf 選 |
+| `:Workspace new <name>` | 以目前檔案的 git root（或 cwd）建立新 workspace |
+| `:Workspace add [dir]` / `:Workspace remove [name]` | 加入／移除 folder |
+| `:Workspace list` / `:Workspace close` | 列出 folder／關閉並回到原本的 cwd |
+| `:CopyPath` / `:CopyRelativePath` | 複製真實絕對路徑／相對路徑；visual 或 `:2,5CopyPath` 會附加 `:2-5` |
+| file tree 的 `gy` / `Y`、右鍵選單 | 同上兩種複製路徑 |
+
+workspace 檔存放在 `~/.local/share/nvim/workspaces/`。開啟後 cwd 會切到 hub（`~/.local/state/nvim/workspace-hub/<name>`，裡面只有 symlink），
+file tree、搜尋和 agent 都能看到所有 folder；buffer 和複製出來的路徑一律是真實路徑。
 
 ## 全域搜尋
 

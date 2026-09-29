@@ -66,11 +66,20 @@ function M.setup_cmp()
   vim.keymap.set("s", "<Tab>", function() tab(function() feed_key("<Tab>") end) end)
   vim.keymap.set("i", "<S-Tab>", function() shift_tab(function() feed_key("<S-Tab>") end) end)
   vim.keymap.set("s", "<S-Tab>", function() shift_tab(function() feed_key("<S-Tab>") end) end)
-  vim.keymap.set("i", "<Down>", function() select_next(function() feed_key("<Down>") end) end)
+  -- VSCode 行為：第一行按上跳到行首、最後一行按下跳到行尾（insert mode 版，normal 版在 keymaps.lua）
+  local function vertical_key(dir)
+    local line = vim.fn.line(".")
+    if dir == "up" then
+      return line == 1 and "<Home>" or "<Up>"
+    end
+    return line == vim.fn.line("$") and "<End>" or "<Down>"
+  end
+
+  vim.keymap.set("i", "<Down>", function() select_next(function() feed_key(vertical_key("down")) end) end)
   vim.keymap.set("s", "<Down>", function() select_next(function() feed_key("<Down>") end) end)
   vim.keymap.set("i", "<Right>", function() select_next(function() feed_key("<Right>") end) end)
   vim.keymap.set("s", "<Right>", function() select_next(function() feed_key("<Right>") end) end)
-  vim.keymap.set("i", "<Up>", function() select_prev(function() feed_key("<Up>") end) end)
+  vim.keymap.set("i", "<Up>", function() select_prev(function() feed_key(vertical_key("up")) end) end)
   vim.keymap.set("s", "<Up>", function() select_prev(function() feed_key("<Up>") end) end)
   vim.keymap.set("i", "<Left>", function() select_prev(function() feed_key("<Left>") end) end)
   vim.keymap.set("s", "<Left>", function() select_prev(function() feed_key("<Left>") end) end)
