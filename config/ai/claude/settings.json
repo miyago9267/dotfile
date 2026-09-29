@@ -3,6 +3,7 @@
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "100",
     "CLAUDE_CODE_THISTLE_GREBE": "counter_steer",
     "CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS": "1",
+    "STINGRAY": "1",
     "STINGRAY_SHAPE3": "1"
   },
   "permissions": {
@@ -331,6 +332,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "^(startup|resume|clear|compact|fork)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/miyago/.claude/hooks/herdr-agent-state.sh' session",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "Stop": [
@@ -463,7 +474,8 @@
     "rust-analyzer-lsp@claude-plugins-official": true,
     "clangd-lsp@claude-plugins-official": true,
     "i-have-adhd@i-have-adhd": true,
-    "stingray@stingray": true
+    "stingray@stingray": true,
+    "warp@claude-code-warp": true
   },
   "extraKnownMarketplaces": {
     "claude-hud": {
@@ -482,6 +494,12 @@
       "source": {
         "source": "github",
         "repo": "Nanako0129/stingray"
+      }
+    },
+    "claude-code-warp": {
+      "source": {
+        "source": "github",
+        "repo": "warpdotdev/claude-code-warp"
       }
     }
   },
