@@ -176,6 +176,24 @@ P1–P4 每個 phase 結束時，所有 host 的實際行為都不變；P5 才�
 - P4a：revert dotfile 的切換 commit，auto-update 下次執行就從舊 fork 裝回；舊 fork 目錄在 P4b 之前都保留原樣。
 - P4b 之後：舊 fork 在 archive 目錄仍可還原。
 
+## P4a 執行切片（2026-09-29，送審版）
+
+前置：P1–P3 已 commit（`pilotfish-codex@9d07203` 的 `feat/multi-host`，dotfile `ddcc129`）。
+
+**不在此切片**：GitHub 改名與任何 push（external mutation，另外確認）；刪除 dotfile `plugins/pilotfish-agy`、`plugins/pilotfish-grok` 與舊 fork（P4b）。
+
+| 步驟 | 動作 | 驗收 |
+|---|---|---|
+| S1 | `pilotfish-codex` 本機 `main` fast-forward merge `feat/multi-host` | `git log main` 含 `9d07203`；5 host `--check` 綠 |
+| S2 | R8 marker：claude 放在 `skills/pilotfish-orchestration/SKILL.md` 的 frontmatter 之後、body 第一行（`<!-- pilotfish-claude vX -->`，auto-update 會把它裝進 `pilotfish:begin/end` 之間）；agy 放在 `rules/pilotfish-agy.md` 第一行（`setup_gemini.sh` 會併入 generated `GEMINI.md`）；codex、grok 已有；opencode 輸出全是 JSON，不加，改由 S6 的內容比對驗證。golden 改為 regression fixture：`refresh_golden.py` 新增 `--from-dist` 模式，從本 repo 的 `DIST_DIRS[host]` 複製並在 `SOURCE` 記 `shoal@<sha>`；同步更新各 test 的 `SOURCE_REFS` / `GOLDEN_COUNT` | 5 host `--check` 綠、`unittest discover` 全綠、`tests/golden/*/SOURCE` 記錄新來源 |
+| S3 | 目錄改名 `Forks/pilotfish-codex` → `Forks/shoal`，並建 symlink `Forks/pilotfish-codex -> shoal` 作為過渡相容（P4b 移除） | 舊路徑仍可讀；`git -C Forks/shoal status` 正常 |
+| S4 | `~/.codex/config.toml:311` marketplace `source` 改指 `Forks/shoal/plugin`（改前備份） | `tomllib` 可解析；路徑存在 |
+| S5 | dotfile 單一 commit 切換：`agent-stack-auto-update.sh` 改從 `shoal` HEAD `git archive hosts/claude/dist` 安裝；`install-pilotfish.sh` 改為 `git archive` HEAD 的 `hosts/opencode` 到暫存目錄 → `bun install --frozen-lockfile` → `bun run build` → 安裝 js（取代 R7 表中「committed dist js」，plan-verifier 第 2 輪允許的替代方案；repo 不 commit 產物）；`setup_gemini.sh` symlink 改指 `shoal/hosts/agy/dist`；`claude/AGENTS.md`、skill 說明、`config/ai/grok/README.md`、`PILOTFISH_ROUTING.md` 的路徑文字改為 `shoal` | 單一 commit，可整個 revert |
+| S6 | `.opencode/pilotfish/{catalog,routing}.json` 維持 dotfile 內的一般檔案（可攜），由 `check_agent_rule_sync.sh` 比對必須與 `shoal/hosts/opencode/dist` 逐位元組相同；`check_agent_rule_sync.sh` 另加 marker 檢查，對象是**實際安裝處**：`${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/pilotfish-orchestration/SKILL.md` 與 generated `GEMINI.md` | 併入 S5 的 commit；刪掉已安裝檔中的 marker 行時 sync check 必須失敗 |
+| S7 | 驗證：切換前快照 `~/.claude/agents`、skill、`plugins/pilotfish-opencode.js`、`~/.gemini` 的 pilotfish 連結；切換後各跑一次 auto-update、`install-pilotfish.sh`、`setup_gemini.sh`（或其 pilotfish 段）、`check_agent_rule_sync.sh` | agents 與 skill 內容和切換前相同（marker 除外）；opencode js 與切換前 build 相同或只差路徑註解；gemini 連結指向 shoal；sync check 綠 |
+
+**Rollback**：revert S5 的 dotfile commit；`~/.codex/config.toml` 用 S4 的備份還原；S3 的 symlink 讓舊路徑持續可用；S1/S2 只在本機 `main`，可 `git reset` 回 `61a411b`（需另確認）。
+
 ## Open Decisions
 
 1. **Repo 名稱**：沿用 `pilotfish-codex` 改名（GitHub 會自動轉址，上游連結不會斷），或開新 repo `pilotfish-hosts` 之類，把 codex 歷史搬進去？
