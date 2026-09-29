@@ -23,6 +23,7 @@ if vim.loop.fs_stat(lazypath) then
   vim.opt.rtp:prepend(lazypath)
   require("lazy").setup(require("plugins"), {
     change_detection = { notify = false },
+    dev = { path = "~/Project/Active/Packages", fallback = true },
     checker = { enabled = false },
   })
 else
@@ -31,4 +32,3 @@ end
 
 require("config.keymaps").setup()
 require("config.agent").setup()
-require("config.workspace").setup()

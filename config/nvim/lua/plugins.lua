@@ -43,6 +43,8 @@ return {
         { "<leader>t", group = "Terminal" },
         { "<leader>u", group = "UI toggle" },
         { "<leader>w", group = "Window" },
+        { "<leader>W", group = "Workspace" },
+        { "<leader>y", group = "Copy path" },
       },
     },
   },
@@ -81,10 +83,10 @@ return {
       update_focused_file = {
         enable = true,
         update_root = true,
-        -- workspace 中由 config.workspace 接手定位，避免 root 跳到真實 repo
-        exclude = function(event) return require("config.workspace").tree_exclude(event) end,
+        -- workspace 中由 archipelago 接手定位，避免 root 跳到真實 repo
+        exclude = function(event) return require("archipelago.integrations.nvim-tree").exclude(event) end,
       },
-      on_attach = function(bufnr) require("config.workspace").tree_on_attach(bufnr) end,
+      on_attach = function(bufnr) require("archipelago.integrations.nvim-tree").on_attach(bufnr) end,
       view = { width = 32, side = "left" },
       renderer = { group_empty = true, highlight_git = "name" },
       filters = { dotfiles = false },
@@ -96,13 +98,20 @@ return {
     cmd = "FzfLua",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     opts = {},
+    init = function()
+      -- vim.ui.select（code action、:Workspace open 等）改用 fzf，第一次呼叫時才載入
+      vim.ui.select = function(...)
+        require("fzf-lua").register_ui_select()
+        return vim.ui.select(...)
+      end
+    end,
     keys = {
-      -- 走 config.workspace：workspace 中會跟進 hub 裡的 symlink，平常行為不變
-      { "<C-p>", function() require("config.workspace").fzf("files") end, desc = "Find files" },
-      { "<leader>ff", function() require("config.workspace").fzf("files") end, desc = "Find files" },
-      { "<leader>fg", function() require("config.workspace").fzf("live_grep") end, desc = "Search text in project" },
-      { "<leader>fw", function() require("config.workspace").fzf("grep_cword") end, desc = "Search word under cursor" },
-      { "<leader>fw", function() require("config.workspace").fzf("grep_visual") end, mode = "v", desc = "Search selection" },
+      -- 走 archipelago：workspace 中會跟進 hub 裡的 symlink，平常行為不變
+      { "<C-p>", function() require("archipelago.integrations.fzf-lua").files() end, desc = "Find files" },
+      { "<leader>ff", function() require("archipelago.integrations.fzf-lua").files() end, desc = "Find files" },
+      { "<leader>fg", function() require("archipelago.integrations.fzf-lua").live_grep() end, desc = "Search text in project" },
+      { "<leader>fw", function() require("archipelago.integrations.fzf-lua").grep_cword() end, desc = "Search word under cursor" },
+      { "<leader>fw", function() require("archipelago.integrations.fzf-lua").grep_visual() end, mode = "v", desc = "Search selection" },
       { "<leader>fb", "<cmd>FzfLua buffers<CR>", desc = "Find buffers" },
       { "<leader>fr", "<cmd>FzfLua oldfiles<CR>", desc = "Recent files" },
     },
@@ -257,6 +266,38 @@ return {
         end,
         desc = "Toggle format on save",
       },
+    },
+  },
+  {
+    -- multi-root workspace；本機有 ~/Project/Active/Packages/archipelago.nvim 時用 local 版（見 init.lua 的 dev）
+    "miyago9267/archipelago.nvim",
+    dev = true,
+    lazy = false,
+    opts = {},
+    keys = {
+      { "<leader>Wo", "<cmd>Workspace open<CR>", desc = "Open workspace" },
+      {
+        "<leader>Wn",
+        function()
+          vim.ui.input({ prompt = "New workspace name: " }, function(name)
+            if name and name ~= "" then require("archipelago").create(name) end
+          end)
+        end,
+        desc = "New workspace",
+      },
+      -- 在 file tree 上按會加入游標所在的資料夾；沒開 workspace 時自動開一個未存檔的 untitled
+      { "<leader>Wa", function() require("archipelago").add() end, desc = "Add folder" },
+      -- fzf 選資料夾：預設 zoxide 常用目錄，<C-f> 切成 fd 全搜，<Tab> 多選
+      { "<leader>WA", function() require("archipelago.integrations.fzf-lua").add_folder() end, desc = "Add folder (fzf)" },
+      { "<leader>Wr", "<cmd>Workspace remove<CR>", desc = "Remove folder" },
+      { "<leader>Wl", "<cmd>Workspace list<CR>", desc = "List folders" },
+      { "<leader>Ws", "<cmd>Workspace save<CR>", desc = "Save workspace" },
+      { "<leader>Wc", "<cmd>Workspace close<CR>", desc = "Close workspace" },
+      -- 右鍵被 terminal 吃掉時的鍵盤版 Copy Path；visual 會帶上行號範圍
+      { "<leader>yp", "<cmd>CopyPath<CR>", desc = "Copy absolute path" },
+      { "<leader>yr", "<cmd>CopyRelativePath<CR>", desc = "Copy relative path" },
+      { "<leader>yp", ":CopyPath<CR>", mode = "v", desc = "Copy absolute path:lines" },
+      { "<leader>yr", ":CopyRelativePath<CR>", mode = "v", desc = "Copy relative path:lines" },
     },
   },
   {

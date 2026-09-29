@@ -24,3 +24,11 @@ created: 2026-09-29
 - VimEnter 自動開啟 `.code-workspace`（tmux 實機驗過 T11）
 - 右鍵 PopUp：Copy Path / Copy Relative Path
 - `KEYBINDINGS.md` 已更新
+
+## Phase 3：抽成獨立插件
+
+> Status: completed (2026-09-29)
+
+- 抽成開源插件 [archipelago.nvim](https://github.com/miyago9267/archipelago.nvim)（MIT）；dotfile 改用 lazy 載入（本機有 `~/Project/Active/Packages/archipelago.nvim` 時用 local 版）
+- `config/nvim/lua/config/workspace.lua` 與 `tests/workspace_test.lua` 移除，測試改在插件 repo（unit + 真 nvim-tree 整合測試）
+- 行為調整：沒開 workspace 時加 folder 會自動建立 untitled workspace，`:Workspace save` 才存檔；workspace 開啟期間暫停 nvim-tree 的 `update_root`

@@ -137,17 +137,27 @@ Agent panel 開啟後會進入 terminal input mode，這是為了可以直接輸
 
 ## Workspace（multi-root）
 
+| 快捷鍵 | 功能 |
+| --- | --- |
+| `Space Wa` | 加入 folder：在 file tree 上是游標所在資料夾，否則是目前檔案的 git root；沒開 workspace 時會自動開一個未存檔的 untitled workspace（包含目前專案） |
+| `Space WA` | 用 fzf 挑資料夾加入：預設是 zoxide 常用目錄，`Ctrl-f` 切成 `fd` 搜整個家目錄，`Tab` 可多選 |
+| `Space Wr` / `Space Wl` | 移除 folder／列出 folder |
+| `Space Ws` | 存檔：untitled 會問名稱；已存檔的 workspace 加減 folder 會自動寫回 |
+| `Space Wo` / `Space Wn` / `Space Wc` | 開啟／新建（同名就直接開啟）／關閉（untitled 直接丟掉） |
+| `Space yp` / `Space yr` | 複製絕對／相對路徑；visual 模式會帶 `:start-end` |
+
 | 指令 | 功能 |
 | --- | --- |
 | `nvim foo.code-workspace` | 直接以 workspace 開啟（VSCode 同格式） |
-| `:Workspace open [name]` | 開啟 workspace；不給名稱時用 fzf 選 |
+| `:Workspace open [name]` | 開啟 workspace；不給名稱時用 fzf 選（`vim.ui.select` 已改走 fzf-lua） |
 | `:Workspace new <name>` | 以目前檔案的 git root（或 cwd）建立新 workspace |
 | `:Workspace add [dir]` / `:Workspace remove [name]` | 加入／移除 folder |
+| `:Workspace save [name]` | 存檔到 `~/.local/share/nvim/archipelago/` |
 | `:Workspace list` / `:Workspace close` | 列出 folder／關閉並回到原本的 cwd |
 | `:CopyPath` / `:CopyRelativePath` | 複製真實絕對路徑／相對路徑；visual 或 `:2,5CopyPath` 會附加 `:2-5` |
 | file tree 的 `gy` / `Y`、右鍵選單 | 同上兩種複製路徑 |
 
-workspace 檔存放在 `~/.local/share/nvim/workspaces/`。開啟後 cwd 會切到 hub（`~/.local/state/nvim/workspace-hub/<name>`，裡面只有 symlink），
+由 [archipelago.nvim](https://github.com/miyago9267/archipelago.nvim) 提供。workspace 檔存放在 `~/.local/share/nvim/archipelago/`。開啟後 cwd 會切到 hub（`~/.local/state/nvim/archipelago/<name>`，裡面只有 symlink），
 file tree、搜尋和 agent 都能看到所有 folder；buffer 和複製出來的路徑一律是真實路徑。
 
 ## 全域搜尋
