@@ -1,4 +1,13 @@
 {
+  "agy-auto-update": {
+    "PreInvocation": [
+      {
+        "command": "bash '/Users/miyago/.gemini/config/hooks/agy-auto-update.sh'",
+        "timeout": 10,
+        "type": "command"
+      }
+    ]
+  },
   "herdr": {
     "PreInvocation": [
       {
