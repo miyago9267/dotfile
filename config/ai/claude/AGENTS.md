@@ -67,6 +67,17 @@
   `skill-create.sh`。只在需要 durable lesson、handoff 或明確要求的記錄時使用。
 - Commit 是最後一步，之後不再碰檔案。
 
-## Claude Memory Sources
+## Claude Memory
 
-@memories/MEMORY.md
+- 跨 project 共用偏好在 `~/.claude/memories/MEMORY.md`（dotfile 版控）；
+  per-project auto memory 在 `~/.claude/projects/<project>/memory/`。
+- Miyago 常在 project 與任務間切換，auto memory 要主動、頻繁地寫，不等被要求：
+  - 被糾正或確認某個做法 -> `feedback`
+  - 做出決策、踩到坑、查到非顯而易見的事實 -> `project` / `reference`
+  - 一段工作告一段落、切換話題或 compact 前 -> `project` 記做到哪、下一步、
+    卡在哪，日期寫絕對日期
+- 跨 project 通用的偏好寫進 shared `MEMORY.md`，不寫進 per-project memory。
+- 寫前先找既有檔更新，過時的直接改或刪；repo、git 查得到的不存。
+
+Shared `MEMORY.md` 經 `~/.claude/rules/shared-memory.md`（symlink）自動載入；
+`AGENTS.md` 內的 `@import` 不會展開，不要再用。
