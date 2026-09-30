@@ -194,6 +194,21 @@ P1–P4 每個 phase 結束時，所有 host 的實際行為都不變；P5 才�
 
 **Rollback**：revert S5 的 dotfile commit；`~/.codex/config.toml` 用 S4 的備份還原；S3 的 symlink 讓舊路徑持續可用；S1/S2 只在本機 `main`，可 `git reset` 回 `61a411b`（需另確認）。
 
+## Release 切片：shoal v1.0.0（2026-09-30，送審版）
+
+Miyago 決定：以新產品發布到**新 public repo** `miyago9267/shoal`，版本 `v1.0.0`；`pilotfish-codex` 保留、加遷移說明、不 archive。
+
+| 步驟 | 動作 | 驗收 |
+|---|---|---|
+| R1 | 產品版本與 host 版本分開：根目錄 `VERSION` 改 `1.0.0`（shoal 產品版）；新增 `hosts/codex/VERSION` = `1.8.1` 作 codex host 版本，`tests/test_plugin.py`、`tests/test_policy.py` 改讀它（原本讀根目錄 `VERSION`）；`hosts/codex/src` marker、`templates/`、golden、`plugin.json`、`install.py` 的 `1.8.1` 一字不動；各 host 版本表寫進新 README | `python3 -m unittest discover -s tests` 全綠；codex `--check` 綠；上述 1.8.1 位置 `git diff` 為空 |
+| R2 | 文件搬家：現有 codex 的 `CHANGELOG.md`、`README.md` 以 `git mv` 移到 `hosts/codex/`，並把其中相對連結改寫為從新位置出發（`./docs/...` → `../../docs/...` 等）；`docs/README.zh-*.md` 指向英文 README 的入口改指 `../hosts/codex/README.md`；新增根目錄 `README.md`（shoal 產品介紹：多 host、core/binding/src/dist、render/--check、安裝入口表、host 版本表）與 `CHANGELOG.md`（從 v1.0.0 起）；`INSTALL.md` 與 `install/` 留在原位（raw URL 路徑相容），標題註明是 codex host | `bun run lint:md` 0 error；連結檢查 script：對 `README.md`、`hosts/codex/README.md`、`hosts/codex/CHANGELOG.md`、`docs/README.zh-*.md` 的每個相對連結（去掉 `#anchor`）解析後 `test -e`，0 缺失 |
+| R3 | 安裝來源改 `miyago9267/shoal`：`install/install.sh`、`install/install.ps1`、`INSTALL.md`、`install/AGENT-INSTALL.md` 共 6 處；註明 v1.0.0 之前的 pinned ref 仍需用 `pilotfish-codex` | `git grep miyago9267/pilotfish-codex` 只剩歷史 spec 與新 README 的遷移說明；installer 相關測試綠 |
+| R4 | 本機驗證後 commit；`gh repo create miyago9267/shoal --public`；本機 remote：`origin` 改名 `pilotfish-codex`，新增 `origin` = shoal；只 push `main` 與新 tag `v1.0.0`（舊 `v1.x` tag 不推，避免版本線混淆） | 新 repo 的 CI（Python tests 三平台、Markdown lint）綠 |
+| R5 | `gh release create v1.0.0`，notes 含：5 host、逐位元組 golden、驗證摘要（558 測試、S7、fresh verifier、第一天 auto-update 成功）、已知限制（policy 未合併 P5、grok 仍由 dotfile 安裝） | Release 頁面存在、標為 Latest |
+| R6 | 舊 repo：從 `pilotfish-codex/main` 開分支加 README 頂部遷移說明（指向 shoal、v1.8.1 為最後 codex-only 版本、舊 pinned ref 持續可用），只 push 到 `pilotfish-codex`；dotfile spec/PROGRESS 更新 repo 位置 | `pilotfish-codex` README 頂部可見說明；shoal 不含這個 commit |
+
+**Rollback**：R4 前全部是本機 commit，可 reset；R4 後 `gh repo delete miyago9267/shoal` 可移除新 repo（不可逆，需再確認）；R5 可單獨 `gh release delete v1.0.0 --cleanup-tag`；R6 可 revert；舊 repo 內容與既有 tag 全程不刪。
+
 ## Open Decisions
 
 1. **Repo 名稱**：沿用 `pilotfish-codex` 改名（GitHub 會自動轉址，上游連結不會斷），或開新 repo `pilotfish-hosts` 之類，把 codex 歷史搬進去？

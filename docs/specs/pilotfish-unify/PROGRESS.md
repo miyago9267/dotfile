@@ -27,3 +27,14 @@
 
 - 2026-09-29 plan-verifier 審 P4a 切片：REVISE（marker 位置、golden 更新機制）→ 修正後 READY。
 - 2026-09-29 fresh verifier：CONFIRMED（宣稱 1–7 皆有證據）；advisory：已安裝 SKILL.md 的 marker 未 commit 會擋 revert（已隨本進度一併 commit）、暫存目錄未清理（列入待辦）。
+
+## shoal v1.0.0 發布（2026-09-30）
+
+- 新 public repo `miyago9267/shoal`，繼承完整 history、不繼承舊 tag；Release `v1.0.0`（Latest）指向 `e4e1808`，三平台 Python tests 與 Markdown lint 綠。
+- 版本分層：shoal 產品版 `VERSION` = 1.0.0；codex host 版 `hosts/codex/VERSION` = 1.8.1，輸出不變。
+- 舊 repo `miyago9267/pilotfish-codex`：main `cec6659` README 加遷移說明；舊 tag 全數留在遠端：codex 的 tag 在 `pilotfish-codex`（本機唯一未推的 `v1.8.0` 已補推），v1.1.x、v1.3.x 等 12 個屬於上游 `Nanako0129/pilotfish`；本機 remote 改名 `pilotfish-codex`、`origin` 指向 shoal，舊 remote 設 `--no-tags`。
+- 發布過程的兩個失誤與處理：
+  1. 本機既有 codex 時期 `v1.0.0` tag 撞名，指令鏈未擋住，舊 tag 被推到新 repo；數分鐘內刪除，改為本機移除全部舊 tag 後重建。
+  2. installer 新增的中文註解讓 Windows 測試（未指定編碼讀檔）失敗；註解改英文於 `e4e1808`，經 Miyago 同意把尚未發 Release 的 `v1.0.0` tag 從 `b947d47` 移到 `e4e1808`。
+- shoal 工作樹另有 Miyago 的未 commit WIP（codex root 改 `gpt-6.1-sol`），依決定不納入 v1.0.0。
+- 2026-09-30 fresh verifier：CONFIRMED（repo/tag、Release Latest、三平台 CI、版本分層、codeload 可取得、舊 repo 遷移說明、WIP 未入 commit、連結、dotfile auto-update 與 sync check）。
