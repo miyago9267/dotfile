@@ -232,9 +232,8 @@ return {
     },
   },
   {
-    -- 存檔自動 format；沒裝對應 formatter 時退回 LSP format
+    -- 手動 format（Space F）；存檔自動 format 預設關閉，Space uF 開關。沒裝對應 formatter 時退回 LSP format
     "stevearc/conform.nvim",
-    event = "BufWritePre",
     cmd = "ConformInfo",
     opts = {
       formatters_by_ft = {
@@ -257,18 +256,18 @@ return {
       },
       default_format_opts = { lsp_format = "fallback" },
       format_on_save = function()
-        if vim.g.miyago_autoformat == false then
+        if not vim.g.miyago_autoformat then
           return
         end
         return { timeout_ms = 1000 }
       end,
     },
     keys = {
-      { "<leader>cf", function() require("conform").format({ async = true }) end, mode = { "n", "v" }, desc = "Format" },
+      { "<leader>F", function() require("conform").format({ async = true }) end, mode = { "n", "v" }, desc = "Format" },
       {
         "<leader>uF",
         function()
-          vim.g.miyago_autoformat = vim.g.miyago_autoformat == false
+          vim.g.miyago_autoformat = not vim.g.miyago_autoformat
           vim.notify("Format on save: " .. (vim.g.miyago_autoformat and "on" or "off"))
         end,
         desc = "Toggle format on save",

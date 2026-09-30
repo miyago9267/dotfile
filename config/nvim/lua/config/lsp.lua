@@ -63,7 +63,7 @@ local function on_attach(client, bufnr)
   map("n", "gr", vim.lsp.buf.references, "LSP: references")
   map("n", "K", vim.lsp.buf.hover, "LSP: hover")
   map("n", "<F2>", vim.lsp.buf.rename, "LSP: rename")
-  map({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, "LSP: code action")
+  map({ "n", "v" }, "<leader>.", vim.lsp.buf.code_action, "LSP: code action")
   map("n", "[d", function() vim.diagnostic.jump({ count = -1, float = true }) end, "Prev diagnostic")
   map("n", "]d", function() vim.diagnostic.jump({ count = 1, float = true }) end, "Next diagnostic")
 

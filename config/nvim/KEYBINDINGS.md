@@ -42,7 +42,7 @@ Copilot 未登入、沒有 Node 或 credentials 時會靜默跳過，不影響�
 | `gr` | 找 references |
 | `K` | 顯示 hover documentation |
 | `F2` | Rename symbol |
-| `Space ca` / `Space cf` | Code action／format |
+| `Space .` / `Space F` | Code action／format（同 VSCode Ctrl-. ／ Shift-Alt-F） |
 | `[d` / `]d` | 上一個／下一個 diagnostic |
 
 ## Problems（Trouble）
@@ -54,7 +54,7 @@ Copilot 未登入、沒有 Node 或 credentials 時會靜默跳過，不影響�
 | `Space dr` | LSP references 面板 |
 | `Space dl` | 顯示游標所在行的 diagnostic |
 
-存檔時會自動 format（conform.nvim）：有對應 formatter（stylua、ruff、prettier、gofmt、rustfmt 等）就用，沒有就退回 LSP format。
+Format 用 `Space F` 手動觸發（conform.nvim）：有對應 formatter（stylua、ruff、prettier、gofmt、rustfmt 等）就用，沒有就退回 LSP format。存檔自動 format 預設關閉，`Space uF` 可暫時打開。
 
 目前涵蓋 C/C++、Lua、Go、Rust、Python、TypeScript、Vue、HTML、CSS、YAML、JSON、TOML、XML、Markdown、Bash、Terraform 與 Dockerfile。
 每個 server 都會先檢查 executable；沒有安裝時只失去該語言的智慧功能，不影響 Neovim 啟動。
@@ -69,7 +69,7 @@ Copilot 未登入、沒有 Node 或 credentials 時會靜默跳過，不影響�
 | `Space uc` | 開關 cursorline |
 | `Space uh` | 開關 inlay hints |
 | `Space ut` | 開關 sticky scroll（捲動時把所在 function／class 標頭釘在頂端） |
-| `Space uF` | 開關存檔自動 format |
+| `Space uF` | 開關存檔自動 format（預設關） |
 
 F1 / F3 / F4 也分別對應透明背景、行數、file tree；F12 對應原生 tag jump。
 它們只是有實體 F-key 或 SSH/WSL 環境時的相容入口，MacBook 以 `Space` 入口為準。
