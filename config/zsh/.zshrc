@@ -63,6 +63,9 @@ __zplug_static="$HOME/.zplug/static-load.zsh"
 __zplug_build_static() {
   local k line tmp="$__zplug_static.$$"
   local -a words
+  # cache 被清空時（例如 git pull 途中啟動 shell）不可產生空 loader，
+  # 否則它比所有來源都新，之後每個 shell 都會沿用而載不到 theme。
+  [[ -s $_zplug_cache[plugin] && -s $_zplug_cache[theme] ]] || return 2
   {
     print -r -- "# Generated from ~/.zplug/cache by .zshrc; do not edit."
     [[ -n $ZSH ]] && print -r -- "export ZSH=${(q)ZSH} ZSH_CACHE_DIR=${(q)ZSH_CACHE_DIR}"
@@ -95,7 +98,14 @@ if [[ -r $__zplug_static && $__zplug_static -nt $ZPLUG_LOADFILE && $__zplug_stat
   zplug() { unfunction zplug; source ~/.zplug/init.zsh && zplug "$@" }
 else
   source ~/.zplug/init.zsh
-  zplug load && { __zplug_build_static || rm -f "$__zplug_static" "$__zplug_static".* }
+  zplug load && {
+    __zplug_build_static
+    case $? in
+      0) ;;
+      2) rm -f "$__zplug_static" "$HOME"/.zplug/cache/*(N.) ;;  # 空 cache：下個 shell 重新產生
+      *) rm -f "$__zplug_static" "$__zplug_static".* ;;
+    esac
+  }
 fi
 unset -f __zplug_build_static
 unset __zplug_static
