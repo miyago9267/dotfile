@@ -150,3 +150,5 @@ unset -f __zshrc_prepend_path 2>/dev/null
 unset -f __zshrc_prepend_path_if_dir 2>/dev/null
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+[ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
