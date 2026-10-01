@@ -1,0 +1,134 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+  "version": 4,
+  "final_space": true,
+  "blocks": [
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "newline": true,
+      "segments": [
+        {
+          "type": "text",
+          "style": "plain",
+          "foreground": "#585858",
+          "template": "╭─ "
+        },
+        {
+          "type": "os",
+          "style": "plain",
+          "template": "{{ .Icon }} "
+        },
+        {
+          "type": "path",
+          "style": "plain",
+          "foreground": "#0087af",
+          "options": {
+            "style": "folder"
+          },
+          "template": "{{ .Parent }}<b><#00afff>{{ .Path }}</></b> "
+        },
+        {
+          "type": "git",
+          "style": "plain",
+          "foreground": "#5fd700",
+          "options": {
+            "branch_icon": " ",
+            "fetch_status": true
+          },
+          "template": "{{ .HEAD }}{{ if gt .Behind 0 }} ⇣{{ .Behind }}{{ end }}{{ if gt .Ahead 0 }}{{ if eq .Behind 0 }} {{ end }}⇡{{ .Ahead }}{{ end }}{{ if gt .StashCount 0 }} *{{ .StashCount }}{{ end }}{{ if gt .Working.Unmerged 0 }} <#ff0000>~{{ .Working.Unmerged }}</>{{ end }}{{ if .Staging.Changed }} <#d7af00>+{{ add .Staging.Added .Staging.Modified .Staging.Deleted }}</>{{ end }}{{ if gt (add .Working.Modified .Working.Deleted) 0 }} <#d7af00>!{{ add .Working.Modified .Working.Deleted }}</>{{ end }}{{ if gt .Working.Untracked 0 }} <#00afff>?{{ .Working.Untracked }}</>{{ end }} "
+        }
+      ]
+    },
+    {
+      "type": "prompt",
+      "alignment": "right",
+      "filler": "<#585858>─</>",
+      "segments": [
+        {
+          "type": "executiontime",
+          "style": "plain",
+          "foreground": "#87875f",
+          "options": {
+            "threshold": 3000,
+            "style": "round"
+          },
+          "template": " {{ .FormattedMs }} "
+        },
+        {
+          "type": "python",
+          "style": "plain",
+          "foreground": "#00afaf",
+          "options": {
+            "display_mode": "environment",
+            "fetch_version": false
+          },
+          "template": " {{ .Venv }} "
+        },
+        {
+          "type": "node",
+          "style": "plain",
+          "foreground": "#5faf00",
+          "options": {
+            "display_mode": "files"
+          },
+          "template": " {{ .Full }} "
+        },
+        {
+          "type": "go",
+          "style": "plain",
+          "foreground": "#00afaf",
+          "options": {
+            "display_mode": "files"
+          },
+          "template": " {{ .Full }} "
+        },
+        {
+          "type": "terraform",
+          "style": "plain",
+          "foreground": "#00afd7",
+          "template": " tf:{{ .WorkspaceName }}"
+        },
+        {
+          "type": "time",
+          "style": "plain",
+          "foreground": "#5f8787",
+          "options": {
+            "time_format": "15:04:05"
+          },
+          "template": " {{ .CurrentDate | date .Format }} "
+        }
+      ]
+    },
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "newline": true,
+      "segments": [
+        {
+          "type": "text",
+          "style": "plain",
+          "foreground": "#585858",
+          "template": "╰─ "
+        },
+        {
+          "type": "text",
+          "style": "plain",
+          "foreground": "#5fd700",
+          "foreground_templates": [
+            "{{ if gt .Code 0 }}#ff0000{{ end }}"
+          ],
+          "template": "❯"
+        }
+      ]
+    }
+  ],
+  "transient_prompt": {
+    "background": "transparent",
+    "foreground": "#5fd700",
+    "foreground_templates": [
+      "{{ if gt .Code 0 }}#ff0000{{ end }}"
+    ],
+    "template": "❯ "
+  }
+}

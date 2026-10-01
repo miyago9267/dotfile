@@ -35,6 +35,7 @@ setup.ps1                          # 統一入口（根目錄）
 setup.bat                          # 薄 wrapper（雙擊用）
 script/windows/
   profile.ps1                      # 主 profile（對應 .zshrc）
+  theme.omp.json                   # oh-my-posh 主題（對應 .p10k.zsh，lean 風格）
   profile.d/                       # 模組化載入（對應 .zshrc.d/）
     00_path_helpers.ps1            #   PATH 工具函式
     01_aliases.ps1                 #   別名與常用 function

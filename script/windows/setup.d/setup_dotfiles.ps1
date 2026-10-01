@@ -80,6 +80,9 @@ if (-not $canSymlink) {
     }
 }
 
+# -- oh-my-posh theme（03_prompt.ps1 從 profile 同層讀取） --
+Link-DotFile (Join-Path $DotfileRoot 'script' 'windows' 'theme.omp.json') (Join-Path (Split-Path $PROFILE) 'theme.omp.json')
+
 # -- .vimrc --
 Link-DotFile (Join-Path $DotfileRoot 'config' 'vim' '.vimrc') (Join-Path $UserHome '.vimrc')
 
