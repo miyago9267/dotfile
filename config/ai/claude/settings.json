@@ -52,7 +52,7 @@
       "/Users/miyago/Project/Note/itrd-knowledge-base"
     ]
   },
-  "model": "opus",
+  "model": "opus[1m]",
   "fallbackModel": [
     "sonnet"
   ],
@@ -513,5 +513,6 @@
   },
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark-ansi",
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "tui": "fullscreen"
 }
