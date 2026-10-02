@@ -224,10 +224,10 @@ return {
     cmd = "Trouble",
     opts = {},
     keys = {
-      { "<leader>dd", "<cmd>Trouble diagnostics toggle<CR>", desc = "Problems (project)" },
-      { "<leader>db", "<cmd>Trouble diagnostics toggle filter.buf=0<CR>", desc = "Problems (buffer)" },
-      { "<leader>ds", "<cmd>Trouble symbols toggle focus=false<CR>", desc = "Symbols outline" },
-      { "<leader>dr", "<cmd>Trouble lsp toggle focus=false win.position=right<CR>", desc = "LSP references" },
+      { "<leader>dd", function() require("config.layout").trouble("diagnostics toggle") end, desc = "Problems (project)" },
+      { "<leader>db", function() require("config.layout").trouble("diagnostics toggle filter.buf=0") end, desc = "Problems (buffer)" },
+      { "<leader>ds", function() require("config.layout").trouble("symbols toggle focus=false") end, desc = "Symbols outline" },
+      { "<leader>dr", function() require("config.layout").trouble("lsp toggle focus=false win.position=right") end, desc = "LSP references" },
       { "<leader>dl", function() vim.diagnostic.open_float() end, desc = "Line diagnostics" },
     },
   },
@@ -326,6 +326,45 @@ return {
     config = function()
       -- 插件在 lf 沒被佔用時會自己綁 lf；l 是移動鍵，綁了會讓每次按 l 都要等 timeout
       pcall(vim.keymap.del, "n", "lf")
+    end,
+  },
+  {
+    -- 固定區塊版面：左 tree、右 agent dock、底部面板；編輯器欄以外的視窗由 edgy 搬進對應區塊
+    -- 單一插槽（同區只顯示一個）由 config.layout 在各開窗入口處理，不靠 edgy
+    "folke/edgy.nvim",
+    event = "VeryLazy",
+    opts = function()
+      local layout = require("config.layout")
+      return {
+        animate = { enabled = false },
+        options = {
+          left = { size = 32 },
+          right = { size = 0.30 },
+          bottom = { size = 12 },
+        },
+        left = {
+          { ft = "NvimTree", title = "File Tree" },
+        },
+        right = {
+          { ft = "snacks_terminal", title = "Claude", filter = layout.is_claude_win },
+          { ft = "miyago_agent", title = "Agent", filter = layout.is_agent_win },
+        },
+        bottom = {
+          { ft = "miyago_terminal", title = "Terminal", filter = layout.is_panel_win },
+          { ft = "trouble", title = "Problems", filter = layout.is_trouble_win },
+        },
+      }
+    end,
+    config = function(_, opts)
+      -- edgy 預設的 check_main 會把最近的檔案 buffer 再開出來；改成留空的編輯視窗（見 config.layout）
+      local layout = require("config.layout")
+      require("edgy.editor").check_main = layout.ensure_editor
+      require("edgy").setup(opts)
+      layout.setup()
+      -- `nvim .` 只有 tree 時，補一個空的編輯視窗（像 VSCode 開資料夾），tree 回到 32 欄
+      vim.schedule(function()
+        layout.ensure_main({ keep_focus = true })
+      end)
     end,
   },
   {

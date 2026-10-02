@@ -1,3 +1,5 @@
+local layout = require("config.layout")
+
 local M = {}
 
 local agents = {
@@ -11,10 +13,6 @@ local buffers = {}
 
 local function available(agent)
   return vim.fn.executable(agent.command[1]) == 1
-end
-
-local function panel_width()
-  return math.max(32, math.floor(vim.o.columns * 0.30))
 end
 
 local function find_window(bufnr)
@@ -42,18 +40,24 @@ local function open_native(agent_name, toggle)
     end
   end
 
-  vim.cmd("botright vsplit")
-  vim.cmd("vertical resize " .. panel_width())
-
-  if bufnr and vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "terminal" then
-    vim.api.nvim_win_set_buf(0, bufnr)
-  else
+  local fresh = not (bufnr and vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "terminal")
+  if fresh then
     bufnr = vim.api.nvim_create_buf(false, true)
     buffers[agent_name] = bufnr
-    vim.api.nvim_win_set_buf(0, bufnr)
     vim.bo[bufnr].bufhidden = "hide"
     vim.bo[bufnr].swapfile = false
     vim.api.nvim_buf_set_name(bufnr, "Agent://" .. agent_name)
+    -- 顯示前先標記，edgy 才能認出這是 agent 並放進右側 dock
+    vim.b[bufnr].miyago_agent = agent_name
+    vim.bo[bufnr].filetype = "miyago_agent"
+  end
+
+  -- 單一插槽：換上新 agent 前先收掉其他 agent 的視窗（只關視窗，程序保留）
+  layout.hide_agents(bufnr)
+  -- 位置與寬度交給 edgy；這裡只開一個全高的右側 split
+  vim.api.nvim_open_win(bufnr, true, { split = "right", win = -1 })
+
+  if fresh then
     vim.fn.termopen(agent.command, {
       cwd = vim.fn.getcwd(),
       on_exit = function()
@@ -69,8 +73,16 @@ local function open_native(agent_name, toggle)
   vim.cmd("startinsert")
 end
 
+-- Claude 由 claudecode.nvim 開窗；Claude 沒在顯示時先收掉其他 agent，維持右側單一插槽
+local function prepare_claude()
+  if not layout.claude_win() then
+    layout.hide_agents()
+  end
+end
+
 local function toggle_claude()
   if vim.fn.exists(":ClaudeCode") == 2 then
+    prepare_claude()
     vim.cmd("ClaudeCode")
   else
     vim.notify("Claude Code unavailable", vim.log.levels.WARN)
@@ -107,6 +119,7 @@ function M.send_selection(agent_name)
   end
 
   if agent_name == "claude" and vim.fn.exists(":ClaudeCodeSend") == 2 then
+    prepare_claude()
     vim.cmd("ClaudeCodeSend")
     return
   end

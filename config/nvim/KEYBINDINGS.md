@@ -138,6 +138,16 @@ Space prefix 也遵循 tmux 的 pane 操作邏輯：
 
 Agent panel 開啟後會進入 terminal input mode，這是為了可以直接輸入 prompt。要使用 `Space a*` 或其他 Neovim 快捷鍵，先按 `Esc`；也可以按 `<C-\\><C-n>` 回到 Normal mode。
 
+## 版面（固定區塊）
+
+由 edgy.nvim 管理，開關任一區塊都不影響其他區塊的大小：左側 file tree（32 欄）、編輯器、右側 agent dock（畫面 30%）、編輯器下方的底部面板（高 12 行，不橫跨 tree 與 agent）。
+
+- 右側 dock 同時只顯示一個 agent；開另一個會取代它，舊 agent 的程序保留，可再切回。
+- 底部面板同時只顯示 terminal 或 Problems（Trouble）其中一個；terminal 重複叫回同一個 shell，`:Shell <command>` 另開新的。
+- `Space z` 只在編輯器區內最大化目前分割，dock 大小不變；再按一次還原。
+- 關掉最後一個編輯視窗時會留一個空的編輯視窗，dock 才不會佔滿畫面；在這個空視窗再 `:q` 會離開 Neovim。
+- dock 視窗內按 `q` 關閉該視窗；Leaf 預覽（`Space mp`）仍是浮動視窗。
+
 ## Workspace（multi-root）
 
 | 快捷鍵 | 功能 |

@@ -1,24 +1,64 @@
 local M = {}
 
+local layout = require("config.layout")
+
+local shell_buf
+
+-- 底部面板的 terminal：位置與高度交給 edgy；buffer 在顯示前先標記並設 filetype，edgy 才認得
+-- 單一插槽：開啟前先收掉底部其他內容（只關視窗，terminal 程序保留）
+local function open_terminal(cmd)
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.bo[buf].bufhidden = "hide"
+  vim.bo[buf].swapfile = false
+  vim.b[buf].miyago_panel = "terminal"
+  vim.bo[buf].filetype = "miyago_terminal"
+  layout.hide_panels(buf)
+  vim.api.nvim_open_win(buf, true, { split = "below", win = -1 })
+  vim.fn.termopen(cmd or vim.o.shell)
+  vim.cmd("startinsert")
+  return buf
+end
+
+local function shell_alive()
+  return shell_buf and vim.api.nvim_buf_is_valid(shell_buf) and vim.b[shell_buf].terminal_job_id
+    and vim.fn.jobwait({ vim.b[shell_buf].terminal_job_id }, 0)[1] == -1
+end
+
+-- 顯示固定的那個 shell（沒有或已結束就開新的）；重複呼叫叫回同一個 buffer
+local function show_shell()
+  if shell_alive() then
+    layout.hide_panels(shell_buf)
+    local win = layout.buf_win(shell_buf)
+    if not win then
+      win = vim.api.nvim_open_win(shell_buf, true, { split = "below", win = -1 })
+    else
+      vim.api.nvim_set_current_win(win)
+    end
+    vim.cmd("startinsert")
+    return
+  end
+  if shell_buf and vim.api.nvim_buf_is_valid(shell_buf) then
+    vim.api.nvim_buf_delete(shell_buf, { force = true })
+  end
+  shell_buf = open_terminal()
+end
+
 local function terminal_toggle()
-  for _, win in ipairs(vim.api.nvim_list_wins()) do
-    local buf = vim.api.nvim_win_get_buf(win)
-    if vim.bo[buf].buftype == "terminal" then
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if layout.is_panel_win(vim.api.nvim_win_get_buf(win), win) then
       vim.api.nvim_win_close(win, true)
       return
     end
   end
-  vim.cmd("botright split | resize 12 | terminal")
-  vim.cmd("startinsert")
+  show_shell()
 end
 
 local function shell_command(opts)
   if opts.args == "" then
-    vim.cmd("botright split | resize 12 | terminal")
+    show_shell()
   else
-    vim.cmd("botright split | resize 12 | terminal " .. opts.args)
+    open_terminal(opts.args)
   end
-  vim.cmd("startinsert")
 end
 
 local function toggle_numbers()

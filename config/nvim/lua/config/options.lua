@@ -23,6 +23,8 @@ function M.setup()
   vim.opt.splitbelow = true
   vim.opt.splitright = true
   vim.opt.laststatus = 3
+  -- 開關 dock 時編輯器內容不跳動（edgy 建議）
+  vim.opt.splitkeep = "screen"
   vim.opt.showmode = false
   vim.opt.autoread = true
   vim.opt.confirm = true
