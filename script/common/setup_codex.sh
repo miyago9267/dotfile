@@ -75,54 +75,6 @@ normalize_git_url() {
     -e 's#/$##'
 }
 
-install_git_skill() {
-  local name="$1"
-  local repo="$2"
-  local dst="$CODEX_DST/skills/$name"
-  local actual_repo
-  local expected_repo
-  local ssh_command
-
-  if [ -L "$dst" ]; then
-    printf "${Y}  [SKIP] skills/%s -- unmanaged symlink exists${N}\n" "$name"
-    return
-  fi
-
-  if [ -d "$dst/.git" ]; then
-    actual_repo=$(git -C "$dst" remote get-url origin 2>/dev/null || true)
-    expected_repo=$(normalize_git_url "$repo")
-    if [ "$(normalize_git_url "$actual_repo")" != "$expected_repo" ]; then
-      printf "${Y}  [SKIP] skills/%s -- origin mismatch${N}\n" "$name"
-      return
-    fi
-    if [ -n "$(git -C "$dst" status --porcelain)" ]; then
-      printf "${Y}  [SKIP] skills/%s -- local changes exist${N}\n" "$name"
-      return
-    fi
-    ssh_command='ssh -o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=yes'
-    if GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="$ssh_command" \
-      git -C "$dst" pull --ff-only --quiet; then
-      printf "${G}  [OK]   skills/%s${N}\n" "$name"
-    else
-      printf "${Y}  [WARN] skills/%s -- update failed${N}\n" "$name"
-    fi
-    return
-  fi
-
-  if [ -e "$dst" ]; then
-    printf "${Y}  [SKIP] skills/%s -- unmanaged path exists${N}\n" "$name"
-    return
-  fi
-
-  ssh_command='ssh -o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=yes'
-  if GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="$ssh_command" \
-    git clone --quiet "$repo" "$dst"; then
-    printf "${G}  [CLONE] skills/%s${N}\n" "$name"
-  else
-    printf "${Y}  [SKIP] skills/%s -- private repo unavailable${N}\n" "$name"
-  fi
-}
-
 install_pinned_git_skill() {
   local name="$1"
   local repo="$2"
@@ -187,10 +139,6 @@ SHARED_CORE_SKILLS=(
   final-state-publication
   community-tech-brief
   jev-tools
-)
-
-EXTERNAL_CODEX_SKILLS=(
-  "build-install|https://github.com/miyago9267/build-install.git"
 )
 
 PINNED_EXTERNAL_CODEX_SKILLS=(
@@ -349,12 +297,6 @@ for skill_path in "$CODEX_DST/skills"/*; do
       fi
       ;;
   esac
-done
-
-printf '\n%b--- External Codex Skills ---%b\n' "$Y" "$N"
-for entry in "${EXTERNAL_CODEX_SKILLS[@]}"; do
-  IFS='|' read -r name repo <<< "$entry"
-  install_git_skill "$name" "$repo"
 done
 
 printf '\n%b--- Pinned External Codex Skills ---%b\n' "$Y" "$N"

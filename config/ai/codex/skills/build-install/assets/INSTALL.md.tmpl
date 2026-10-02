@@ -1,0 +1,30 @@
+# <PROJECT_NAME> installation playbook
+
+This document is for an AI agent. Read it completely before taking action.
+
+## Scope and prerequisites
+
+- Project: `<PROJECT_NAME>`
+- Source: `<REPOSITORY_URL>`
+- Destination: `<INSTALL_DIR>`
+- Prerequisites: `<PREREQUISITES>`
+
+Inspect `install.sh` and the project files before executing anything. Prefer a tagged `--ref` when available.
+
+## Steps
+
+1. Confirm the host meets the prerequisites and that the destination is acceptable.
+2. Show the user the files that will be written and ask for confirmation before installation.
+3. Run:
+
+   ```bash
+   curl -fsSL <INSTALL_URL> | bash -s -- --ref <DEFAULT_REF>
+   ```
+
+   Use the repository checkout directly when already inside the project. Use `--dry-run` first if the command or destination is unfamiliar.
+4. Run the verification command: `<VERIFY_COMMAND>`.
+5. Report changed paths, selected ref, verification output, and any follow-up configuration.
+
+## Rerun and uninstall
+
+Rerunning the installer must preserve user configuration. To uninstall, follow: `<UNINSTALL_STEPS>`.
