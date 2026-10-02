@@ -6,7 +6,6 @@ STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/miyago-agent-stack-updater"
 LOG_FILE="$STATE_DIR/update.log"
 STAMP_FILE="$STATE_DIR/last-check"
 LOCK_DIR="$STATE_DIR/lock"
-CHECK_INTERVAL=86400
 
 mkdir -p "$STATE_DIR"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
@@ -14,12 +13,14 @@ if ! mkdir "$LOCK_DIR" 2>/dev/null; then
 fi
 trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT
 
+# 每個本地日曆日跑一次：今天還沒跑過就跑。原本的「距上次滿 24 小時」會讓
+# 觸發時間每天往後漂，晚開 session 那天就整天跳過。
 now=$(date +%s)
 last=$(cat "$STAMP_FILE" 2>/dev/null || printf '0')
 case "$last" in
   ''|*[!0-9]*) last=0 ;;
 esac
-if [ "$((now - last))" -lt "$CHECK_INTERVAL" ]; then
+if [ "$(date -r "$last" +%F 2>/dev/null || date -d "@$last" +%F)" = "$(date +%F)" ]; then
   exit 0
 fi
 printf '%s\n' "$now" > "$STAMP_FILE"
