@@ -14,7 +14,6 @@ astra_active_file="$dotfile_dir/config/ai/generated/astra/AGENTS.md"
 claude_settings_file="$dotfile_dir/config/ai/claude/settings.json"
 claude_adapter_file="$dotfile_dir/config/ai/claude/AGENTS.md"
 grok_file="$dotfile_dir/config/ai/grok/AGENTS.md"
-pilotfish_dir="$dotfile_dir/plugins/pilotfish-grok"
 shoal_dir="${PILOTFISH_SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
 claude_skill_file="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/pilotfish-orchestration/SKILL.md"
 
@@ -170,12 +169,19 @@ jq -e --arg command "$HOME/.codex/hooks/experience-observe.py" \
   exit 1
 }
 grep -Fq 'rules come from `config/ai/AGENTS.md`' "$grok_file"
-test "$(cat "$pilotfish_dir/VERSION")" = "1.0.6"
-test -f "$pilotfish_dir/install/AGENT-INSTALL.md"
-test -f "$pilotfish_dir/templates/rules.pilotfish-grok.md"
-test -f "$pilotfish_dir/templates/agents/verifier.md"
-test -f "$pilotfish_dir/templates/roles/verifier.toml"
-grep -Fq '<!-- pilotfish-grok v1.0.6 -->' "$pilotfish_dir/templates/rules.pilotfish-grok.md"
+# grok 的 Pilotfish 由 shoal 產生與安裝（tools/install_grok.py）；檢查 shoal dist，
+# 並比對 ~/.grok 實際安裝的 rules marker。未安裝或版本不同只警告，不讓檢查失敗。
+grok_dist="$shoal_dir/hosts/grok/dist"
+grok_version="$(cat "$shoal_dir/hosts/grok/VERSION")"
+test -f "$grok_dist/rules/pilotfish-grok.md"
+test -f "$grok_dist/agents/verifier.md"
+test -f "$grok_dist/roles/verifier.toml"
+test -f "$grok_dist/hooks/pilotfish-grok.json"
+grep -Fq "<!-- pilotfish-grok v$grok_version -->" "$grok_dist/rules/pilotfish-grok.md"
+grok_installed_rules="${GROK_HOME:-$HOME/.grok}/rules/pilotfish-grok.md"
+if ! grep -Fq "<!-- pilotfish-grok v$grok_version -->" "$grok_installed_rules" 2>/dev/null; then
+  printf '%s\n' "warning: pilotfish-grok v$grok_version is not installed in $grok_installed_rules; run python3 $shoal_dir/tools/install_grok.py" >&2
+fi
 
 for root_adapter in "$source_file" "$grok_file"; do
   if grep -Eq 'For material plans|Route material work|Missing roles, hooks|Preserve Pilotfish' "$root_adapter"; then
