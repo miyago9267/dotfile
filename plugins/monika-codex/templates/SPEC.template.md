@@ -14,6 +14,7 @@ priority: medium
 ## Background
 
 <!-- 為什麼要做這件事？現有的問題是什麼？ -->
+<!-- 為誰做？怎樣算成功？依據是什麼（最近一次真實用戶接觸的日期與結論）？ -->
 
 ## Requirements (EARS)
 
