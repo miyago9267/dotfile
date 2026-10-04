@@ -193,6 +193,16 @@
       "cicd-watch": "deny",
       "strategic-compact": "deny",
       "*": "deny"
+    },
+    "open-computer-use_*": "ask"
+  },
+  "mcp": {
+    "open-computer-use": {
+      "type": "local",
+      "command": [
+        "/Users/miyago/dotfile/config/ai/shared/computer-use/computer-use-mcp.sh"
+      ],
+      "enabled": true
     }
   }
 }
