@@ -38,6 +38,8 @@ role routing。
 ### Out of scope
 
 - 修改 daily config/opencode 的 slim runtime。
+  （2026-10-04 Miyago 推翻此項：daily config 也安裝 pilotfish，見 shoal
+  `docs/specs/opencode-global/SPEC.md`。）
 - 修改既有 pilotfish-codex。
 - 讓 plugin 自動改寫既有 session 的 model。
 - 把尚未在本機宣告的 fable、opus5 或 gpt 6 astra 假設成可用。

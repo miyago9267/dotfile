@@ -49,6 +49,8 @@ permission 與 plugin 行為。
 - 固定 `Luna`、`Sol`、`Terra`、`Astra` 或任何預設 model catalog。
 - 建立第二套 permission、sandbox、session 或 credential manager。
 - 直接修改現有 dotfile OpenCode production config。
+  （2026-10-04 Miyago 推翻此項：改由 shoal 的 `install.sh --global` 安裝到
+  `config/opencode`，見 shoal `docs/specs/opencode-global/SPEC.md`。）
 - 以中央 service 取代 OpenCode 的 provider runtime。
 - 在第一版提供 routing GUI、billing optimizer 或跨 runtime orchestration。
 

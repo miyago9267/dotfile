@@ -21,11 +21,14 @@ tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
 git -C "$source_repo" archive HEAD hosts/opencode | tar -x -C "$tmp_dir"
 
+# 打成單一 bundle：tsc 的輸出會 import ../route-resolution.js 等相對路徑，
+# 單獨放進 plugins/ 會載入失敗。參數與 shoal 的 install.sh 相同。
 (
   cd "$tmp_dir/hosts/opencode/plugin"
   bun install --frozen-lockfile >/dev/null
-  bun run build >/dev/null
+  bun build src/plugin/pilotfish-opencode.ts --bundle --format esm --target bun \
+    --outfile "$tmp_dir/pilotfish-opencode.js" >/dev/null
 )
 
-install -m 0644 "$tmp_dir/hosts/opencode/plugin/dist/plugin/pilotfish-opencode.js" "$target_file"
+install -m 0644 "$tmp_dir/pilotfish-opencode.js" "$target_file"
 printf 'installed %s\n' "$target_file"
