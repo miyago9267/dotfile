@@ -32,7 +32,18 @@
       "Bash(reboot *)",
       "Bash(sudo rm *)",
       "Bash(sudo dd *)",
-      "Bash(chmod -R 777 *)"
+      "Bash(chmod -R 777 *)",
+      "Read(~/dotfile/secrets/**)",
+      "Read(~/.ssh/**)",
+      "Read(~/.kube/config)",
+      "Read(~/.config/gcloud/**)",
+      "Read(//**/.env)",
+      "Read(//**/.env.local)",
+      "Read(//**/.env.*.local)",
+      "Read(//**/.env.production)",
+      "Read(//**/.env.development)",
+      "Read(//**/.env.staging)",
+      "Read(//**/.env.test)"
     ],
     "ask": [
       "Bash(rm *)",
@@ -96,6 +107,11 @@
           {
             "type": "command",
             "command": "bash ~/dotfile/config/ai/claude/hooks/destructive-guard.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/secret-guard.sh",
             "timeout": 5
           }
         ]
