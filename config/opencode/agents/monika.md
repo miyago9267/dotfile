@@ -13,6 +13,10 @@ permission:
     quick-reviewer: allow
     quick-mech: allow
     vault-librarian: allow
+    executor: allow
+    security-executor: allow
+    verifier: allow
+    security-reviewer: allow
   webfetch: allow
   websearch: allow
   external_directory: allow

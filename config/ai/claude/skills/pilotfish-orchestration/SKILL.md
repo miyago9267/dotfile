@@ -8,7 +8,7 @@ when_to_use: "large / architectural / risky / cross-surface task，或需要決�
 > 不要手改。與 shared contract 衝突時以 shared contract 為準（例如 `/goal` 授權）。
 
 <!-- pilotfish:begin -->
-<!-- pilotfish-claude v1.4.2-claude.1 -->
+<!-- pilotfish-claude v1.4.2-claude.3 -->
 
 # Pilotfish orchestration
 

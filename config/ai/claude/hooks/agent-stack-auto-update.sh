@@ -154,5 +154,12 @@ if update_pilotfish; then
 else
   printf '%s\n' 'pilotfish update failed'
 fi
+# dispatch guard 由 shoal 安裝與註冊（docs/specs/dispatch-enforcement R7），只從 committed HEAD 取檔。
+shoal_root="${PILOTFISH_CLAUDE_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
+if python3 "$shoal_root/tools/install_hooks.py" --host claude --apply >/dev/null 2>&1; then
+  printf '%s\n' 'shoal guard update check passed'
+else
+  printf '%s\n' 'shoal guard update failed'
+fi
 
 printf '%s\n' "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] update check complete"

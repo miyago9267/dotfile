@@ -312,8 +312,36 @@ def write_turn(home: Path, payload: dict[str, Any], role: str) -> None:
             os.write(fd, json.dumps({"prompt_id": pid, "role": role}).encode())
         finally:
             os.close(fd)
+        _write_shoal_turn(home, sid, pid, role)
     except OSError:
         return
+
+
+def _write_shoal_turn(home: Path, sid: str, pid: str, role: str) -> None:
+    """shoal dispatch guard 的分類 provider：寫 ~/.local/state/shoal/guard/turns/<sid>.json。
+    目錄由 shoal guard 建立並檢查權限；這裡只在目錄已存在且可信時寫入。"""
+    xdg = os.environ.get("XDG_STATE_HOME", "")
+    base = Path(xdg) if xdg and os.path.isabs(xdg) else home / ".local/state"
+    turns = base / "shoal/guard/turns"
+    try:
+        turns.relative_to(home)
+        if not _no_symlink_below(turns, home):
+            return
+    except ValueError:
+        pass
+    try:
+        info = os.lstat(turns)
+    except OSError:
+        return
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) & 0o077:
+        return
+    fd = _open_private(turns / f"{sid}.json", os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+    if fd is None:
+        return
+    try:
+        os.write(fd, json.dumps({"turn_id": pid, "role": role}).encode())
+    finally:
+        os.close(fd)
 
 
 def _breaker_path(home: Path) -> Path | None:
