@@ -33,13 +33,17 @@
 
 ## Credential broker
 
-需要機敏 credential 時使用 `~/bin/agent-secret`，不可直接讀 KeePassXC：
+需要機敏 credential 時使用 `~/bin/agent-secret`（macOS Keychain 優先，sops + age 次之）：
 
 ```bash
-agent-secret run <alias> -- <approved-command> [args...]
+agent-secret list                                   # 名稱、環境變數與指令限制，不含值
+agent-secret run <名稱> -- <command> [args...]       # 值以環境變數注入該指令
 ```
 
-禁止在 chat、log、file、command argument 或 tool output 中要求、貼出或回傳 master password/secret value。執行 write、deployment、production、rotation 或 destructive operation 前，確認 alias 與 target environment。
+- 需要在指令裡引用變數時用 `sh -c '... $NAME ...'`（單引號）；alias 若列出允許指令，只能執行清單內的程式，不能用 shell 包裝。
+- `keychain-only` 只表示值只存在這台 Mac 的 Keychain（不查 sops、不進 repo）；讀取時不會跳 macOS 確認視窗（2026-10-05 實測），沒有任何人為把關，production 項目照樣要先確認 alias 與 target。非 macOS 沒有 Keychain，只能用存在 sops 的項目。
+- 不執行 `agent-secret edit`；`put`、`rm` 只在 Miyago 明確要求時才做。找不到名稱時請 Miyago 自己用 `pbpaste | agent-secret put <NAME>` 加入。
+- 禁止在 chat、log、file、commit message、command argument 或 tool output 中要求、貼出或回傳 secret value；不要用 `echo`、`printenv`、`env` 確認值。執行 write、deployment、production、rotation 或 destructive operation 前，確認 alias 與 target environment。
 
 ## Knowledge bases
 

@@ -32,6 +32,9 @@
 - 可進行 shell access 時，執行 CLI work 前先 source `~/.zshrc`。
 - secrets 使用 credential broker；絕不把 secret value 暴露在 chat、logs、
   files、command arguments 或 tool output。
+  - `agent-secret list` 看有哪些名稱；`agent-secret run <名稱> -- <指令>` 把值注入單一指令。
+  - 不得用 `echo`、`printenv`、`env` 確認值，或把值寫進檔案與 log。
+  - `edit` 不執行，`put`、`rm` 只在 Miyago 明確要求時做；缺名稱請 Miyago 自己加入。
 - Miyago 的主要環境是 macOS 與 Neovim，也支援 WSL Ubuntu 和 Windows。主要
   stack：TypeScript、Bun、Vue/Nuxt、Hono、Go、Python、Docker、Kubernetes
   與 GCP。
