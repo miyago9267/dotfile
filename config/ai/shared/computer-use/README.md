@@ -21,14 +21,39 @@ server（名稱 `open-computer-use`）提供給 Claude Code、Codex、agy 與日
 
 ## 安裝與註冊
 
+新機器從 dotfile 加一個 private repo 就能裝起來。`bash setup.sh` 選單的
+「Computer use MCP (open-computer-use + desktop-ops)」（macOS，標成 optional，所以 `--all` 不會跑，
+`--everything` 才會）等於依序跑 `--install` 與 `--apply`；也可以手動分開跑：
+
 ```sh
-npm view open-computer-use@0.3.6 dist.integrity   # 先比對 integrity
-npm i -g --ignore-scripts open-computer-use@0.3.6
-script/common/setup_computer_use.sh               # dry-run（預設，不改任何東西）
-script/common/setup_computer_use.sh --apply       # 註冊四個 runtime
-script/common/setup_computer_use.sh --remove      # 移除
+script/common/setup_computer_use.sh --dry-run --install   # 只印安裝計畫，不改東西、不連網
+script/common/setup_computer_use.sh --install             # 安裝 driver、service repo、相依套件、helper
+script/common/setup_computer_use.sh                       # 註冊的 dry-run（預設，不改任何東西）
+script/common/setup_computer_use.sh --apply               # 註冊四個 runtime
+script/common/setup_computer_use.sh --remove              # 移除
 bash config/ai/shared/computer-use/tests/test_computer_use_mcp.sh
 ```
+
+`--install` 不註冊任何東西，可以重複跑，已經到位的步驟會跳過；不用 sudo，也不讀任何 secret。
+pin 都寫在 `setup_computer_use.sh` 開頭的變數裡：
+
+1. Driver：已裝好 pin 的版本且驗證通過就不動。否則先比對 `npm view open-computer-use@0.3.6
+   dist.integrity` 與 pin，不同就拒絕安裝；相同才跑 `npm install -g --ignore-scripts`，裝完檢查
+   `TeamIdentifier`、`codesign --verify --strict` 與 `spctl --assess`（要是 `Notarized Developer
+   ID`）。任何一項不過就停在這裡，不會往下做。
+2. Service repo（`--server desktop-ops` 或 `all`）：`~/Project/Active/Tools/desktop-ops` 不存在就
+   clone `git@github.com:miyago9267/desktop-ops.git`（private，走你自己的 ssh／`gh` 設定）並
+   `checkout --detach` 到 pin 的 commit。已存在時 `origin` 必須是這個 repo（ssh 或 https 寫法）；
+   pin 是 HEAD 或 HEAD 的祖先就完全不碰（開發用的 checkout）；HEAD 落後時只有在 work tree 乾淨
+   才 `fetch` 加 `merge --ff-only`，有未 commit 的東西就停下來請你自己處理。不會 reset、clean
+   或 stash。
+3. `node_modules` 不在或 `bun.lock` 比較新時跑 `bun install --frozen-lockfile --ignore-scripts`；
+   helper binary 不在或比 Swift source 舊時跑 `helper/build.sh`。
+4. 缺 `npm`、`git`、`bun`、`swiftc`、`codesign` 或 `spctl` 時，在做任何事之前就停，每個缺的工具
+   印一行怎麼裝。
+
+裝完還要自己做的事（`--install` 結尾也會印）：`open-computer-use doctor` 授權 Accessibility 與
+Screen Recording、用既有的 secrets 流程提供 `TYPESAFE_API_KEY`、跑 `--apply`、重啟 agent session。
 
 `--server open-computer-use|desktop-ops|all`（預設 `all`）決定動哪一個 server；兩個 server 的
 註冊與移除互不影響。只動 S1 時加 `--server open-computer-use`：
@@ -39,7 +64,9 @@ script/common/setup_computer_use.sh --server desktop-ops --remove
 bash config/ai/shared/computer-use/tests/test_setup_computer_use.sh   # 用 stub CLI 與暫存 HOME，不碰真的設定
 ```
 
-`--apply` 會先檢查所選 server 的 launcher 都可執行，有任何一個不行就在寫入之前停下來。
+`--apply` 會先檢查所選 server 的 launcher 都可執行，而且它啟動需要的東西都在：
+`open-computer-use` 要有 pin 版本的 package；`desktop-ops` 要有 repo、相依套件、helper binary 與
+bun。有任何一個不行就在寫入之前停下來，並提示先跑 `--install`。
 
 `--apply` 會寫入：
 
@@ -84,7 +111,8 @@ launcher 是 hygiene（版本 pin、signer 檢查、env scrub），不是 securi
 - Codex 呼叫 MCP tool 沒有 approval prompt；opencode 有 `ask` rule；Claude 與 agy
   用各自預設的 tool 權限流程。
 - 每次啟動會跑 `codesign -dv` 比對 `TeamIdentifier` 與 `codesign --verify --strict`；
-  notarization（`spctl`）只在安裝時手動驗過一次。Node 的 launcher script
+  notarization（`spctl`）只在 `--install` 時檢查。`--install` 比對的是 registry 回報的 integrity，
+  `npm` 實際下載的內容由 npm 自己驗。Node 的 launcher script
   （`bin/`、`scripts/`）不在 app bundle 的簽章範圍內，只受版本 pin 保護。
 - `COMPUTER_USE_MCP_BIN`、`COMPUTER_USE_MCP_CODESIGN` 是 test seam；能改 agent
   環境變數的人可以用它們繞過檢查。
@@ -141,7 +169,7 @@ git -C ~/dotfile status --porcelain 'config/opencode*'   # 應為空
 安裝與註冊：
 
 ```sh
-(cd ~/Project/Active/Tools/desktop-ops && bun install --frozen-lockfile --ignore-scripts && ./helper/build.sh)
+script/common/setup_computer_use.sh --server desktop-ops --install   # clone／對齊 pin、bun install、build helper
 script/common/setup_computer_use.sh --server desktop-ops --apply
 bash config/ai/shared/computer-use/tests/test_desktop_ops_mcp.sh
 ```

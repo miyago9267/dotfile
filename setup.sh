@@ -66,6 +66,7 @@ _ALL_ITEMS=(
   "install_sesh.sh|sesh (跨 CC/codex session finder)|工具|0|0|environment|darwin linux:apt linux:pacman|0"
   "install_gh.sh|Git CLI 工具 (gh + glab)|工具|0|0|environment|darwin linux:apt linux:pacman|0"
   "install_remora_proxy.sh|Remora + Calico Claude + Proxy|工具|0|0|environment|darwin|0"
+  "install_desktop_ops.sh|Computer use MCP (open-computer-use + desktop-ops)|工具|0|0|environment|darwin|1"
   "install_yazi.sh|Yazi 檔案管理器 (+ zoxide, bat)|工具|0|0|environment|darwin linux:apt linux:pacman|0"
   "install_tui_tools.sh|TUI 工具組 (lazygit, k9s, btop, glow 等)|工具|0|0|environment|darwin linux:apt linux:pacman|0"
   "install_node.sh|Node.js 生態 (nvm + v24 + npm/yarn/pnpm)|語言|0|0|environment|all|0"
