@@ -46,9 +46,16 @@ Miyago 要的是：
 - **R8**: While driver 在操作 app，the system shall 不產生對外網路連線；若觀察到連線就停止
   並回報。
 
-### S2：Jev 決策層（設計中，尚未核准）
+### S2：`desktop-ops` 決策層
 
-見 `S2-DESIGN.md`。
+- **R9**: When agent 要讀或操作 app，the system shall 先套用黑名單，被擋的目標不讀畫面、不執行動作。
+- **R10**: When 動作被判定為不可逆，the system shall 先取得 Miyago 的 Touch ID 確認才執行。
+- **R11**: When 目標 app 沒有在畫面上的視窗且呼叫沒有明確允許，the system shall 不把它叫到前台。
+- **R12**: If 畫面內容符合憑證格式，then the system shall 不把它送到決策模型。
+- **R13**: When Miyago 以 Touch ID 放行一個被擋的 app 或網站，the system shall 只在限定時間內對
+  不叫模型的工具開放該目標。
+
+完整設計在 `desktop-ops` repo（private）的 `docs/DESIGN.md`。
 
 ## Non-goals
 
@@ -106,7 +113,7 @@ Open Computer Use.app（com.ifuryst.opencomputeruse）
 
 - Launcher 與測試：`config/ai/shared/computer-use/`
 - 註冊：`script/common/setup_computer_use.sh [--dry-run|--apply|--remove]`
-- S2 會在 launcher 之上加一層 `jev-computer` MCP，原 driver 留作接手用的低階介面。
+- S2 會在 launcher 之上加一層 `desktop-ops` MCP，原 driver 留作接手用的低階介面。
 
 ## ADR
 
@@ -166,14 +173,14 @@ Open Computer Use.app（com.ifuryst.opencomputeruse）
 
 - 安裝、launcher、測試、setup script、四個 runtime 註冊、實機驗收。
 
-### S2: `jev-computer` 決策層
+### S2: `desktop-ops` 決策層
 
 - 目標導向工具，決策順序為文字比對 → Jev → 回 status 給 LLM；加上 app policy、不可逆動作
   gate、單一 driver 鎖。需要先決定資料界線。
 
 ### S3: 量測
 
-- 比較原始工具與 `jev-computer` 的 turn 數、token、延遲，再決定原始九個工具是否繼續對
+- 比較原始工具與 `desktop-ops` 的 turn 數、token、延遲，再決定原始九個工具是否繼續對
   agent 開放。
 
 ## Risks

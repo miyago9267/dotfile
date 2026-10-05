@@ -139,6 +139,7 @@ SHARED_CORE_SKILLS=(
   final-state-publication
   community-tech-brief
   jev-tools
+  desktop-ops
 )
 
 PINNED_EXTERNAL_CODEX_SKILLS=(

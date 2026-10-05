@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "deny_apps": [],
+  "deny_app_prefixes": [],
+  "deny_hosts": [],
+  "irreversible_keywords": []
+}

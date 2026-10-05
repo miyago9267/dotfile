@@ -117,6 +117,27 @@ main 直接 Edit/Write 會被 deny（R1）；沒有派任何 Agent 就改超過 
 `would_deny`）、`off`。任何錯誤 fail-open。log：`~/.local/state/miyago/jev/pilotfish-guard.jsonl`
 （只記 basename，1MB 上限）。hook 註冊在 settings.json，不在此處。
 
+## 例外：`desktop-ops` 的畫面文字（Miyago 核准，2026-10-04）
+
+這份文件與 `jev-choice` 的規則是不把原始 tool output 與未核准個資送給 Jev。`desktop-ops`
+（`config/ai/shared/computer-use/desktop-ops-mcp.sh`，repo 在
+`~/Project/Active/Tools/desktop-ops`）是 Miyago 核准的例外，範圍只限它的 `computer_do` /
+`computer_check` / `computer_choose` / `computer_read`，而且只在 launcher 的
+`DESKTOP_OPS_JEV_PATH` 為 `on` 時生效；`off` 時這四個工具不存在，也不讀 key、不對外連線。
+
+- 會送到 `api.typesafe.ai`：黑名單以外的 app 視窗的元素標籤、角色、值與可見文字（截斷，每次請求
+  的 state 不超過 16 KB），目標或問題字串，`values` 的名稱與 `field`。
+- 不會送：`values` 的 `text`（之後每一輪都遮掉，包含剛填過的欄位）、密碼欄位的內容、黑名單 app
+  與黑名單 host 的任何內容、截圖。命中憑證格式（`jev-ask` 既有 pattern，另加 JWT、`xox*`、
+  `AIza`、卡號、身分證字號、一次性驗證碼）的請求整個不送，拒送訊息不回顯命中的字串。
+- 連線：不跟隨 redirect、不走 proxy 環境變數、API 錯誤只回 status code、最多重試兩次；key 只注入
+  server，S1 driver 子程序拿不到。
+- 這不是 DLP。黑名單維持窄範圍（密碼管理器、鑰匙圈、Mail、Messages、銀行類），所以通訊 app、
+  終端機、筆記、編輯器與瀏覽器非黑名單 host 的畫面文字都會送出；TypeSafe 的保留期限未知。
+
+設計與決定見 `desktop-ops` repo（private）的 `docs/DESIGN.md`。撤回這個例外：把 launcher 的開關改回
+`off`，並刪掉本節與 `jev-choice/SKILL.md` 的對應小節。
+
 ## Runtime mapping
 
 | Runtime | jev-browser | Reticle | compaction |

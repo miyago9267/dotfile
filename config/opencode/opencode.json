@@ -194,13 +194,21 @@
       "strategic-compact": "deny",
       "*": "deny"
     },
-    "open-computer-use_*": "ask"
+    "open-computer-use_*": "ask",
+    "desktop-ops_*": "ask"
   },
   "mcp": {
     "open-computer-use": {
       "type": "local",
       "command": [
         "/Users/miyago/dotfile/config/ai/shared/computer-use/computer-use-mcp.sh"
+      ],
+      "enabled": true
+    },
+    "desktop-ops": {
+      "type": "local",
+      "command": [
+        "/Users/miyago/dotfile/config/ai/shared/computer-use/desktop-ops-mcp.sh"
       ],
       "enabled": true
     }
