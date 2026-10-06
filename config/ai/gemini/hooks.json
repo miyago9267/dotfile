@@ -84,5 +84,19 @@
         ]
       }
     ]
+  },
+  "secret-guard": {
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/miyago/dotfile/config/ai/shared/hooks/secret-guard-adapter.sh' --host agy",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
   }
 }

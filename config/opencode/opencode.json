@@ -195,7 +195,29 @@
       "*": "deny"
     },
     "open-computer-use_*": "ask",
-    "desktop-ops_*": "ask"
+    "desktop-ops_*": "ask",
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.env.example": "allow",
+      "~/dotfile/secrets": "deny",
+      "~/dotfile/secrets/*": "deny",
+      "~/.ssh": "deny",
+      "~/.ssh/*": "deny",
+      "~/.kube/config": "deny",
+      "~/.config/gcloud": "deny",
+      "~/.config/gcloud/*": "deny",
+      "~/.age": "deny",
+      "~/.age/*": "deny",
+      "~/.env.secrets": "deny",
+      "~/.config/sops/age": "deny",
+      "~/.config/sops/age/*": "deny",
+      "~/Library/Application Support/sops/age": "deny",
+      "~/Library/Application Support/sops/age/*": "deny",
+      "~/Library/Keychains": "deny",
+      "~/Library/Keychains/*": "deny"
+    }
   },
   "mcp": {
     "open-computer-use": {

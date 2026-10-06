@@ -37,7 +37,21 @@
       "read_file(/Users/miyago/.config/gcloud)",
       "write_file(/Users/miyago/.config/gcloud)",
       "read_file(/Users/miyago/.config/gh)",
-      "write_file(/Users/miyago/.config/gh)"
+      "write_file(/Users/miyago/.config/gh)",
+      "read_file(/Users/miyago/dotfile/secrets)",
+      "write_file(/Users/miyago/dotfile/secrets)",
+      "read_file(/Users/miyago/.kube/config)",
+      "write_file(/Users/miyago/.kube/config)",
+      "read_file(/Users/miyago/.age)",
+      "write_file(/Users/miyago/.age)",
+      "read_file(/Users/miyago/.env.secrets)",
+      "write_file(/Users/miyago/.env.secrets)",
+      "read_file(/Users/miyago/.config/sops/age)",
+      "write_file(/Users/miyago/.config/sops/age)",
+      "read_file(/Users/miyago/Library/Application Support/sops/age)",
+      "write_file(/Users/miyago/Library/Application Support/sops/age)",
+      "read_file(/Users/miyago/Library/Keychains)",
+      "write_file(/Users/miyago/Library/Keychains)"
     ],
     "ask": [
       "command(git add)",

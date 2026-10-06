@@ -3,7 +3,7 @@ id: spec-secrets-management
 title: Dotfile Secret 管理（age + sops）
 status: in-progress
 created: 2026-03-19
-updated: 2026-10-05
+updated: 2026-10-06
 author: Miyago
 approved_by:
 tags: [secrets, age, sops, security, cross-platform]
@@ -278,6 +278,51 @@ shell 啟動時每次跑 `sops -d` 會有約 200-300ms 延遲。
 - `production-gcp-openvpn` 已於 2026-10-05 比對相同。原本以為這一項要等 Miyago
   按 Keychain 的確認，實際上 `keychain-only` 的讀取不會跳確認視窗（見「尚未處理」）。
 - KeePassXC 的資料與舊腳本在觀察期內保留，不刪除。
+
+### 其他 runtime 的 secret 邊界（2026-10-06）
+
+Claude 的邊界是 `settings.json` 的 `Read(...)` deny 加 `secret-guard.sh`。這一節把等效
+保護延伸到其他 runtime。判斷規則只有 `config/ai/claude/hooks/secret-guard.sh` 一份；
+`config/ai/shared/hooks/secret-guard-adapter.sh` 只轉換各 host 的輸入輸出格式。威脅模型
+不變：防合作型 agent 的意外外洩，缺 `jq`、格式不符時 fail-open，不是硬邊界。
+
+| runtime | 指令（secret guard） | 檔案路徑 deny | 生效方式 |
+| --- | --- | --- | --- |
+| Codex | `setup_codex.sh` 把 `secret-guard.sh` 註冊到 `PreToolUse`（matcher `Bash`） | 未做，另案 | 跑 `setup_codex.sh` 後 |
+| OpenCode | `plugins/secret-guard.js` 在 `tool.execute.before` 經 adapter 呼叫 guard，命中就 throw | `opencode.json` 的 `permission.read` | `~/.config/opencode` 是 symlink，下次啟動 |
+| agy | `hooks.json` 的 `secret-guard` 區塊（`PreToolUse`，matcher `run_command`）經 adapter | `antigravity-cli/settings.json` 的 `read_file` / `write_file` deny | hooks 是 symlink，立即；settings 要跑 `setup_gemini.sh` |
+| Grok | 未做 | 未做 | -- |
+
+有官方文件支持的部分：
+
+- Codex：`PreToolUse` 的輸入是 `tool_input.command`（字串）與 `cwd`，deny 的輸出是
+  `hookSpecificOutput.permissionDecision`，與 Claude 相同，所以直接掛 `secret-guard.sh`、
+  不經 adapter。文件載明 `ask` 尚未支援，guard 本來就只回 deny。
+- OpenCode：`permission` 規則是最後一條命中的生效，pattern 開頭的 `~` 會展開；`read` 的
+  內建預設（`*.env`、`*.env.*` deny，`*.env.example` allow）在自訂 `read` 時重列。
+  plugin 在 `tool.execute.before` throw Error 可以擋下工具呼叫。
+
+需要實測的部分（都要啟動該 runtime，離線測試驗不到）：
+
+- OpenCode：`output.args` 裡 bash 指令的鍵名文件沒寫，plugin 依序試 `command`、`cmd`、
+  `script`，讀不到就放行；`read` 規則比對的是絕對路徑還是相對路徑、`*` 是否跨 `/`，
+  文件也沒有明講。
+- agy：`run_command` 的參數鍵名（adapter 試 `CommandLine` 等常見寫法）、matcher
+  `run_command` 是否命中、`{"decision":"deny"}` 是否真的擋下，以及 `settings.json` 的
+  deny 對目錄底下的檔案是否生效，都沒有文件可查。`.env` 的 glob 寫法沒有記載，沒有加。
+- Codex：註冊邏輯只以暫存目錄離線驗證，live 的 `~/.codex/hooks.json` 要跑安裝流程才會有。
+
+已知缺口：
+
+- Codex 沒有檔案路徑的 deny。要靠 permission profile 遷移，牽涉 `sandbox_mode` 與
+  `approval_policy`，另案處理。
+- `secret-guard.sh` 只看 CLI 子指令，不看 `cat`、`head`、`grep` 讀檔。Gemini 的
+  `policies/custom-rules.toml` 自動 allow 這幾個指令，經 shell 讀受保護路徑的檔案不會被擋。
+- Grok 未做：它把 `HOME` 換成假目錄（guard 以 `$HOME` 解析 `~/dotfile/secrets`）、
+  `config.toml` 的管理者不明，而且尚未登入，無法驗證。
+
+測試：`config/ai/shared/hooks/tests/`（adapter 與 Codex 註冊）、
+`config/opencode/tests/secret-guard.test.js`（`bun test`）。
 
 ### 尚未處理
 

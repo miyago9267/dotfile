@@ -18,6 +18,7 @@ FACTORY_SESSION_SRC="$DOTFILE_DIR/config/ai/shared/hooks/factory-session-start.p
 FACTORY_SESSION_DST="$HOME/.codex/hooks/factory-session-start.py"
 COMPACTION_SHADOW_SRC="$DOTFILE_DIR/config/ai/shared/jev/compaction-shadow.py"
 COMPACTION_SHADOW_DST="$HOME/.codex/hooks/jev-compaction-shadow.py"
+SECRET_GUARD_SRC="$DOTFILE_DIR/config/ai/claude/hooks/secret-guard.sh"
 SHARED_SKILL_SRC="$DOTFILE_DIR/config/ai/shared/skills"
 SHARED_RULES_SRC="$DOTFILE_DIR/config/ai/AGENTS.md"
 PERSONAL_MODEL_SRC="${PERSONAL_MODEL_SRC:-$DOTFILE_DIR/../Project/AI/agent-workspace/personal-model/PROFILE.md}"
@@ -247,6 +248,48 @@ ensure_compaction_shadow_hook() {
 }
 
 ensure_compaction_shadow_hook
+
+# --- secret-guard registration: begin ---
+# 把 secret guard 掛到 Codex 的 PreToolUse(Bash)。Codex 的 PreToolUse 輸入（tool_input.command、cwd）
+# 與 deny 輸出格式和 Claude 相同，所以直接掛 config/ai/claude/hooks/secret-guard.sh，不經 adapter。
+# Codex 的 PreToolUse 不支援 ask，guard 只會回 deny。這層是防意外外洩，不是硬邊界。
+# 這一段（begin 到 end）由 config/ai/shared/hooks/tests/test_codex_secret_guard_registration.sh 抽出來離線測試。
+# 回傳：0 已註冊（或本來就有）、1 hooks.json 不存在、2 缺 jq、3 JSON 無效或寫入失敗。
+register_secret_guard_hook() { # hooks_file guard_path
+  local hooks_file="$1"
+  local guard_command="bash '$2'"
+  local tmp_file
+  [ -f "$hooks_file" ] || return 1
+  command -v jq >/dev/null 2>&1 || return 2
+  tmp_file="$hooks_file.tmp.$$"
+  if jq --arg command "$guard_command" '
+    .hooks //= {}
+    | .hooks.PreToolUse //= []
+    | if any(.hooks.PreToolUse[]?.hooks[]?; .command == $command)
+      then .
+      else .hooks.PreToolUse += [{matcher: "Bash", hooks: [{type: "command", command: $command, timeout: 10}]}]
+      end
+  ' "$hooks_file" > "$tmp_file" && [ -s "$tmp_file" ]; then
+    command mv -f "$tmp_file" "$hooks_file"
+  else
+    command rm -f "$tmp_file"
+    return 3
+  fi
+}
+# --- secret-guard registration: end ---
+
+ensure_secret_guard_hook() {
+  local rc=0
+  register_secret_guard_hook "$CODEX_DST/hooks.json" "$SECRET_GUARD_SRC" || rc=$?
+  case "$rc" in
+    0) printf '%b  [OK]   hooks.json -- secret guard enabled (PreToolUse Bash)%b\n' "$G" "$N" ;;
+    1) printf '%b  [SKIP] hooks.json -- not found; secret guard NOT registered%b\n' "$Y" "$N" ;;
+    2) printf '%b  [SKIP] hooks.json -- jq is unavailable; secret guard NOT registered%b\n' "$Y" "$N" ;;
+    *) printf '%b  [SKIP] hooks.json -- invalid JSON or cannot update; secret guard NOT registered%b\n' "$Y" "$N" ;;
+  esac
+}
+
+ensure_secret_guard_hook
 
 for profile in fast code heavy; do
   link_item "$CODEX_SRC/$profile.config.toml" "$CODEX_DST/$profile.config.toml" "$profile.config.toml"
