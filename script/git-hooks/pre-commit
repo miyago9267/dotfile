@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+# dotfile 的 pre-commit：staged 檔案碰到 guard / broker 相關路徑時，commit 前重跑對應回歸測試。
+#
+#   config/ai/claude/hooks/**、config/ai/shared/jev/**  -> run-all.sh（約 2 分鐘）
+#   script/utils/agent-secret*、script/utils/tests/**    -> test_agent_secret.sh（約 30 秒）
+#   config/ai/claude/settings.json                       -> jq -e . 合法性檢查
+#   其他 commit 直接放行。
+#
+# 測試對象：工作區（working tree），不是 staged 內容。
+#   理由：測試會用到 repo 內的相對路徑、symlink 與絕對路徑，把 index 匯出到暫存目錄
+#   再跑，成本高且容易與實際行為不一致。
+#   限制：部分 stage（git add -p）或有未 stage 的相關變更時，跑的是工作區，可能與
+#   實際要 commit 的內容不同；偵測到時會印警告，不會擋。
+#   例外：settings.json 的 JSON 檢查直接讀 index（git show :path），因為幾乎零成本。
+#
+# 逃生門：DOTFILE_SKIP_TESTS=1 git commit ...（會印一行提醒；不要用 --no-verify）。
+# 測試用覆寫：DOTFILE_HOOK_CLAUDE_CMD、DOTFILE_HOOK_SECRET_CMD 取代預設測試指令。
+# 缺 jq 或 python3 時印提示並略過對應檢查，不擋 commit。
+# 相容 bash 3.2（macOS 內建），不使用 bash 4+ 語法。
+set -u
+
+if [ "${DOTFILE_SKIP_TESTS:-}" = 1 ]; then
+  echo "[pre-commit] DOTFILE_SKIP_TESTS=1：略過回歸測試，記得事後手動重跑。" >&2
+  exit 0
+fi
+
+root=$(git rev-parse --show-toplevel) || exit 0
+cd "$root" || exit 0
+
+need_claude=0; need_secret=0; need_json=0
+while IFS= read -r -d '' f; do
+  case "$f" in
+    config/ai/claude/hooks/*|config/ai/shared/jev/*) need_claude=1 ;;
+    script/utils/agent-secret*|script/utils/tests/*) need_secret=1 ;;
+    config/ai/claude/settings.json) need_json=1 ;;
+  esac
+done < <(git diff --cached --name-only -z)
+
+[ $((need_claude + need_secret + need_json)) = 0 ] && exit 0
+
+# 警告：相關路徑有未 stage 的變更時，工作區與 staged 內容不同
+unstaged=$(git diff --name-only -- config/ai/claude/hooks config/ai/shared/jev \
+  'script/utils/agent-secret*' script/utils/tests 2>/dev/null | head -5)
+if [ -n "$unstaged" ]; then
+  echo "[pre-commit] 注意：以下相關檔案有未 stage 的變更，測試跑的是工作區內容：" >&2
+  printf '%s\n' "$unstaged" | sed 's/^/  /' >&2
+fi
+
+# hook 執行時 git 會設定 GIT_DIR / GIT_INDEX_FILE 等；測試若在暫存 repo 內用 git 會被汙染
+# shellcheck disable=SC2046
+unset $(git rev-parse --local-env-vars)
+
+fail=0
+ran=
+
+# run_suite <名稱> <指令>：指令從 repo 根目錄執行，失敗時印尾端輸出與手動重跑方式
+run_suite() {
+  local name=$1 cmd=$2 out rc
+  echo "[pre-commit] 執行 $name ..." >&2
+  out=$(bash -c "$cmd" 2>&1); rc=$?
+  if [ "$rc" = 0 ]; then
+    ran="$ran $name"
+  else
+    fail=1
+    printf '%s\n' "$out" | tail -40 >&2
+    echo "[pre-commit] FAIL $name (rc=$rc)" >&2
+    echo "  手動重跑：cd $root && $cmd" >&2
+  fi
+}
+
+if [ "$need_claude" = 1 ]; then
+  if command -v jq >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
+    run_suite "claude hooks + jev tests" "${DOTFILE_HOOK_CLAUDE_CMD:-bash config/ai/claude/hooks/tests/run-all.sh}"
+  else
+    echo "[pre-commit] 缺 jq 或 python3：略過 claude hooks + jev tests，請在有工具的機器補跑。" >&2
+  fi
+fi
+
+if [ "$need_secret" = 1 ]; then
+  run_suite "agent-secret tests" "${DOTFILE_HOOK_SECRET_CMD:-bash script/utils/tests/test_agent_secret.sh}"
+fi
+
+if [ "$need_json" = 1 ]; then
+  if command -v jq >/dev/null 2>&1; then
+    if git show :config/ai/claude/settings.json | jq -e . >/dev/null 2>&1; then
+      ran="$ran settings.json"
+    else
+      fail=1
+      echo "[pre-commit] FAIL settings.json 不是合法 JSON（staged 內容）" >&2
+      echo "  手動檢查：git show :config/ai/claude/settings.json | jq -e ." >&2
+    fi
+  else
+    echo "[pre-commit] 缺 jq：略過 settings.json 檢查。" >&2
+  fi
+fi
+
+if [ "$fail" = 1 ]; then
+  echo "[pre-commit] commit 已擋下。修正後重試；真的要略過請用 DOTFILE_SKIP_TESTS=1。" >&2
+  exit 1
+fi
+[ -n "$ran" ] && echo "[pre-commit] OK:$ran" >&2
+exit 0

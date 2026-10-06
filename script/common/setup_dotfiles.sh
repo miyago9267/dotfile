@@ -45,3 +45,17 @@ fi
 # canonical source while keeping config files portable across machines.
 link "$dotfile_dir/config/ai/AGENTS.md" "$config_root/miyago-agent/AGENTS.md"
 link "$workspace_dir/personal-model/PROFILE.md" "$config_root/miyago-agent/personal-model/PROFILE.md"
+
+# Git hooks：dotfile 的 pre-commit 在 guard / broker 相關檔案變更時重跑回歸測試。
+# 用 core.hooksPath 指向有版控的目錄；若 .git/hooks 有非 sample 的既有 hook 就不覆蓋。
+hooks_dir="$dotfile_dir/script/git-hooks"
+if [ -d "$dotfile_dir/.git" ] && [ -d "$hooks_dir" ]; then
+  if [ "$(git -C "$dotfile_dir" config --get core.hooksPath)" = "$hooks_dir" ]; then
+    echo "  ${G}[OK]${N} core.hooksPath -> $hooks_dir"
+  elif [ -n "$(find "$dotfile_dir/.git/hooks" -type f ! -name '*.sample' 2>/dev/null)" ]; then
+    echo "  ${Y}[SKIP]${N} .git/hooks 有既有 hook，未設定 core.hooksPath"
+  else
+    git -C "$dotfile_dir" config core.hooksPath "$hooks_dir"
+    echo "  ${Y}[GIT]${N} core.hooksPath -> $hooks_dir"
+  fi
+fi
