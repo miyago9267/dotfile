@@ -161,5 +161,13 @@ if python3 "$shoal_root/tools/install_hooks.py" --host claude --apply >/dev/null
 else
   printf '%s\n' 'shoal guard update failed'
 fi
+# Codex、Grok、agy、OpenCode 的全域安裝同樣從 shoal committed HEAD 同步；
+# 每個 host 一行摘要直接寫進 update.log，單一 host 失敗不影響其他步驟。
+if sync_summary=$(PATH="$HOME/.bun/bin:$PATH" python3 "$shoal_root/tools/sync_global.py" --apply 2>&1); then
+  printf '%s\n' "$sync_summary" | sed 's/^/shoal sync: /'
+else
+  printf '%s\n' 'shoal sync failed'
+  printf '%s\n' "$sync_summary" | sed 's/^/shoal sync: /'
+fi
 
 printf '%s\n' "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] update check complete"
