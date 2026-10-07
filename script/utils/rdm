@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# rdm — Redmine REST API 的薄 wrapper。
+#   rdm GET  <path>               rdm GET '/issues.json?assigned_to_id=me&limit=5'
+#   rdm POST <path> < body.json   jq -n '{issue:{...}}' | rdm POST /issues.json
+#   rdm PUT  <path> < body.json   jq -n '{issue:{notes:"..."}}' | rdm PUT /issues/123.json
+# key 由 agent-secret 的 redmine alias 注入 curl 的環境，再由 curl --variable 展開成 header，
+# 不進任何行程的 argv；回應裡的 api_key 欄位會被濾掉。只接受 .json endpoint，沒有 DELETE。
+# HTTP 狀態印在 stderr（http=NNN）；非 2xx 時照樣印出 body，並以 curl 的非零碼結束。
+# REDMINE_URL 可覆寫站台；RDM_BROKER 可覆寫 broker（測試用）。
+set -uo pipefail
+
+base=${REDMINE_URL:-https://redmine.dunqian.tw}
+broker=${RDM_BROKER:-agent-secret}
+
+die() { printf 'rdm: %s\n' "$1" >&2; exit 2; }
+[[ $# -eq 2 ]] || die 'usage: rdm <GET|POST|PUT> <path> [< body.json]'
+method=$1 path=$2
+[[ $path =~ ^/[^?]*\.json(\?.*)?$ ]] || die "path 必須以 / 開頭並指向 .json endpoint: $path"
+
+args=(-sS -m 30 --fail-with-body -X "$method"
+  --variable %REDMINE_API_KEY
+  --expand-header 'X-Redmine-API-Key: {{REDMINE_API_KEY}}'
+  -w '%{stderr}http=%{http_code}\n')
+case $method in
+  GET) ;;
+  POST|PUT) args+=(-H 'Content-Type: application/json' --data-binary @-) ;;
+  *) die "不支援的 method: $method" ;;
+esac
+
+body=$("$broker" run redmine -- /usr/bin/curl "${args[@]}" "$base$path"); rc=$?
+# PUT 成功是空 body，proxy 錯誤頁是 HTML：濾不動時原樣印出，但含 api_key 的內容不印
+if [[ -n $body ]] && ! jq 'del(.. | .api_key?)' <<< "$body" 2>/dev/null; then
+  if [[ $body == *api_key* ]]; then
+    printf 'rdm: 回應不是 JSON 且含 api_key，已隱藏\n' >&2
+  else
+    printf '%s\n' "$body"
+  fi
+fi
+exit $rc

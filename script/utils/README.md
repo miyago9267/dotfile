@@ -15,6 +15,7 @@
 | `extract` | 智能解壓縮（tar/zip/rar/7z/bz2...） | `extract archive.tar.gz` |
 | `runcpp.sh` | C++ 編譯執行（支援 GDB, 最佳化旗標） | `runcpp.sh main.cpp` |
 | `agent-call` | background read-only calls | `agent-call --help` |
+| `rdm` | Redmine REST API wrapper（key 經 `agent-secret` 的 `redmine` alias 注入） | `rdm GET '/issues.json?assigned_to_id=me'`、`jq -n '{issue:{...}}' \| rdm POST /issues.json` |
 | `cfupdate.py` | CloudFlare DNS 動態更新 | 需設定 API token |
 | `init-project` | 專案初始化（Python/Node/Go） | `init-project` |
 | `sec` | Secret 管理（age + sops） | `sec status`、`sec edit`、`sec show` |

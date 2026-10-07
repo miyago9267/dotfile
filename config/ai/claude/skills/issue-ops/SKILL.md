@@ -167,6 +167,7 @@ cat go.mod 2>/dev/null | grep -v "^//"
 - `health-check`：Stage 1 發現 production issue -> 帶 service name -> health-check Step 1
 - `log-analysis`：cicd-watch 修不好 -> 帶 `BRANCH` + run ID + failed job -> log-analysis Step 2（TIME_RANGE = CI run 時間）
 - `post-mortem`：Stage 4c PR merged + 是 incident -> 帶 `ISSUE` + timeline -> /post-mortem
+- `redmine`：`PLATFORM` 是 GitLab，Stage 3 產出 `PR_URL` 後或 Stage 4c merged 後 Miyago 要掛工單 -> 帶 `PR_URL` + `ISSUE`（可能沒有）-> redmine Step 1；發 tag / release 前的工單同步也交給它（Step 4）
 
 ## 規則
 
