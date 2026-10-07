@@ -7,6 +7,7 @@
 | `gq` | git add + commit + push 一步到位 | `gq "commit message"` |
 | `hs` | 快速 HTTP server | `hs [port]`（預設 8000） |
 | `jp` | JSON 格式化 | `jp '{"a":1}'` 或 `curl ... \| jp` |
+| `md2pdf` | Markdown 轉 PDF（版面比照 VSCode Markdown PDF；需要 bun 與 Chrome） | `md2pdf doc.md`、`md2pdf -o out.pdf doc.md`、`md2pdf --no-header *.md` |
 | `pf` | 查找佔用 port 的 process | `pf 3000` |
 | `qb` | 快速備份（加時間戳） | `qb myfile.conf` |
 | `qn` | 快速筆記 | `qn add "todo"`、`qn list`、`qn search keyword` |

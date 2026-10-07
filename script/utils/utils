@@ -17,6 +17,7 @@ get_desc() {
     hs)           echo "快速 HTTP server" ;;
     init-project) echo "專案初始化（Python/Node/Go）" ;;
     jp)           echo "JSON 格式化" ;;
+    md2pdf)       echo "Markdown 轉 PDF（版面比照 VSCode Markdown PDF）" ;;
     pf)           echo "查找佔用 port 的 process" ;;
     qb)           echo "快速備份（加時間戳）" ;;
     qn)           echo "快速筆記" ;;
@@ -38,6 +39,7 @@ get_usage() {
     hs)           echo "hs [port]  (default: 8000)" ;;
     init-project) echo "init-project" ;;
     jp)           echo "jp '{\"a\":1}' | curl ... | jp" ;;
+    md2pdf)       echo "md2pdf [-o out.pdf] [--no-header] <file.md>..." ;;
     pf)           echo "pf <port>" ;;
     qb)           echo "qb <file-or-dir>" ;;
     qn)           echo "qn add \"text\" | qn list | qn search <keyword>" ;;

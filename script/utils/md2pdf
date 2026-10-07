@@ -1,0 +1,117 @@
+#!/bin/bash
+# Markdown 轉 PDF（版面比照 VSCode Markdown PDF：A4、頁首標題/日期、頁尾頁碼）
+# 底層是 bunx md-to-pdf + 系統 Chrome，不另外下載 Chromium。
+
+MD_TO_PDF_VERSION="5.2.5"
+
+usage() {
+  echo "Usage: md2pdf [-o out.pdf] [--no-header] <file.md>..."
+  echo "  -o <file>     指定輸出路徑（只能搭配單一輸入檔）"
+  echo "  --no-header   不印頁首與頁尾"
+  echo "  預設輸出在來源檔旁邊，同名 .pdf；CHROME_PATH 可指定瀏覽器"
+}
+
+find_chrome() {
+  if [ -n "$CHROME_PATH" ]; then
+    echo "$CHROME_PATH"
+    return
+  fi
+  local c
+  for c in \
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+    "/Applications/Chromium.app/Contents/MacOS/Chromium" \
+    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"; do
+    [ -x "$c" ] && echo "$c" && return
+  done
+  for c in google-chrome google-chrome-stable chromium chromium-browser; do
+    command -v "$c" 2>/dev/null && return
+  done
+  return 1
+}
+
+OUT=""
+HEADER=true
+FILES=()
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|--help)   usage; exit 0 ;;
+    -o)          OUT="$2"; shift 2 ;;
+    --no-header) HEADER=false; shift ;;
+    -*)          echo "Error: unknown option $1"; usage; exit 1 ;;
+    *)           FILES+=("$1"); shift ;;
+  esac
+done
+
+if [ ${#FILES[@]} -eq 0 ]; then
+  usage
+  exit 1
+fi
+
+if [ -n "$OUT" ] && [ ${#FILES[@]} -gt 1 ]; then
+  echo "Error: -o 只能搭配單一輸入檔"
+  exit 1
+fi
+
+if ! command -v bunx >/dev/null 2>&1; then
+  echo "Error: 找不到 bunx，請先安裝 bun"
+  exit 1
+fi
+
+CHROME="$(find_chrome)" || {
+  echo "Error: 找不到 Chrome/Chromium，請安裝或設定 CHROME_PATH"
+  exit 1
+}
+
+LAUNCH_OPTIONS="{\"executablePath\":\"$CHROME\"}"
+
+# 數值取自 VSCode Markdown PDF 的預設設定
+if $HEADER; then
+  PDF_OPTIONS=$(cat <<'EOF'
+{
+  "format": "A4",
+  "printBackground": true,
+  "displayHeaderFooter": true,
+  "margin": {"top": "1.5cm", "bottom": "1cm", "left": "1cm", "right": "1cm"},
+  "headerTemplate": "<div style='font-size: 9px; margin-left: 1cm;'><span class='title'></span></div><div style='font-size: 9px; margin-left: auto; margin-right: 1cm;'><span class='date'></span></div>",
+  "footerTemplate": "<div style='font-size: 9px; margin: 0 auto;'><span class='pageNumber'></span> / <span class='totalPages'></span></div>"
+}
+EOF
+)
+else
+  PDF_OPTIONS='{"format": "A4", "printBackground": true, "margin": {"top": "1cm", "bottom": "1cm", "left": "1cm", "right": "1cm"}}'
+fi
+
+# md-to-pdf 預設字型沒有中文，補上 CJK fallback
+CSS='body { font-family: -apple-system, "Segoe UI", "PingFang TC", "Noto Sans CJK TC", "Microsoft JhengHei", sans-serif; }'
+
+FAILED=0
+for FILE in "${FILES[@]}"; do
+  if [ ! -f "$FILE" ]; then
+    echo "Error: $FILE does not exist"
+    FAILED=1
+    continue
+  fi
+
+  TARGET="${OUT:-${FILE%.*}.pdf}"
+  TMP="$(mktemp "${TMPDIR:-/tmp}/md2pdf.XXXXXX")"
+
+  # 走 stdin 才能自訂輸出路徑；--basedir 讓相對路徑的圖片仍可解析
+  if bunx "md-to-pdf@$MD_TO_PDF_VERSION" \
+      --basedir "$(cd "$(dirname "$FILE")" && pwd)" \
+      --document-title "$(basename "${FILE%.*}")" \
+      --css "$CSS" \
+      --pdf-options "$PDF_OPTIONS" \
+      --launch-options "$LAUNCH_OPTIONS" \
+      < "$FILE" > "$TMP" && [ -s "$TMP" ]; then
+    chmod 644 "$TMP"
+    mv "$TMP" "$TARGET"
+    echo "✅ $FILE -> $TARGET"
+  else
+    rm -f "$TMP"
+    echo "Error: 轉換失敗 $FILE"
+    FAILED=1
+  fi
+done
+
+exit $FAILED
