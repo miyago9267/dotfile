@@ -177,7 +177,7 @@
 
 ## Work boundary
 
-- Pi 沒有 Codex/Pilotfish 的 typed role、Claude hooks 或 MCP 的一對一語義；沒有載入的
+- Pi 沒有 Codex/Shoal 的 typed role、Claude hooks 或 MCP 的一對一語義；沒有載入的
   capability 不得宣稱已啟用。
 
 <!-- runtime-adapter:end -->

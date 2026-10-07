@@ -96,45 +96,47 @@ update_calico() {
   mv -f "$target.new" "$target"
 }
 
-update_pilotfish() {
+update_shoal() {
   # 從本機 shoal 的 committed HEAD（hosts/claude/dist）安裝，不裝未 commit 的 WIP。
-  # PILOTFISH_CLAUDE_ROOT 沿用舊名，現在指向 shoal repo 根目錄。
+  # SHOAL_ROOT 指向 shoal repo 根目錄。
   local src tmp root cfg skill
-  src="${PILOTFISH_CLAUDE_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
+  src="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
   git -C "$src" rev-parse --verify HEAD >/dev/null 2>&1 || return 1
   tmp=$(mktemp -d)
   git -C "$src" archive HEAD hosts/claude/dist | tar -x -C "$tmp" || return 1
   root="$tmp/hosts/claude/dist"
   cfg="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-  skill="$cfg/skills/pilotfish-orchestration"
+  skill="$cfg/skills/shoal-orchestration"
   for name in scout Explore plan-verifier security-reviewer mech-executor executor verifier security-executor; do
     [ -f "$root/agents/$name.md" ] || return 1
   done
   for name in scout Explore plan-verifier security-reviewer mech-executor executor verifier security-executor; do
     install -m 0644 "$root/agents/$name.md" "$cfg/agents/$name.md"
   done
+  # 舊名 skill 目錄（rebrand 前）已由 shoal-orchestration 取代，移除避免重複載入。
+  rm -rf "$cfg/skills/pilotfish-orchestration"
   mkdir -p "$skill/references"
-  for ref in "$root"/skills/pilotfish-orchestration/references/*.md; do
+  for ref in "$root"/skills/shoal-orchestration/references/*.md; do
     install -m 0644 "$ref" "$skill/references/$(basename "$ref")"
   done
   # 完整 orchestration 放在按需載入的 skill，不再寫回常駐的 AGENTS.md。
   # 保留 dotfiles 自己的 frontmatter，只替換 marker 之間的內容。
   python3 - "$skill/SKILL.md" \
-    "$root/skills/pilotfish-orchestration/SKILL.md" <<'PY'
+    "$root/skills/shoal-orchestration/SKILL.md" <<'PY'
 import pathlib
 import sys
 
 target = pathlib.Path(sys.argv[1])
 source = pathlib.Path(sys.argv[2]).read_text()
 body = source.split("---", 2)[2].strip("\n")
-replacement = "<!-- pilotfish:begin -->\n" + body + "\n<!-- pilotfish:end -->"
+replacement = "<!-- shoal:begin -->\n" + body + "\n<!-- shoal:end -->"
 text = target.read_text()
-begin = text.count("<!-- pilotfish:begin -->")
-end = text.count("<!-- pilotfish:end -->")
+begin = text.count("<!-- shoal:begin -->")
+end = text.count("<!-- shoal:end -->")
 if begin != 1 or end != 1:
-    raise SystemExit("pilotfish markers are not exactly one pair")
-start = text.index("<!-- pilotfish:begin -->")
-finish = text.index("<!-- pilotfish:end -->", start) + len("<!-- pilotfish:end -->")
+    raise SystemExit("shoal markers are not exactly one pair")
+start = text.index("<!-- shoal:begin -->")
+finish = text.index("<!-- shoal:end -->", start) + len("<!-- shoal:end -->")
 target.write_text(text[:start] + replacement + text[finish:])
 PY
 }
@@ -149,13 +151,13 @@ if update_calico; then
 else
   printf '%s\n' 'calico update failed'
 fi
-if update_pilotfish; then
-  printf '%s\n' 'pilotfish update check passed'
+if update_shoal; then
+  printf '%s\n' 'shoal update check passed'
 else
-  printf '%s\n' 'pilotfish update failed'
+  printf '%s\n' 'shoal update failed'
 fi
 # dispatch guard 由 shoal 安裝與註冊（docs/specs/dispatch-enforcement R7），只從 committed HEAD 取檔。
-shoal_root="${PILOTFISH_CLAUDE_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
+shoal_root="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
 if python3 "$shoal_root/tools/install_hooks.py" --host claude --apply >/dev/null 2>&1; then
   printf '%s\n' 'shoal guard update check passed'
 else

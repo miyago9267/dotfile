@@ -1,5 +1,5 @@
 ---
-description: Pilotfish-style read-only reconnaissance for bounded repository questions
+description: Shoal-style read-only reconnaissance for bounded repository questions
 mode: subagent
 model: deepseek/deepseek-v4-flash
 permission:

@@ -8,7 +8,7 @@
   ],
   "plugin": [
     "oh-my-openagent@latest",
-    "file:///Users/miyago/dotfile/config/opencode-harness/plugins/pilotfish-opencode.js"
+    "file:///Users/miyago/dotfile/config/opencode-harness/plugins/shoal-opencode.js"
   ],
   "mcp": {
     "playwright": {

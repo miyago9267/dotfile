@@ -14,12 +14,12 @@ pack。
 
 ## Routing boundary
 
-- Pilotfish 負責 task classification、Plan/approval gates、delegation、security
+- Shoal 負責 task classification、Plan/approval gates、delegation、security
   separation 與 fresh-context verification。
 - 此 skill 只負責 reverse/security domain classification 與 pack 的 case/evidence
   workflow。
 - 使用一條 domain PRIMARY route。不要因為 external pack 建議就啟動 second
-  router、spawn role 或 bypass Pilotfish。
+  router、spawn role 或 bypass shoal。
 - 如果另一個 installed skill 負責該 task domain，保持它為 primary；只有 task
   確實包含 reverse/security subtask 時才使用此 router。
 

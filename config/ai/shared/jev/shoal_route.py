@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Opt-in UserPromptSubmit hook: Jev suggests a Pilotfish first role, advisory only.
+"""Opt-in UserPromptSubmit hook: Jev suggests a Shoal first role, advisory only.
 
 Only clean, short, low-risk prompts are sent. Anything risky, pasted, or still
 identifying after redaction is skipped locally. Output is a fixed template; Jev
@@ -45,7 +45,7 @@ ROLE_TEXT = {
     "judgment": "`executor`",
 }
 DIRECTIVE = (
-    "Pilotfish Jev advisory (not approval; AGENTS.md gates and dispatch brake win): "
+    "Shoal Jev advisory (not approval; AGENTS.md gates and dispatch brake win): "
     "suggested first role = {role}."
 )
 PLAN_SUFFIX = " Consider explore_then_plan before any write."
@@ -172,7 +172,7 @@ def screen(prompt: str) -> str | None:
 
 def resolve_endpoint(env: dict[str, str], home: str, real_home: str) -> str:
     """Honor the loopback test endpoint only when HOME is a different directory."""
-    override = env.get("PILOTFISH_JEV_TEST_ENDPOINT", "")
+    override = env.get("SHOAL_JEV_TEST_ENDPOINT", "")
     if not override:
         return ENDPOINT
     try:
@@ -274,7 +274,7 @@ def append_log(home: Path, record: dict[str, Any]) -> None:
     state = _state_dir(home)
     if state is None:
         return
-    path = state / "pilotfish-route.jsonl"
+    path = state / "shoal-route.jsonl"
     try:
         if path.exists() and path.stat().st_size > MAX_LOG_BYTES:
             return
@@ -346,7 +346,7 @@ def _write_shoal_turn(home: Path, sid: str, pid: str, role: str) -> None:
 
 def _breaker_path(home: Path) -> Path | None:
     state = _state_dir(home)
-    return None if state is None else state / "pilotfish-route.breaker.json"
+    return None if state is None else state / "shoal-route.breaker.json"
 
 
 def breaker_open(home: Path) -> bool:
@@ -482,7 +482,7 @@ def _denied(cwd: str, home: Path, env: dict[str, str]) -> bool:
     if any(part.lower() == "itrd" for part in Path(current).parts):
         return True
     folded = current.casefold()
-    for root in (item for item in env.get("PILOTFISH_JEV_DENY", "").split(":") if item):
+    for root in (item for item in env.get("SHOAL_JEV_DENY", "").split(":") if item):
         resolved = os.path.realpath(os.path.expanduser(root)).casefold()
         if folded == resolved or folded.startswith(resolved + os.sep):
             return True
@@ -490,7 +490,7 @@ def _denied(cwd: str, home: Path, env: dict[str, str]) -> bool:
 
 
 def run(payload: dict[str, Any], env: dict[str, str]) -> str | None:
-    mode = env.get("PILOTFISH_JEV_MODE", "")
+    mode = env.get("SHOAL_JEV_MODE", "")
     if mode not in {"active", "shadow"} or payload.get("agent_id"):
         return None
     prompt = payload.get("prompt")

@@ -7,4 +7,4 @@ oh-my-openagent.json.bak.*
 oh-my-openagent.json.migrations.json
 secrets/
 # shoal install.sh --global 產生的 plugin bundle（build 產物，比照 opencode-harness）
-plugins/pilotfish-opencode.js
+plugins/shoal-opencode.js

@@ -1,4 +1,4 @@
-# Pilotfish orchestration policy
+# Shoal orchestration policy
 
 Main-session policy. Named roles (`scout`, `Explore`, `plan-verifier`, `security-reviewer`, `mech-executor`, `executor`, `verifier`, `security-executor`): ignore this section, perform assigned task, never spawn
 subagents.
@@ -27,7 +27,7 @@ fresh-context review.
   invoke before dispatch brake/direct-vs-delegated choice; never pre-screen it
   away. Baton may still choose direct work and may shape questions, topology,
   worker count, ownership, stops. If absent, apply this policy without
-  searching/installing. pilotfish and Baton compose; neither bypasses the
+  searching/installing. shoal and Baton compose; neither bypasses the
   other's named-role, model-routing, leaf, approval, or verification boundaries.
 - Risk precedes size. Independent-review triggers: explicit user request for
   independent review; security/trust; destructive/irreversible/external

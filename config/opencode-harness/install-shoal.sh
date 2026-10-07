@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# PILOTFISH_OPENCODE_SOURCE 沿用舊名，現在指向 shoal repo 根目錄。
-source_repo="${PILOTFISH_OPENCODE_SOURCE:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
+# SHOAL_ROOT 指向 shoal repo 根目錄。
+source_repo="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-target_file="$script_dir/plugins/pilotfish-opencode.js"
+target_file="$script_dir/plugins/shoal-opencode.js"
 
 if ! git -C "$source_repo" rev-parse --verify HEAD >/dev/null 2>&1; then
   printf 'shoal repository not found: %s\n' "$source_repo" >&2
@@ -12,7 +12,7 @@ if ! git -C "$source_repo" rev-parse --verify HEAD >/dev/null 2>&1; then
 fi
 
 if ! command -v bun >/dev/null 2>&1; then
-  printf 'bun is required to build pilotfish-opencode\n' >&2
+  printf 'bun is required to build shoal-opencode\n' >&2
   exit 1
 fi
 
@@ -26,9 +26,9 @@ git -C "$source_repo" archive HEAD hosts/opencode | tar -x -C "$tmp_dir"
 (
   cd "$tmp_dir/hosts/opencode/plugin"
   bun install --frozen-lockfile >/dev/null
-  bun build src/plugin/pilotfish-opencode.ts --bundle --format esm --target bun \
-    --outfile "$tmp_dir/pilotfish-opencode.js" >/dev/null
+  bun build src/plugin/shoal-opencode.ts --bundle --format esm --target bun \
+    --outfile "$tmp_dir/shoal-opencode.js" >/dev/null
 )
 
-install -m 0644 "$tmp_dir/pilotfish-opencode.js" "$target_file"
+install -m 0644 "$tmp_dir/shoal-opencode.js" "$target_file"
 printf 'installed %s\n' "$target_file"

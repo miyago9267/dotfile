@@ -37,17 +37,17 @@ function classify(prompt: string): string | undefined {
 }
 
 async function candidatesFor(role: string, cwd: string): Promise<ModelRef[]> {
-  const path = process.env.PILOTFISH_ROUTING_PATH || join(resolve(cwd), ".opencode", "pilotfish", "pi-routing.json");
+  const path = process.env.SHOAL_ROUTING_PATH || join(resolve(cwd), ".opencode", "shoal", "pi-routing.json");
   const routing = await readJson<RoutingConfig>(path);
   const candidates = routing.roles?.[role]?.candidates;
-  if (!candidates?.length) throw new Error(`Pilotfish role has no route: ${role}`);
+  if (!candidates?.length) throw new Error(`Shoal role has no route: ${role}`);
   return candidates;
 }
 
 async function runChild(model: string, task: string, cwd: string): Promise<string> {
   const child = spawn("pi", ["--print", "--no-session", "--no-extensions", "--model", model], {
     cwd,
-    env: { ...process.env, PILOTFISH_CHILD: "1" },
+    env: { ...process.env, SHOAL_CHILD: "1" },
     stdio: ["pipe", "pipe", "pipe"],
   });
   const stdout: Buffer[] = [];
@@ -78,14 +78,14 @@ async function runChild(model: string, task: string, cwd: string): Promise<strin
 
 export default function (pi: ExtensionAPI) {
   // The child process is deliberately non-orchestrating to prevent recursion.
-  if (process.env.PILOTFISH_CHILD === "1") return;
+  if (process.env.SHOAL_CHILD === "1") return;
 
   pi.registerTool({
-    name: "pilotfish_dispatch",
-    label: "Pilotfish dispatch",
-    description: "Dispatch a bounded task to an isolated Pi child session using the Pilotfish role model route.",
+    name: "shoal_dispatch",
+    label: "Shoal dispatch",
+    description: "Dispatch a bounded task to an isolated Pi child session using the Shoal role model route.",
     parameters: Type.Object({
-      role: Type.String({ description: "Pilotfish role: scout, executor, mech-executor, verifier, reviewer, plan-verifier, security-reviewer, or security-executor" }),
+      role: Type.String({ description: "Shoal role: scout, executor, mech-executor, verifier, reviewer, plan-verifier, security-reviewer, or security-executor" }),
       task: Type.String({ description: "Complete bounded task for the child session" }),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
@@ -99,7 +99,7 @@ export default function (pi: ExtensionAPI) {
         }
         try {
           const output = await runChild(`${selected.provider}/${selected.model}`, params.task, ctx.cwd);
-          return { content: [{ type: "text", text: `Pilotfish ${params.role} result (${candidate.provider}/${candidate.model}):\n\n${output}` }], details: { role: params.role, model: candidate } };
+          return { content: [{ type: "text", text: `Shoal ${params.role} result (${candidate.provider}/${candidate.model}):\n\n${output}` }], details: { role: params.role, model: candidate } };
         } catch (error) {
           attempts.push(`${candidate.provider}/${candidate.model}: ${error instanceof Error ? error.message : String(error)}`);
         }
@@ -113,15 +113,15 @@ export default function (pi: ExtensionAPI) {
     if (!role) return;
     return {
       message: {
-        customType: "pilotfish-auto-route",
-        content: `Pilotfish automatic route selected: ${role}. Before doing the task yourself, call pilotfish_dispatch with role=${role} and a bounded task description. Use the child result as evidence; retain ownership of integration, approval, and final judgment in this session.`,
+        customType: "shoal-auto-route",
+        content: `Shoal automatic route selected: ${role}. Before doing the task yourself, call shoal_dispatch with role=${role} and a bounded task description. Use the child result as evidence; retain ownership of integration, approval, and final judgment in this session.`,
         display: false,
       },
     };
   });
 
-  pi.registerCommand("pilotfish", {
-    description: "Select a model through the project Pilotfish role route",
+  pi.registerCommand("shoal", {
+    description: "Select a model through the project Shoal role route",
     handler: async (args, ctx) => {
       const role = args.trim() || "executor";
       try {
@@ -130,13 +130,13 @@ export default function (pi: ExtensionAPI) {
           const selected = piRef(candidate);
           const model = ctx.modelRegistry.find(selected.provider, selected.model);
           if (model && await pi.setModel(model)) {
-            ctx.ui.notify(`Pilotfish ${role} → ${candidate.provider}/${candidate.model}`, "info");
+            ctx.ui.notify(`Shoal ${role} → ${candidate.provider}/${candidate.model}`, "info");
             return;
           }
         }
         throw new Error("No usable authenticated candidate");
       } catch (error) {
-        ctx.ui.notify(`Pilotfish route failed: ${error instanceof Error ? error.message : String(error)}`, "error");
+        ctx.ui.notify(`Shoal route failed: ${error instanceof Error ? error.message : String(error)}`, "error");
       }
     },
   });

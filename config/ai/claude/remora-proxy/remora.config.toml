@@ -23,7 +23,7 @@ effective_window_percent = 100
 # Compact before the hard client ceiling, even though the usable window is 100%.
 auto_compact_percent = 90
 
-# Role keys track pilotfish's current roster (latest = v1.2.0, eight roles).
+# Role keys track shoal's current roster (eight roles, as in upstream pilotfish v1.2.0+).
 # remora >=0.1.10 ships all eight in-session; older six-role configs still work via
 # fallbacks (plan-verifier <- verifier, security-reviewer <- security-executor).
 # Explicit keys below make routing/effort deterministic across remora versions.

@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD013 -->
 
-# Pilotfish OpenCode Local Routing
+# Shoal OpenCode Local Routing
 
 這是本機 opencode-harness 的第一版 provider／role 分配。daily
 opencode 不載入這份 plugin，也不共用這份 role model binding。
@@ -10,17 +10,17 @@ opencode 不載入這份 plugin，也不共用這份 role model binding。
 所有 level 共用同一個 opencode-harness／och 入口；level 只影響 role
 到 model 的內部分配，不建立分級指令或分開的啟動流程。harness config
 會載入本機安裝的
-pilotfish-opencode plugin；目前安裝檔由 shoal repo（本機
+shoal-opencode plugin；目前安裝檔由 shoal repo（本機
 Forks/Fork-Remaster-code/shoal）HEAD 的 hosts/opencode build 產生，位置是
-config/opencode-harness/plugins/pilotfish-opencode.js。
+config/opencode-harness/plugins/shoal-opencode.js。
 
 需要重建 local plugin 時，執行
-config/opencode-harness/install-pilotfish.sh；可用
-PILOTFISH_OPENCODE_SOURCE 指定 shoal repo 位置。
+config/opencode-harness/install-shoal.sh；可用
+SHOAL_ROOT 指定 shoal repo 位置。
 
-目前工作目錄若有 .opencode/pilotfish/catalog.json，plugin 會驗證
+目前工作目錄若有 .opencode/shoal/catalog.json，plugin 會驗證
 provider、model、capability 與 authentication state；可選的
-.opencode/pilotfish/routing.json 會提供 candidate order 和 fallback。
+.opencode/shoal/routing.json 會提供 candidate order 和 fallback。
 
 ## 初步分層
 
@@ -61,7 +61,7 @@ provider、model、capability 與 authentication state；可選的
   identity。它們只保留為 high-level preferred candidates，沒有寫入 active
   route；等 customer provider 宣告後再加入該客戶自己的 catalog。
 - provider credential 仍由 OpenCode auth／environment 管理；本檔與
-  .opencode/pilotfish/ 不保存 secret value。
+  .opencode/shoal/ 不保存 secret value。
 
 ## Safety boundary
 

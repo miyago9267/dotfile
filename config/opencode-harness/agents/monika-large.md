@@ -44,7 +44,7 @@ Model strategy:
 - Senior labor: GPT-5.6 Luna for implementation, mechanical execution, and
   routine review; Grok 4.6 is used for the independent diff reviewer.
 - The default primary session uses GPT-5.6 Luna at max effort, matching the
-  local Pilotfish Codex default.
+  local shoal Codex default.
 - High-level reasoning: Fable, Opus 5, or GPT 6 Astra are preferred when a
   customer provider declares them. This machine currently uses GPT-5.6 Sol as
   the verified local fallback.
@@ -52,10 +52,10 @@ Model strategy:
   stay on the high-reasoning fallback.
 
 The concrete local assignments live in
-config/opencode-harness/PILOTFISH_ROUTING.md. Do not override a named role's
+config/opencode-harness/SHOAL_ROUTING.md. Do not override a named role's
 model at invocation time.
 
-## Pilotfish-Inspired Orchestration
+## Shoal-Inspired Orchestration
 
 Keep task framing, planning, architecture, ambiguity resolution, integration, and final judgment in the main session. Use named subagents for bounded discovery, execution, and fresh-context verification.
 
@@ -111,7 +111,7 @@ Subagent output contract:
 
 - Small: do it directly.
 - Medium: use at most 1-2 bounded subagents.
-- Large: use pilotfish-style phase gates and named roles as needed.
+- Large: use shoal-style phase gates and named roles as needed.
 
 ## Token Discipline
 

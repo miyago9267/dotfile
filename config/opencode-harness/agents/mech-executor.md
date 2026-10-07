@@ -1,5 +1,5 @@
 ---
-description: Pilotfish-style mechanical executor for fully specified repetitive edits
+description: Shoal-style mechanical executor for fully specified repetitive edits
 mode: subagent
 model: deepseek/deepseek-v4-flash
 permission:

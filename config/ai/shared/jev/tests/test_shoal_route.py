@@ -1,4 +1,4 @@
-"""Tests for the opt-in Pilotfish Jev route hook. Local stub only; no network."""
+"""Tests for the opt-in Shoal Jev route hook. Local stub only; no network."""
 
 from __future__ import annotations
 
@@ -14,10 +14,10 @@ import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-HOOK = Path(__file__).resolve().parents[1] / "pilotfish_route.py"
+HOOK = Path(__file__).resolve().parents[1] / "shoal_route.py"
 ROLES = ("parent_local", "mechanical", "exploration", "judgment")
 ALLOWED_OUTPUTS = {
-    "Pilotfish Jev advisory (not approval; AGENTS.md gates and dispatch brake win): "
+    "Shoal Jev advisory (not approval; AGENTS.md gates and dispatch brake win): "
     f"suggested first role = {role}.{suffix}"
     for role in ("main session directly", "`mech-executor`", "`scout`", "`executor`")
     for suffix in ("", " Consider explore_then_plan before any write.")
@@ -106,8 +106,8 @@ class RouteHookTests(unittest.TestCase):
         env = {
             "PATH": os.environ.get("PATH", ""),
             "HOME": str(self.home),
-            "PILOTFISH_JEV_MODE": mode,
-            "PILOTFISH_JEV_TEST_ENDPOINT": self.stub.url,
+            "SHOAL_JEV_MODE": mode,
+            "SHOAL_JEV_TEST_ENDPOINT": self.stub.url,
         }
         start = time.monotonic()
         done = subprocess.run(
@@ -129,7 +129,7 @@ class RouteHookTests(unittest.TestCase):
         return data["hookSpecificOutput"]["additionalContext"]
 
     def log_records(self) -> list[dict]:
-        path = self.home / ".local/state/miyago/jev/pilotfish-route.jsonl"
+        path = self.home / ".local/state/miyago/jev/shoal-route.jsonl"
         if not path.exists():
             return []
         return [json.loads(line) for line in path.read_text().splitlines()]
@@ -292,11 +292,11 @@ class RouteHookTests(unittest.TestCase):
     def test_endpoint_override_ignored_for_real_home(self) -> None:
         import importlib.util
 
-        spec = importlib.util.spec_from_file_location("pilotfish_route", HOOK)
+        spec = importlib.util.spec_from_file_location("shoal_route", HOOK)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         real = os.path.expanduser("~")
-        env = {"PILOTFISH_JEV_TEST_ENDPOINT": self.stub.url}
+        env = {"SHOAL_JEV_TEST_ENDPOINT": self.stub.url}
         self.assertEqual(module.resolve_endpoint(env, home=real, real_home=real), module.ENDPOINT)
         self.assertEqual(
             module.resolve_endpoint(env, home=str(self.home), real_home=real), self.stub.url
@@ -306,8 +306,8 @@ class RouteHookTests(unittest.TestCase):
         env = {
             "PATH": os.environ.get("PATH", ""),
             "HOME": str(self.home),
-            "PILOTFISH_JEV_MODE": "active",
-            "PILOTFISH_JEV_TEST_ENDPOINT": "http://example.com/v1/systemone",
+            "SHOAL_JEV_MODE": "active",
+            "SHOAL_JEV_TEST_ENDPOINT": "http://example.com/v1/systemone",
         }
         payload = {"prompt": "找出 routing 相關的程式在哪裡", "cwd": str(self.cwd)}
         done = subprocess.run(
@@ -357,10 +357,10 @@ class RouteHookTests(unittest.TestCase):
     def test_override_ignored_for_alias_of_real_home(self) -> None:
         import importlib.util
 
-        spec = importlib.util.spec_from_file_location("pilotfish_route", HOOK)
+        spec = importlib.util.spec_from_file_location("shoal_route", HOOK)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        env = {"PILOTFISH_JEV_TEST_ENDPOINT": self.stub.url}
+        env = {"SHOAL_JEV_TEST_ENDPOINT": self.stub.url}
         alias = self.home.parent / (self.home.name + "-alias")
         alias.symlink_to(self.home)
         try:
@@ -391,7 +391,7 @@ class RouteHookTests(unittest.TestCase):
     def test_log_is_private_and_prompt_free(self) -> None:
         prompt = "找出 routing 相關的程式在哪裡 marker-zq"
         self.run_hook(prompt)
-        path = self.home / ".local/state/miyago/jev/pilotfish-route.jsonl"
+        path = self.home / ".local/state/miyago/jev/shoal-route.jsonl"
         self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
         raw = path.read_text()
         self.assertNotIn("marker-zq", raw)

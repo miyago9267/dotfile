@@ -25,6 +25,7 @@ docs/ai/
 .omo/
 # Pilotfish temporary backups (timestamp/hash suffix changes frequently)
 *.pilotfish-*
+*.shoal-*
 # PROGRESS.md 在 docs/specs/ 底下需要 commit，只排除根目錄的
 /PROGRESS.md
 

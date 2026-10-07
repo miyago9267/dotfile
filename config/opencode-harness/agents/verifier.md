@@ -1,5 +1,5 @@
 ---
-description: Pilotfish-style completed-work verifier that returns CONFIRMED or REFUTED
+description: Shoal-style completed-work verifier that returns CONFIRMED or REFUTED
 mode: subagent
 model: openai/gpt-5.6-sol
 permission:

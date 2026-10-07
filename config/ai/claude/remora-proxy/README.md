@@ -52,12 +52,12 @@ CLIProxyAPI 的 client auth key 存 macOS Keychain（`remora-proxy-key`），沒
 需要原生 Claude Code、`gh`、`curl`、`shasum`、`tar`。安裝腳本會使用 release SHA-256 與 GitHub
 attestation 驗證 Remora 與 Calico artifacts，再進行安裝。
 
-## Pilotfish 對應
+## Shoal 對應
 
-不釘版本，一律跟 latest：pilotfish（global agents + AGENTS.md block）照上游
-`install/AGENT-INSTALL.md` 更新到最新 tag；remora 裝最新 release 即可。
-`remora.config.toml` 的 role keys 對應 pilotfish 目前的 roster（v1.2.0 起為八個
-roles，新增 read-only 的 `plan-verifier` / `security-reviewer`）。remora >= 0.1.10
+不釘版本，一律跟 latest：shoal（global agents + AGENTS.md block）由 shoal repo 的
+`tools/sync_global.py` 從 committed HEAD 同步；remora 裝最新 release 即可。
+`remora.config.toml` 的 role keys 對應 shoal 目前的 roster（承襲上游 pilotfish
+v1.2.0 起的八個 roles，新增 read-only 的 `plan-verifier` / `security-reviewer`）。remora >= 0.1.10
 session 內自帶完整八 role；更舊的六 role config 靠 fallback 相容（`plan-verifier`
 ← `verifier`、`security-reviewer` ← `security-executor`），config 裡顯式列出是為了
 讓 routing / effort 不依賴 fallback 行為。

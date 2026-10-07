@@ -18,4 +18,4 @@
 - Shared continuity 存在 `~/.grok/memory/MEMORY.md`。
 - Grok setup 會把這份 adapter、shared contract 與 memory 接起來；維持 source
   分離，讓每份內容只讀一次。
-- Pilotfish-Grok 仍是 optional，不能取代 shared precedence。
+- Shoal 的 Grok 安裝（shoal-grok）仍是 optional，不能取代 shared precedence。

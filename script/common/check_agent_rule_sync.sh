@@ -14,8 +14,8 @@ astra_active_file="$dotfile_dir/config/ai/generated/astra/AGENTS.md"
 claude_settings_file="$dotfile_dir/config/ai/claude/settings.json"
 claude_adapter_file="$dotfile_dir/config/ai/claude/AGENTS.md"
 grok_file="$dotfile_dir/config/ai/grok/AGENTS.md"
-shoal_dir="${PILOTFISH_SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
-claude_skill_file="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/pilotfish-orchestration/SKILL.md"
+shoal_dir="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
+claude_skill_file="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/shoal-orchestration/SKILL.md"
 
 test -s "$source_file"
 test -s "$personal_model_file"
@@ -169,23 +169,23 @@ jq -e --arg command "$HOME/.codex/hooks/experience-observe.py" \
   exit 1
 }
 grep -Fq 'rules come from `config/ai/AGENTS.md`' "$grok_file"
-# grok 的 Pilotfish 由 shoal 產生與安裝（tools/install_grok.py）；檢查 shoal dist，
+# grok 的 shoal 由 shoal 產生與安裝（tools/install_grok.py）；檢查 shoal dist，
 # 並比對 ~/.grok 實際安裝的 rules marker。未安裝或版本不同只警告，不讓檢查失敗。
 grok_dist="$shoal_dir/hosts/grok/dist"
 grok_version="$(cat "$shoal_dir/hosts/grok/VERSION")"
-test -f "$grok_dist/rules/pilotfish-grok.md"
+test -f "$grok_dist/rules/shoal-grok.md"
 test -f "$grok_dist/agents/verifier.md"
 test -f "$grok_dist/roles/verifier.toml"
-test -f "$grok_dist/hooks/pilotfish-grok.json"
-grep -Fq "<!-- pilotfish-grok v$grok_version -->" "$grok_dist/rules/pilotfish-grok.md"
-grok_installed_rules="${GROK_HOME:-$HOME/.grok}/rules/pilotfish-grok.md"
-if ! grep -Fq "<!-- pilotfish-grok v$grok_version -->" "$grok_installed_rules" 2>/dev/null; then
-  printf '%s\n' "warning: pilotfish-grok v$grok_version is not installed in $grok_installed_rules; run python3 $shoal_dir/tools/install_grok.py" >&2
+test -f "$grok_dist/hooks/shoal-grok.json"
+grep -Fq "<!-- shoal-grok v$grok_version -->" "$grok_dist/rules/shoal-grok.md"
+grok_installed_rules="${GROK_HOME:-$HOME/.grok}/rules/shoal-grok.md"
+if ! grep -Fq "<!-- shoal-grok v$grok_version -->" "$grok_installed_rules" 2>/dev/null; then
+  printf '%s\n' "warning: shoal-grok v$grok_version is not installed in $grok_installed_rules; run python3 $shoal_dir/tools/install_grok.py" >&2
 fi
 
 for root_adapter in "$source_file" "$grok_file"; do
-  if grep -Eq 'For material plans|Route material work|Missing roles, hooks|Preserve Pilotfish' "$root_adapter"; then
-    printf '%s\n' "Pilotfish policy leaked into root adapter: $root_adapter" >&2
+  if grep -Eq 'For material plans|Route material work|Missing roles, hooks|Preserve shoal' "$root_adapter"; then
+    printf '%s\n' "shoal policy leaked into root adapter: $root_adapter" >&2
     exit 1
   fi
 done
@@ -219,29 +219,29 @@ for anchor in \
   grep -Fq "$anchor" "$grok_file"
 done
 
-# Pilotfish（shoal）：版本 marker 必須出現在「實際安裝處」，且與 shoal dist 記錄的版本一致。
+# shoal：版本 marker 必須出現在「實際安裝處」，且與 shoal dist 記錄的版本一致。
 # claude 裝在 ~/.claude 的 skill（auto-update 寫入），agy 併入 generated GEMINI.md（setup_gemini.sh 產生）。
-check_pilotfish_marker() {
+check_shoal_marker() {
   local host="$1" dist_file="$2" installed_file="$3" marker
-  marker=$(grep -m1 -E "^<!-- pilotfish-$host v[^ ]+ -->$" "$dist_file" || true)
+  marker=$(grep -m1 -E "^<!-- shoal-$host v[^ ]+ -->$" "$dist_file" || true)
   if [ -z "$marker" ]; then
-    printf '%s\n' "pilotfish-$host marker missing in shoal dist: $dist_file" >&2
+    printf '%s\n' "shoal-$host marker missing in shoal dist: $dist_file" >&2
     exit 1
   fi
   if ! grep -Fxq "$marker" "$installed_file"; then
-    printf '%s\n' "pilotfish-$host marker '$marker' missing in installed file: $installed_file" >&2
+    printf '%s\n' "shoal-$host marker '$marker' missing in installed file: $installed_file" >&2
     exit 1
   fi
 }
-check_pilotfish_marker claude \
-  "$shoal_dir/hosts/claude/dist/skills/pilotfish-orchestration/SKILL.md" "$claude_skill_file"
-check_pilotfish_marker agy \
-  "$shoal_dir/hosts/agy/dist/rules/pilotfish-agy.md" "$gemini_active_file"
+check_shoal_marker claude \
+  "$shoal_dir/hosts/claude/dist/skills/shoal-orchestration/SKILL.md" "$claude_skill_file"
+check_shoal_marker agy \
+  "$shoal_dir/hosts/agy/dist/rules/shoal-agy.md" "$gemini_active_file"
 
 # opencode 的輸出全是 JSON，沒有 marker；改成 dotfile 內的 catalog / routing 必須與 shoal dist 逐位元組相同。
 for opencode_json in catalog.json routing.json; do
-  if ! cmp -s "$dotfile_dir/.opencode/pilotfish/$opencode_json" "$shoal_dir/hosts/opencode/dist/$opencode_json"; then
-    printf '%s\n' ".opencode/pilotfish/$opencode_json differs from shoal hosts/opencode/dist/$opencode_json" >&2
+  if ! cmp -s "$dotfile_dir/.opencode/shoal/$opencode_json" "$shoal_dir/hosts/opencode/dist/$opencode_json"; then
+    printf '%s\n' ".opencode/shoal/$opencode_json differs from shoal hosts/opencode/dist/$opencode_json" >&2
     exit 1
   fi
 done

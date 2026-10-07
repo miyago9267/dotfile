@@ -1,6 +1,6 @@
-# Pilotfish workflow extensions
+# Shoal workflow extensions
 
-Ported from pilotfish-codex 1.8.1 and adapted to Claude Code. These rules
+Ported from shoal-codex 1.8.1 and adapted to Claude Code. These rules
 extend [orchestration-policy.md](orchestration-policy.md). When a rule here
 conflicts with that policy, the policy wins: report the conflict to the user
 instead of choosing silently. None of these rules expands approval, security,

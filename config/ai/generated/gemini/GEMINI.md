@@ -183,9 +183,9 @@
 
 <!-- runtime-adapter:end -->
 
-<!-- pilotfish-agy v0.1.0 -->
-<!-- pilotfish-agy:begin -->
-## Pilotfish orchestration (agy only)
+<!-- shoal-agy v2.0.0 -->
+<!-- shoal-agy:begin -->
+## Shoal orchestration (agy only)
 
 This section applies only to the agy (Antigravity CLI) main session. If you are
 not in agy, or `invoke_subagent` and the roles below are unavailable, ignore it.
@@ -206,7 +206,7 @@ The main session keeps framing, Plan, architecture, integration, and final
 judgment. Do small, local, already-stable work directly.
 
 Before any large, ambiguous, architectural, risky, cross-surface, or
-explicitly plan-first task, load the `pilotfish-orchestration` skill and follow
+explicitly plan-first task, load the `shoal-orchestration` skill and follow
 it. For those tasks only (not small, local edits), these gates hold even
 without the skill:
 
@@ -217,4 +217,4 @@ without the skill:
 - Children never delegate. Never swap `plan-verifier` and `verifier`.
 - After integration, a fresh `verifier` checks the exact claim before you
   report `完成`.
-<!-- pilotfish-agy:end -->
+<!-- shoal-agy:end -->

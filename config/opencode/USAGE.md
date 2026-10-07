@@ -131,7 +131,7 @@ Harness path:
 - default agent: `monika-large`
 - loads `oh-my-openagent`
 - enables Playwright MCP and existing research/code MCPs
-- enables pilotfish-style phase-gated subagents
+- enables shoal-style phase-gated subagents
 - enables oh-my-openagent Team Mode with conservative bounds
 - keeps `pty-bridge` and Sentry disabled
 

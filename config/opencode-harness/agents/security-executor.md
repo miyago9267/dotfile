@@ -1,5 +1,5 @@
 ---
-description: Pilotfish-style approved security-sensitive implementation executor
+description: Shoal-style approved security-sensitive implementation executor
 mode: subagent
 model: openai/gpt-5.6-sol
 permission:

@@ -1,5 +1,5 @@
 ---
-description: Pilotfish-style read-only Plan challenge that returns READY or REVISE
+description: Shoal-style read-only Plan challenge that returns READY or REVISE
 mode: subagent
 model: openai/gpt-5.6-sol
 permission:

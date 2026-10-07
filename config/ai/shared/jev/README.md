@@ -68,23 +68,23 @@ JEV_CONTEXT_SHADOW=1 claude
 `codex-jev-compaction` plugin；先用 replay 樣本校準 retention 判斷，不沿用
 Stingray 的 benchmark。
 
-## Pilotfish route advisory
+## Shoal route advisory
 
 Claude 的 `UserPromptSubmit` hook（`claude/hooks/jev-route.sh` ->
-`pilotfish_route.py`）會請 Jev 判斷 user prompt 最適合先派哪個 Pilotfish
+`shoal_route.py`）會請 Jev 判斷 user prompt 最適合先派哪個 Shoal
 role，再注入一句固定格式的建議。這句建議只是 advisory：不構成 approval，
 AGENTS.md 的 gate 與 dispatch brake 優先。Jev 只能建議 role，或把流程收緊成
 「寫入前先 explore_then_plan」，不能放寬 interaction shape。
 
-只有環境變數 `PILOTFISH_JEV_MODE=active` 時才注入；`shadow` 只記錄、不注入；
+只有環境變數 `SHOAL_JEV_MODE=active` 時才注入；`shadow` 只記錄、不注入；
 其他值或未設定時完全不呼叫 Jev。`config/zsh/.zshrc.d/claude.zsh` 預設匯出
 `active`，因此從互動式 zsh 啟動的 Claude 會開啟；單次停用可用
-`PILOTFISH_JEV_MODE=off claude`。
+`SHOAL_JEV_MODE=off claude`。
 
 以下情況在本機直接略過，不外送：
 
 - subagent 的 prompt，或 cwd 路徑中有任何一段是 `ITRD`（不分大小寫）。
-  另可用 `PILOTFISH_JEV_DENY` 追加其他目錄，以冒號分隔。
+  另可用 `SHOAL_JEV_DENY` 追加其他目錄，以冒號分隔。
 - 出現風險字眼：auth、token、key、password、login、ssh、remove、kill、push、
   merge、deploy、prod、migration、刪、清空、部署、權限、個資、付錢等。
   這類 prompt 交給既有的 risk policy 處理。
@@ -100,13 +100,13 @@ AGENTS.md 的 gate 與 dispatch brake 優先。Jev 只能建議 role，或把流
 
 遮罩不是完整 DLP：通過檢查的 prompt 文字仍會送到 TypeSafe，其保留與訓練
 政策未經查證。只在允許這項資料流的 session 啟用。log 位於
-`~/.local/state/miyago/jev/pilotfish-route.jsonl`，只記錄判斷類別與分數，
+`~/.local/state/miyago/jev/shoal-route.jsonl`，只記錄判斷類別與分數，
 不記錄 prompt、ID 或回應原文。
 
 測試：`python3 -m unittest discover -s shared/jev/tests`，只使用本機 stub，
 不連網。
 
-## Pilotfish dispatch guard
+## Shoal dispatch guard
 
 dispatch guard 已移到 shoal（`hooks/shoal_guard.py`，見 shoal 的
 `docs/specs/dispatch-enforcement/`），由 `tools/install_hooks.py --host claude` 安裝並註冊。

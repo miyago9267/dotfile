@@ -1,5 +1,5 @@
 ---
-description: Pilotfish-style read-only security evidence reviewer before approval
+description: Shoal-style read-only security evidence reviewer before approval
 mode: subagent
 model: openai/gpt-5.6-sol
 permission:

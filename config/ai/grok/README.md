@@ -24,14 +24,14 @@ Run `bash script/common/setup_grok.sh` after pulling the dotfiles. It links the
 native persona adapter to `$GROK_HOME/AGENTS.md` and installs both launchers in
 `~/.local/bin`. The bare `grok` command is intentionally left untouched.
 
-Pilotfish orchestration is deliberately separate. Its source of truth is the
+Shoal orchestration is deliberately separate. Its source of truth is the
 grok output of `shoal` (`hosts/grok/dist`, local repo at
 `~/Project/Active/Forks/Fork-Remaster-code/shoal`). Install or update it with
 `python3 tools/install_grok.py` from the shoal repo (dry-run by default; add
 `--apply` to write, `--restore <backup-dir> --apply` to roll back). It installs
 agents, roles, the orchestration rules and two native hooks from shoal's
 committed HEAD, and backs up every replaced file plus `config.toml` first.
-`setup_grok.sh` does not merge Pilotfish roles or policy into the root
+`setup_grok.sh` does not merge shoal roles or policy into the root
 `AGENTS.md`. `plugins/pilotfish-grok/` is kept only as the historical upstream
 v1.0.6 reference.
 

@@ -25,6 +25,7 @@ PERSONAL_MODEL_SRC="${PERSONAL_MODEL_SRC:-$DOTFILE_DIR/../Project/AI/agent-works
 SHARED_MEMORY_SRC="$DOTFILE_DIR/config/ai/memories"
 ACTIVE_RULES_DIR="$DOTFILE_DIR/config/ai/generated/codex"
 ACTIVE_RULES_SRC="$ACTIVE_RULES_DIR/AGENTS.md"
+SHOAL_ROOT="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
 
 Y='\033[1;33m'
 G='\033[1;32m'
@@ -131,6 +132,14 @@ compose_active_rules() {
     printf '%s\n\n' '<!-- runtime-adapter:begin -->'
     cat "$CODEX_SRC/AGENTS.md"
     printf '\n%s\n' '<!-- runtime-adapter:end -->'
+    # shoal-codex bootstrap 區塊：與 shoal install.py 的 merge_instruction_text 同形
+    # （前一段 rstrip 後空一行，區塊 rstrip 後補單一換行），來源是 shoal committed HEAD，
+    # 這樣重新產生後 install.py 不會看到 drift。
+    if shoal_bootstrap=$(git -C "$SHOAL_ROOT" show HEAD:templates/agents-md.bootstrap.md 2>/dev/null); then
+      printf '\n%s\n' "$shoal_bootstrap"
+    else
+      printf 'shoal bootstrap unavailable at %s; AGENTS.md generated without shoal-codex block\n' "$SHOAL_ROOT" >&2
+    fi
   } > "$tmp_file"
   mv "$tmp_file" "$ACTIVE_RULES_SRC"
 }
