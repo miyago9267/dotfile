@@ -175,6 +175,9 @@ else
 fi
 # dispatch guard 由 shoal 安裝與註冊（docs/specs/dispatch-enforcement R7），只從 committed HEAD 取檔。
 shoal_root="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
+if [ ! -d "$shoal_root/.git" ]; then
+  printf '%s\n' "shoal checkout not found at $shoal_root; clone miyago9267/shoal there or set SHOAL_ROOT"
+fi
 if python3 "$shoal_root/tools/install_hooks.py" --host claude --apply >/dev/null 2>&1; then
   printf '%s\n' 'shoal guard update check passed'
 else
@@ -188,5 +191,8 @@ else
   printf '%s\n' 'shoal sync failed'
   printf '%s\n' "$sync_summary" | sed 's/^/shoal sync: /'
 fi
+
+# shoal 的 installer 寫的是絕對路徑，而 settings.json 在版控裡；改回可攜形式（docs/specs/portable-paths）。
+python3 "${MIYAGO_DOTFILE_ROOT:-$HOME/dotfile}/script/common/portable_paths.py" --fix 2>&1 | sed 's/^/portable paths: /'
 
 printf '%s\n' "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] update check complete"

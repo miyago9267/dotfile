@@ -4,6 +4,7 @@
 #   config/ai/claude/hooks/**、config/ai/shared/jev/**  -> run-all.sh（約 2 分鐘）
 #   script/utils/agent-secret*、script/utils/tests/**    -> test_agent_secret.sh（約 30 秒）
 #   config/ai/claude/settings.json                       -> jq -e . 合法性檢查
+#   所有 commit                                          -> portable_paths.py --check --staged
 #   其他 commit 直接放行。
 #
 # 測試對象：工作區（working tree），不是 staged 內容。
@@ -26,6 +27,15 @@ fi
 
 root=$(git rev-parse --show-toplevel) || exit 0
 cd "$root" || exit 0
+
+# 寫死的機器路徑（docs/specs/portable-paths）：每次 commit 都看 staged 內容，不到一秒。
+portable="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/common/portable_paths.py"
+if command -v python3 >/dev/null 2>&1 && [ -f "$portable" ]; then
+  if ! python3 "$portable" --check --staged --root "$root"; then
+    echo "[pre-commit] commit 已擋下。修正後重試；真的要略過請用 DOTFILE_SKIP_TESTS=1。" >&2
+    exit 1
+  fi
+fi
 
 need_claude=0; need_secret=0; need_json=0
 while IFS= read -r -d '' f; do

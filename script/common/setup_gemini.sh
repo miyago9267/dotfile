@@ -140,6 +140,8 @@ if [ -d "$SHOAL_AGY_SRC" ]; then
     fi
   done
   link_item "$SHOAL_AGY_SRC/skills/shoal-orchestration" "$AGY_SKILL_DST/shoal-orchestration" "config/skills/shoal-orchestration (agy)"
+else
+  printf "${Y}  [SKIP] shoal (agy) -- 找不到 %s；clone miyago9267/shoal 或設定 SHOAL_AGY_SRC${N}\n" "$SHOAL_AGY_SRC"
 fi
 
 printf "${G}=== 完成 ===${N}\n"

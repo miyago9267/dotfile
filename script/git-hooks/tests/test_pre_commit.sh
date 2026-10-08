@@ -95,6 +95,17 @@ stage config/ai/claude/settings.json '{ not json'
 check missing_jq_allows '[ $rc = 0 ]' "grep -q '缺 jq' '$T/err'"
 reset
 
+# 6b. 寫死的機器路徑：staged 內容有 home 絕對路徑或絕對目標的 symlink 就擋下，不跑其他測試
+stage notes.txt 'path /Users/someone/x'; run_hook
+check hardcoded_path_blocks '[ $rc = 1 ]' "grep -q 'notes.txt:1' '$T/err'" "[ ! -s '$MARK' ]"
+reset
+ln -s /home/someone/target "$R/abs-link"; git -C "$R" add abs-link; run_hook
+check absolute_symlink_blocks '[ $rc = 1 ]' "grep -q 'abs-link: symlink' '$T/err'"
+reset
+stage notes.txt 'path ~/x and $HOME/y'; run_hook
+check portable_path_passes '[ $rc = 0 ]'
+reset
+
 # 7. 整合：真的用 core.hooksPath 讓 git commit 呼叫 hook
 git -C "$R" config core.hooksPath "$(dirname "$HOOK")"
 stage README.md; : > "$MARK"

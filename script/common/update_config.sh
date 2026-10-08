@@ -27,4 +27,9 @@ for name in "${CONFIG_SETUP_SCRIPTS[@]}"; do
   bash "$script_path"
 done
 
+# installer 會把這台機器的絕對路徑回寫進版控的 hook 設定，收尾時改回可攜形式。
+if command -v python3 >/dev/null 2>&1; then
+  python3 "$SCRIPT_DIR/portable_paths.py" --fix
+fi
+
 printf '%s\n' '[OK] config-only sync complete'

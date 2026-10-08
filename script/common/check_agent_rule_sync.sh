@@ -246,4 +246,6 @@ for opencode_json in catalog.json routing.json; do
   fi
 done
 
+python3 "$dotfile_dir/script/common/portable_paths.py" --check
+
 printf '%s\n' 'agent rule sync: OK'
