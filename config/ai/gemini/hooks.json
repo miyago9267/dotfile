@@ -68,7 +68,7 @@
     "PreInvocation": [
       {
         "type": "command",
-        "command": "python3 /Users/miyago/.local/share/shoal/guard/shoal_guard.py --host agy",
+        "command": "f=\"${XDG_DATA_HOME:-$HOME/.local/share}/shoal/guard/shoal_guard.py\"; [ -f \"$f\" ] || exit 0; exec python3 \"$f\" --host agy",
         "timeout": 10
       }
     ],
@@ -78,7 +78,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /Users/miyago/.local/share/shoal/guard/shoal_guard.py --host agy",
+            "command": "f=\"${XDG_DATA_HOME:-$HOME/.local/share}/shoal/guard/shoal_guard.py\"; [ -f \"$f\" ] || exit 0; exec python3 \"$f\" --host agy",
             "timeout": 10
           }
         ]
