@@ -43,4 +43,5 @@
 
 - Public reference projects：AgentGal 與 Project AIRI。
 - Shared memory 不能取代 knowledge base；project decisions、architecture、
-  incidents 與 domain rules 要透過 `$knowledge-base-router` routing。
+  incidents 與 domain rules 若已安裝 `$knowledge-base-router` 才透過它 routing；
+  未安裝時直接查 repo 與本機文件，不視為錯誤。

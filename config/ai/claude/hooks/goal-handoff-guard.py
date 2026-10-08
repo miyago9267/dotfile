@@ -6,6 +6,8 @@
 有具名外部 blocker 就用「阻塞：」開頭寫清楚再停。
 只在 goal 生效時作用；re-entry、解析失敗一律放行（fail open）。
 """
+from __future__ import annotations
+
 import json
 import re
 import sys

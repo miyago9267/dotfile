@@ -170,7 +170,8 @@
   工作使用 `heavy`。
 - 限制 searches 與 tool output；在宣告完成前，先於本機驗證要求的 behavior。
 - project、architecture、incident、deployment、business-logic 或
-  historical-decision lookup 使用 `$knowledge-base-router`。
+  historical-decision lookup 若已安裝 `$knowledge-base-router` 才使用；
+  未安裝時改查 repo 與本機文件。
 
 ## Codex continuity
 

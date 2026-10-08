@@ -140,11 +140,31 @@ read-only work and unrelated approved slices continue.
 
 ## Direction checkpoint
 
-At a stable slice boundary of multi-slice work, the main session may send the
-`verifier` a `direction_checkpoint` brief: the original outcome, non-negotiable
-constraints, slice acceptance, and current evidence. The verifier returns
-`CONTINUE`, `PIVOT` (outcome stands, path or assumption must change; bounded
-re-plan), or `ROLLBACK` (an invariant or acceptance condition is broken; stop
-new writes and return to the latest verified good checkpoint). Insufficient
-evidence stays `INCONCLUSIVE`. Use it only where the slice result can change
-the remaining path; it is not a routine extra verification pass.
+At multi-slice milestone closes the main session sends the `verifier` a
+`direction_checkpoint` brief: the original request, the approved spec's
+non-goals and decisions, the declared design invariants
+(`docs/DESIGN-INVARIANTS.md` or equivalent), and current evidence. It returns
+`CONTINUE`, `PIVOT` (outcome stands; bounded re-plan within approved scope),
+or `ROLLBACK` (an invariant or acceptance condition is broken); insufficient
+evidence stays `INCONCLUSIVE`. Required when one objective reaches its third
+slice (a new spec continuing it counts) and at every later milestone close:
+once per milestone, separate from outcome verification, not skipped by `fast`
+review intent. Before closing a single-slice spec or dispatching architecture
+or design work, main runs the same comparison itself; otherwise optional. On
+deviation or `ROLLBACK`, stop new writes and report it with a recommendation
+(`stop_condition=decision`, or `PAUSED_NEEDS_USER` without interaction);
+rolling back is the user's decision. Executor design decisions beyond the
+brief (mechanism, interface, naming, omission) are unreviewed: accept or
+reject each and record it before merging.
+
+Cost-unbounded continuation applies only when the user explicitly selects it
+(in `/goal`, the prompt, or the AUTO/ASK choice). Within approved scope,
+continue to acceptance without stopping or asking because of cost, tokens,
+time, slice count, discovery budget, or whether to continue. The AUTO stop
+list and the milestone direction check stay in force, and the mode grants no
+extra authority. At the two-`REVISE` cap, disposition, narrow, or split as
+usual, then continue as user-directed continuation; every pass still needs a
+material change, otherwise `PAUSED_VERIFICATION`. Escalate only to a higher
+executor tier or main-session takeover; an unresolved P1 outside approved
+scope still stops. A `PIVOT` re-plans only within approved scope; beyond it,
+stop at `decision`.

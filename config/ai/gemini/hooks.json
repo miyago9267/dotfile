@@ -2,7 +2,7 @@
   "agy-auto-update": {
     "PreInvocation": [
       {
-        "command": "bash '/Users/miyago/.gemini/config/hooks/agy-auto-update.sh'",
+        "command": "[ -f \"$HOME/.gemini/config/hooks/agy-auto-update.sh\" ] && bash \"$HOME/.gemini/config/hooks/agy-auto-update.sh\" || true",
         "timeout": 10,
         "type": "command"
       }
@@ -11,7 +11,7 @@
   "herdr": {
     "PreInvocation": [
       {
-        "command": "bash '/Users/miyago/.gemini/config/hooks/herdr-agent-state.sh' session",
+        "command": "[ -f \"$HOME/.gemini/config/hooks/herdr-agent-state.sh\" ] && bash \"$HOME/.gemini/config/hooks/herdr-agent-state.sh\" session || true",
         "timeout": 10,
         "type": "command"
       }
@@ -92,7 +92,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash '/Users/miyago/dotfile/config/ai/shared/hooks/secret-guard-adapter.sh' --host agy",
+            "command": "bash \"$HOME/dotfile/config/ai/shared/hooks/secret-guard-adapter.sh\" --host agy",
             "timeout": 10
           }
         ]

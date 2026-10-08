@@ -11,6 +11,8 @@ INVENTORY_FILE="${SRE_INVENTORY_FILE:-$HOME/dotfile/.ai/sre-inventory.md}"
 TTL="${SRE_INVENTORY_TTL:-21600}"  # 6h
 
 if [[ ! -f "$INVENTORY_FILE" ]]; then
+  # 未顯式指定 SRE_INVENTORY_FILE 時，缺檔代表這台機器沒用 sre-inventory，靜默略過
+  [[ -z "${SRE_INVENTORY_FILE:-}" ]] && exit 0
   jq -n --arg p "$INVENTORY_FILE" '{
     systemMessage: ("[sre-inventory] not found at " + $p + " -- run inventory-refresh.sh when convenient")
   }'
