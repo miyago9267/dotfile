@@ -13,6 +13,23 @@ if ! mkdir "$LOCK_DIR" 2>/dev/null; then
 fi
 trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT
 
+# Claude Code CLI 每次 session 啟動都向上游檢查，不受下面的每日 gate 限制；
+# 只有版本變動或失敗才寫 log。新版本在下次啟動 claude 時生效。
+update_claude_cli() {
+  local before after
+  command -v claude >/dev/null 2>&1 || return 0
+  before=$(claude --version 2>/dev/null)
+  if ! timeout 300 claude update >/dev/null 2>&1; then
+    printf '%s\n' "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] claude cli update failed"
+    return 1
+  fi
+  after=$(claude --version 2>/dev/null)
+  if [ "$before" != "$after" ]; then
+    printf '%s\n' "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] claude cli updated: $before -> $after"
+  fi
+}
+update_claude_cli >>"$LOG_FILE" 2>&1
+
 # 每個本地日曆日跑一次：今天還沒跑過就跑。原本的「距上次滿 24 小時」會讓
 # 觸發時間每天往後漂，晚開 session 那天就整天跳過。
 now=$(date +%s)

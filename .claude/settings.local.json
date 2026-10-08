@@ -31,7 +31,8 @@
       "Read(//private/tmp/**)",
       "Bash(agy agents *)",
       "Read(//Users/miyago/**)",
-      "Bash(pkill *)"
+      "Bash(pkill *)",
+      "Bash(set *)"
     ]
   }
 }
