@@ -413,3 +413,11 @@ temp/
 # Claude 自動同步的 claude.ai skills 與刪除暫存（runtime state，不進版控）
 config/ai/claude/skills/synced/
 config/ai/claude/skills/.trash/
+# 指向 repo 外的 skill link：各機器位置與有無都不同，由 setup_claude.sh 在來源存在時建立
+config/ai/claude/skills/jev-browser
+config/ai/claude/skills/jev-choice
+config/ai/claude/skills/jev-shadow-report
+config/ai/claude/skills/reticle-verify
+config/ai/claude/skills/experience-harvest
+config/ai/claude/skills/patina
+config/ai/claude/skills/sepia

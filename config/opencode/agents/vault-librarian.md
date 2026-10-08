@@ -22,7 +22,7 @@ Read-only, on-demand searcher for Miyago's personal Obsidian knowledge base.
 
 Vault:
 
-`/Users/miyago/Project/Note/miyago-knowledge-base`
+`~/Project/Note/miyago-knowledge-base`
 
 Workflow:
 

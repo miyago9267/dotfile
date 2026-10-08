@@ -64,5 +64,5 @@ Expected:
 
 - Phase 1-2 validation is complete.
 - Phase 3-5 docs are complete.
-- Demo 3 passed on `/Users/miyago/Project/Assignments/micro-device/final` with `ocstudio run --dir ...`: `game-engine-worker` detected Godot 4.6.1, found `godot/project.godot`, scenes/scripts, CLI `/opt/homebrew/bin/godot`, and reported `Changes made: none`.
+- Demo 3 passed on `~/Project/Assignments/micro-device/final` with `ocstudio run --dir ...`: `game-engine-worker` detected Godot 4.6.1, found `godot/project.godot`, scenes/scripts, CLI `/opt/homebrew/bin/godot`, and reported `Changes made: none`.
 - Demo 1 and Demo 2 remain optional manual demos; Demo 2 intentionally writes `.ai/artifacts/studio-demo/`.

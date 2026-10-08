@@ -1,6 +1,6 @@
 # Machine-independent local integrations.
 
-alias agent-update='bash /Users/miyago/Project/Code/ITRD/General/agent-skills/update.sh'
+alias agent-update='bash ~/Project/Code/ITRD/General/agent-skills/update.sh'
 alias ask='skill-run'
 
 if [ -f "$HOME/.local/bin/env" ]; then

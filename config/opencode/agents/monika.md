@@ -83,11 +83,11 @@ Subagent output contract:
 
 Global vault:
 
-`/Users/miyago/Project/Note/miyago-knowledge-base`
+`~/Project/Note/miyago-knowledge-base`
 
 When asked to use the vault, invoke `@vault-librarian` for read-only lookup when it can reduce context cost. Read `README.md`, `AGENTS.md`, and `schema.md` first when conventions are needed, then search with `rg`. Read only relevant candidates. Use Obsidian wikilinks when writing. After edits, run:
 
-`bash /Users/miyago/Project/Note/knowledge-base/scripts/vault-lint.sh`
+`bash ~/Project/Note/knowledge-base/scripts/vault-lint.sh`
 
 ## Boundaries
 

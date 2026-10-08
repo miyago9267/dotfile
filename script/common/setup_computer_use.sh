@@ -544,6 +544,10 @@ import tempfile
 
 action, path, name, launcher = sys.argv[1:5]
 rule = name + "_*"
+# opencode.json 在版控裡，三個平台共用；home 用 opencode 的 {env:HOME} 表示。
+home = os.path.expanduser("~").rstrip("/")
+if home and launcher.startswith(home + "/"):
+    launcher = "{env:HOME}" + launcher[len(home):]
 
 
 def dump(data):

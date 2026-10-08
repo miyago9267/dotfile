@@ -13,10 +13,10 @@ knowledge 或 domain rules，且 repo source 不足以回答時，才查相關�
 
 | 需求 | Vault | Access |
 | --- | --- | --- |
-| Miyago 擁有的 projects、specs、architecture、patterns、tools、workflows 與個人工程決策 | `/Users/miyago/Project/Note/miyago-knowledge-base` | 透過其 `AGENTS.md` 讀寫 |
-| Service configuration、infrastructure、deployment、SOPs、incidents 與 ADRs | `/Users/miyago/Project/Note/sre-knowledge-base` | 透過其 `AGENTS.md` 讀寫 |
-| PMS business logic、DB schema 與 application-layer triage | `/Users/miyago/Project/Note/itrd-knowledge-base` | Read-only；永遠不寫入 |
-| RiceCall product、architecture、operations 與 project-specific knowledge | `/Users/miyago/Project/Note/ricecall-knowledge-base` | 透過其 `AGENTS.md` 讀寫 |
+| Miyago 擁有的 projects、specs、architecture、patterns、tools、workflows 與個人工程決策 | `~/Project/Note/miyago-knowledge-base` | 透過其 `AGENTS.md` 讀寫 |
+| Service configuration、infrastructure、deployment、SOPs、incidents 與 ADRs | `~/Project/Note/sre-knowledge-base` | 透過其 `AGENTS.md` 讀寫 |
+| PMS business logic、DB schema 與 application-layer triage | `~/Project/Note/itrd-knowledge-base` | Read-only；永遠不寫入 |
+| RiceCall product、architecture、operations 與 project-specific knowledge | `~/Project/Note/ricecall-knowledge-base` | 透過其 `AGENTS.md` 讀寫 |
 
 Task 跨越 boundaries 時使用多個 vault。RiceCall details 優先使用 RiceCall vault；
 其他 vault 的 node 只當 routing index，不當 canonical content。

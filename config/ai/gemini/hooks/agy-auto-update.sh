@@ -64,7 +64,7 @@ fi
 echo "$NOW" > "$TS_FILE" 2>/dev/null || true
 
 # Find agy executable
-AGY_BIN="${AGY_BIN:-$(command -v agy || echo "/Users/miyago/.local/bin/agy")}"
+AGY_BIN="${AGY_BIN:-$(command -v agy || echo "$HOME/.local/bin/agy")}"
 if [ ! -x "$AGY_BIN" ]; then
   rm -rf "$LOCK_DIR" 2>/dev/null || true
   emit_and_exit

@@ -5,7 +5,7 @@
 
 ## Canonical Configuration Source Boundary
 
-- 唯一的 canonical configuration source set 是 `/Users/miyago/dotfile/config/ai/`。
+- 唯一的 canonical configuration source set 是 `~/dotfile/config/ai/`。
 - 設定通常透過 symlink 或 deployment 接到 runtime location 才會生效；這個目錄本身不是共用 project
   runtime。
 - 進行 global Agent behavior、skills、memory、harness 或 workspace-context routing
@@ -20,7 +20,7 @@
   才需要先跑 planning harness；低風險、局部、可逆的 docs/config patch 使用 `goal -> verify` 即可。
   Runtime 若提供 checkpoint 或 handoff，只有在 milestone 已驗證或即將切換 scope 時才寫入；不要為了
   每個小操作建立 session 文件。
-- `/Users/miyago/Project/AI/monika` 是 `non-entry` 。除非 Miyago 明確指定它為
+- `~/Project/AI/monika` 是 `non-entry` 。除非 Miyago 明確指定它為
   project-specific target，不得讀取、修改、測試，也不得從那裡推論 global Agent behavior。
 - canonical entry set 缺少必要資訊時，回報缺口。不能因為名稱相似、時間較新或目前工作目錄而退回其他 project checkout。
 

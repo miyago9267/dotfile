@@ -1,31 +1,31 @@
 # Canonical AI 設定來源
 
 ```yaml
-source_root: /Users/miyago/dotfile/config/ai
+source_root: ~/dotfile/config/ai
 source_policy: hard
 activation: symlinked-or-deployed-to-runtime-locations
-workspace_root: /Users/miyago/Project/AI/agent-workspace
+workspace_root: ~/Project/AI/agent-workspace
 workspace_role: canonical-global-rule-base
 project_ai_monika: non-entry
 identity:
   canonical_name: Monika
   legacy_aliases: [Astra, astra, monika-large, studio-monika]
-  source: /Users/miyago/dotfile/config/ai/AGENTS.md
+  source: ~/dotfile/config/ai/AGENTS.md
 ```
 
 ## 硬邊界
 
-`/Users/miyago/dotfile/config/ai/` 是 Miyago Agent 行為、routing、
+`~/dotfile/config/ai/` 是 Miyago Agent 行為、routing、
 shared rules、skills、memories 與 runtime adapters 的唯一 canonical
 source set。
 設定會透過 symlink 或 deployment 接到各 runtime location 後生效。
 這個 source directory 本身不是 shared project runtime。
 
 Global Agent experience、task context、system maps 與 handoffs 必須從
-`/Users/miyago/Project/AI/agent-workspace/` 讀取。
+`~/Project/AI/agent-workspace/` 讀取。
 這是 canonical global rule base，目前第一版只有文件形式。
 
-`/Users/miyago/Project/AI/monika` 明確標記為 `non-entry`。
+`~/Project/AI/monika` 明確標記為 `non-entry`。
 除非 Miyago 的 project-specific task 明確指定該路徑，
 否則不要讀取、修改、測試它，也不要從它推論 global Agent
 behavior。

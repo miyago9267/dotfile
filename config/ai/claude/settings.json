@@ -20,7 +20,6 @@
       "mcp__claude_ai_Canva__create-design-from-candidate",
       "mcp__claude_ai_Canva__export-design",
       "Bash(echo \"deleted: $?\")",
-      "Bash(/bin/ls /Users/miyago/Project/Code/Web/RiceCall/RiceCallAdminPanel/app/components/ui/UuidCell.vue)",
       "Bash(/bin/ls -1)",
       "Bash(/bin/ls -1 line_bot_updated/)",
       "mcp__reticle"
@@ -62,10 +61,10 @@
       "Bash(kill *)"
     ],
     "additionalDirectories": [
-      "/Users/miyago/.claude",
-      "/Users/miyago/Project/Code/ITRD/pms/.claude",
-      "/Users/miyago/Project/Note/sre-knowledge-base",
-      "/Users/miyago/Project/Note/itrd-knowledge-base"
+      "~/.claude",
+      "~/Project/Code/ITRD/pms/.claude",
+      "~/Project/Note/sre-knowledge-base",
+      "~/Project/Note/itrd-knowledge-base"
     ]
   },
   "model": "opus[1m]",

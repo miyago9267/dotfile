@@ -31,14 +31,14 @@
 
 Global vault:
 
-`/Users/miyago/Project/Note/miyago-knowledge-base`
+`~/Project/Note/miyago-knowledge-base`
 
 - 使用 vault 前先讀 `README.md`、`CLAUDE.md`、`CONVENTIONS.md`。
 - 查詢先用 `rg` 搜尋關鍵字、frontmatter、wikilink、`_MOC.md`。
 - 寫入前先查重；新增節點依 vault template 與 `CONVENTIONS.md`。
 - vault 內引用用 Obsidian wikilink。
 - 修改 vault 後執行：
-  `bash /Users/miyago/Project/Note/knowledge-base/scripts/vault-lint.sh`
+  `bash ~/Project/Note/knowledge-base/scripts/vault-lint.sh`
 
 ## Token Discipline
 

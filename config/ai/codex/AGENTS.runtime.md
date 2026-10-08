@@ -47,12 +47,12 @@ agent-secret run <名稱> -- <command> [args...]       # 值以環境變數注�
 
 ## Knowledge bases
 
-- 專案位置索引：`/Users/miyago/Project/Note/miyago-knowledge-base/wiki/conventions/workspace-directory-layout.md`
-- SRE vault：`/Users/miyago/Project/Note/sre-knowledge-base`
-- PMS vault：`/Users/miyago/Project/Note/itrd-knowledge-base`（唯讀）
+- 專案位置索引：`~/Project/Note/miyago-knowledge-base/wiki/conventions/workspace-directory-layout.md`
+- SRE vault：`~/Project/Note/sre-knowledge-base`
+- PMS vault：`~/Project/Note/itrd-knowledge-base`（唯讀）
 - 任務涉及既有 project decision、architecture、spec、pattern 或歷史脈絡時，先讀 personal vault 的 `AGENTS.md` 與 `INDEX.md`，再以 `rg` / MOC / wikilink 定位 canonical node。
 - 查詢 vault 先查 `INDEX.md`；寫入只限 SRE vault，遵循其 `AGENTS.md`、template、MOC、INDEX 與 lint 規則，不寫 secrets 或未驗證推論。
-- 修改 SRE vault 後執行：`bash /Users/miyago/Project/Note/sre-knowledge-base/scripts/vault-lint.sh`
+- 修改 SRE vault 後執行：`bash ~/Project/Note/sre-knowledge-base/scripts/vault-lint.sh`
 
 ## Codex boundaries
 

@@ -48,7 +48,7 @@ verifier = "high"
 security-executor = "max"
 
 [runtime]
-claude_binary = "/Users/miyago/.local/bin/calico-claude"
+claude_binary = "~/.local/bin/calico-claude"
 max_tool_use_concurrency = 5
 enable_tool_search = false
 clear_subagent_model_override = true

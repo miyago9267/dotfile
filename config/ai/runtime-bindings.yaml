@@ -5,20 +5,20 @@ purpose: >-
   會由各 runtime 的 setup/build 流程實際套用。
 
 canonical:
-  configuration_source: /Users/miyago/dotfile/config/ai
-  shared_rules: /Users/miyago/dotfile/config/ai/AGENTS.md
-  global_workspace: /Users/miyago/Project/AI/agent-workspace
-  personal_model: /Users/miyago/Project/AI/agent-workspace/personal-model/PROFILE.md
+  configuration_source: ~/dotfile/config/ai
+  shared_rules: ~/dotfile/config/ai/AGENTS.md
+  global_workspace: ~/Project/AI/agent-workspace
+  personal_model: ~/Project/AI/agent-workspace/personal-model/PROFILE.md
   no_cross_runtime_sources: true
   allowed_shared_sources:
-    - /Users/miyago/dotfile/config/ai/AGENTS.md
-    - /Users/miyago/dotfile/config/ai/shared
-    - /Users/miyago/dotfile/config/ai/memories
-    - /Users/miyago/Project/AI/agent-workspace/personal-model
+    - ~/dotfile/config/ai/AGENTS.md
+    - ~/dotfile/config/ai/shared
+    - ~/dotfile/config/ai/memories
+    - ~/Project/AI/agent-workspace/personal-model
 
 identity:
   canonical_name: Monika
-  source: /Users/miyago/dotfile/config/ai/AGENTS.md
+  source: ~/dotfile/config/ai/AGENTS.md
   legacy_aliases:
     - Astra
     - astra
@@ -43,7 +43,7 @@ opencode_family:
   shared_binding: family_level_optional
   profiles:
     daily:
-      source_root: /Users/miyago/dotfile/config/opencode
+      source_root: ~/dotfile/config/opencode
       effort: lean
       use_for: "日常、單一 repo、低到中複雜度工作"
       primary_agent: monika
@@ -52,7 +52,7 @@ opencode_family:
         - AGENTS.md
         - agents/
     harness:
-      source_root: /Users/miyago/dotfile/config/opencode-harness
+      source_root: ~/dotfile/config/opencode-harness
       effort: high
       use_for: "大型工程、跨模組、browser、MCP、subagent"
       primary_agent: monika-large
@@ -63,7 +63,7 @@ opencode_family:
       adapter_file: optional
       reason: "主要工作契約由 profile、agents、plugin 與 MCP 組成，不硬造另一份 AGENTS.md"
     studio:
-      source_root: /Users/miyago/dotfile/config/opencode-studio
+      source_root: ~/dotfile/config/opencode-studio
       effort: domain-specific
       use_for: "創意、遊戲、資產、引擎與 multimodal 工作"
       primary_agent: studio-monika
@@ -92,29 +92,29 @@ mechanisms:
 runtimes:
   claude:
     family: claude-code
-    source_root: /Users/miyago/dotfile/config/ai/claude
-    adapter_source: /Users/miyago/dotfile/config/ai/claude/AGENTS.md
-    target_root: /Users/miyago/.claude
+    source_root: ~/dotfile/config/ai/claude
+    adapter_source: ~/dotfile/config/ai/claude/AGENTS.md
+    target_root: ~/.claude
     entry_file: AGENTS.md
     current:
-      entry_target: /Users/miyago/.claude/AGENTS.md
+      entry_target: ~/.claude/AGENTS.md
       entry_mode: generated_link
-      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
-      shared_target: /Users/miyago/.claude/AGENTS.md
+      shared_source: ~/dotfile/config/ai/AGENTS.md
+      shared_target: ~/.claude/AGENTS.md
       shared_mode: generated
       instruction_files: claude-md-and-agents-md
       status: phase_2_agents_md_primary
     target:
-      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
-      shared_target: /Users/miyago/.claude/AGENTS.md
+      shared_source: ~/dotfile/config/ai/AGENTS.md
+      shared_target: ~/.claude/AGENTS.md
       instruction_files: claude-md-and-agents-md
       adapter_load: generated_after_shared_and_personal_model
       entry_mode: link
     evidence:
-      - /Users/miyago/dotfile/script/common/setup_claude.sh
-      - /Users/miyago/dotfile/config/ai/claude/AGENTS.md
-      - /Users/miyago/dotfile/config/ai/claude/settings.json
-      - /Users/miyago/dotfile/config/ai/generated/claude/AGENTS.md
+      - ~/dotfile/script/common/setup_claude.sh
+      - ~/dotfile/config/ai/claude/AGENTS.md
+      - ~/dotfile/config/ai/claude/settings.json
+      - ~/dotfile/config/ai/generated/claude/AGENTS.md
     shared_capability: configured_agents_md_primary_entry
     notes:
       - "Claude Code 2.1.277+ supports AGENTS.md; the managed global entry is now one generated AGENTS.md file."
@@ -122,33 +122,33 @@ runtimes:
 
   codex:
     family: codex-cli
-    source_root: /Users/miyago/dotfile/config/ai/codex
-    adapter_source: /Users/miyago/dotfile/config/ai/codex/AGENTS.md
-    target_root: /Users/miyago/.codex
+    source_root: ~/dotfile/config/ai/codex
+    adapter_source: ~/dotfile/config/ai/codex/AGENTS.md
+    target_root: ~/.codex
     entry_file: AGENTS.md
     current:
-      entry_target: /Users/miyago/.codex/AGENTS.md
+      entry_target: ~/.codex/AGENTS.md
       entry_mode: link
-      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      shared_source: ~/dotfile/config/ai/AGENTS.md
       shared_mode: generated_composition
       status: phase_1_active
     target:
-      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
-      shared_target: /Users/miyago/.codex/AGENTS.shared.md
+      shared_source: ~/dotfile/config/ai/AGENTS.md
+      shared_target: ~/.codex/AGENTS.shared.md
       adapter_load: generate
-      generated_entry: /Users/miyago/.codex/AGENTS.md
+      generated_entry: ~/.codex/AGENTS.md
       entry_mode: link
-      orca_managed_target: "/Users/miyago/Library/Application Support/orca/codex-runtime-home/home"
+      orca_managed_target: "~/Library/Application Support/orca/codex-runtime-home/home"
       orca_entry_mode: link
-      orca_shared_target: "/Users/miyago/Library/Application Support/orca/codex-runtime-home/home/AGENTS.shared.md"
+      orca_shared_target: "~/Library/Application Support/orca/codex-runtime-home/home/AGENTS.shared.md"
     evidence:
-      - /Users/miyago/dotfile/script/common/setup_codex.sh
-      - /Users/miyago/dotfile/config/ai/codex/AGENTS.md
-      - /Users/miyago/dotfile/config/ai/codex-plugin/scripts/build.sh
+      - ~/dotfile/script/common/setup_codex.sh
+      - ~/dotfile/config/ai/codex/AGENTS.md
+      - ~/dotfile/config/ai/codex-plugin/scripts/build.sh
     shared_capability: include_not_verified
     experience_hook:
-      source: /Users/miyago/dotfile/config/ai/codex/hooks/experience-observe.py
-      target: /Users/miyago/.codex/hooks/experience-observe.py
+      source: ~/dotfile/config/ai/codex/hooks/experience-observe.py
+      target: ~/.codex/hooks/experience-observe.py
       event: UserPromptSubmit
       status: phase_1_active
     notes:
@@ -158,61 +158,61 @@ runtimes:
 
   astra:
     family: codex-model-profile
-    source_root: /Users/miyago/dotfile/config/ai/astra
-    adapter_source: /Users/miyago/dotfile/config/ai/astra/AGENTS.md
+    source_root: ~/dotfile/config/ai/astra
+    adapter_source: ~/dotfile/config/ai/astra/AGENTS.md
     target_root: "explicit ASTRA_TARGET_ROOT"
     entry_file: AGENTS.md
     current:
-      entry_target: /Users/miyago/dotfile/config/ai/generated/astra/AGENTS.md
+      entry_target: ~/dotfile/config/ai/generated/astra/AGENTS.md
       entry_mode: generated_composition
       status: profile_source_ready
     target:
-      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      shared_source: ~/dotfile/config/ai/AGENTS.md
       adapter_load: generated_composition
-      generated_entry: /Users/miyago/dotfile/config/ai/generated/astra/AGENTS.md
+      generated_entry: ~/dotfile/config/ai/generated/astra/AGENTS.md
       activation: explicit_main_session_only
       model: gpt-6-astra
       effort_recommendation: low_for_routine_work
       context_policy: "API-backed Astra: aim below 260K input tokens; >272K changes pricing for the full request; 1.05M is capacity, not a target"
     skills:
-      allowlist: /Users/miyago/dotfile/config/ai/astra/skills-allowlist.txt
+      allowlist: ~/dotfile/config/ai/astra/skills-allowlist.txt
       policy: "預設只載入 shared contract；需要時最多加一個 task skill，safe-ops 保留為 always-on guard"
     legacy_compatibility:
       - "不自動切換 normal Luna/Sol session"
       - "不建立 Astra child；既有 named roles 維持原 model binding"
       - "Astra profile name 與 plugin IDs 保留；它提供 explicit model profile，不提供第二套 persona"
     evidence:
-      - /Users/miyago/dotfile/script/common/setup_astra.sh
-      - /Users/miyago/dotfile/config/ai/astra/AGENTS.md
-      - /Users/miyago/dotfile/config/ai/astra/skills-allowlist.txt
+      - ~/dotfile/script/common/setup_astra.sh
+      - ~/dotfile/config/ai/astra/AGENTS.md
+      - ~/dotfile/config/ai/astra/skills-allowlist.txt
 
   gemini:
     family: gemini-cli
-    source_root: /Users/miyago/dotfile/config/ai/gemini
-    adapter_source: /Users/miyago/dotfile/config/ai/gemini/GEMINI.md
-    target_root: /Users/miyago/.gemini
+    source_root: ~/dotfile/config/ai/gemini
+    adapter_source: ~/dotfile/config/ai/gemini/GEMINI.md
+    target_root: ~/.gemini
     entry_file: GEMINI.md
     current:
-      entry_target: /Users/miyago/.gemini/GEMINI.md
+      entry_target: ~/.gemini/GEMINI.md
       entry_mode: link
-      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      shared_source: ~/dotfile/config/ai/AGENTS.md
       shared_mode: generated_composition
       status: phase_1_active
     target:
-      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
-      shared_target: /Users/miyago/.gemini/AGENTS.shared.md
+      shared_source: ~/dotfile/config/ai/AGENTS.md
+      shared_target: ~/.gemini/AGENTS.shared.md
       adapter_load: generate
-      generated_entry: /Users/miyago/.gemini/GEMINI.md
+      generated_entry: ~/.gemini/GEMINI.md
       entry_mode: link
-      permissions_source: /Users/miyago/dotfile/config/ai/gemini/antigravity-cli/settings.json
-      permissions_target: /Users/miyago/.gemini/antigravity-cli/settings.json
-      hooks_source: /Users/miyago/dotfile/config/ai/gemini/hooks.json
-      hooks_target: /Users/miyago/.gemini/config/hooks.json
+      permissions_source: ~/dotfile/config/ai/gemini/antigravity-cli/settings.json
+      permissions_target: ~/.gemini/antigravity-cli/settings.json
+      hooks_source: ~/dotfile/config/ai/gemini/hooks.json
+      hooks_target: ~/.gemini/config/hooks.json
     evidence:
-      - /Users/miyago/dotfile/script/common/setup_gemini.sh
-      - /Users/miyago/dotfile/config/ai/gemini/GEMINI.md
-      - /Users/miyago/dotfile/config/ai/gemini/antigravity-cli/settings.json
-      - /Users/miyago/dotfile/config/ai/gemini/hooks.json
+      - ~/dotfile/script/common/setup_gemini.sh
+      - ~/dotfile/config/ai/gemini/GEMINI.md
+      - ~/dotfile/config/ai/gemini/antigravity-cli/settings.json
+      - ~/dotfile/config/ai/gemini/hooks.json
     shared_capability: include_not_verified
     notes:
       - "Gemini has a native GEMINI.md and policies path; no shared instruction include was verified."
@@ -221,53 +221,53 @@ runtimes:
 
   grok:
     family: grok-cli
-    source_root: /Users/miyago/dotfile/config/ai/grok
-    adapter_source: /Users/miyago/dotfile/config/ai/grok/AGENTS.md
-    target_root: /Users/miyago/.grok
+    source_root: ~/dotfile/config/ai/grok
+    adapter_source: ~/dotfile/config/ai/grok/AGENTS.md
+    target_root: ~/.grok
     entry_file: AGENTS.md
     current:
-      entry_target: /Users/miyago/.grok/AGENTS.md
+      entry_target: ~/.grok/AGENTS.md
       entry_mode: link
-      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
-      shared_target: /Users/miyago/.grok/AGENTS.shared.md
+      shared_source: ~/dotfile/config/ai/AGENTS.md
+      shared_target: ~/.grok/AGENTS.shared.md
       shared_mode: generated_composition
       status: phase_0_active
     target:
-      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
-      shared_target: /Users/miyago/.grok/AGENTS.shared.md
+      shared_source: ~/dotfile/config/ai/AGENTS.md
+      shared_target: ~/.grok/AGENTS.shared.md
       adapter_load: generate
-      generated_entry: /Users/miyago/.grok/AGENTS.md
+      generated_entry: ~/.grok/AGENTS.md
       entry_mode: link
     evidence:
-      - /Users/miyago/dotfile/script/common/setup_grok.sh
-      - /Users/miyago/dotfile/config/ai/grok/AGENTS.md
+      - ~/dotfile/script/common/setup_grok.sh
+      - ~/dotfile/config/ai/grok/AGENTS.md
     shared_capability: include_not_verified
     notes:
       - "Grok has its own adapter and memory behavior; it must not consume a Codex-owned file."
 
   opencode-daily:
     family: opencode
-    source_root: /Users/miyago/dotfile/config/opencode
-    adapter_source: /Users/miyago/dotfile/config/opencode/AGENTS.md
-    target_root: /Users/miyago/.config/opencode
+    source_root: ~/dotfile/config/opencode
+    adapter_source: ~/dotfile/config/opencode/AGENTS.md
+    target_root: ~/.config/opencode
     entry_file: AGENTS.md
     current:
-      entry_target: /Users/miyago/.config/opencode/AGENTS.md
+      entry_target: ~/.config/opencode/AGENTS.md
       entry_mode: link_via_directory
       instruction_setting: AGENTS.md
       status: adapter_only
     target:
-      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      shared_source: ~/dotfile/config/ai/AGENTS.md
       adapter_load: instruction_path
       generated_entry: null
       instruction_setting:
-        - /Users/miyago/dotfile/config/ai/AGENTS.md
+        - ~/dotfile/config/ai/AGENTS.md
         - AGENTS.md
       entry_mode: link_via_directory
     evidence:
-      - /Users/miyago/dotfile/script/common/setup_dotfiles.sh
-      - /Users/miyago/dotfile/config/opencode/opencode.json
-      - /Users/miyago/dotfile/config/opencode/AGENTS.md
+      - ~/dotfile/script/common/setup_dotfiles.sh
+      - ~/dotfile/config/opencode/opencode.json
+      - ~/dotfile/config/opencode/AGENTS.md
     shared_capability: instruction_path_configured_runtime_test_pending
     notes:
       - "OpenCode currently loads AGENTS.md through its instructions setting."
@@ -275,22 +275,22 @@ runtimes:
 
   opencode-harness:
     family: opencode
-    source_root: /Users/miyago/dotfile/config/opencode-harness
+    source_root: ~/dotfile/config/opencode-harness
     adapter_source: null
-    target_root: /Users/miyago/.config/opencode-harness
+    target_root: ~/.config/opencode-harness
     entry_file: AGENTS.md
     current:
       entry_target: null
       entry_mode: link_via_directory
       status: profile_variant_without_adapter
     target:
-      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      shared_source: ~/dotfile/config/ai/AGENTS.md
       adapter_load: instruction_path
       generated_entry: null
       entry_mode: profile_native
     evidence:
-      - /Users/miyago/dotfile/script/common/setup_dotfiles.sh
-      - /Users/miyago/dotfile/config/opencode-harness/opencode.json
+      - ~/dotfile/script/common/setup_dotfiles.sh
+      - ~/dotfile/config/opencode-harness/opencode.json
     shared_capability: family_level_optional
     notes:
       - "This profile intentionally has no standalone AGENTS.md adapter."
@@ -298,25 +298,25 @@ runtimes:
 
   opencode-studio:
     family: opencode
-    source_root: /Users/miyago/dotfile/config/opencode-studio
-    adapter_source: /Users/miyago/dotfile/config/opencode-studio/AGENTS.md
-    target_root: /Users/miyago/.config/opencode-studio
+    source_root: ~/dotfile/config/opencode-studio
+    adapter_source: ~/dotfile/config/opencode-studio/AGENTS.md
+    target_root: ~/.config/opencode-studio
     entry_file: AGENTS.md
     current:
-      entry_target: /Users/miyago/.config/opencode-studio/AGENTS.md
+      entry_target: ~/.config/opencode-studio/AGENTS.md
       entry_mode: link_via_directory
       status: adapter_only
     target:
-      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      shared_source: ~/dotfile/config/ai/AGENTS.md
       adapter_load: instruction_path
       generated_entry: null
       instruction_setting:
-        - /Users/miyago/dotfile/config/ai/AGENTS.md
+        - ~/dotfile/config/ai/AGENTS.md
         - AGENTS.md
       entry_mode: link_via_directory
     evidence:
-      - /Users/miyago/dotfile/script/common/setup_dotfiles.sh
-      - /Users/miyago/dotfile/config/opencode-studio/opencode.json
+      - ~/dotfile/script/common/setup_dotfiles.sh
+      - ~/dotfile/config/opencode-studio/opencode.json
     shared_capability: instruction_path_configured_runtime_test_pending
 
   deepseek-harness:
@@ -333,7 +333,7 @@ runtimes:
       role: dedicated-harness
       architecture: plugin-first-cordis
       composition: profiles_and_bundles
-      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      shared_source: ~/dotfile/config/ai/AGENTS.md
       adapter_load: plugin_or_profile_patch
       workspace: explicit_workspace_selection
       entry_mode: harness_native
@@ -375,7 +375,7 @@ runtimes:
     target:
       role: terminal-coding-harness
       architecture: codex-style-rust-workspace
-      shared_source: /Users/miyago/dotfile/config/ai/AGENTS.md
+      shared_source: ~/dotfile/config/ai/AGENTS.md
       adapter_load: project_or_user_skill_and_generated_instruction
       workspace: current_directory
       entry_mode: harness_native
@@ -405,7 +405,7 @@ runtimes:
 model_provider_only:
   deepseek_v4:
     role: model_provider_not_harness
-    current_local_route: /Users/miyago/dotfile/config/opencode/opencode.json
+    current_local_route: ~/dotfile/config/opencode/opencode.json
     integration: "Use DeepSeek as the model behind existing OpenCode, Claude Code or other compatible agent tools."
     models:
       - deepseek-v4-pro
@@ -427,11 +427,11 @@ model_provider_only:
 
 shared_assets:
   knowledge-base-router:
-    source: /Users/miyago/dotfile/config/ai/shared/skills/knowledge-base-router
+    source: ~/dotfile/config/ai/shared/skills/knowledge-base-router
     current_links:
-      - /Users/miyago/.codex/skills/knowledge-base-router
-      - /Users/miyago/.claude/skills/knowledge-base-router
-      - /Users/miyago/.grok/skills/knowledge-base-router
+      - ~/.codex/skills/knowledge-base-router
+      - ~/.claude/skills/knowledge-base-router
+      - ~/.grok/skills/knowledge-base-router
     missing_or_unverified:
       - gemini
       - opencode-daily
@@ -441,16 +441,16 @@ shared_assets:
     status: partially_confirmed
 
   community-tech-brief:
-    source: /Users/miyago/dotfile/config/ai/shared/skills/community-tech-brief
+    source: ~/dotfile/config/ai/shared/skills/community-tech-brief
     setup_destinations:
-      claude: /Users/miyago/.claude/skills/community-tech-brief
-      codex: /Users/miyago/.codex/skills/community-tech-brief
-      gemini: /Users/miyago/.gemini/skills/community-tech-brief
-      grok: /Users/miyago/.grok/skills/community-tech-brief
+      claude: ~/.claude/skills/community-tech-brief
+      codex: ~/.codex/skills/community-tech-brief
+      gemini: ~/.gemini/skills/community-tech-brief
+      grok: ~/.grok/skills/community-tech-brief
     current_links:
-      - /Users/miyago/.claude/skills/community-tech-brief
-      - /Users/miyago/.codex/skills/community-tech-brief
-      - /Users/miyago/.grok/skills/community-tech-brief
+      - ~/.claude/skills/community-tech-brief
+      - ~/.codex/skills/community-tech-brief
+      - ~/.grok/skills/community-tech-brief
     missing_or_unverified:
       - gemini
       - opencode-daily
@@ -460,10 +460,10 @@ shared_assets:
     status: partially_confirmed
 
   memory:
-    source: /Users/miyago/dotfile/config/ai/memories/MEMORY.md
+    source: ~/dotfile/config/ai/memories/MEMORY.md
     current_links:
-      - /Users/miyago/.codex/memories
-      - /Users/miyago/.grok/memory/MEMORY.md
+      - ~/.codex/memories
+      - ~/.grok/memory/MEMORY.md
     other_runtimes: review_required
     mechanism: link
     status: partial_runtime_compatibility

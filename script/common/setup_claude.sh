@@ -15,14 +15,19 @@ ACTIVE_RULES_SRC="$ACTIVE_RULES_DIR/AGENTS.md"
 LEGACY_ENTRY_SRC="$CLAUDE_SRC/CLAUDE.md"
 LEGACY_ENTRY_DST="$CLAUDE_DST/CLAUDE.md"
 LEGACY_SHARED_DST="$CLAUDE_DST/AGENT_RULES_SHARED.md"
-KB_ROUTER_SRC="$DOTFILE_DIR/config/ai/shared/skills/knowledge-base-router"
-KB_ROUTER_DST="$CLAUDE_DST/skills/knowledge-base-router"
-TECH_BRIEF_SRC="$DOTFILE_DIR/config/ai/shared/skills/community-tech-brief"
-TECH_BRIEF_DST="$CLAUDE_DST/skills/community-tech-brief"
-JEV_TOOLS_SRC="$DOTFILE_DIR/config/ai/shared/skills/jev-tools"
-JEV_TOOLS_DST="$CLAUDE_DST/skills/jev-tools"
-DESKTOP_OPS_SRC="$DOTFILE_DIR/config/ai/shared/skills/desktop-ops"
-DESKTOP_OPS_DST="$CLAUDE_DST/skills/desktop-ops"
+# skills/ 整個目錄 symlink 回 repo，所以裡面的 link 會被版控看到（docs/specs/portable-paths）：
+# - shared skill 用相對目標，三個平台共用同一個 commit
+# - repo 外的 skill 不進版控（.gitignore），來源存在時才在本機建立
+SHARED_SKILLS=(knowledge-base-router community-tech-brief jev-tools desktop-ops)
+EXTERNAL_SKILLS=(
+  "jev-browser|$HOME/Project/AI/Skills/jev-tools/skills/jev-browser"
+  "jev-choice|$HOME/Project/AI/Skills/jev-tools/skills/jev-choice"
+  "jev-shadow-report|$HOME/Project/AI/Skills/jev-tools/skills/jev-shadow-report"
+  "reticle-verify|$HOME/Project/AI/Skills/jev-tools/skills/reticle-verify"
+  "experience-harvest|$HOME/Project/AI/agent-workflow-factory/skills/experience-harvest"
+  "patina|$HOME/.local/share/patina/.claude/skills/patina"
+  "sepia|$HOME/.sepia/skills/sepia"
+)
 REMORA_SRC="$CLAUDE_SRC/remora-proxy/remora.config.toml"
 REMORA_DST="$HOME/.config/remora-cc/config.toml"
 
@@ -111,6 +116,45 @@ link_external_item() {
   printf "${G}  [LINK] %s -> %s${N}\n" "$label" "$src"
 }
 
+# shared skill：在 repo 的 claude/skills/ 底下建立相對 symlink
+link_shared_skill() {
+  local name="$1"
+  local target="../../shared/skills/$name"
+  local dst="$CLAUDE_SRC/skills/$name"
+
+  if [ ! -e "$DOTFILE_DIR/config/ai/shared/skills/$name" ]; then
+    printf "${R}  [SKIP] %s skill -- 來源不存在${N}\n" "$name"
+    return
+  fi
+  if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$target" ]; then
+    printf "${G}  [OK]   %s skill -- 已是正確的 symlink${N}\n" "$name"
+    return
+  fi
+  if [ -e "$dst" ] && [ ! -L "$dst" ]; then
+    printf "${R}  [SKIP] %s skill -- %s 不是 symlink，未變更${N}\n" "$name" "$dst"
+    return
+  fi
+  rm -f "$dst"
+  ln -s "$target" "$dst"
+  printf "${G}  [LINK] %s skill -> %s${N}\n" "$name" "$target"
+}
+
+# repo 外的 skill：這台機器沒有來源就略過，並清掉指向別台機器的斷掉 link
+link_optional_skill() {
+  local name="${1%%|*}"
+  local src="${1#*|}"
+  local dst="$CLAUDE_SRC/skills/$name"
+
+  if [ ! -e "$src" ]; then
+    if [ -L "$dst" ] && [ ! -e "$dst" ]; then
+      rm -f "$dst"
+      printf "${Y}  [CLEAN] %s skill -- 移除斷掉的 symlink${N}\n" "$name"
+    fi
+    return
+  fi
+  link_external_item "$src" "$dst" "$name skill"
+}
+
 compose_active_rules() {
   mkdir -p "$ACTIVE_RULES_DIR"
   local tmp_file="$ACTIVE_RULES_SRC.tmp.$$"
@@ -142,10 +186,12 @@ done
 remove_legacy_entry
 compose_active_rules
 link_external_item "$ACTIVE_RULES_SRC" "$SHARED_RULES_DST" "shared agent contract + personal model + Claude adapter"
-link_external_item "$KB_ROUTER_SRC" "$KB_ROUTER_DST" "knowledge-base-router skill"
-link_external_item "$TECH_BRIEF_SRC" "$TECH_BRIEF_DST" "community-tech-brief skill"
-link_external_item "$JEV_TOOLS_SRC" "$JEV_TOOLS_DST" "jev-tools skill"
-link_external_item "$DESKTOP_OPS_SRC" "$DESKTOP_OPS_DST" "desktop-ops skill"
+for name in "${SHARED_SKILLS[@]}"; do
+  link_shared_skill "$name"
+done
+for entry in "${EXTERNAL_SKILLS[@]}"; do
+  link_optional_skill "$entry"
+done
 
 if [ -L "$LEGACY_SHARED_DST" ] && [ "$(readlink "$LEGACY_SHARED_DST")" = "$DOTFILE_DIR/config/ai/codex/AGENT_RULES_SHARED.md" ]; then
   if [ -e "${LEGACY_SHARED_DST}.legacy" ] || [ -L "${LEGACY_SHARED_DST}.legacy" ]; then
@@ -157,7 +203,10 @@ if [ -L "$LEGACY_SHARED_DST" ] && [ "$(readlink "$LEGACY_SHARED_DST")" = "$DOTFI
 fi
 
 mkdir -p "$(dirname "$REMORA_DST")"
-install -m 600 "$REMORA_SRC" "$REMORA_DST"
+# 版控裡用 ~/ 表示 home；remora 讀的是複製出去的檔案，安裝時展開成這台機器的路徑。
+sed "s|\"~/|\"$HOME/|g" "$REMORA_SRC" > "$REMORA_DST.tmp.$$"
+install -m 600 "$REMORA_DST.tmp.$$" "$REMORA_DST"
+rm -f "$REMORA_DST.tmp.$$"
 printf "${G}  [SYNC] remora-cc/config.toml${N}\n"
 
 printf "${G}=== 完成 ===${N}\n"

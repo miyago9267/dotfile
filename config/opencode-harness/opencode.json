@@ -8,7 +8,7 @@
   ],
   "plugin": [
     "oh-my-openagent@latest",
-    "file:///Users/miyago/dotfile/config/opencode-harness/plugins/shoal-opencode.js"
+    "file://{env:HOME}/dotfile/config/opencode-harness/plugins/shoal-opencode.js"
   ],
   "mcp": {
     "playwright": {
@@ -24,9 +24,9 @@
     "pty-bridge": {
       "type": "local",
       "command": [
-        "/Users/miyago/.bun/bin/bun",
+        "{env:HOME}/.bun/bin/bun",
         "run",
-        "/Users/miyago/dotfile/config/ai/claude/mcp/pty-bridge/index.ts"
+        "{env:HOME}/dotfile/config/ai/claude/mcp/pty-bridge/index.ts"
       ],
       "enabled": false
     },

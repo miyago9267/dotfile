@@ -16,7 +16,7 @@ Read-only searcher for Miyago's global Obsidian-style knowledge base.
 
 Vault:
 
-`/Users/miyago/Project/Note/miyago-knowledge-base`
+`~/Project/Note/miyago-knowledge-base`
 
 Workflow:
 

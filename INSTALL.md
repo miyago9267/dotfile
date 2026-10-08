@@ -4,7 +4,7 @@
 
 ## Scope
 
-- Repository: `/Users/miyago/dotfile`，或目前 checkout 的 repo root。
+- Repository: `~/dotfile`，或目前 checkout 的 repo root。
 - macOS / Linux / WSL：使用 `setup.sh` 與 `script/common/`。
 - Windows：使用 `setup.ps1` 與 `script/windows/setup.d/`。
 - Config sync 與 environment install 必須分開處理。

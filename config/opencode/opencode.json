@@ -223,14 +223,14 @@
     "open-computer-use": {
       "type": "local",
       "command": [
-        "/Users/miyago/dotfile/config/ai/shared/computer-use/computer-use-mcp.sh"
+        "{env:HOME}/dotfile/config/ai/shared/computer-use/computer-use-mcp.sh"
       ],
       "enabled": true
     },
     "desktop-ops": {
       "type": "local",
       "command": [
-        "/Users/miyago/dotfile/config/ai/shared/computer-use/desktop-ops-mcp.sh"
+        "{env:HOME}/dotfile/config/ai/shared/computer-use/desktop-ops-mcp.sh"
       ],
       "enabled": true
     }

@@ -28,7 +28,7 @@
 ## Cross-runtime calls
 
 - 需要 bounded、background 的 read-only second opinion 時，使用
-  `/Users/miyago/dotfile/script/utils/agent-call`，不要開 foreground TUI。
+  `~/dotfile/script/utils/agent-call`，不要開 foreground TUI。
 - `agent-call` 會固定使用 agy `--mode plan` 或 Codex `--sandbox read-only`，並
   回傳 job metadata；使用 `status`、`wait`、`cancel` 管理長工作。
 - Runner 不處理 write、commit、push、credential、production 或其他 high-side-effect
