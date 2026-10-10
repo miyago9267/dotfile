@@ -148,7 +148,7 @@ Harness dry-run prompts for subagent validation:
 ```
 
 ```text
-@plan-verifier Check this Plan: "Update only config/opencode docs to mention GPT-5.6 aliases; no code changes; verify markdown only." Return READY or REVISE with blocking issues and minimal revision needed. Do not edit files.
+@quick-reviewer Check this Plan: "Update only config/opencode docs to mention GPT-5.6 aliases; no code changes; verify markdown only." Return blocking issues, evidence, and the minimal revision needed. Do not edit files.
 ```
 
 ```text

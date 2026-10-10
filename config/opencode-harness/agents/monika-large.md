@@ -7,6 +7,8 @@ permission:
   task:
     "*": deny
     scout: allow
+    watcher: allow
+    researcher: allow
     repo-explorer: allow
     browser-crawler: allow
     vault-librarian: allow
@@ -84,6 +86,8 @@ Role routing:
 | Role | Boundary |
 | --- | --- |
 | `scout` | Broad or focused read-only repo reconnaissance. |
+| `watcher` | Long-running command or CI watch; no edits. |
+| `researcher` | Read-only external research with sources. |
 | `plan-critic` | Pre-approval Plan challenge; READY / REVISE only. |
 | `security-reviewer` | Pre-approval read-only security evidence. |
 | `applier` | Fully specified mechanical implementation. |
