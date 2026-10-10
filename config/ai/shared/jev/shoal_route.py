@@ -32,8 +32,11 @@ MAX_PROMPT_LINES = 5
 MAX_RESPONSE_BYTES = 64 * 1024
 SOCKET_TIMEOUT_SECONDS = 1.0
 DEADLINE_SECONDS = 1.5
-THRESHOLD = 0.8
+# 2026-10-10 由 0.8 放寬：729 筆紀錄中 0.8 只有 19% 有分類，guard 多半不介入；0.6 為 43%。
+THRESHOLD = 0.6
 MIN_LEAD = 0.2
+# needs_plan 的升級提示維持原本的門檻。
+PLAN_THRESHOLD = 0.8
 BREAKER_FAILURES = 3
 BREAKER_SECONDS = 600
 MAX_LOG_BYTES = 1024 * 1024
@@ -469,7 +472,7 @@ def directive(scores: dict[str, float]) -> str | None:
     if best < THRESHOLD or best - second < MIN_LEAD:
         return None
     text = DIRECTIVE.format(role=ROLE_TEXT[role])
-    if scores["needs_plan"] >= THRESHOLD:
+    if scores["needs_plan"] >= PLAN_THRESHOLD:
         text += PLAN_SUFFIX
     return text
 

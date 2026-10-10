@@ -191,7 +191,7 @@ class RouteHookTests(unittest.TestCase):
         self.assertTrue(text.endswith("Consider explore_then_plan before any write."))
 
     def test_low_confidence_or_small_lead_emits_nothing(self) -> None:
-        for body in (scores(exploration=0.7), scores(exploration=0.9, judgment=0.8)):
+        for body in (scores(exploration=0.5), scores(exploration=0.9, judgment=0.8)):
             self.stub.body = body
             self.assertEqual(self.run_hook("找出 routing 相關的程式在哪裡")[0], "")
 

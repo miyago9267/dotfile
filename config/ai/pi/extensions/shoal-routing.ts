@@ -85,7 +85,7 @@ export default function (pi: ExtensionAPI) {
     label: "Shoal dispatch",
     description: "Dispatch a bounded task to an isolated Pi child session using the Shoal role model route.",
     parameters: Type.Object({
-      role: Type.String({ description: "Shoal role: scout, executor, applier, verifier, reviewer, plan-critic, security-reviewer, or security-executor" }),
+      role: Type.String({ description: "Shoal role: scout, executor, applier, watcher, researcher, verifier, reviewer, plan-critic, security-reviewer, or security-executor" }),
       task: Type.String({ description: "Complete bounded task for the child session" }),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {

@@ -11,6 +11,11 @@
         { "provider": "deepseek", "model": "deepseek-v4-flash" }
       ]
     },
+    "watcher": {
+      "candidates": [
+        { "provider": "deepseek", "model": "deepseek-v4-flash" }
+      ]
+    },
     "executor": {
       "candidates": [
         { "provider": "openai", "model": "gpt-6-luna" },
@@ -23,6 +28,12 @@
       ]
     },
     "plan-critic": {
+      "candidates": [
+        { "provider": "anthropic", "model": "claude-opus-5-5" },
+        { "provider": "openai", "model": "gpt-6-sol" }
+      ]
+    },
+    "researcher": {
       "candidates": [
         { "provider": "anthropic", "model": "claude-opus-5-5" },
         { "provider": "openai", "model": "gpt-6-sol" }
