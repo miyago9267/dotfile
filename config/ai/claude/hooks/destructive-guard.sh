@@ -3,6 +3,7 @@
 # SQL 的 DROP TABLE/DATABASE/SCHEMA 與 TRUNCATE：確定會送進資料庫 client 或直譯器執行時回 deny
 # （bypassPermissions 模式下也擋，由 Miyago 自己在 terminal 執行）；只是搜尋、列印或提到字樣的指令不 deny。
 # 其餘規則回 ask：一般模式會跳確認，bypassPermissions 模式下不擋（Miyago 的選擇）。
+# 本機 git 的 reset --hard、clean 不擋（2026-10-10 Miyago 決定）；force push 與刪遠端 branch/tag 仍 ask。
 # 取代原本的 safe-ops skill；kubectl/gcloud 由 ops-write-guard.sh 處理，git add 由 git-add-guard.sh 處理。
 set -uo pipefail
 command -v jq >/dev/null 2>&1 || exit 0
@@ -275,19 +276,21 @@ s/(git)[[:space:]]+(--git-dir|--work-tree|--namespace)=[^[:space:];&|]+/\1/g
 s/(git)[[:space:]]+(--no-pager|--bare|-P)([[:space:]])/\1\3/g
 ta')
 
-# rm -rf / -fr，目標全部在 /tmp、/private/tmp 或 scratchpad 底下才放行
+# rm -rf / -fr，目標全部在 temp 目錄或專案內相對路徑才放行
 if printf '%s' "$cmd" | grep -qE "${sep}rm[[:space:]]+(-[a-zA-Z]*r[a-zA-Z]*f|-[a-zA-Z]*f[a-zA-Z]*r|-r[[:space:]]+-f|-f[[:space:]]+-r)"; then
   targets=$(printf '%s' "$cmd" | grep -oE "${sep}rm[[:space:]]+[^;&|]*" | sed -E 's/^[^r]*rm[[:space:]]+//' | tr ' ' '\n' | grep -vE '^-|^$' || true)
   bad=$(printf '%s\n' "$targets" | grep -vE '^("|'"'"')?(/tmp/|/private/tmp/|\$TMPDIR|/var/folders/)' | grep -v '^$' || true)
-  [ -n "$bad" ] && reason="rm -rf 目標不在 temp 目錄：$(printf '%s' "$bad" | head -3 | tr '\n' ' ')"
+  # 專案內的相對路徑（不含 ..、不是 . 或 * 本身、不是 .git）也放行；指令裡有 cd 到絕對路徑、~、$VAR 或 .. 時不適用
+  if ! printf '%s' "$cmd" | grep -qE "${sep}cd[[:space:]]+[\"']?(/|~|\\$|\.\.)"; then
+    bad=$(printf '%s\n' "$bad" | grep -vE '^("|'"'"')?(\./)?\.?[A-Za-z0-9_][^[:space:]]*$' || true)
+    rel=$(printf '%s\n' "$targets" | grep -E '(^|/)\.\.(/|"|'"'"'|$)|^("|'"'"')?(\./)?\.git("|'"'"'|/|$)' || true)
+    bad=$(printf '%s\n%s\n' "$bad" "$rel" | grep -v '^$' | sort -u || true)
+  fi
+  [ -n "$bad" ] && reason="rm -rf 目標不在專案內或 temp 目錄：$(printf '%s' "$bad" | head -3 | tr '\n' ' ')"
 fi
 
 if [ -z "$reason" ]; then
-  if printf '%s' "$cmd" | grep -qE "${sep}git[[:space:]]+reset[[:space:]]+[^;&|]*--hard"; then
-    reason="git reset --hard 會丟掉未 commit 的變更"
-  elif printf '%s' "$cmd" | grep -qE "${sep}git[[:space:]]+clean[[:space:]]+-[a-zA-Z]*f"; then
-    reason="git clean -f 會刪掉 untracked 檔案"
-  elif printf '%s' "$cmd" | grep -qE "${sep}git[[:space:]]+push([[:space:]][^;&|]*)?[[:space:]](--force([[:space:]]|=|$)|--force-with-lease|-f([[:space:]]|$)|\+[^[:space:]]+)"; then
+  if printf '%s' "$cmd" | grep -qE "${sep}git[[:space:]]+push([[:space:]][^;&|]*)?[[:space:]](--force([[:space:]]|=|$)|--force-with-lease|-f([[:space:]]|$)|\+[^[:space:]]+)"; then
     reason="force push 會改寫遠端歷史"
   elif printf '%s' "$cmd" | grep -qE "${sep}git[[:space:]]+push([[:space:]][^;&|]*)?[[:space:]](--delete|-d([[:space:]]|$)|:[^[:space:]]+)"; then
     reason="會刪除遠端分支或 tag"

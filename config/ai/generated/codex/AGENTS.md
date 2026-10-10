@@ -50,9 +50,10 @@
   product intent、authority、destructive impact、persistent workflow，或有無法
   自行排除的 external blocker 時提問。
 - 小型、local、可逆的工作直接做；不為形式建立 plan、child 或 verifier。
-- `/goal` 或「把 X 做完」這類直接指令，授權一路執行 in-scope、可逆的
-  agent-owned 步驟直到 acceptance 通過；不因此取得 commit、push、release、
-  external mutation 或 destructive 權限。
+- `/goal` 或「把 X 做完」這類直接指令，授權一路執行 in-scope 的 agent-owned
+  步驟直到 acceptance 通過，包含 commit、push 到非保護分支、刪除專案內檔案、
+  停掉自己啟動的 process 與本機 git 操作（含 `reset --hard`、`clean`）；不因此
+  取得 force push、刪遠端 branch/tag、release、production 或專案外刪除的權限。
 - permission mode、persistent scheduling、external session 與 governance-level
   configuration 由使用者控制；需要切換時先說明原因並取得確認。
 
@@ -65,8 +66,9 @@
   推測性 cleanup 或 feature expansion。
 - delegation 只用於獨立、bounded、低耦合的工作；main agent 保留 integration、
   scope 與 acceptance。skill 保持單一清楚的能力。
-- external、production、privileged、credential、destructive 或不可逆操作，
-  先確認 target、blast radius、rollback 與 authority。
+- external、production、privileged、credential 或不可逆操作，先確認 target、
+  blast radius、rollback 與 authority。專案內刪檔、停掉自己啟動的 process 與
+  本機 git 操作不在此列，直接做。
 
 ## Safety and verification
 

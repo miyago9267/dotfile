@@ -50,15 +50,8 @@
       "Read(//**/.env.test)"
     ],
     "ask": [
-      "Bash(rm *)",
-      "Bash(rm -rf *)",
-      "Bash(rmdir *)",
-      "Bash(git reset --hard*)",
       "Bash(git push --force*)",
-      "Bash(git push -f *)",
-      "Bash(git clean *)",
-      "Bash(pkill *)",
-      "Bash(kill *)"
+      "Bash(git push -f *)"
     ],
     "additionalDirectories": [
       "~/.claude",
