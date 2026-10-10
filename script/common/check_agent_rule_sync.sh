@@ -15,7 +15,9 @@ claude_settings_file="$dotfile_dir/config/ai/claude/settings.json"
 claude_adapter_file="$dotfile_dir/config/ai/claude/AGENTS.md"
 grok_file="$dotfile_dir/config/ai/grok/AGENTS.md"
 shoal_dir="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
-claude_skill_file="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/shoal-orchestration/SKILL.md"
+# shoal 由 Claude plugin 安裝；實際安裝處是 plugin cache 裡的 skill（路徑取自 installed_plugins.json）。
+claude_plugin_root="$(jq -r '.plugins["shoal@shoal"][0].installPath // empty' "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/plugins/installed_plugins.json" 2>/dev/null || true)"
+claude_skill_file="$claude_plugin_root/skills/shoal-orchestration/SKILL.md"
 
 test -s "$source_file"
 test -s "$personal_model_file"
@@ -220,7 +222,7 @@ for anchor in \
 done
 
 # shoal：版本 marker 必須出現在「實際安裝處」，且與 shoal dist 記錄的版本一致。
-# claude 裝在 ~/.claude 的 skill（auto-update 寫入），agy 併入 generated GEMINI.md（setup_gemini.sh 產生）。
+# claude 裝在 shoal plugin cache 的 skill（auto-update 安裝 plugin），agy 併入 generated GEMINI.md（setup_gemini.sh 產生）。
 check_shoal_marker() {
   local host="$1" dist_file="$2" installed_file="$3" marker
   marker=$(grep -m1 -E "^<!-- shoal-$host v[^ ]+ -->$" "$dist_file" || true)

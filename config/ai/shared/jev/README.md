@@ -109,10 +109,11 @@ AGENTS.md 的 gate 與 dispatch brake 優先。Jev 只能建議 role，或把流
 ## Shoal dispatch guard
 
 dispatch guard 已移到 shoal（`hooks/shoal_guard.py`，見 shoal 的
-`docs/specs/dispatch-enforcement/`），由 `tools/install_hooks.py --host claude` 安裝並註冊。
+`docs/specs/dispatch-enforcement/`），Claude 端隨 `shoal@shoal` plugin 的 hooks 載入
+（不再用 `tools/install_hooks.py --host claude` 註冊全域 guard）。
 本目錄只保留分類 provider：`write_turn` 除了既有的 `turns/<session_id>.json`，也寫
 `~/.local/state/shoal/guard/turns/<session_id>.json`（`turn_id`、`role`），讓 guard 套用
-R1。放行改用環境變數 `SHOAL_GUARD_DIRECT=1`，prompt 內的 `#direct` 不再生效。
+R1。放行用 prompt 內的 `#direct`（單一回合）或環境變數 `SHOAL_GUARD_DIRECT=1`。
 
 ## 例外：`desktop-ops` 的畫面文字（Miyago 核准，2026-10-04）
 

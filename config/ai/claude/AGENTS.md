@@ -29,17 +29,20 @@
 
 ## Orchestration
 
-- 完整 shoal 流程在 `shoal-orchestration` skill（hook 每日從本機 `shoal`（`hosts/claude/dist`）同步）。
-  large、architectural、risky 或 cross-surface task 決定 delegation、review 或
-  approval 前先載入；與 shared contract 衝突時以 shared contract 為準。
-- Named roles（`scout`、`Explore`、`plan-verifier`、`security-reviewer`、
-  `mech-executor`、`executor`、`verifier`、`security-executor`）忽略本段，
+- shoal 由 Claude plugin `shoal@shoal` 提供（hook 每日從本機 `shoal` 的 committed HEAD 同步），
+  包含 role、`shoal-orchestration` skill、dispatch guard 與 SessionStart 注入的
+  bootstrap；本檔不放 bootstrap，也不再有全域安裝的 role 檔。Role 以
+  `shoal:<role>` 派工（例如 `shoal:executor`）。large、architectural、risky 或
+  cross-surface task 決定 delegation、review 或 approval 前先載入 skill；與 shared
+  contract 衝突時以 shared contract 為準。
+- Named roles（`scout`、`applier`、`executor`、`plan-critic`、`verifier`、
+  `security-reviewer`、`security-executor`、`watcher`、`researcher`）忽略本段，
   只做被指派的工作，不再派 subagent。
 - Main session 保留 framing、Plan、approval、integration 與最終判斷。每次派
   agent 前寫清楚 `scope | stop condition | output cap`；child 不再派 child；
   named role 不指定 `model`。
 - Risk trigger（使用者要求獨立 review、security/trust、destructive/irreversible/
-  external mutation、data/schema/migration、release）：實作前用 `plan-verifier`
+  external mutation、data/schema/migration、release）：實作前用 `plan-critic`
   審 Plan 並取得 Miyago 核准，完成後用 fresh `verifier` 驗一次。
 - Security-sensitive 工作只走 `security-reviewer` -> 核准 -> `security-executor`，
   不用一般 executor。

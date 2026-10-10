@@ -114,48 +114,58 @@ update_calico() {
 }
 
 update_shoal() {
-  # 從本機 shoal 的 committed HEAD（hosts/claude/dist）安裝，不裝未 commit 的 WIP。
-  # SHOAL_ROOT 指向 shoal repo 根目錄。
-  local src tmp root cfg skill
+  # Claude 端用 shoal 的 Claude plugin（role 以 shoal:<role> 出現，含 skill 與 guard），
+  # 只從 committed HEAD 取檔，不裝未 commit 的 WIP。SHOAL_ROOT 指向 shoal repo 根目錄。
+  # plugin 與舊的全域安裝（agents/、skills/shoal-orchestration、settings.json 的 guard）不並存；
+  # 只留 agents/Explore.md 覆寫內建 Explore（plugin 的 shoal:Explore 蓋不掉不同名的內建 agent）。
+  local src cfg data mp stage
   src="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
   git -C "$src" rev-parse --verify HEAD >/dev/null 2>&1 || return 1
-  tmp=$(mktemp -d)
-  git -C "$src" archive HEAD hosts/claude/dist | tar -x -C "$tmp" || return 1
-  root="$tmp/hosts/claude/dist"
+  command -v claude >/dev/null 2>&1 || return 1
   cfg="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-  skill="$cfg/skills/shoal-orchestration"
-  for name in scout Explore plan-verifier security-reviewer mech-executor executor verifier security-executor; do
-    [ -f "$root/agents/$name.md" ] || return 1
-  done
-  for name in scout Explore plan-verifier security-reviewer mech-executor executor verifier security-executor; do
-    install -m 0644 "$root/agents/$name.md" "$cfg/agents/$name.md"
-  done
-  # 舊名 skill 目錄（rebrand 前）已由 shoal-orchestration 取代，移除避免重複載入。
-  rm -rf "$cfg/skills/pilotfish-orchestration"
-  mkdir -p "$skill/references"
-  for ref in "$root"/skills/shoal-orchestration/references/*.md; do
-    install -m 0644 "$ref" "$skill/references/$(basename "$ref")"
-  done
-  # 完整 orchestration 放在按需載入的 skill，不再寫回常駐的 AGENTS.md。
-  # 保留 dotfiles 自己的 frontmatter，只替換 marker 之間的內容。
-  python3 - "$skill/SKILL.md" \
-    "$root/skills/shoal-orchestration/SKILL.md" <<'PY'
+  data="${XDG_DATA_HOME:-$HOME/.local/share}/shoal"
+  mp="$data/claude-marketplace"
+  mkdir -p "$data" || return 1
+  stage=$(mktemp -d "$data/.claude-marketplace.XXXXXX") || return 1
+  if ! git -C "$src" archive HEAD .claude-plugin claude-plugin hosts/claude/dist/agents/Explore.md |
+    tar -x -C "$stage"; then
+    rm -rf "$stage"
+    return 1
+  fi
+  if ! install -m 0644 "$stage/hosts/claude/dist/agents/Explore.md" "$cfg/agents/Explore.md"; then
+    rm -rf "$stage"
+    return 1
+  fi
+  rm -rf "$stage/hosts"
+  # 整個目錄換掉，避免殘留舊版檔案；舊目錄放到最後才刪。
+  rm -rf "$mp.old"
+  [ ! -d "$mp" ] || mv "$mp" "$mp.old"
+  mv "$stage" "$mp" || return 1
+  rm -rf "$mp.old"
+  # local directory marketplace：第一次才註冊，之後只刷新。
+  if timeout 120 claude plugin marketplace list --json 2>/dev/null |
+    python3 -c 'import json,sys; sys.exit(0 if any(m.get("name")=="shoal" for m in json.load(sys.stdin)) else 1)'; then
+    timeout 120 claude plugin marketplace update shoal >/dev/null 2>&1 || return 1
+  else
+    timeout 120 claude plugin marketplace add "$mp" >/dev/null 2>&1 || return 1
+    # CLI 會把絕對路徑寫進 settings.json（版控內），改回 ~ 形式。
+    python3 - "$cfg/settings.json" "$mp" "$HOME" <<'PY'
 import pathlib
 import sys
 
-target = pathlib.Path(sys.argv[1])
-source = pathlib.Path(sys.argv[2]).read_text()
-body = source.split("---", 2)[2].strip("\n")
-replacement = "<!-- shoal:begin -->\n" + body + "\n<!-- shoal:end -->"
-text = target.read_text()
-begin = text.count("<!-- shoal:begin -->")
-end = text.count("<!-- shoal:end -->")
-if begin != 1 or end != 1:
-    raise SystemExit("shoal markers are not exactly one pair")
-start = text.index("<!-- shoal:begin -->")
-finish = text.index("<!-- shoal:end -->", start) + len("<!-- shoal:end -->")
-target.write_text(text[:start] + replacement + text[finish:])
+path = pathlib.Path(sys.argv[1]).resolve()
+mp, home = sys.argv[2], sys.argv[3]
+if mp.startswith(home + "/"):
+    text = path.read_text()
+    path.write_text(text.replace('"path": "%s"' % mp, '"path": "~%s"' % mp[len(home):]))
 PY
+  fi
+  if timeout 120 claude plugin list --json 2>/dev/null |
+    python3 -c 'import json,sys; sys.exit(0 if any(p.get("id")=="shoal@shoal" for p in json.load(sys.stdin)) else 1)'; then
+    timeout 120 claude plugin update shoal@shoal >/dev/null 2>&1 || return 1
+  else
+    timeout 120 claude plugin install shoal@shoal >/dev/null 2>&1 || return 1
+  fi
 }
 
 if update_remora; then
@@ -173,15 +183,10 @@ if update_shoal; then
 else
   printf '%s\n' 'shoal update failed'
 fi
-# dispatch guard 由 shoal 安裝與註冊（docs/specs/dispatch-enforcement R7），只從 committed HEAD 取檔。
+# dispatch guard 隨 Claude plugin 的 hooks 載入，不再用 install_hooks.py 註冊全域 guard。
 shoal_root="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
 if [ ! -d "$shoal_root/.git" ]; then
   printf '%s\n' "shoal checkout not found at $shoal_root; clone miyago9267/shoal there or set SHOAL_ROOT"
-fi
-if python3 "$shoal_root/tools/install_hooks.py" --host claude --apply >/dev/null 2>&1; then
-  printf '%s\n' 'shoal guard update check passed'
-else
-  printf '%s\n' 'shoal guard update failed'
 fi
 # Codex、Grok、agy、OpenCode 的全域安裝同樣從 shoal committed HEAD 同步；
 # 每個 host 一行摘要直接寫進 update.log，單一 host 失敗不影響其他步驟。

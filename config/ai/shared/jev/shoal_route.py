@@ -40,7 +40,7 @@ MAX_LOG_BYTES = 1024 * 1024
 
 ROLE_TEXT = {
     "parent_local": "main session directly",
-    "mechanical": "`mech-executor`",
+    "mechanical": "`applier`",
     "exploration": "`scout`",
     "judgment": "`executor`",
 }

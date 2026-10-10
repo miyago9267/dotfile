@@ -19,7 +19,7 @@ ROLES = ("parent_local", "mechanical", "exploration", "judgment")
 ALLOWED_OUTPUTS = {
     "Shoal Jev advisory (not approval; AGENTS.md gates and dispatch brake win): "
     f"suggested first role = {role}.{suffix}"
-    for role in ("main session directly", "`mech-executor`", "`scout`", "`executor`")
+    for role in ("main session directly", "`applier`", "`scout`", "`executor`")
     for suffix in ("", " Consider explore_then_plan before any write.")
 }
 
