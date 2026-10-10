@@ -15,7 +15,7 @@ P10K_FILE="${P10K_CONFIG:-$HOME/.p10k.zsh}"
 
 # Fallback list, used only when the runtime statusline cannot be scanned.
 # The live list is derived from statusline.sh's seg_* functions by load_segment_choices.
-SEGMENT_CHOICES="dir project git node python model effort ctx limit5h limit7d burn lines cost style duration stash clock"
+SEGMENT_CHOICES="dir project git node python model effort ctx cache toks ttft limit5h limit7d burn lines cost style duration stash clock"
 DEFAULT_SEGMENTS="dir git model ctx limit5h limit7d cost clock"
 THEME_CHOICES=""
 theme_choices_loaded=0
@@ -67,6 +67,10 @@ Options:
                Copy coralline into ~/.claude/coralline and update Claude settings,
                then exit without writing theme config.
   --default    Use the coralline default config without opening the setup menu.
+  --subagent-rows=on|off
+               Register (or remove) the subagent panel renderer in Claude
+               settings and exit — the non-interactive twin of the wizard's
+               closing question, for AI installs and upgrades.
   --import-p10k
                Import ~/.p10k.zsh without opening the setup menu.
   --wizard     Open the visual wizard directly.
@@ -167,6 +171,16 @@ knob_names() {  # $1=statusline file
     | grep -v '#.*0[[:space:]]*=' \
     | sed -E 's/=0.*$//' | sort -u | tr '\n' ' '
 }
+
+# Glyph knobs (VL_CTX_GLYPH, VL_BAR_EMPTY, ...) are deliberately NOT reported
+# here. An option token is the exact assignment the UPGRADE.md playbook appends,
+# and the right value for a glyph depends on what the user's terminal font
+# carries — something no delta can know. Emitting the shipped default would
+# write a no-op; emitting a replacement would change the look of installs that
+# render fine. Worse, the two gauge knobs are not new, so a "new since your
+# installed copy" report structurally cannot surface them at all. That check
+# lives in UPGRADE.md's verification step instead, where the user is already
+# looking at a rendered line (#47).
 
 # Inline comment after `seg_<name>() {`, else empty.
 segment_desc() {  # $1=statusline file $2=segment name
@@ -294,7 +308,12 @@ prepare_preview_input() {
   [ -n "$sample" ] && need_file "$sample"
   input=$(mktemp "${TMPDIR:-/tmp}/coralline-input.XXXXXX") || exit 1
   if [ -n "$sample" ]; then
-    jq --arg cwd "$SCRIPT_DIR" '.cwd = $cwd | .workspace.current_dir = $cwd' "$sample" > "$input" 2>/dev/null || cp "$sample" "$input"
+    # The sample's fixed prompt_cache.expires_at would preview as a countdown
+    # years long; rebase it onto jq's own clock so `cache` previews a plausible
+    # remaining TTL. jq's `now` keeps this inside the existing call (no fork).
+    jq --arg cwd "$SCRIPT_DIR" '.cwd = $cwd | .workspace.current_dir = $cwd
+      | if has("prompt_cache") then .prompt_cache.expires_at = (now + 600 | floor) else . end' \
+      "$sample" > "$input" 2>/dev/null || cp "$sample" "$input"
   else
     jq -n --arg cwd "$SCRIPT_DIR" '{cwd: $cwd, workspace: {current_dir: $cwd}}' > "$input"
   fi
@@ -1292,35 +1311,109 @@ THEMES
   installed=1
 }
 
-update_settings() {
-  local tmp backup
+settings_merge() {  # apply jq filter $1 (plus any --arg pairs after it) to settings.json
+  # One shared pipeline for every settings.json write: timestamped backup, merge
+  # into a sibling temp file, fail loud on every write error, atomic rename.
+  # A missing or zero-byte file starts from null (jq -n); delete callers guard before calling.
+  local filter="$1" dir tmp backup stamp n=0 ; shift
   command -v jq >/dev/null 2>&1 || die "jq is required to merge Claude settings"
-  mkdir -p "$(dirname "$SETTINGS_FILE")"
-  tmp=$(mktemp "${TMPDIR:-/tmp}/coralline-settings.XXXXXX") || exit 1
+  dir=$(dirname "$SETTINGS_FILE")
+  mkdir -p "$dir" || die "could not create settings directory $dir"
+  tmp=$(mktemp "$dir/.coralline-settings.XXXXXX") \
+    || die "could not create a temporary settings file in $dir"
   if [ -f "$SETTINGS_FILE" ]; then
-    backup="$SETTINGS_FILE.bak.$(date +%Y%m%d%H%M%S)"
-    cp "$SETTINGS_FILE" "$backup"
-    if ! jq --arg command "bash $TARGET_DIR/statusline.sh" '.statusLine = {
-      "type": "command",
-      "command": $command,
-      "refreshInterval": 1
-    }' "$SETTINGS_FILE" > "$tmp"; then
+    stamp=$(date +%Y%m%d%H%M%S)
+    backup="$SETTINGS_FILE.bak.$stamp"
+    while [ -e "$backup" ]; do
+      n=$((n + 1)); backup="$SETTINGS_FILE.bak.$stamp.$n"
+    done
+    if ! cp "$SETTINGS_FILE" "$backup"; then
+      rm -f "$backup" "$tmp"
+      die "could not back up $SETTINGS_FILE; original left unchanged"
+    fi
+    if [ ! -s "$SETTINGS_FILE" ]; then
+      jq -ne "$@" "$filter" > "$tmp" || {
+        rm -f "$tmp"
+        die "failed to create settings from empty $SETTINGS_FILE; original left unchanged, backup written to $backup"
+      }
+    elif ! jq -e "$@" "$filter" "$SETTINGS_FILE" > "$tmp"; then
       rm -f "$tmp"
       die "failed to parse $SETTINGS_FILE; original left unchanged, backup written to $backup"
     fi
-  else
-    cat > "$tmp" <<EOF
-{
-  "statusLine": {
-    "type": "command",
-    "command": "bash $TARGET_DIR/statusline.sh",
-    "refreshInterval": 1
-  }
-}
-EOF
+  elif ! jq -ne "$@" "$filter" > "$tmp"; then
+    rm -f "$tmp"
+    die "failed to create $SETTINGS_FILE"
   fi
-  mv "$tmp" "$SETTINGS_FILE"
+  if ! mv "$tmp" "$SETTINGS_FILE"; then
+    rm -f "$tmp"
+    die "could not replace $SETTINGS_FILE; original left unchanged${backup:+, backup written to $backup}"
+  fi
+}
+
+update_settings() {
+  local command
+  printf -v command 'bash %q' "$TARGET_DIR/statusline.sh"
+  settings_merge '.statusLine = {"type": "command", "command": $command, "refreshInterval": 1}' \
+    --arg command "$command"
   printf 'Updated %s\n' "$SETTINGS_FILE"
+}
+
+subagent_enabled() {  # exit 0 when settings.json registers the subagent renderer
+  [ -f "$SETTINGS_FILE" ] || return 1
+  jq -e '
+    .subagentStatusLine as $s |
+    if ($s | type) != "object" then false
+    elif $s.type != "command" then false
+    elif ($s.command | type) != "string" then false
+    else ($s.command | endswith(" --subagent"))
+    end
+  ' "$SETTINGS_FILE" >/dev/null 2>&1
+}
+
+enable_subagent_statusline() {
+  # No refreshInterval here: Claude Code documents it for statusLine only;
+  # subagentStatusLine re-renders on panel events.
+  local command
+  printf -v command 'bash %q --subagent' "$TARGET_DIR/statusline.sh"
+  settings_merge '.subagentStatusLine = {"type": "command", "command": $command}' \
+    --arg command "$command"
+  printf 'Updated %s (subagent panel rows enabled)\n' "$SETTINGS_FILE"
+}
+
+disable_subagent_statusline() {
+  [ -s "$SETTINGS_FILE" ] || return 0
+  settings_merge 'del(.subagentStatusLine)'
+  printf 'Updated %s (subagent panel rows disabled)\n' "$SETTINGS_FILE"
+}
+
+verify_subagent_render() {  # preview the panel-row bodies with the user's theme
+  # startTime is minted relative to now so the preview exercises the elapsed
+  # segment too (a canned past date would render a huge, alarming duration).
+  local statusline input
+  statusline=$(runtime_statusline)
+  input=$(mktemp "${TMPDIR:-/tmp}/coralline-subinput.XXXXXX") || exit 1
+  jq -n --argjson now "$(date +%s)" '{columns: 100, tasks: [
+    {id: "t1", name: "Explore", type: "Explore", status: "running",
+     model: "claude-haiku-4-5-20251001", contextWindowSize: 200000,
+     tokenCount: 42000, startTime: (($now - 120) * 1000)},
+    {id: "t2", name: "executor", type: "executor", status: "completed",
+     model: "claude-fable-5", contextWindowSize: 200000,
+     tokenCount: 155000, startTime: (($now - 45) * 1000)}
+  ]}' > "$input"
+  printf '\nSubagent panel preview (row bodies):\n'
+  CORALLINE_CONFIG="$CONFIG_FILE" bash "$statusline" --subagent < "$input" | jq -r '.content'
+  rm -f "$input"
+}
+
+offer_subagent_rows() {  # opt-in toggle; default answer = current state (no change)
+  local cur=n
+  subagent_enabled && cur=y
+  if yes_no "Render subagent panel rows in your coralline theme (Claude Code >= 2.1.205)" "$cur"; then
+    [ "$cur" = "y" ] || enable_subagent_statusline
+    verify_subagent_render
+  else
+    [ "$cur" = "n" ] || disable_subagent_statusline
+  fi
 }
 
 verify_render() {
@@ -1451,6 +1544,8 @@ for arg in "$@"; do
     --install) install_files; update_settings ;;
     --install-only) install_only=1; install_files; update_settings ;;
     --default) setup_mode="default" ;;
+    --subagent-rows=on)  enable_subagent_statusline;  verify_subagent_render; exit 0 ;;
+    --subagent-rows=off) disable_subagent_statusline; exit 0 ;;
     --import-p10k) setup_mode="import-p10k" ;;
     --wizard) setup_mode="wizard" ;;
     --help|-h) usage; exit 0 ;;
@@ -1469,5 +1564,9 @@ load_theme_choices
 main_menu
 write_final_config || exit 0
 verify_render
+case "$setup_mode" in
+  default|import-p10k) ;;  # no-menu modes require explicit --subagent-rows=on|off
+  *) offer_subagent_rows ;;
+esac
 printf '\n%sDone.%s Restart Claude Code or open a new session to see coralline.\n' "$T_GREEN" "$T_RESET"
 printf '%sReconfigure anytime with:%s\n  %sbash %s/configure.sh%s\n' "$T_DIM" "$T_RESET" "$T_CORAL" "$TARGET_DIR" "$T_RESET"

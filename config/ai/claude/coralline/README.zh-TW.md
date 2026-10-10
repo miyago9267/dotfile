@@ -1,49 +1,53 @@
 # coralline
 
-> 給 Claude Code 用、向 [Powerlevel10k](https://github.com/romkatv/powerlevel10k) 致敬的
-> statusline，特色是人類與 AI 共用同一個 installer 入口：你可以直接跑，也可以交給
-> Claude 幫你跑完設定。
+> 給 Claude Code 用、向 [Powerlevel10k](https://github.com/romkatv/powerlevel10k) 致敬的 statusline，同時提供原生 Bash 與 Windows PowerShell renderer。
 
 [English README](./README.md)
 
-![六種 coralline 主題總覽](./assets/hero.png)
+![並排顯示 coralline 最初六個主題](./assets/hero.png)
 
 ## 效果
 
+這是以乾淨的 `main` worktree 與內建 sample 實際 render 出來的 runtime 預設值：
+
 ```text
-╭ ~/side-project/coralline  ⬢ coralline  ⎇ main+!  ◆ Fable 5  ψ high  ⬡ ▰▰▰▱▱ 62% ↑1.2M ↓45.6k  5h ▰▰▱▱▱ 41% ↺2h44m  7d ▰▰▰▰▱ 79% ↺1d11h  +321 −87  $1.23  ✎ Explanatory  ⧖ 47m  ⚑ 1  ⊙ 02:45 pm ╮
+ ~/side-project/coralline  ⎇ main  ◆ Fable 5  ⬡ ▰▰▰▱▱ 62% ↑1.2M ↓45.6k cr:98.7k cw:4.3k  5h ▰▰▱▱▱ 41% ↺2h44m  7d ▰▰▰▰▱ 79% ↺1d11h  $1.23  ⊙ 01:37:35 pm 
 ```
 
-| 區段 | 顯示內容 |
-|---|---|
-| `dir` | 目前目錄，過長路徑摺疊為 `~/a/…/z` |
-| `project` | repo 名稱（`⬢`），在所有 worktree 都相同；非 git repo 時隱藏 |
-| `git` | 分支、已暫存 `+` / 已修改 `!` / 未追蹤 `?`、領先 `⇡` 落後 `⇣` |
-| `node` | 目前 Node 版本（Nerd Font `nf-dev-nodejs_small`），來自 `.nvmrc` / `.node-version`（或以 `VL_RUNTIME_PROBE=1` 讀取 `PATH` 上的 `node`）；偵測不到時隱藏；需手動開啟 |
-| `python` | 目前 Python 環境（Nerd Font `nf-dev-python`）—— `$VIRTUAL_ENV` / conda（略過 `base`）/ `.python-version`（或以 `VL_RUNTIME_PROBE=1` 讀取 `PATH` 上的 `python3`）；偵測不到時隱藏；需手動開啟 |
-| `model` | 目前使用的 Claude 模型 |
-| `effort` | 推理強度（`ψ`）—— `low` / `med` / `high` / `xhigh` / `max` |
-| `ctx` | context window 量表、輸入/輸出/快取 token 數 |
-| `limit5h` / `limit7d` | 用量限額量表與重置倒數 |
-| `burn` | 消耗時間預估：根據最近燒耗率推算，何時會達到限額上限（5h 或 7d）100%（`↗`）；把 `burn` 加入 `VL_SEGMENTS` 啟用 |
-| `lines` | 本次 session 修改行數 |
-| `cost` | 本次 session 花費（USD） |
-| `style` | 目前的 output style |
-| `duration` | session 經過時間 |
-| `stash` | git stash 數量 |
-| `clock` | 時鐘，12 或 24 小時制 |
+| 區段 | 預設啟用 | 顯示內容 |
+|---|---|---|
+| `dir` | 是 | 目前目錄，過長路徑會摺疊 |
+| `project` | 否 | repo 名稱，在所有 worktree 都相同；非 git repo 時隱藏 |
+| `git` | 是 | 分支、已暫存 `+`、已修改 `!`、未追蹤 `?`、領先 `⇡`、落後 `⇣` |
+| `node` | 否 | pin 檔指定的 Node 版本，或以 `VL_RUNTIME_PROBE=1` 偵測 `PATH`；偵測不到時隱藏 |
+| `python` | 否 | 目前 virtualenv、conda 或 pin 檔指定的 Python 版本，或以 `VL_RUNTIME_PROBE=1` 偵測 `PATH`；偵測不到時隱藏 |
+| `model` | 是 | 目前使用的 Claude model |
+| `effort` | 否 | 推理強度：`low`、`med`、`high`、`xhigh` 或 `max` |
+| `ctx` | 是 | context 用量條與輸入、輸出、快取 token 數 |
+| `cache` | 否 | prompt cache 命中率，以及快取失效的倒數；失效後顯示 `cold` |
+| `toks` | 否 | 最後一則回應的生成速度（每秒輸出 token 數，不含 prefill）；`≥` 表示改用含 prefill 的替代值 |
+| `ttft` | 否 | 最後一則回應的第一個 token 等待時間；推算不出來時隱藏 |
+| `limit5h` | 是 | 五小時額度量表與重置倒數 |
+| `limit7d` | 是 | 七天額度量表與重置倒數 |
+| `burn` | 否 | 綁定中的 5h 或 7d 額度到達 100% 的預估時間 |
+| `lines` | 否 | 本次 session 新增與刪除的行數 |
+| `cost` | 是 | 本次 session 花費（USD） |
+| `style` | 否 | 目前 output style |
+| `duration` | 否 | session 經過時間 |
+| `stash` | 否 | git stash 數量 |
+| `clock` | 是 | 12 或 24 小時制時鐘 |
 
-量表會隨用量變色：綠色 → 50% 轉黃 → 75% 轉紅（門檻可調）。
+量表會從綠色變成 50% 的黃色與 75% 的紅色；兩個門檻都能自訂。`cache` 使用同樣的門檻但方向相反，因為命中率高才是好結果：低於 50% 轉黃、低於 25% 轉紅。
+
+`cache` 需要 Claude Code v2.1.263 以上，`prompt_cache` 是從該版本開始出現在 statusline payload 裡。session 送出第一個 request 之前這一段會自我隱藏。倒數在一小時以內會顯示秒數（`10m12s`、`42s`），超過一小時則不顯示（`1h06m`）；快取失效之後，或從來沒熱過的情況，倒數會換成 `cold`。百分比是這個 session 的累計命中率，兩種情況下都仍然是真實數字，不會被歸零：`cold` 告訴你的是後面還有沒有一份活著的快取。倒數顯示的是「上次 render 當下」的值，不是即時時鐘：Claude Code 只在 payload 事件（以及快取到期的那一刻）重繪 statusline，不會每秒重繪，除非你在 settings 裡設定 `statusLine.refreshInterval`。
+
+`toks` 是最後一則回應的生成速度：這則回應的 output token 數（含 thinking token），除以從第一個 token 到最後一個 token 的時間。`ttft` 是第一個 token 出來之前的等待時間。statusline payload 沒有這兩個值，所以每則回應結束時，coralline 會讀一次 session transcript 的尾端來推算：每個串流的 block 結束時都會記下時間戳，thinking block 另外記錄它串流了多久，由此可以定位第一個 token。回應如果是以文字或 tool call 開頭，就沒有這個記號，這時 `ttft` 會隱藏，`toks` 改顯示含 prefill 的速度，並加上 `≥`，因為這個數字只可能低估生成速度。這個替代值是這則回應的 output token 數除以上次 render 之後新增的 API 時間（payload 的 `total_output_tokens` 是最後一則回應的數字，`total_api_duration_ms` 是整個 session 所有 request 的總和）；同一段時間裡有 subagent 或其他 request 完成，數字會偏低；沒有設定 `statusLine.refreshInterval` 時，在兩則回應之間執行的 subagent 會整筆算到下一則回應頭上。tool call 永遠不會算進去，因為那個總和只包含 API 時間。只要任一個 segment 在清單裡，coralline 就會在 `~/.claude/coralline/toks-*` 為每個 session 留一個小檔案（只保留最近 32 個 session），量到第一則回應之前顯示 `… tok/s`，在結束一則回應的那次 render 多花一次 `tail` 和一次 `jq`（transcript 還沒寫完的話最多再重試兩次），中間的 render 不會。session 送出第一個 request 之前兩者都會自我隱藏。wizard 預覽沒有 transcript，所以預覽裡只會看到 `… tok/s`，不會出現 `ttft`。
 
 ## 安裝
 
-三種安裝方式都由同一支 `install.sh` 驅動，每一種都會把 renderer **與設定 wizard** 複製到
-`~/.claude/coralline`、並把 statusline 註冊進 Claude Code，所以不管你用哪種方式裝，之後都能重跑 wizard。
+macOS、Linux 與有 Bash 的 Windows 使用 `install.sh`；沒有 Git Bash 或 WSL 的 Windows 使用下方原生 Windows PowerShell 5.1 流程。Bash 需要 `jq` 與 [Nerd Font](https://www.nerdfonts.com/)；設定 `VL_ASCII=1` 可改用無特殊字符的渲染。Git 是選用項目，只用來啟用 git 相關區段。
 
-> **需求：** `jq` 以及 [Nerd Font](https://www.nerdfonts.com/) 終端機字型。
-> 沒有 Nerd Font 的話，在設定檔加上 `VL_ASCII=1` 改用無特殊字符的渲染。
-
-### 請 Claude 安裝（推薦）
+### 請 Claude 安裝
 
 把這段貼進 Claude Code：
 
@@ -53,198 +57,136 @@ fetch https://raw.githubusercontent.com/Nanako0129/coralline/main/INSTALL.md
 and follow the playbook in it.
 ```
 
-Claude 會先讀 playbook，再用同一支 installer bootstrap runtime、訪談你的外觀偏好、
-寫入設定並驗證，最後提醒你如果不滿意可以自己重新開啟視覺化 wizard。
+Claude 會依環境選擇路徑、在更改偏好前詢問，並使用對應 installer。這會抓取可變的 `main/INSTALL.md`；請先檢閱，或依[信任與安全](#信任與安全)把 playbook、installer 與 payload 釘到同一個已稽核 commit。
 
-如果你的 Claude 對這份 playbook 亮紅旗、想先檢查內容，那是正確的直覺而不是阻礙：
-見[信任與安全](#信任與安全)。
+### Bash
 
-### 自己安裝
-
-在終端機執行：
+執行互動式 installer：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Nanako0129/coralline/main/install.sh | bash
 ```
 
-互動執行時會詢問要裝哪個版本 —— 最新的 release tag（建議）或 `main`（最新開發版）。
-想略過詢問就用 `--ref` 直接指定，例如 `... | bash -s -- --ref v0.9.1` 或 `--ref main`。
+它會建議最新 release tag，也能選擇可變的 `main`。使用 `--ref v0.18.1` 或其他 ref 可略過詢問。若一行安裝無法執行，使用 [`INSTALL.md` 的 manual fallback](./INSTALL.md#manual-fallback)。
 
-### 手動安裝
+### Windows 無 Git Bash
+
+`statusline.ps1` 是原生 Windows PowerShell 5.1 renderer。它不需要 Bash、`jq`、WSL、archive 解壓工具或 Git；`git.exe` 是選用項目，只用來啟用 `git`、`stash` 與 `project`。它支援和 Bash 相同的主列區段、風格、版面、state-backed 功能、float 輸出與套用主題的 subagent 列。
+
+以下 bootstrap 會跟隨可變的 `main`，在下載可執行 installer 前先解析成 commit，再把同一個 commit 傳給 `install.ps1`：
+
+```powershell
+& { $ErrorActionPreference='Stop';$repo='Nanako0129/coralline';$ref='main';$subagentRows="preserve";if($subagentRows -cnotin @("preserve","on","off")){throw "invalid SubagentRows"};$runtime="auto";if($runtime -cnotin @("auto","native","bash")){throw "invalid Runtime"};if($repo -notmatch '^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})/[A-Za-z0-9._-]{1,100}$' -or $ref -notmatch '^[A-Za-z0-9][A-Za-z0-9._/-]*$' -or $ref.Length -gt 200 -or $ref.Contains('..') -or $ref.Contains('//') -or $ref.Contains('@{') -or $ref.EndsWith('/') -or $ref.EndsWith('.') -or $ref -match '(?i)(^|/)[^/]*\.lock($|/)'){throw 'invalid Repo or Ref'};$safe={param([string]$p,[string]$label,[bool]$cmd=$false);if([string]::IsNullOrWhiteSpace($p) -or $p -match '[\x00-\x1f\x7f-\x9f]' -or $p.StartsWith('\\') -or $p.StartsWith('//') -or $p.IndexOf(':',2) -ge 0){throw "$label is not a safe local path"};$full=[IO.Path]::GetFullPath($p).Replace('/','\');$root=[IO.Path]::GetPathRoot($full);if($root -notmatch '^[A-Za-z]:\\$'){throw "$label is not on a local drive"};$drive=New-Object IO.DriveInfo($root);if($drive.DriveType -eq [IO.DriveType]::Network){throw "$label is on a network drive"};if($cmd -and ($full.Contains('"') -or $full.Contains('%') -or $full.Contains('!'))){throw "$label is not cmd-safe"};$current=$root;foreach($part in $full.Substring($root.Length).Split(@([char]'\'),[StringSplitOptions]::RemoveEmptyEntries)){$current=[IO.Path]::Combine($current,$part);$item=Get-Item -LiteralPath $current -Force -ErrorAction SilentlyContinue;if($null -eq $item){break};if(($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0){throw "$label contains a reparse point"}};if($full.Length -gt $root.Length){$full=$full.TrimEnd('\')};return $full};$fetch={param([uri]$uri,[long]$cap,[string]$label);if($uri.Scheme -cne 'https' -or ($uri.Host -cne 'api.github.com' -and $uri.Host -cne 'raw.githubusercontent.com') -or $uri.UserInfo -or $uri.Query -or $uri.Fragment){throw "unexpected $label URI"};$request=[Net.HttpWebRequest]::Create($uri);$request.Method='GET';$request.AllowAutoRedirect=$false;$request.Timeout=15000;$request.ReadWriteTimeout=15000;$request.UserAgent='coralline-bootstrap';$response=$null;try{$response=[Net.HttpWebResponse]$request.GetResponse();if($response.StatusCode -ne [Net.HttpStatusCode]::OK -or $response.ResponseUri.AbsoluteUri -cne $uri.AbsoluteUri){throw "$label request failed or redirected"};if($response.ContentLength -gt $cap){throw "$label Content-Length exceeds limit"};$input=$response.GetResponseStream();$memory=New-Object IO.MemoryStream;try{$buffer=New-Object byte[] 8192;$total=0L;while(($read=$input.Read($buffer,0,$buffer.Length)) -gt 0){$total+=$read;if($total -gt $cap){throw "$label stream exceeds limit"};$memory.Write($buffer,0,$read)};if($response.ContentLength -ge 0 -and $total -ne $response.ContentLength){throw "$label download was truncated"};return ,$memory.ToArray()}finally{if($null -ne $input){$input.Dispose()};$memory.Dispose()}}finally{if($null -ne $response){$response.Dispose()}}};$old=[Net.ServicePointManager]::SecurityProtocol;$tmp=$null;$made=$false;$code=0;try{[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12;$parts=$repo.Split('/');$commit=$ref;if($commit -cnotmatch '^[0-9a-f]{40}$'){$api=[uri]('https://api.github.com/repos/'+[uri]::EscapeDataString($parts[0])+'/'+[uri]::EscapeDataString($parts[1])+'/commits/'+[uri]::EscapeDataString($ref));$strict=New-Object Text.UTF8Encoding($false,$true);try{$payload=$strict.GetString((& $fetch $api 1MB 'commit resolution'))|ConvertFrom-Json}catch{throw ('commit resolution response is invalid: '+$_.Exception.Message)};if($null -eq $payload -or $payload.PSObject.Properties.Name -notcontains 'sha'){throw 'commit resolution response has no sha'};$commit=[string]$payload.sha;if($commit -cnotmatch '^[0-9a-f]{40}$'){throw 'commit resolution returned an invalid sha'}};$uri=[uri]('https://raw.githubusercontent.com/'+[uri]::EscapeDataString($parts[0])+'/'+[uri]::EscapeDataString($parts[1])+'/'+$commit+'/install.ps1');$bytes=& $fetch $uri 1MB 'installer';$tempRoot=& $safe ([IO.Path]::GetTempPath()) 'TEMP';$tmp=& $safe ([IO.Path]::Combine($tempRoot,('coralline-install-'+[guid]::NewGuid().ToString('N')+'.ps1'))) 'installer temp';$output=[IO.File]::Open($tmp,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None);$made=$true;try{$output.Write($bytes,0,$bytes.Length);$output.Flush($true)}finally{$output.Dispose()};$checked=& $safe $tmp 'downloaded installer';if($checked -cne $tmp){throw 'installer temp identity changed'};$tokens=$null;$errors=$null;[void][Management.Automation.Language.Parser]::ParseFile($tmp,[ref]$tokens,[ref]$errors);if($errors.Count -ne 0){throw ('downloaded installer parse failed: '+$errors[0].Message)};$exe=& $safe ([IO.Path]::Combine($PSHOME,'powershell.exe')) 'PowerShell executable' $true;if(-not [IO.File]::Exists($exe)){throw 'trusted powershell.exe is missing'};$psi=New-Object Diagnostics.ProcessStartInfo;$psi.FileName=$exe;$psi.UseShellExecute=$false;$psi.Arguments='-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "'+$tmp+'" -Repo "'+$repo+'" -Ref "'+$commit+'"';$psi.Arguments+=" -SubagentRows "+[char]34+$subagentRows+[char]34;if($runtime -cne "auto"){$psi.Arguments+=" -Runtime "+[char]34+$runtime+[char]34};$process=New-Object Diagnostics.Process;$process.StartInfo=$psi;try{if(-not $process.Start()){throw 'installer child did not start'};$process.WaitForExit();$code=$process.ExitCode}finally{$process.Dispose()}}finally{[Net.ServicePointManager]::SecurityProtocol=$old;if($made -and $null -ne $tmp -and [IO.File]::Exists($tmp)){$checked=& $safe $tmp 'installer cleanup';if($checked -cne $tmp){throw 'refusing unexpected cleanup path'};$item=Get-Item -LiteralPath $tmp -Force;if(($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0){throw 'refusing reparse-point cleanup'};[IO.File]::Delete($tmp)}};if($code -ne 0){exit $code} }
+```
+
+要安裝已稽核的 release 或 commit，請複製同一行，只把 `$ref='main'` 換成選定的 tag 或 40 字元 SHA。branch 或 tag 都可能移動；bootstrap 會先解析再下載。原生 installer 管理 `statusline.ps1` 與十個 shipped themes（選到 Bash runtime 時再加上 `statusline.sh`）、精確合併最上層 `statusLine`、除非明確指定 `on` 或 `off` 否則保留 `subagentStatusLine`、永不建立或修改 `coralline.conf`，且不會把 custom themes、state 與 float 輸出納入替換。現行契約見 [`INSTALL.md`](./INSTALL.md)，歷史設計見[原生 installer PR #55](https://github.com/Nanako0129/coralline/pull/55)。
+
+原生 renderer 下，`install.ps1` 寫入的是 `statusLine.refreshInterval: 2`，不是 `1`：只要下一個 refresh tick 觸發，Claude Code 就會 `abort()` 正在進行中的 statusline render，而原生 PowerShell renderer 一次 render 接近一秒，所以 1 秒的 tick 幾乎每次都會在 render 完成前把它中斷。重新執行 `install.ps1` 時，installer 每次都會整個替換 `statusLine` 值，所以既有的 `refreshInterval`（不論是 `1`、`5` 或其他任何值）在選用原生 renderer 時會變成 `2`，選用 Bash renderer 時會變成 `1`。
+
+`install.ps1` 也會透過 `-Runtime auto|native|bash`（bootstrap 裡的 `$runtime`）決定 Claude Code 要執行哪個 renderer。預設的 `auto` 在 Git for Windows 以全機安裝裝在標準位置（`HKLM\SOFTWARE\GitForWindows` 的 `InstallPath`，否則為 `%ProgramFiles%\Git`），且該 `bash.exe` 找得到 `jq` 時，選用 Bash renderer，也就是經由 Git Bash 執行 `statusline.sh`，搭配 `refreshInterval: 1`；否則退回原生 renderer。它會印出選用的 runtime，退回時也會印出原因。`-Runtime native` 維持原生 renderer，完全不偵測 Git Bash；`-Runtime bash` 要求 Git Bash 與 `jq` 都在，缺任何一個就會在改動任何東西之前停下。使用者層級（per-user）安裝的 Git 以及 Scoop 這類以 junction 安裝的 Git 都不會被偵測到，所以 `auto` 在這些環境會退回原生，`-Runtime bash` 則會拒絕。installer 是在自己的環境裡檢查 `jq`；Claude Code 執行 statusline 時用的是它自己的環境，所以那邊也必須找得到 `jq`。
+
+兩個 renderer 對待 `coralline.conf` 的方式不同。Bash renderer 把它當成 shell 程式碼 source，所以裡面的內容每次 render 都會被執行；原生 renderer 只解析、不執行任何東西。在預設的 `auto` 下，原生安裝在裝有 Git Bash 與 `jq` 的機器上重新執行 `install.ps1` 時會切換成 Bash renderer；只要 installer 選用 Bash renderer，不論是 `auto` 或 `-Runtime bash`，都會印出一行說明，指出這個 renderer 會執行 `coralline.conf`。要維持原生 renderer，請在 bootstrap 設定 `$runtime="native"`，或傳入 `-Runtime native`。兩個 renderer 會並存安裝，切回原生時絕不刪除 `statusline.sh`，而且即使在 `-SubagentRows preserve` 下，內容是另一個 runtime 針對這個安裝位置的 coralline 指令，或是針對這個安裝位置但指向不同 `bash.exe`（例如舊的 Git 位置）的 Bash 指令，這樣的 `subagentStatusLine` 也會移到選定的 runtime。
+
+### 信任與安全
+
+預設的 `main/INSTALL.md`、`main/UPGRADE.md` 與 `main/install.sh` URL 都是可變的遠端輸入。執行前請讀取選定的 [`INSTALL.md`](./INSTALL.md)、[`install.sh`](./install.sh) 與 [`install.ps1`](./install.ps1)。
+
+把 `--ref <SHA>` 傳給已經從 `main` 下載並開始執行的 installer，只會釘選它接著下載的檔案。要把最初的 Bash installer 與 payload 都釘到同一個已稽核 commit，請以一個已檢閱的 40 字元 SHA 取代下方 placeholder：
 
 ```bash
-git clone https://github.com/Nanako0129/coralline ~/.claude/coralline-src
-mkdir -p ~/.claude/coralline/themes
-cp ~/.claude/coralline-src/statusline.sh ~/.claude/coralline/
-cp ~/.claude/coralline-src/codex-quota.py ~/.claude/coralline/
-cp ~/.claude/coralline-src/configure.sh ~/.claude/coralline/
-cp ~/.claude/coralline-src/install.sh ~/.claude/coralline/
-cp ~/.claude/coralline-src/themes/claude-coral.conf ~/.claude/coralline/themes/
-chmod +x ~/.claude/coralline/statusline.sh ~/.claude/coralline/codex-quota.py ~/.claude/coralline/configure.sh
+SHA=YOUR_AUDITED_40_CHARACTER_COMMIT_SHA
+audit_dir=$(mktemp -d "${TMPDIR:-/tmp}/coralline-audit.XXXXXX") || exit 1
+(
+  set -o pipefail
+  trap 'cd / && rm -rf "$audit_dir"' EXIT
+  cd "$audit_dir" || exit 1
+  curl -fsSL "https://raw.githubusercontent.com/Nanako0129/coralline/$SHA/install.sh" | bash -s -- --ref "$SHA"
+)
 ```
 
-接著在 `~/.claude/settings.json` 加入：
-
-```json
-{
-  "statusLine": {
-    "type": "command",
-    "command": "bash ~/.claude/coralline/statusline.sh",
-    "refreshInterval": 1
-  }
-}
-```
-
-> **注意：** 上面的指令只複製 `claude-coral` 一個主題。「請 Claude 安裝」與一行安裝會帶上全部主題；
-> 手動安裝後若要換主題，把 `~/.claude/coralline-src/themes/*.conf` 其餘的也複製進 `~/.claude/coralline/themes/`。
-
-### 更新
-
-兩種更新方式，都由同一支 installer 驅動。無論哪種，你的 `~/.claude/coralline.conf`
-都會被保留，舊的 `statusline.sh` 會備份在 `~/.claude/coralline/` 下（保留最近 3 份）。
-
-#### 請 Claude 更新（推薦）
-
-把這段貼進 Claude Code：
-
-```text
-Please update coralline for me:
-fetch https://raw.githubusercontent.com/Nanako0129/coralline/main/UPGRADE.md
-and follow the playbook in it.
-```
-
-Claude 會重跑 installer、讀取「new since your installed copy」報告，並主動問你要不要開啟新出現的 opt-in 功能。
-
-#### 自己更新
-
-重跑 installer —— 有新東西時它會印出一段簡短的「new since your installed copy」報告：
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/Nanako0129/coralline/main/install.sh | bash -s -- --install-only
-```
-
-## 信任與安全
-
-「請 Claude 安裝」本質上是一份遠端文件，指示 AI 執行 `curl | bash` 並修改
-`~/.claude/settings.json`。這個形狀和 prompt-injection 攻擊一模一樣，所以你的 Claude
-如果先亮紅旗、要求檢查，那是它運作正常，不是故障。回應這種懷疑的方式是檢驗，不是信任：
-
-- **先讀會執行的東西。** 全部都在這個 repo 裡：[install.sh](./install.sh)（約 270 行）
-  只做複製檔案和合併一個 `statusLine` key 到 `settings.json`；[INSTALL.md](./INSTALL.md)
-  是 AI 遵循的 playbook。讓你的 Claude 先讀完這兩份再請求核可，這是預期流程。
-- **釘選版本。** `... | bash -s -- --ref v0.9.1` 安裝打過 tag 的 release 而非 `main`，
-  你審過的就是你跑的。互動式安裝本來就預設建議最新 tag。
-- **確切會寫入什麼：** `~/.claude/coralline/` 底下的檔案、你的選擇存在
-  `~/.claude/coralline.conf`、以及合併進 `~/.claude/settings.json` 的一個 `statusLine`
-  設定（合併前會先建立帶時間戳的 `settings.json.bak.*` 備份）。REMORA 額度刷新另會在
-  `${XDG_CACHE_HOME:-~/.cache}/coralline/` 留一份私有的正規化快取。
-- **裝完之後跑的是什麼：** `statusline.sh` 在每次 prompt 時渲染。原生 Claude 路徑維持
-  純 bash，只用一次 `jq` 與最多一次 `git`，不會啟動 Python 或 Codex。只有
-  `REMORA_ACTIVE=1` 且原生額度為空時，`codex-quota.py` 才會透過子程序 stdio 啟動官方
-  Codex app-server。Coralline 不開網路 listener、不提供額度 API，也不索取憑證；Codex
-  只在內部使用既有登入狀態。
-- **INSTALL.md 為什麼對 AI 說話：** 人類走視覺化精靈、AI 走訪談腳本，所以 playbook 對
-  「實際執行它的讀者」說話。一份開頭就對你的 AI 下指令的文件本來就該被檢視，這正是它
-  引用的每個檔案都放在這個 repo、讓你們倆都能先讀的原因。
-
-### 移除
-
-```bash
-rm -rf ~/.claude/coralline ~/.claude/coralline.conf
-```
-
-然後把 `~/.claude/settings.json` 裡的 `statusLine` 區塊刪掉（或還原最新的
-`settings.json.bak.*`）。不會留下其他任何東西。
-
-## 設定
-
-兩種方式都使用同一支 installer。人類不帶模式參數執行時會進入視覺化設定；
-Claude 則使用 `--install-only` bootstrap，接著依照 `INSTALL.md` 訪談並寫入設定。
-
-### 設定模式
-
-| 模式 | 適合情境 |
-|---|---|
-| 預設 | 想直接使用 coralline 預設外觀 |
-| Powerlevel10k import | 已經有 `~/.p10k.zsh`，想帶入 style、時間格式與主要色彩 |
-| 視覺化 wizard | 想先預覽 theme、style、segments、折行、時鐘與字型相容性 |
-
-自己直接執行 installer、不帶模式參數時，會開啟互動式設定。除非你明確要求視覺化自訂，
-Claude 不需要操作這個人類 TUI。
-
-### 重新設定
-
-每一種安裝方式都會把 wizard 複製到 `~/.claude/coralline`，所以你隨時可以重跑來重新調整外觀：
-
-```bash
-bash ~/.claude/coralline/configure.sh
-```
-
-### 測試 fork
-
-讓 installer 指向同一個 fork：
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/YOU/coralline/main/install.sh | bash -s -- --repo YOU/coralline
-```
+使用唯一暫存目錄，可避免從 stdin 執行的 Bash 把外層 coralline checkout 當成本機來源。Bash `--install-only` 與更新不會修改 `coralline.conf`；wizard 或 AI 只會在顯示變更並取得同意後修改。Bash 會先備份 `settings.json`，再以 `jq` 做語意合併，因此會保留無關設定，但不承諾原始格式不變。原生 installer 則遵守上方更窄的 managed／unmanaged 邊界。兩種 renderer 在安裝後都不會發出網路請求。
 
 ## 設定檔
 
-所有設定都在 `~/.claude/coralline.conf`（純 bash，由腳本 source 進來）：
+Bash 讀取 `~/.claude/coralline.conf`，原生 renderer 也能讀同一個檔案。它是會被 source 的 shell 語法，通常從一個內建主題開始：
 
-| 變數 | 預設值 | 說明 |
+```bash
+. "$HOME/.claude/coralline/themes/claude-coral.conf"
+```
+
+| 變數 | Runtime 預設值 | 說明 |
 |---|---|---|
-| `VL_STYLE` | `pill` | `pill`：powerline 膠囊 · `lean`：純色文字 · `classic`：文字鋪在統一深色橫條上(p10k classic) |
-| `VL_LAYOUT` | `fixed` | `fixed`：每個 `VL_SEGMENTS*` 變數固定一行 · `auto`：響應式 |
-| `VL_MAX_LINES` | `3` | 僅 `auto`——最多折成幾行（`1` = 永不折行） |
-| `VL_WRAP_MARGIN` | `4` | 僅 `auto`——右側預留的欄數，避免 segment 貼到視窗邊緣 |
-| `VL_SEGMENTS` | `dir git model ctx limit5h limit7d cost clock` | 第一行的區段與順序（`auto` 模式下為完整清單） |
-| `VL_SEGMENTS2` / `VL_SEGMENTS3` | （空） | 僅 `fixed`——可選的第二、三行 |
-| `VL_CLOCK` | `12h` | `12h` / `24h` / `off` |
-| `VL_CLOCK_SECONDS` | `1` | 時鐘是否顯示秒數 |
-| `VL_BAR_WIDTH` | `5` | 量表寬度（格數） |
-| `VL_PATH_DEPTH` | `4` | 路徑超過此深度即摺疊 |
-| `VL_NAME_MAX` | `0` | `project` / `git` 名稱超過此字數即以 `…` 截斷（`0` = 關閉） |
-| `VL_COST_DECIMALS` | `2` | 費用顯示的小數位數 |
+| `VL_STYLE` | `pill` | `pill`、`lean` 或 `classic` |
+| `VL_LAYOUT` | `fixed` | 每個 `VL_SEGMENTS*` 固定一列；`auto` 會響應式折行單一清單 |
+| `VL_MAX_LINES` / `VL_WRAP_MARGIN` | `3` / `4` | `auto` 的行數上限與右側留白 |
+| `VL_SEGMENTS` | `dir git model ctx limit5h limit7d cost clock` | 第一列，亦是 `auto` 模式的完整清單 |
+| `VL_SEGMENTS2` / `VL_SEGMENTS3` | 空 | 選用的固定第二、三列 |
+| `VL_CLOCK` / `VL_CLOCK_SECONDS` | `12h` / `1` | `12h`、`24h` 或 `off`；秒數開關 |
+| `VL_BAR_WIDTH` | `5` | 量表寬度 |
+| `VL_BAR_FILL` / `VL_BAR_EMPTY` | `▰` / `▱` | 量表字符 |
+| `VL_CTX_GLYPH` / `VL_PROJECT_GLYPH` / `VL_CACHE_GLYPH` | `⬡` / `⬢` / `⛁` | context、project 與 cache 字符 |
+| `VL_PATH_DEPTH` / `VL_NAME_MAX` | `4` / `0` | 路徑摺疊與選用的名稱截斷 |
+| `VL_COST_DECIMALS` | `2` | 費用顯示精度 |
+| `VL_CTX_ALWAYS_SHOW` / `VL_COST_ALWAYS_SHOW` | `0` / `0` | 把有效但缺失／空白的 context 或 cost 顯示為零 |
 | `VL_WARN_PCT` / `VL_HOT_PCT` | `50` / `75` | 量表變色門檻 |
 | `VL_ASCII` | `0` | 設為 `1` 停用 Nerd Font 字符 |
-| `VL_RUNTIME_PROBE` | `0` | `node` / `python`：設為 `1` 時，若無 pin 檔則改用 `PATH` 上的 `node` / `python3` 偵測（每次繪製會 fork） |
-| `VL_BG_*` / `VL_FG_*` | 依主題 | 顏色——256 色編號或 `"R,G,B"` |
+| `VL_RUNTIME_PROBE` | `0` | 無 pin 時讓 `node` 與 `python` 偵測 `PATH`；每次 render 會增加 fork |
+| `VL_BG_*` / `VL_FG_*` | 依主題 | 256 色編號或 `"R,G,B"` |
+
+### 版面與風格
+
+`VL_LAYOUT="auto"` 會量測顯示欄寬並折成最多 `VL_MAX_LINES` 行；Claude Code v2.1.153+ 會提供 `$COLUMNS`，Claude Code 外則退回終端寬度。顯示寬度的實作與可攜性理由見 [PR #10](https://github.com/Nanako0129/coralline/pull/10)。
+
+| 風格 | 結果 |
+|---|---|
+| `pill` | 每個區段有獨立背景的 powerline 膠囊 |
+| `lean` | 純色文字，可選分隔、統一背景與端點 |
+| `classic` | p10k 統一深色橫條與尾端截角的一字 preset（[PR #40](https://github.com/Nanako0129/coralline/pull/40)） |
+
+Installer 可以從 `~/.p10k.zsh` 匯入選定的風格、色彩與時鐘設定；詳見 [`INSTALL.md` mapping](./INSTALL.md#ai-interview)。
+
+### 主題
+
+內建主題：`claude-coral`、`catppuccin-mocha`、`nord`、`gruvbox-dark`、`tokyo-night`、`mono`、`dracula`、`lunar-pink`、`reverie` 與 `morning-haze`。主題就是指定 `VL_BG_*` 與 `VL_FG_*` 的 `.conf` 檔；wizard 會遞迴掃描 [`themes/`](./themes/) 下的 `.conf`。
+
+## 選用功能
+
+### Subagent 面板
+
+![coralline 主狀態列與套用主題的 subagent 面板列](./assets/subagent-panel.png)
+
+明確啟用或停用套用主題的 subagent 列：
+
+```bash
+bash ~/.claude/coralline/configure.sh --subagent-rows=on
+bash ~/.claude/coralline/configure.sh --subagent-rows=off
+```
+
+Bash install-only 與一般更新不會自行新增或刪除 `subagentStatusLine`；只有 wizard 選擇或上方明確指令才會改動。原生 installer 預設使用 `-SubagentRows preserve`，只有明確指定 `on` 或 `off` 才改設定。
+
+每個 task 的 model 與 context 欄位需要 Claude Code v2.1.205+。在 v2.1.211，coralline 會從 task sidecar 恢復 payload 缺少的本機 `agentType` role；沒有 sidecar 時仍會使用 payload 的 name 與 label。缺少 model 或 start time 時只隱藏對應區段。只有 token count 缺失或無效時才會隱藏 `ctx`；沒有有效 context size 時仍顯示 glyph 與 bare token count，只省略量表與百分比。列由 panel event 觸發重繪，不是固定每秒輪詢；原生 main-session 列會保留。選用的 `effort` 區段顯示 Claude Code 對每個本機 agent 實際送出的 effort，讀自該 agent transcript 裡記錄的第一筆回應，所以定義檔沒寫 `effort:` 的 agent 也會顯示它實際跑的模型預設值。agent 寫出第一筆回應後才會出現；Haiku 4.5 則維持隱藏，因為 Claude Code 不會對它送 effort。每次 panel 重繪時，每個 transcript 最多讀 64 行，在 macOS 上量到每個 task 6–12ms。設計與現行 fallback 行為可追溯到 [issue #45](https://github.com/Nanako0129/coralline/issues/45) 與 [PR #44](https://github.com/Nanako0129/coralline/pull/44)。
+
+| `VL_SUB_SEGMENTS` 值 | 顯示內容 |
+|---|---|
+| `name` | task identity 與 label，依狀態上色 |
+| `model` | per-task model |
+| `effort` | per-task 實際使用的推理強度（選用；`VL_BG_SUB_EFFORT`，未設時沿用 `VL_BG_EFFORT`） |
+| `ctx` | context 用量條與 token 數 |
+| `elapsed` | 經過的 wall-clock 時間 |
+
+預設順序是 `name model ctx elapsed`。要加上 effort，設定 `VL_SUB_SEGMENTS="name model effort ctx elapsed"`。
 
 ### 消耗率區段
 
-![burn 區段在完整狀態列中的樣子，以及各種狀態](./assets/burn-segment.png)
-
-預設關閉。把 `burn` 加入 `VL_SEGMENTS` 即可顯示「到期倒數」—— 根據最近燒耗率推算，
-到達限額上限（5h 或 7d）還剩多久，例如 `↗ 5h ⇢ 1h58m`。相關鍵：`CORALLINE_BURN_WINDOW`
-（近期斜率回溯長度，預設 600s）、`VL_BURN_GLYPH`（預設 `↗`）、`VL_BG_BURN`（預設用 5h
-的背景色）。只要 `burn` 在區段清單裡，coralline 就會寫入樣本到
-`~/.claude/coralline/burn-5h.tsv`；從清單移除後便不再寫入任何檔案。
-
-ETA 會依「相對於視窗重置的急迫度」上色，當數字本身已無意義時則收斂成一個符號：
-
-| 你看到 | 代表 |
-|---|---|
-| `↗ 5h ⇢ 1h58m` **紅** | 會在視窗重置*之前*就耗盡 |
-| `↗ 5h ⇢ 1h58m` **黃** | 重置與耗盡時間很接近 |
-| `↗ 5h ⇢ 1h58m` **綠** | 能從容趕在重置前，還有餘裕 |
-| **亮綠** `↗ ✓` | 照這個速度，就算從全新視窗開始也燒不完一輪——`24d15h` 這種數字純屬噪音 |
-| **暗淡** `↗ ✓` | idle：已停止消耗，手上沒有進行中的負載 |
-| **暗淡** `↗ …` | 暖機中：冷啟動還沒有樣本（刻意*不用*綠勾，免得全新安裝看起來一切健康） |
-
-標籤會告訴你目前由哪道限額綁定 —— 取 `5h`／`7d` 中最快撞到 100% 的那一個。
-`5h` 只有在你燒得夠兇、最近視窗內出現至少兩次整數 % 跨越時才會出現；在輕度或穩定的
-步調下沒有可擬合的短期斜率，於是改由 7d 推算綁定，顯示 `↗ 7d`。
+把 `burn` 加入 `VL_SEGMENTS`，即可顯示綁定中的 5h 或 7d 額度到達 100% 的預估時間。它預設關閉；列在清單中時會把樣本寫入 `~/.claude/coralline/burn-5h.tsv`，移除後停止寫入。`CORALLINE_BURN_WINDOW` 預設為 600 秒。動機與 estimator 契約見 [issue #17](https://github.com/Nanako0129/coralline/issues/17)。
 
 ### 跨 session 額度同步（選用）
 
-`VL_LIMIT_SYNC=1` 會讓 `limit5h`／`limit7d` 顯示「你任一 session 看過的最新額度值」，而不是只看當前 session 自己的快照。每次 render 會把 `5h`／`7d` 的值寫進一個每台主機共用的 store（`limit-5h.d`、`limit-7d.d` 目錄），區段則顯示當前視窗中記錄到的最大百分比。預設關閉。
+設定 `VL_LIMIT_SYNC=1`，讓會重繪的 session 透過 `limit-5h.d` 與 `limit-7d.d` 共用帳號仍開放的 5h 與 7d 視窗。session 自己的有效讀數永遠贏自己的視窗；只有 store 握有嚴格較新的視窗，或 session 完全沒有讀數時，才使用仍開放的 stored window。它預設關閉、沒有 API 存取，也無法刷新完全閒置的 session。store 位於 `~/.claude/coralline`；若有設定 `CLAUDE_CONFIG_DIR`，則改為 `$CLAUDE_CONFIG_DIR/coralline`，burn 樣本與 float 檔案同理，因此兩個 Claude 設定目錄各自保有獨立狀態，不會互相覆蓋視窗。原始 redraw-only 契約見 [PR #24](https://github.com/Nanako0129/coralline/pull/24)，無讀數 fallback 見 [PR #64](https://github.com/Nanako0129/coralline/pull/64)。
 
-之所以需要它，是因為 Claude Code 只在某個 session 有活動時才會重畫它的狀態列，而傳進來的額度數字是該 session 最後一次看到的值。所以閒置的 session 會顯示偏舊、彼此不一致的百分比。開啟同步後，每個 session 在下次重畫時就會收斂到目前已知的最新值。
+### Float readout（選用）
 
-> **它只在重畫時更新。** 完全沒在重畫的 session 救不了，而且「已知最新」也只到你最近活躍的那個 session 看到的值。coralline 沒有 API 存取，所以它只能縮小 session 之間的落差，沒辦法讓一個完全閒置的 bar 變即時。
-
-單 session 使用者用不到（只有一份快照），所以維持選用。
+設定 `VL_FLOAT=1`，每次 render 都會把純文字一行寫入 `~/.claude/coralline/float.txt`。`VL_FLOAT_SEGMENTS` 預設為 `model ctx cost`。coralline 不提供 display carrier；這個檔案就是 integration seam，repo 另附一個不受支援的 [iTerm2 範例](./example/float-display-iterm2/)。設計邊界記錄在 [issue #15](https://github.com/Nanako0129/coralline/issues/15)。
 
 ### REMORA Codex 額度橋接
 
@@ -254,121 +196,79 @@ Provider 只把取得時間與可為空的 5h／7d 百分比、reset epoch 正�
 
 `windowDurationMins=300` 對應 5h，`10080` 對應 7d；`usedPercent` 本身就是已用比例，直接顯示。只有 duration 缺少，且完整的一對視窗或另一個已知視窗能讓位置判斷沒有歧義時，才會依 primary→5h、secondary→7d 回退；單獨且未標 duration 的視窗會被拒絕，因此帶明確 duration 的單一 7d primary 絕不會被複製成 5h。若需指定 Codex 執行檔，可設定 `CORALLINE_CODEX_BINARY`，但值必須是可執行的絕對路徑；未設定時從 `PATH` 尋找 `codex`。原生 Claude render 永遠不會執行這個 provider。
 
-### 響應式版面
+## 更新、重新設定與移除
 
-設定 `VL_LAYOUT="auto"` 後，視窗夠寬時整條維持單行，變窄時以貪婪法折行，
-最多折成 `VL_MAX_LINES` 行。達到行數上限後，剩餘區段會溢出在最後一行。
-`VL_WRAP_MARGIN` 會在右側預留幾欄空間，讓折行後的內容不貼到視窗邊緣——
-若你的終端機有額外 padding，可以把它調大。
+### 更新
 
-寬度來自 `$COLUMNS`。Claude Code v2.1.153+ 會在執行 statusline 前把 `COLUMNS`
-設成當前終端寬度，所以折行會隨視窗縮放自動反應、開箱即用。在 Claude Code 以外，
-腳本會退而用控制終端機的 `stty size`；兩者都拿不到時保持單行。
+請 Claude 依照 upgrade playbook 更新：
 
 ```text
-wide window:    ~/dev/app  ⎇ main  ◆ Fable 5  ⬡ ▰▰▰▱▱ 62%  5h ▰▰▱▱▱ 41%  $1.23  ⊙ 14:45
-
-narrow window:  ~/dev/app  ⎇ main  ◆ Fable 5
-                ⬡ ▰▰▰▱▱ 62%  5h ▰▰▱▱▱ 41%  $1.23  ⊙ 14:45
+Please update coralline for me:
+fetch https://raw.githubusercontent.com/Nanako0129/coralline/main/UPGRADE.md
+and follow the playbook in it.
 ```
 
-偏好完全固定的版面就維持 `VL_LAYOUT="fixed"`，
-用 `VL_SEGMENTS` / `VL_SEGMENTS2` / `VL_SEGMENTS3` 釘住每一行。
+或在任何 coralline checkout 以外的目錄直接更新 Bash 安裝：
 
-### Lean 風格
+```bash
+curl -fsSL https://raw.githubusercontent.com/Nanako0129/coralline/main/install.sh | bash -s -- --install-only
+```
 
-偏好 Powerlevel10k 的 *lean* 簡潔路線——不要背景、只要純色文字？設定
-`VL_STYLE="lean"`，每個區段的 `VL_BG_*` 顏色就會變成它的文字強調色：
+上方 URL 會抓取可變的 `main` playbook 或 bootstrap code。一般 updater 必須從 coralline checkout 外執行；在 checkout 內執行時，installer 會刻意使用該 checkout 的檔案，而不下載遠端 payload。在 checkout 外，Bash installer 會在非互動執行時維持 `main`。互動式 `--install-only` 會在成功解析 latest release tag 時詢問要安裝哪個 payload ref，按 Enter 預設該 release；若 release 查詢失敗，則不提示並維持 `main`。只有明確要開發版 payload 時才傳入 `--ref main`。先前釘選的安裝，不會讓之後未釘選的更新自動變成 immutable。要做 audited update，請從同一個已檢閱的 40 字元 SHA 抓取 `UPGRADE.md`，再依上方做法從中立暫存目錄執行同一 SHA 的 `install.sh`，並把相同 SHA 傳給 `--ref`。僅有 PowerShell 的 Windows 則以同一個選定 ref 重跑原生 bootstrap。Installer 會報告新的 opt-in，但除非取得同意，否則保留既有選擇；見 [issue #31](https://github.com/Nanako0129/coralline/issues/31) 與現行 [`UPGRADE.md`](./UPGRADE.md)。
 
-![Lean 風格與 pill 風格對照](./assets/style-lean.png)
+### 重新設定
 
-| 變數 | 預設值 | 說明 |
-|---|---|---|
-| `VL_STYLE` | `pill` | 設為 `lean` 切換成簡潔風格 |
-| `VL_LEAN_SEP` | （空） | 區段之間的額外分隔字串，例如 `·` |
-| `VL_LEAN_FG` | （空） | 強制指定文字色；留空 = 繼承各區段的強調色 |
-| `VL_LEAN_BG` | （空） | 在整列後面鋪一層統一背景——`"R,G,B"` 或 256 色碼。想要完整的 p10k *classic* 外觀，建議直接用下方的 `VL_STYLE="classic"` preset，它會幫你接好這個 |
-| `VL_LEAN_CAP_R` | （空） | 收尾字元，用 `VL_LEAN_BG` 的顏色畫出，把橫條尾端斜切收進終端（p10k 的尾端分隔，例如 `$''`）；需搭配 `VL_LEAN_BG` |
-| `VL_LEAN_CAP_L` | （空） | 起始截角字元——`VL_LEAN_CAP_R` 在 bar 開頭的左向鏡像（例如 `$''`）；需搭配 `VL_LEAN_BG`。stock p10k *classic* 左端保持平的 |
+有 Bash 的安裝包含視覺化 wizard：
 
-> **提示：** 本來就是 p10k 使用者？跟 AI 安裝員或視覺化 wizard 說要匯入
-> `~/.p10k.zsh`，它會在你同意後帶入風格、配色與時間格式。詳見
-> [INSTALL.md 的 AI interview](./INSTALL.md#ai-interview)。
+```bash
+bash ~/.claude/coralline/configure.sh
+```
 
-### Classic 風格
+PowerShell-only 安裝沒有原生 wizard；請先備份再手動編輯 `coralline.conf`，或沿用有 Bash 的主機所建立的設定。
 
-想要 Powerlevel10k 原廠的 *classic* 提示列——一條統一的深色橫條、彩色文字、
-尾端一個實心截角？設定 `VL_STYLE="classic"`。這是一鍵預設：它以 `lean` 的方式
-把文字畫在深色橫條上（p10k 的 `POWERLEVEL9K_BACKGROUND`），並加上尾端的
-powerline 截角，不需要其他設定。
+### 移除
 
-![Classic 風格](./assets/style-classic.png)
+Runtime 目錄可能包含 custom themes、burn／limit history、`float.txt` 與其他非受管理檔案。刪除前請先備份要保留的內容。也請先備份目前的 `~/.claude/settings.json`，並且只有在 command 仍指向 coralline 時才移除 `statusLine` 或 `subagentStatusLine`；未比較建立後的其他變更前，不要直接還原整份舊 backup。
 
-| 變數 | 預設值 | 說明 |
-|---|---|---|
-| `VL_STYLE` | `pill` | 設為 `classic` 切換成 p10k 深色橫條外觀 |
-| `VL_BG_BAR` | （空 → `238`） | 整列後面那條橫條的顏色——`"R,G,B"` 或 256 色碼。任何主題的配色都會鋪在這條橫條上；灰階配色（例如 `mono`）建議明確設定 `VL_BG_BAR` 以拉開對比 |
+有 Bash 的系統先檢查並編輯目前 settings，再移除 runtime：
 
-底層上 `classic` 就是 `lean` 加上一個 `VL_LEAN_BG`（來自 `VL_BG_BAR`）與一個
-`VL_LEAN_CAP_R` 尾端截角，所以你若明確指定 `VL_LEAN_BG` 或截角仍會蓋過預設。
-匯入 p10k *classic* 設定時，會帶入你原本的橫條顏色與分隔字元。
+```bash
+settings="$HOME/.claude/settings.json"
+cp "$settings" "$settings.bak.$(date +%Y%m%d%H%M%S)"
+"${EDITOR:-vi}" "$settings"
+rm -rf "$HOME/.claude/coralline"
+# Optional: remove your saved preferences too.
+rm -f "$HOME/.claude/coralline.conf"
+```
 
-## 主題
+PowerShell-only 系統：
 
-| | |
+```powershell
+$settings = Join-Path $HOME '.claude\settings.json'
+Copy-Item -LiteralPath $settings -Destination "$settings.bak.$(Get-Date -Format yyyyMMddHHmmss)"
+notepad.exe $settings
+Remove-Item -LiteralPath (Join-Path $HOME '.claude\coralline') -Recurse -Force
+# Optional: remove your saved preferences too.
+Remove-Item -LiteralPath (Join-Path $HOME '.claude\coralline.conf') -Force -ErrorAction SilentlyContinue
+```
+
+## 平台與效能
+
+| 平台 | 支援方式 |
 |---|---|
-| **`claude-coral`** — 鋼藍 · 木槿紫 · Claude 珊瑚紅（預設）<br>![claude-coral 主題預覽](./assets/theme-claude-coral.png) | **`catppuccin-mocha`** — 深底粉彩<br>![catppuccin-mocha 主題預覽](./assets/theme-catppuccin-mocha.png) |
-| **`nord`** — 北極冷霜<br>![nord 主題預覽](./assets/theme-nord.png) | **`gruvbox-dark`** — 溫暖復古<br>![gruvbox-dark 主題預覽](./assets/theme-gruvbox-dark.png) |
-| **`tokyo-night`** — 深藍霓虹<br>![tokyo-night 主題預覽](./assets/theme-tokyo-night.png) | **`mono`** — 灰階極簡<br>![mono 主題預覽](./assets/theme-mono.png) |
-| **`dracula`** — 青 · 粉 · 紫，Dracula 暗炭底<br>![dracula 主題預覽](./assets/theme-dracula.png) | **`lunar-pink`** — 粉 · 青 · 黃，近黑底<br>![lunar-pink 主題預覽](./assets/theme-lunar-pink.png) |
-| **`reverie`** — 柔粉彩 · 暖深底配梅紫文字<br>![reverie 主題預覽](./assets/theme-reverie.png) | |
+| macOS | 內建 Bash 3.2 |
+| Linux | Bash 4+ / 5 |
+| Windows with Git Bash | Bash renderer |
+| Windows without Git Bash | 原生 Windows PowerShell 5.1 renderer |
 
-主題就只是一個指定 `VL_BG_*` / `VL_FG_*` 的 `.conf` 檔——複製一份、改顏色、
-在 `coralline.conf` 裡改 source 你的版本即可。歡迎發 PR 貢獻新主題。
-wizard 會自動掃描 `themes/*.conf` 與 `themes/best-themes/*.conf` 這類巢狀集合，
-新增主題檔時不需要修改 `configure.sh`。
+Renderer 全程在本機執行：不呼叫網路或 API，也不使用 token。Bash 主列只用一次 `jq` 解析 payload；兩種 renderer 每次 render 最多呼叫一次 `git status --porcelain=v2 --branch`，不會為每個欄位啟動 process。可重現的量測方法見 [BENCHMARK.zh-TW.md](./BENCHMARK.zh-TW.md)，來源是 [PR #65](https://github.com/Nanako0129/coralline/pull/65)。
 
-> **要貢獻新主題？** 複製一份現有 `.conf`，設好所有 `VL_BG_*` / `VL_FG_*`（含
-> `VL_BG_EFFORT`；`VL_BG_BAR` 選用——只有灰階配色需要它來讓 classic 橫條可讀），
-> 把名稱加進 [`tools/render-screenshots.py`](./tools/render-screenshots.py)
-> 的 `THEMES` 清單，重跑產生 `assets/theme-<名稱>.png`，再到上方表格加一列。請**不要重產
-> `hero.png`** —— 它是固定展示最初六個主題的招牌圖、不是完整目錄。
+## 支持、致謝與授權
 
-## 平台支援
+如果 coralline 讓你的日常 session 更清楚，歡迎在 Patreon 支持後續維護。
 
-| 平台 | 狀態 |
-|---|---|
-| macOS | ✅ 支援（內建 bash 3.2 即可） |
-| Linux | ✅ 支援 |
-| Windows + Git Bash | ✅ 支援——有裝 Git Bash 時，Claude Code 會用它執行 statusline |
-| Windows 無 Git Bash | ❌ 暫不支援——Claude Code 會退回 PowerShell，跑不了 bash 腳本（[roadmap](https://github.com/Nanako0129/coralline/issues)） |
+[![在 Patreon 支持 coralline](https://img.shields.io/badge/Support_on_Patreon-FF424D?style=for-the-badge&logo=patreon&logoColor=white)](https://www.patreon.com/cw/Nanako0129/membership)
 
-> **Windows 提醒：** 裝 [Git for Windows](https://git-scm.com/download/win)（內含 Git Bash）和 `jq`，
-> coralline 即可原生運作。給「無 Git Bash」情境的原生 PowerShell 版本列在 roadmap 上。渲染流程
-> 特意設計成在 Git Bash 模擬的 `fork()` 下仍便宜——一個 `jq`、一個 `git`，沒有逐欄位的子程序開銷。
+coralline 的視覺語言致敬 [Powerlevel10k](https://github.com/romkatv/powerlevel10k)、[powerline](https://github.com/powerline/powerline) 系譜與 [Nerd Fonts](https://www.nerdfonts.com/)。
 
-## 為什麼很快
-
-statusline 就是一支本地 shell 腳本：完全不打網路、不呼叫任何 API、不消耗任何 token。
-Claude Code 只是把 session 的 JSON 從 stdin 餵給它，再顯示它印出的內容。
-
-它每秒執行一次（`refreshInterval: 1`），所以腳本在 CPU 上必須夠便宜：
-單次 `jq` 呼叫一口氣取出所有欄位，單次 `git status --porcelain=v2 --branch`
-同時拿到分支、檔案狀態與領先/落後數。不依賴 `bc`，也沒有逐欄位的子程序開銷。
-macOS 內建的 bash 3.2 和任何 Linux bash 都能跑。
-
-## 致敬與致謝
-
-coralline 的視覺語言——膠囊化的區段、powerline 轉場、git 的 `⇡⇣` 符號、
-隨用量變色的量表——是對 [@romkatv](https://github.com/romkatv) 的
-[Powerlevel10k](https://github.com/romkatv/powerlevel10k) 的致敬之作，
-它定義了「又快又美的 prompt」應有的樣子。也感謝開創這一切的
-[powerline](https://github.com/powerline/powerline) 系譜，以及讓膠囊外型成為可能的
-[Nerd Fonts](https://www.nerdfonts.com/)。
-
-至於名稱：珊瑚藻（coralline algae）以一層層纖薄的色彩堆出礁岩——
-而 **coral·line** 正是這個專案的本體：一條 Claude 珊瑚色的線。
-
-## 授權
-
-[MIT](./LICENSE)
+[MIT License](./LICENSE)

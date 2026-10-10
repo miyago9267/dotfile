@@ -486,6 +486,10 @@
     "command": "bash ~/.claude/coralline/statusline.sh",
     "refreshInterval": 1
   },
+  "subagentStatusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/coralline/statusline.sh --subagent"
+  },
   "enabledPlugins": {
     "gitlab@claude-plugins-official": true,
     "sentry@claude-plugins-official": true,
