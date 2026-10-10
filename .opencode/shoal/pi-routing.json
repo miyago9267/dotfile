@@ -6,7 +6,7 @@
         { "provider": "deepseek", "model": "deepseek-v4-flash" }
       ]
     },
-    "mech-executor": {
+    "applier": {
       "candidates": [
         { "provider": "deepseek", "model": "deepseek-v4-flash" }
       ]
@@ -22,7 +22,7 @@
         { "provider": "xai", "model": "grok-4.6" }
       ]
     },
-    "plan-verifier": {
+    "plan-critic": {
       "candidates": [
         { "provider": "anthropic", "model": "claude-opus-5-5" },
         { "provider": "openai", "model": "gpt-6-sol" }

@@ -32,7 +32,7 @@ function classify(prompt: string): string | undefined {
   if (/(security|secret|credential|permission|auth|vulnerability|attack|安全|密鑰|憑證|權限|漏洞|攻擊)/.test(text)) return "security-reviewer";
   if (/(review|verify|verification|check whether|is this correct|test the change|審查|驗證|確認|檢查是否|是否正確)/.test(text)) return "verifier";
   if (/(find|search|where|which file|explain|inspect|locate|list|尋找|搜尋|哪個檔案|說明|檢視|定位|列出)/.test(text) && !/(implement|fix|change|add|update|實作|修復|修改|新增|更新)/.test(text)) return "scout";
-  if (/(mechanical|rename all|replace all|repetitive|bulk|機械|全部重新命名|全部替換|重複|批次)/.test(text)) return "mech-executor";
+  if (/(mechanical|rename all|replace all|repetitive|bulk|機械|全部重新命名|全部替換|重複|批次)/.test(text)) return "applier";
   return "executor";
 }
 
@@ -85,7 +85,7 @@ export default function (pi: ExtensionAPI) {
     label: "Shoal dispatch",
     description: "Dispatch a bounded task to an isolated Pi child session using the Shoal role model route.",
     parameters: Type.Object({
-      role: Type.String({ description: "Shoal role: scout, executor, mech-executor, verifier, reviewer, plan-verifier, security-reviewer, or security-executor" }),
+      role: Type.String({ description: "Shoal role: scout, executor, applier, verifier, reviewer, plan-critic, security-reviewer, or security-executor" }),
       task: Type.String({ description: "Complete bounded task for the child session" }),
     }),
     async execute(_toolCallId, params, _signal, _onUpdate, ctx) {

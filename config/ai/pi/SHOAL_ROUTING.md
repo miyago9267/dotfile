@@ -12,7 +12,7 @@ child 結果回到主 session，由主 session 負責整合與最終判斷。
 /shoal scout
 /shoal executor
 /shoal verifier
-/shoal plan-verifier
+/shoal plan-critic
 /shoal security-reviewer
 /shoal security-executor
 ```
@@ -21,10 +21,10 @@ child 結果回到主 session，由主 session 負責整合與最終判斷。
 
 | Role | 優先模型 | 後備模型 |
 | --- | --- | --- |
-| scout、mech-executor | DeepSeek V4 Flash | 無 |
+| scout、applier | DeepSeek V4 Flash | 無 |
 | executor | GPT-6 Luna | Grok 4.6 |
 | reviewer | Grok 4.6 | 無 |
-| plan-verifier | Claude Opus 5.5 | GPT-6 Sol |
+| plan-critic | Claude Opus 5.5 | GPT-6 Sol |
 | verifier | Claude Opus 5.5 | GPT-6 Sol、Grok 4.6 |
 | security-reviewer | GPT-6 Astra | 無；失敗即停止 |
 | security-executor | GPT-6 Sol | GPT-6 Luna |

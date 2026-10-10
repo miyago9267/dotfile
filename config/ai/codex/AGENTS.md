@@ -43,7 +43,7 @@
 ## Shoal
 
 Shoal orchestration 是 active 的。第一次 action 前自動分流：單一 command、
-普通工具與不確定工作留在 Luna parent 或 `mech-executor`；一般設計、工具選擇、
+普通工具與不確定工作留在 Luna parent 或 `applier`；一般設計、工具選擇、
 QA 與 bounded implementation 用 Sol `sol-executor`；只有高信心的架構、跨系統
 權衡、衝突證據，或 Sol 回報 deep boundary 時才用 strong `executor`。cheap path
 遇到 unexpected result、error、retry 或 target change 時先升級一次到

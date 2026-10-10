@@ -39,12 +39,12 @@ provider、model、capability 與 authentication state；可選的
 | vault-librarian | Cheap labor | deepseek/deepseek-v4-flash | 唯讀 knowledge-base search |
 | scout | Cheap labor | deepseek/deepseek-v4-flash（fallback: google/gemini-2.5-flash） | 唯讀 bounded reconnaissance |
 | browser-crawler | Cheap labor | google/gemini-2.5-flash | bounded web／browser research |
-| mech-executor | Cheap labor | deepseek/deepseek-v4-flash | 已明確規格的 mechanical edit |
+| applier | Cheap labor | deepseek/deepseek-v4-flash | 已明確規格的 mechanical edit |
 | executor | Senior labor | openai/gpt-5.6-luna | 有局部判斷的 bounded implementation |
 | implementation-worker | Senior labor | openai/gpt-5.6-luna | 指定檔案的 implementation |
 | reviewer | Senior labor | xai/grok-4.6 | 獨立 diff／risk review |
 | monika-large | Default primary | openai/gpt-5.6-luna（`reasoningEffort: max`） | 主 session、整合與 final judgment |
-| plan-verifier | High-level reasoning | openai/gpt-5.6-sol | READY／REVISE plan challenge |
+| plan-critic | High-level reasoning | openai/gpt-5.6-sol | READY／REVISE plan challenge |
 | verifier | High-level reasoning | openai/gpt-5.6-sol（fallback: xai/grok-4.6） | CONFIRMED／REFUTED acceptance check |
 | security-reviewer | High-level reasoning | openai/gpt-5.6-sol | security evidence review |
 | security-executor | High-level reasoning | openai/gpt-5.6-sol（fallback: openai/gpt-5.6-luna） | approved security-sensitive edit |

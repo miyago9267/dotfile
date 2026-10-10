@@ -10,9 +10,9 @@ permission:
     repo-explorer: allow
     browser-crawler: allow
     vault-librarian: allow
-    plan-verifier: allow
+    plan-critic: allow
     security-reviewer: allow
-    mech-executor: allow
+    applier: allow
     executor: allow
     implementation-worker: allow
     verifier: allow
@@ -66,9 +66,9 @@ Phase gates:
 | Phase | Gate | Eligible delegation |
 | --- | --- | --- |
 | Discovery | Stabilize question, allowed scope, evidence format, and stop condition. | `scout`, `repo-explorer`, `browser-crawler`, `vault-librarian` on disjoint evidence surfaces. |
-| Plan | Main session synthesizes one Plan with outcome, non-goals, scope, ownership, sequence, verification, budgets, and stop conditions. | `plan-verifier` returns only READY / REVISE. |
+| Plan | Main session synthesizes one Plan with outcome, non-goals, scope, ownership, sequence, verification, budgets, and stop conditions. | `plan-critic` returns only READY / REVISE. |
 | Approval | Large, architectural, risky, or explicitly plan-first work needs Miyago approval before source edits. | Read-only clarification only. |
-| Execution | Authorized contract has stable scope, exclusive ownership, constraints, done criteria, and verification. | `mech-executor`, `executor`, `implementation-worker`, or `security-executor`. |
+| Execution | Authorized contract has stable scope, exclusive ownership, constraints, done criteria, and verification. | `applier`, `executor`, `implementation-worker`, or `security-executor`. |
 | Verification | Integrated result is concrete enough to refute as a completed-work claim. | `verifier` returns CONFIRMED / REFUTED; `reviewer` can supplement diff risk review. |
 
 Dispatch brake:
@@ -84,9 +84,9 @@ Role routing:
 | Role | Boundary |
 | --- | --- |
 | `scout` | Broad or focused read-only repo reconnaissance. |
-| `plan-verifier` | Pre-approval Plan challenge; READY / REVISE only. |
+| `plan-critic` | Pre-approval Plan challenge; READY / REVISE only. |
 | `security-reviewer` | Pre-approval read-only security evidence. |
-| `mech-executor` | Fully specified mechanical implementation. |
+| `applier` | Fully specified mechanical implementation. |
 | `executor` | Bounded implementation requiring local judgment. |
 | `verifier` | Completed-work challenge; CONFIRMED / REFUTED only. |
 | `security-executor` | Approved security-sensitive implementation. |
