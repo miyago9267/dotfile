@@ -185,7 +185,7 @@
 
 <!-- runtime-adapter:end -->
 
-<!-- shoal-agy v3.1.0 -->
+<!-- shoal-agy v3.3.1 -->
 <!-- shoal-agy:begin -->
 ## Shoal orchestration (agy only)
 
