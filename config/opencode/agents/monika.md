@@ -17,6 +17,10 @@ permission:
     security-executor: allow
     verifier: allow
     security-reviewer: allow
+    applier: allow
+    plan-critic: allow
+    researcher: allow
+    watcher: allow
   webfetch: allow
   websearch: allow
   external_directory: allow
