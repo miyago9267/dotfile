@@ -68,7 +68,7 @@
     "PreInvocation": [
       {
         "type": "command",
-        "command": "f=\"${XDG_DATA_HOME:-$HOME/.local/share}/shoal/guard/shoal_guard.py\"; [ -f \"$f\" ] || exit 0; exec python3 \"$f\" --host agy",
+        "command": "f=\"${XDG_DATA_HOME:-$HOME/.local/share}/shoal/guard/shoal_guard.py\"; [ -f \"$f\" ] || exit 0; exec python3 \"$f\" --host agy --event PreInvocation",
         "timeout": 10
       }
     ],
@@ -78,10 +78,24 @@
         "hooks": [
           {
             "type": "command",
-            "command": "f=\"${XDG_DATA_HOME:-$HOME/.local/share}/shoal/guard/shoal_guard.py\"; [ -f \"$f\" ] || exit 0; exec python3 \"$f\" --host agy",
+            "command": "f=\"${XDG_DATA_HOME:-$HOME/.local/share}/shoal/guard/shoal_guard.py\"; [ -f \"$f\" ] || exit 0; exec python3 \"$f\" --host agy --event PreToolUse",
             "timeout": 10
           }
         ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "f=\"${XDG_DATA_HOME:-$HOME/.local/share}/shoal/guard/shoal_guard.py\"; [ -f \"$f\" ] || exit 0; exec python3 \"$f\" --host agy --event SessionStart",
+        "timeout": 10
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "f=\"${XDG_DATA_HOME:-$HOME/.local/share}/shoal/guard/shoal_guard.py\"; [ -f \"$f\" ] || exit 0; exec python3 \"$f\" --host agy --event Stop",
+        "timeout": 10
       }
     ]
   },
