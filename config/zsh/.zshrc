@@ -28,6 +28,7 @@ export HISTFILE="$HOME/.zsh_history"
 export HISTSIZE=10000000
 export SAVEHIST=10000000
 # export FUNCNEST=100000
+export PATINA_COMPOSER_CATALOG="$HOME/dotfile/config/ai/patina/providers.json"
 
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
 

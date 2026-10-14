@@ -1,0 +1,31 @@
+{
+  "order": ["agy", "gemini-api"],
+  "providers": {
+    "agy": {
+      "command": [
+        "python3",
+        "/Users/miyago/.local/share/patina/scripts/patina-provider-cli.py",
+        "--provider",
+        "agy",
+        "--binary",
+        "agy"
+      ],
+      "capabilities": ["text_generation", "structured_input"],
+      "model_policy": "provider_default"
+    },
+    "gemini-api": {
+      "command": [
+        "/Users/miyago/dotfile/script/utils/agent-secret",
+        "run",
+        "gemini-api",
+        "--",
+        "python3",
+        "/Users/miyago/.local/share/patina/scripts/patina-provider-cli.py",
+        "--provider",
+        "gemini-api"
+      ],
+      "capabilities": ["text_generation", "structured_input"],
+      "model_policy": "explicit"
+    }
+  }
+}

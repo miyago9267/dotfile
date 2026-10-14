@@ -46,6 +46,8 @@ EXEMPT = (
     ".claude/settings.local.json",
     # agy 的 allow/deny 規則：還沒確認 agy 是否展開 ~，deny 規則改壞會靜默失效
     "config/ai/gemini/antigravity-cli/settings.json",
+    # patina Composer catalog：command 是 argv 直接 exec，不經 shell，~ 與 $HOME 不會展開
+    "config/ai/patina/providers.json",
     # 測試 fixture 與第三方產生的檔案：裡面的路徑是假資料或範例
     "*/tests/*",
     "*/test/*",
