@@ -25,7 +25,8 @@
         "gemini-api"
       ],
       "capabilities": ["text_generation", "structured_input"],
-      "model_policy": "explicit"
+      "model_policy": "explicit",
+      "model": "gemini-2.5-pro"
     }
   }
 }
