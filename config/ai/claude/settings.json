@@ -23,7 +23,8 @@
       "Bash(echo \"deleted: $?\")",
       "Bash(/bin/ls -1)",
       "Bash(/bin/ls -1 line_bot_updated/)",
-      "mcp__reticle"
+      "mcp__reticle",
+      "Bash(agy -p:*)"
     ],
     "deny": [
       "Bash(mkfs *)",
