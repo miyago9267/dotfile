@@ -113,6 +113,14 @@ update_calico() {
   mv -f "$target.new" "$target"
 }
 
+# 0 = 清單存在、有該 host 項目，且未列出該 module；其餘（含任何錯誤）回 1。
+shoal_module_disabled() {
+  python3 -c 'import json,sys
+d=json.load(open(sys.argv[1]))
+e=d.get(sys.argv[2])
+sys.exit(0 if isinstance(e,dict) and isinstance(e.get("modules"),list) and sys.argv[3] not in e["modules"] else 1)' "$1" "$2" "$3" 2>/dev/null
+}
+
 update_shoal() {
   # Claude 端用 shoal 的 Claude plugin（role 以 shoal:<role> 出現，含 skill 與 guard），
   # 只從 committed HEAD 取檔，不裝未 commit 的 WIP。SHOAL_ROOT 指向 shoal repo 根目錄。
@@ -132,7 +140,11 @@ update_shoal() {
     rm -rf "$stage"
     return 1
   fi
-  if ! install -m 0644 "$stage/hosts/claude/dist/agents/Explore.md" "$cfg/agents/Explore.md"; then
+  # shoal 的模組清單有 claude 項目但沒列 claude-explore 時不裝（已存在的由 shoal installer 移除）；
+  # 清單不存在、讀不到或無 claude 項目一律照舊安裝。
+  if shoal_module_disabled "$data/modules.json" claude claude-explore; then
+    :
+  elif ! install -m 0644 "$stage/hosts/claude/dist/agents/Explore.md" "$cfg/agents/Explore.md"; then
     rm -rf "$stage"
     return 1
   fi
