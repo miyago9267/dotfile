@@ -7,7 +7,6 @@
     "STINGRAY_SHAPE3": "1"
   },
   "permissions": {
-    "defaultMode": "auto",
     "allow": [
       "Bash(*)",
       "Read(*)",
@@ -55,6 +54,7 @@
       "Bash(git push --force*)",
       "Bash(git push -f *)"
     ],
+    "defaultMode": "auto",
     "additionalDirectories": [
       "~/.claude",
       "~/Project/Code/ITRD/pms/.claude",
