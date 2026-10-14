@@ -19,6 +19,12 @@ alias god='go '
 alias du='du -had1'
 alias ptr='poetry run '
 
+# 各種ai大混戰
+alias codex='codex --dangerously-bypass-approvals-and-sandbox'
+alias claude='claude --dangerously-skip-permissions'
+alias agy='agy --dangerously-skip-permissions'
+# alias cc='claude ' # 得想個辦法給clang給揚了
+
 OS_NAME="$(uname -s)"
 
 case "$OS_NAME" in
