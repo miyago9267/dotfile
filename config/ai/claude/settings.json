@@ -481,7 +481,8 @@
     "stingray@stingray": true,
     "warp@claude-code-warp": true,
     "shoal@shoal": true,
-    "shoal-dispatch-guard@shoal": true
+    "shoal-dispatch-guard@shoal": true,
+    "baton@baton": true
   },
   "extraKnownMarketplaces": {
     "claude-hud": {
@@ -512,6 +513,12 @@
       "source": {
         "source": "directory",
         "path": "~/.local/share/shoal/claude-marketplace"
+      }
+    },
+    "baton": {
+      "source": {
+        "source": "directory",
+        "path": "~/Project/Active/baton"
       }
     }
   },

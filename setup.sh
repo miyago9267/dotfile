@@ -56,6 +56,7 @@ _ALL_ITEMS=(
   "setup_tmux.sh|Tmux 環境與設定|終端|0|1|environment|darwin linux:apt linux:pacman|0"
   "setup_fonts.sh|字型安裝|基礎|0|0|environment|all|0"
   "setup_claude.sh|Claude Code 設定 (symlink)|工具|1|0|config|all|0"
+  "setup_baton.sh|baton (plugin + baton CLI)|工具|1|0|config|all|0"
   "setup_codex.sh|Codex CLI 設定 (symlink)|工具|1|0|config|all|0"
   "setup_gemini.sh|Gemini CLI 設定 (symlink)|工具|1|0|config|all|0"
   "setup_pi.sh|Pi coding agent 設定 (symlink)|工具|1|0|config|all|0"

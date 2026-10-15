@@ -11,6 +11,7 @@ SCRIPT_DIR="$DOTFILE_DIR/script/common"
 CONFIG_SETUP_SCRIPTS=(
   setup_dotfiles.sh
   setup_claude.sh
+  setup_baton.sh
   setup_codex.sh
   setup_gemini.sh
   setup_grok.sh
