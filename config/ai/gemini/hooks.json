@@ -64,7 +64,7 @@
       }
     ]
   },
-  "shoal-guard": {
+  "shoal-dispatch-guard": {
     "PreInvocation": [
       {
         "type": "command",

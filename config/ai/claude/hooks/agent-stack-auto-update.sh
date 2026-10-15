@@ -121,8 +121,24 @@ e=d.get(sys.argv[2])
 sys.exit(0 if isinstance(e,dict) and isinstance(e.get("modules"),list) and sys.argv[3] not in e["modules"] else 1)' "$1" "$2" "$3" 2>/dev/null
 }
 
+# 0 = 清單有 claude 項目但未列 dispatch-guard，且 chain 沒有 hosts 含 claude 的成員
+# （此時 guard plugin 不需要）；其餘（含任何錯誤）回 1，即照舊安裝。
+shoal_guard_plugin_unneeded() {
+  python3 -c 'import json,sys
+d=json.load(open(sys.argv[1]))
+e=d.get("claude")
+if not (isinstance(e,dict) and isinstance(e.get("modules"),list) and "dispatch-guard" not in e["modules"]):
+    sys.exit(1)
+c=d.get("chain")
+if isinstance(c,list):
+    for m in c:
+        if isinstance(m,dict) and isinstance(m.get("hosts"),list) and "claude" in m["hosts"]:
+            sys.exit(1)
+sys.exit(0)' "$1" 2>/dev/null
+}
+
 update_shoal() {
-  # Claude 端用 shoal 的 Claude plugin（role 以 shoal:<role> 出現，含 skill 與 guard），
+  # Claude 端用 shoal 的兩個 Claude plugin：shoal（role、skill、policy）與 shoal-dispatch-guard（guard hook），
   # 只從 committed HEAD 取檔，不裝未 commit 的 WIP。SHOAL_ROOT 指向 shoal repo 根目錄。
   # plugin 與舊的全域安裝（agents/、skills/shoal-orchestration、settings.json 的 guard）不並存；
   # 只留 agents/Explore.md 覆寫內建 Explore（plugin 的 shoal:Explore 蓋不掉不同名的內建 agent）。
@@ -135,7 +151,7 @@ update_shoal() {
   mp="$data/claude-marketplace"
   mkdir -p "$data" || return 1
   stage=$(mktemp -d "$data/.claude-marketplace.XXXXXX") || return 1
-  if ! git -C "$src" archive HEAD .claude-plugin claude-plugin hosts/claude/dist/agents/Explore.md |
+  if ! git -C "$src" archive HEAD .claude-plugin claude-plugin claude-guard-plugin hosts/claude/dist/agents/Explore.md |
     tar -x -C "$stage"; then
     rm -rf "$stage"
     return 1
@@ -177,6 +193,16 @@ PY
     timeout 120 claude plugin update shoal@shoal >/dev/null 2>&1 || return 1
   else
     timeout 120 claude plugin install shoal@shoal >/dev/null 2>&1 || return 1
+  fi
+  # guard plugin：模組清單明確不要、且 chain 無 claude 成員時才不裝（已存在的由 shoal installer 移除）。
+  if shoal_guard_plugin_unneeded "$data/modules.json"; then
+    return 0
+  fi
+  if timeout 120 claude plugin list --json 2>/dev/null |
+    python3 -c 'import json,sys; sys.exit(0 if any(p.get("id")=="shoal-dispatch-guard@shoal" for p in json.load(sys.stdin)) else 1)'; then
+    timeout 120 claude plugin update shoal-dispatch-guard@shoal >/dev/null 2>&1 || return 1
+  else
+    timeout 120 claude plugin install shoal-dispatch-guard@shoal >/dev/null 2>&1 || return 1
   fi
 }
 

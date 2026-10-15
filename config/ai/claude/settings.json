@@ -480,7 +480,8 @@
     "i-have-adhd@i-have-adhd": true,
     "stingray@stingray": true,
     "warp@claude-code-warp": true,
-    "shoal@shoal": true
+    "shoal@shoal": true,
+    "shoal-dispatch-guard@shoal": true
   },
   "extraKnownMarketplaces": {
     "claude-hud": {
