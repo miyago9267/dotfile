@@ -18,7 +18,7 @@ LEGACY_SHARED_DST="$CLAUDE_DST/AGENT_RULES_SHARED.md"
 # skills/ 整個目錄 symlink 回 repo，所以裡面的 link 會被版控看到（docs/specs/portable-paths）：
 # - shared skill 用相對目標，三個平台共用同一個 commit
 # - repo 外的 skill 不進版控（.gitignore），來源存在時才在本機建立
-SHARED_SKILLS=(knowledge-base-router community-tech-brief jev-tools desktop-ops)
+SHARED_SKILLS=(knowledge-base-router community-tech-brief jev-tools desktop-ops term-reels)
 EXTERNAL_SKILLS=(
   "jev-browser|$HOME/Project/AI/Skills/jev-tools/skills/jev-browser"
   "jev-choice|$HOME/Project/AI/Skills/jev-tools/skills/jev-choice"

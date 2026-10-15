@@ -29,6 +29,7 @@ SHARED_CORE_SKILLS=(
   community-tech-brief
   jev-tools
   desktop-ops
+  term-reels
 )
 
 link_managed() {

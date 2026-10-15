@@ -62,6 +62,7 @@ SHARED_CORE_SKILLS=(
   community-tech-brief
   jev-tools
   desktop-ops
+  term-reels
 )
 
 should_install_gemini_skill() {
