@@ -113,97 +113,30 @@ update_calico() {
   mv -f "$target.new" "$target"
 }
 
-# 0 = 清單存在、有該 host 項目，且未列出該 module；其餘（含任何錯誤）回 1。
-shoal_module_disabled() {
-  python3 -c 'import json,sys
-d=json.load(open(sys.argv[1]))
-e=d.get(sys.argv[2])
-sys.exit(0 if isinstance(e,dict) and isinstance(e.get("modules"),list) and sys.argv[3] not in e["modules"] else 1)' "$1" "$2" "$3" 2>/dev/null
-}
-
-# 0 = 清單有 claude 項目但未列 dispatch-guard，且 chain 沒有 hosts 含 claude 的成員
-# （此時 guard plugin 不需要）；其餘（含任何錯誤）回 1，即照舊安裝。
-shoal_guard_plugin_unneeded() {
-  python3 -c 'import json,sys
-d=json.load(open(sys.argv[1]))
-e=d.get("claude")
-if not (isinstance(e,dict) and isinstance(e.get("modules"),list) and "dispatch-guard" not in e["modules"]):
-    sys.exit(1)
-c=d.get("chain")
-if isinstance(c,list):
-    for m in c:
-        if isinstance(m,dict) and isinstance(m.get("hosts"),list) and "claude" in m["hosts"]:
-            sys.exit(1)
-sys.exit(0)' "$1" 2>/dev/null
-}
-
 update_shoal() {
-  # Claude 端用 shoal 的兩個 Claude plugin：shoal（role、skill、policy）與 shoal-dispatch-guard（guard hook），
-  # 只從 committed HEAD 取檔，不裝未 commit 的 WIP。SHOAL_ROOT 指向 shoal repo 根目錄。
-  # plugin 與舊的全域安裝（agents/、skills/shoal-orchestration、settings.json 的 guard）不並存；
-  # 只留 agents/Explore.md 覆寫內建 Explore（plugin 的 shoal:Explore 蓋不掉不同名的內建 agent）。
-  local src cfg data mp stage
+  # shoal 自己負責更新：匯出 committed HEAD、刷新 Claude 與 Codex 的本機 marketplace、plugin install/update、
+  # 各 host 同步與 sha256 檢查（repo-layout P3）。這裡只呼叫它；SHOAL_ROOT 指向 shoal repo 根目錄。
+  # 不含 git pull；Claude settings.json 的 ~ 還原留在這裡（portable_paths.py 與下面的 rewrite）。
+  local src data mp out status
   src="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
-  git -C "$src" rev-parse --verify HEAD >/dev/null 2>&1 || return 1
-  command -v claude >/dev/null 2>&1 || return 1
-  cfg="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+  [ -f "$src/tools/shoal_install.py" ] || return 1
   data="${XDG_DATA_HOME:-$HOME/.local/share}/shoal"
   mp="$data/claude-marketplace"
-  mkdir -p "$data" || return 1
-  stage=$(mktemp -d "$data/.claude-marketplace.XXXXXX") || return 1
-  if ! git -C "$src" archive HEAD .claude-plugin claude-plugin claude-guard-plugin hosts/claude/dist/agents/Explore.md |
-    tar -x -C "$stage"; then
-    rm -rf "$stage"
-    return 1
-  fi
-  # shoal 的模組清單有 claude 項目但沒列 claude-explore 時不裝（已存在的由 shoal installer 移除）；
-  # 清單不存在、讀不到或無 claude 項目一律照舊安裝。
-  if shoal_module_disabled "$data/modules.json" claude claude-explore; then
-    :
-  elif ! install -m 0644 "$stage/hosts/claude/dist/agents/Explore.md" "$cfg/agents/Explore.md"; then
-    rm -rf "$stage"
-    return 1
-  fi
-  rm -rf "$stage/hosts"
-  # 整個目錄換掉，避免殘留舊版檔案；舊目錄放到最後才刪。
-  rm -rf "$mp.old"
-  [ ! -d "$mp" ] || mv "$mp" "$mp.old"
-  mv "$stage" "$mp" || return 1
-  rm -rf "$mp.old"
-  # local directory marketplace：第一次才註冊，之後只刷新。
-  if timeout 120 claude plugin marketplace list --json 2>/dev/null |
-    python3 -c 'import json,sys; sys.exit(0 if any(m.get("name")=="shoal" for m in json.load(sys.stdin)) else 1)'; then
-    timeout 120 claude plugin marketplace update shoal >/dev/null 2>&1 || return 1
-  else
-    timeout 120 claude plugin marketplace add "$mp" >/dev/null 2>&1 || return 1
-    # CLI 會把絕對路徑寫進 settings.json（版控內），改回 ~ 形式。
-    python3 - "$cfg/settings.json" "$mp" "$HOME" <<'PY'
+  out=$(PATH="$HOME/.bun/bin:$PATH" python3 "$src/tools/shoal_install.py" --update --apply 2>&1)
+  status=$?
+  printf '%s\n' "$out" | sed 's/^/shoal update: /'
+  # CLI 會把絕對路徑寫進 settings.json（版控內），改回 ~ 形式；沒有可改的內容時什麼都不做。
+  python3 - "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json" "$mp" "$HOME" <<'PY'
 import pathlib
 import sys
 
 path = pathlib.Path(sys.argv[1]).resolve()
 mp, home = sys.argv[2], sys.argv[3]
-if mp.startswith(home + "/"):
+if path.is_file() and mp.startswith(home + "/"):
     text = path.read_text()
     path.write_text(text.replace('"path": "%s"' % mp, '"path": "~%s"' % mp[len(home):]))
 PY
-  fi
-  if timeout 120 claude plugin list --json 2>/dev/null |
-    python3 -c 'import json,sys; sys.exit(0 if any(p.get("id")=="shoal@shoal" for p in json.load(sys.stdin)) else 1)'; then
-    timeout 120 claude plugin update shoal@shoal >/dev/null 2>&1 || return 1
-  else
-    timeout 120 claude plugin install shoal@shoal >/dev/null 2>&1 || return 1
-  fi
-  # guard plugin：模組清單明確不要、且 chain 無 claude 成員時才不裝（已存在的由 shoal installer 移除）。
-  if shoal_guard_plugin_unneeded "$data/modules.json"; then
-    return 0
-  fi
-  if timeout 120 claude plugin list --json 2>/dev/null |
-    python3 -c 'import json,sys; sys.exit(0 if any(p.get("id")=="shoal-dispatch-guard@shoal" for p in json.load(sys.stdin)) else 1)'; then
-    timeout 120 claude plugin update shoal-dispatch-guard@shoal >/dev/null 2>&1 || return 1
-  else
-    timeout 120 claude plugin install shoal-dispatch-guard@shoal >/dev/null 2>&1 || return 1
-  fi
+  return "$status"
 }
 
 if update_remora; then
@@ -226,14 +159,7 @@ shoal_root="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
 if [ ! -d "$shoal_root/.git" ]; then
   printf '%s\n' "shoal checkout not found at $shoal_root; clone miyago9267/shoal there or set SHOAL_ROOT"
 fi
-# Codex、Grok、agy、OpenCode 的全域安裝同樣從 shoal committed HEAD 同步；
-# 每個 host 一行摘要直接寫進 update.log，單一 host 失敗不影響其他步驟。
-if sync_summary=$(PATH="$HOME/.bun/bin:$PATH" python3 "$shoal_root/tools/sync_global.py" --apply 2>&1); then
-  printf '%s\n' "$sync_summary" | sed 's/^/shoal sync: /'
-else
-  printf '%s\n' 'shoal sync failed'
-  printf '%s\n' "$sync_summary" | sed 's/^/shoal sync: /'
-fi
+# Codex、Grok、agy、OpenCode 的全域同步已包含在 shoal_install.py --update 內（sync <host> 各一行）。
 
 # shoal 的 installer 寫的是絕對路徑，而 settings.json 在版控裡；改回可攜形式（docs/specs/portable-paths）。
 python3 "${MIYAGO_DOTFILE_ROOT:-$HOME/dotfile}/script/common/portable_paths.py" --fix 2>&1 | sed 's/^/portable paths: /'
