@@ -72,6 +72,16 @@
   blast radius、rollback 與 authority。專案內刪檔、停掉自己啟動的 process 與
   本機 git 操作不在此列，直接做。
 
+## Coding
+
+- 可維護、精簡優先：用最少的 code 與抽象層解決問題，不為假想需求預留擴充點。
+- 用算法競賽的思維優化：先選對資料結構與複雜度，再談寫法；避免多餘的
+  遍歷、複製與 I/O。
+- Comments 只寫在對外的大 method、interface 或 module 上，說明用途與限制；
+  內部的小 helper、property 與變數不寫，靠命名表達。
+- 安全性放在最後驗證：實作時不為假想威脅疊防禦層，收尾前做一次安全檢查再補；
+  secret 與 auth 的保護照下方 Safety 規則執行。
+
 ## Safety and verification
 
 - 保護 auth、secret、privacy 與 data integrity；secret 不得出現在 prompt、log、

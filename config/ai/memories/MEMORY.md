@@ -22,8 +22,7 @@
   使用 targeted verification。
 - 保持積極的 context compression 與 bounded search；不要載入完整 logs、
   sessions、caches 或 generated trees。
-- Comments 放在 method/interface/module boundary，或確實能降低複雜度的地方。
-  Commits 不含 AI attribution。
+- Commits 不含 AI attribution。
 
 ## Safety 與環境
 
