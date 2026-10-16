@@ -57,6 +57,14 @@ HIST_STAMPS="yyyy-mm-dd"
 ZSH_DISABLE_COMPFIX=true
 skip_global_compinit=1
 
+# zplug 只 source OMZ plugin、不跑 oh-my-zsh.sh，補建它的 completions cache
+# （docker plugin 會在背景寫 _docker，目錄不存在時 tee 會在 prompt 後噴錯）
+() {
+  local d=$HOME/.zplug/repos/robbyrussell/oh-my-zsh/cache/completions
+  [[ -d $d ]] || mkdir -p $d
+  fpath=($d $fpath)
+}
+
 # Load plugins (run `zplug install` manually when adding new plugins)
 # 平常只 source 由 zplug cache 產生的 static loader，跳過 zplug 每次啟動的
 # 偵測與 parse（~250ms）；宣告檔或 zplug cache 較新時才走完整 zplug load 並重建。
