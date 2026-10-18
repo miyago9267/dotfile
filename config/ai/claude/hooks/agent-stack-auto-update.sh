@@ -9,7 +9,10 @@ LOCK_DIR="$STATE_DIR/lock"
 
 mkdir -p "$STATE_DIR"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
-  exit 0
+  # 被 kill 時 trap 不會跑，lock 會一直留著；超過 60 分鐘的視為失效，否則每次都靜默跳過
+  [ -n "$(find "$LOCK_DIR" -maxdepth 0 -mmin +60 2>/dev/null)" ] || exit 0
+  rmdir "$LOCK_DIR" 2>/dev/null && mkdir "$LOCK_DIR" 2>/dev/null || exit 0
+  printf '%s\n' "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] removed stale lock" >>"$LOG_FILE"
 fi
 trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT
 
