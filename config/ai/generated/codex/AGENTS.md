@@ -215,7 +215,7 @@ security、release gates；自動升級只切換 typed role，不切換 root mod
 <!-- runtime-adapter:end -->
 
 <!-- shoal-codex:begin -->
-<!-- shoal-codex v3.11.1 -->
+<!-- shoal-codex v3.12.0-beta -->
 <!-- markdownlint-disable-next-line MD041 -->
 ### Shoal always-on bootstrap
 
