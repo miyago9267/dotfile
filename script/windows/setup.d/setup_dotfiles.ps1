@@ -56,6 +56,29 @@ function Link-DotFile {
     }
 }
 
+# -- repo 內的 symlink：Git for Windows 預設 core.symlinks=false，會 checkout 成內容是路徑的純文字檔 --
+if ($canSymlink -and (Get-Command git -ErrorAction SilentlyContinue)) {
+    if ((git -C $DotfileRoot config core.symlinks) -ne 'true') {
+        git -C $DotfileRoot config core.symlinks true
+    }
+    $broken = @(git -C $DotfileRoot ls-files -s | Where-Object { $_ -match '^120000 ' } | ForEach-Object {
+        ($_ -split "`t", 2)[1]
+    } | Where-Object {
+        $path = Join-Path $DotfileRoot $_
+        $item = Get-Item -LiteralPath $path -Force -ErrorAction SilentlyContinue
+        # 純文字檔的內容必須等於 index 裡的 link target，否則是本機修改，不動
+        (-not $item) -or (-not $item.LinkType -and -not $item.PSIsContainer -and
+            "$(Get-Content -LiteralPath $path -Raw)".Trim() -eq (git -C $DotfileRoot cat-file -p ":$_" | Out-String).Trim())
+    })
+    foreach ($rel in $broken) {
+        Remove-Item -LiteralPath (Join-Path $DotfileRoot $rel) -Force -ErrorAction SilentlyContinue
+    }
+    if ($broken.Count -gt 0) {
+        git -C $DotfileRoot checkout -- @broken
+        Write-Host "  [LINK] 還原 $($broken.Count) 個 repo symlink" -ForegroundColor Green
+    }
+}
+
 if ($canSymlink) {
     Write-Host '  使用 symlink 模式' -ForegroundColor Green
 } else {
@@ -107,16 +130,6 @@ if (Test-Path (Split-Path $WTLocalState)) {
 # -- WSL --
 Link-DotFile (Join-Path $DotfileRoot 'config' 'wsl' '.wslconfig') (Join-Path $UserHome '.wslconfig')
 
-# -- Claude Code --
-$ClaudeDst = Join-Path $UserHome '.claude'
-Link-DotFile (Join-Path $DotfileRoot 'claude' 'CLAUDE.md')        (Join-Path $ClaudeDst 'CLAUDE.md')
-Link-DotFile (Join-Path $DotfileRoot 'claude' 'settings.json')    (Join-Path $ClaudeDst 'settings.json')
-Link-DotFile (Join-Path $DotfileRoot 'claude' 'hooks')            (Join-Path $ClaudeDst 'hooks')
-Link-DotFile (Join-Path $DotfileRoot 'claude' 'commands')         (Join-Path $ClaudeDst 'commands')
-Link-DotFile (Join-Path $DotfileRoot 'claude' 'scripts')          (Join-Path $ClaudeDst 'scripts')
-Link-DotFile (Join-Path $DotfileRoot 'claude' 'agents')           (Join-Path $ClaudeDst 'agents')
-Link-DotFile (Join-Path $DotfileRoot 'claude' 'rules')            (Join-Path $ClaudeDst 'rules')
-Link-DotFile (Join-Path $DotfileRoot 'claude' 'skills')           (Join-Path $ClaudeDst 'skills')
-Link-DotFile (Join-Path $DotfileRoot 'claude' 'templates')        (Join-Path $ClaudeDst 'templates')
+# Claude Code 的連結由 setup_claude.ps1 處理（來源在 config/ai/claude）。
 
 Write-Host '  Dotfiles 連結完成' -ForegroundColor Green

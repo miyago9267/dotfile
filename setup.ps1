@@ -209,7 +209,7 @@ if ($All -or $Everything -or $ConfigOnly) {
 }
 
 # -- 執行安裝 --
-Clear-Host
+if (-not [Console]::IsOutputRedirected) { Clear-Host }  # agent / CI 沒有 console，Clear-Host 會丟例外
 Show-Banner
 Write-ColorLine "=== 開始安裝 ===" Yellow
 Write-Host ""

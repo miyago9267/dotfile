@@ -116,26 +116,13 @@ update_calico() {
 update_shoal() {
   # shoal 自己負責更新：匯出 committed HEAD、刷新 Claude 與 Codex 的本機 marketplace、plugin install/update、
   # 各 host 同步與 sha256 檢查（repo-layout P3）。這裡只呼叫它；SHOAL_ROOT 指向 shoal repo 根目錄。
-  # 不含 git pull；Claude settings.json 的 ~ 還原留在這裡（portable_paths.py 與下面的 rewrite）。
-  local src data mp out status
+  # 不含 git pull；CLI 寫進 settings.json 的絕對 marketplace path 由最後的 portable_paths.py --fix 改回 ~。
+  local src out status
   src="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
   [ -f "$src/tools/shoal_install.py" ] || return 1
-  data="${XDG_DATA_HOME:-$HOME/.local/share}/shoal"
-  mp="$data/claude-marketplace"
   out=$(PATH="$HOME/.bun/bin:$PATH" python3 "$src/tools/shoal_install.py" --update --apply 2>&1)
   status=$?
   printf '%s\n' "$out" | sed 's/^/shoal update: /'
-  # CLI 會把絕對路徑寫進 settings.json（版控內），改回 ~ 形式；沒有可改的內容時什麼都不做。
-  python3 - "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json" "$mp" "$HOME" <<'PY'
-import pathlib
-import sys
-
-path = pathlib.Path(sys.argv[1]).resolve()
-mp, home = sys.argv[2], sys.argv[3]
-if path.is_file() and mp.startswith(home + "/"):
-    text = path.read_text()
-    path.write_text(text.replace('"path": "%s"' % mp, '"path": "~%s"' % mp[len(home):]))
-PY
   return "$status"
 }
 

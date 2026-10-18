@@ -4,7 +4,8 @@
   --check [--staged]  掃 tracked 檔案與 symlink；有 /Users/<name>、/home/<name>、
                       C:\\Users\\<name> 或絕對目標的 symlink 就 exit 1。
                       --staged 只看 index 裡這次要 commit 的內容（pre-commit 用）。
-  --fix               把 FIX_FILES 裡 hook command 的 home 前綴改回可攜形式。
+  --fix               把 FIX_FILES 裡 hook command 與 directory marketplace path
+                      的 home 前綴改回可攜形式。
                       herdr、orca、shoal 這類 installer 會回寫絕對路徑，setup 與
                       auto-update 之後跑一次；重跑結果不變。
 
@@ -141,19 +142,47 @@ def _rewrite_commands(node):
     return node, changed
 
 
+def portable_dir(path: str) -> str:
+    """home 開頭的目錄路徑改成 ~/...（一律 /）；Claude 在各平台都會展開 directory source 的 ~。"""
+    m = HOME_RE.match(path)
+    if not m:
+        return path
+    rest = path[m.end():].replace("\\", "/")
+    while "//" in rest:
+        rest = rest.replace("//", "/")
+    return "~" + rest
+
+
+def _rewrite_marketplaces(data) -> bool:
+    """extraKnownMarketplaces.*.source（source 為 directory）的 path。"""
+    changed = False
+    markets = data.get("extraKnownMarketplaces") if isinstance(data, dict) else None
+    for entry in markets.values() if isinstance(markets, dict) else ():
+        source = entry.get("source") if isinstance(entry, dict) else None
+        if isinstance(source, dict) and source.get("source") == "directory" and isinstance(source.get("path"), str):
+            new = portable_dir(source["path"])
+            if new != source["path"]:
+                source["path"] = new
+                changed = True
+    return changed
+
+
 def fix_file(path: Path) -> bool:
     """改寫一個 JSON 檔；symlink 會寫進它指向的檔案。回傳是否有變更。"""
     target = path.resolve()
     text = target.read_text(encoding="utf-8")
     data = json.loads(text)
     _, changed = _rewrite_commands(data)
+    changed = _rewrite_marketplaces(data) or changed
     if not changed:
         return False
     indent = 2
     m = re.search(r"\n( +)\S", text)
     if m:
         indent = len(m.group(1))
-    target.write_text(json.dumps(data, indent=indent, ensure_ascii=False) + "\n", encoding="utf-8")
+    # 保留原本的換行；Windows 的 text mode 會把 \n 寫成 \r\n
+    newline = "\r\n" if b"\r\n" in target.read_bytes() else "\n"
+    target.write_text(json.dumps(data, indent=indent, ensure_ascii=False) + "\n", encoding="utf-8", newline=newline)
     return True
 
 
@@ -188,7 +217,7 @@ def check(root: Path, staged: bool) -> list[str]:
                 target = str(full.readlink())
             else:
                 continue
-            if target.startswith("/") or re.match(r"[A-Za-z]:[\\/]", target):
+            if target.startswith(("/", "\\")) or re.match(r"[A-Za-z]:[\\/]", target):  # Windows 的 readlink 結果用反斜線
                 problems.append(f"{path}: symlink 指向絕對路徑 {target}")
             continue
         if mode == "160000":

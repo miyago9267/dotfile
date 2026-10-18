@@ -2,6 +2,7 @@
 """portable_paths.py 的回歸測試：python3 script/common/test_portable_paths.py"""
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -62,7 +63,8 @@ class PortableCommand(unittest.TestCase):
 
     def test_result_expands_in_sh(self):
         cmd = pp.portable_command("echo /Users/miyago/a '/Users/miyago/b c' \"/home/miyago/d\"")
-        out = subprocess.run(["/bin/sh", "-c", cmd], capture_output=True, text=True, env={**os.environ, "HOME": "/h o"})
+        sh = shutil.which("sh") or "/bin/sh"  # Windows: Git for Windows 的 sh.exe
+        out = subprocess.run([sh, "-c", cmd], capture_output=True, text=True, env={**os.environ, "HOME": "/h o"})
         self.assertEqual(out.stdout.strip(), "/h o/a /h o/b c /h o/d")
 
 
@@ -71,6 +73,7 @@ class FixAndCheck(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
         self.git("init", "-q")
+        self.git("config", "core.symlinks", "true")  # Git for Windows 預設 false，symlink 會變純文字檔
         self.git("config", "user.email", "t@example.invalid")
         self.git("config", "user.name", "t")
 
@@ -96,6 +99,24 @@ class FixAndCheck(unittest.TestCase):
         self.assertEqual(data["dirs"], ["/Users/miyago/keep"])
         self.assertEqual(data["hooks"][0]["command"], 'bash "$HOME/a.sh"')
         self.assertFalse(pp.fix_file(path))
+
+    def test_fix_makes_directory_marketplace_portable(self):
+        path = self.root / "settings.json"
+        data = {"extraKnownMarketplaces": {
+            "win": {"source": {"source": "directory", "path": "C:\\Users\\bob\\.local\\share\\shoal\\claude-marketplace"}},
+            "mac": {"source": {"source": "directory", "path": "/Users/bob/.local/share/x"}},
+            "gh": {"source": {"source": "github", "repo": "o/r"}},
+            "other": {"source": {"source": "directory", "path": "/opt/market"}},
+        }}
+        path.write_text(json.dumps(data), encoding="utf-8")
+        self.assertTrue(pp.fix_file(path))
+        markets = json.loads(path.read_text(encoding="utf-8"))["extraKnownMarketplaces"]
+        self.assertEqual(markets["win"]["source"]["path"], "~/.local/share/shoal/claude-marketplace")
+        self.assertEqual(markets["mac"]["source"]["path"], "~/.local/share/x")
+        self.assertEqual(markets["gh"]["source"], {"source": "github", "repo": "o/r"})
+        self.assertEqual(markets["other"]["source"]["path"], "/opt/market")
+        self.assertFalse(pp.fix_file(path))
+        self.assertNotIn(b"\r\n", path.read_bytes())
 
     def test_fix_writes_through_symlink(self):
         real = self.write("real.json", json.dumps({"command": "sh /home/miyago/a"}))
