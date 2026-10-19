@@ -2,13 +2,27 @@
 
 核心原則：Vim 負責編輯；plugin 只提供視覺效果、file tree、tmux 導航與 Agent。
 
+Vim 與 Neovim 共用同一份 VSCode 風格（Windows／Linux、Ctrl 為主）快捷鍵表：`config/vim/keymaps.vim`，
+由 `base.vim` 載入。每個 key 都帶說明（`MiyagoMap()`）；Vim 直接套用，Neovim 在 `lua/config/keymaps.lua` 套用，所以 which-key 與 palette 看得到說明。
+`Space p` 或 `Space ?` 搜尋所有快捷鍵（Nvim 走 `fzf-lua keymaps`，Vim 走 fzf 列出同一份表）。
+下列表格中，Buffer／Tab／Window／編輯類的 key 兩邊相同；標示「Nvim」的才是 Neovim 專屬。
+
 ## 編輯
 
 | 快捷鍵 | 功能 |
 | --- | --- |
 | `Ctrl-s` | 儲存 |
-| `Ctrl-z` | 復原 |
+| `Ctrl-z` / `Ctrl-y` | 復原／重做 |
+| `Ctrl-c` / `Ctrl-x`（visual） | 複製／剪下到系統剪貼簿 |
+| `Ctrl-v` | 從系統剪貼簿貼上（normal／insert／cmdline；visual 會取代選取內容） |
+| `Ctrl-q` | Visual block（原本 Vim 的 `Ctrl-v`） |
+| `Shift+方向鍵` | 開始 Visual 選取（`keymodel=startsel,stopsel`） |
+| Visual `Tab` / `Shift-Tab` | 縮排／取消縮排並保留選取 |
+| Visual `BS` / `Del` | 刪除選取（不進 register） |
 | `Ctrl-f` | 目前檔案搜尋 |
+| 搜尋輸入中 `↑` / `↓` | 上一個／下一個符合處（還在輸入，Enter 確認；`←` `→` 保留給編輯搜尋文字） |
+| `Ctrl-g` | 跳到行號（進 `:` 命令列） |
+| `Space rr` | 取代游標下的字（`:%s/\<word\>//g`） |
 | `j` / `k` | 依 Miyago 習慣交換上下移動 |
 | `Ctrl-/` | 切換註解（normal／visual／insert；同內建 `gc`） |
 | `Alt-↑` / `Alt-↓` | 整行或選取範圍上下移動 |
@@ -43,7 +57,7 @@ Copilot 未登入、沒有 Node 或 credentials 時會靜默跳過，不影響�
 | `K` | 顯示 hover documentation |
 | `F2` | Rename symbol |
 | `Space .` / `Space F` | Code action／format（同 VSCode Ctrl-. ／ Shift-Alt-F） |
-| `[d` / `]d` | 上一個／下一個 diagnostic |
+| `[d` / `]d` | 上一個／下一個 diagnostic（Vim 的 ALE 錯誤也是同一組） |
 
 ## Problems（Trouble）
 
@@ -79,6 +93,7 @@ F1 / F3 / F4 也分別對應透明背景、行數、file tree；F12 對應原生
 | 快捷鍵 | 功能 |
 | --- | --- |
 | `Space bb` | 列出 buffer |
+| `Ctrl-w` | 關閉目前 buffer（window 操作改用 `Space w*`，見下） |
 | `Space bn` / `Space bp` | 下一個／上一個 buffer |
 | `Ctrl-Left` / `Ctrl-Right` | 左／右切換 buffer（當作檔案 tab 使用） |
 | `Space bc` / `Space bx` | 建立／關閉 buffer |
@@ -95,20 +110,26 @@ Space prefix 也遵循 tmux 的 pane 操作邏輯：
 | 快捷鍵 | 功能 |
 | --- | --- |
 | `Space -` / `Space \|` | Horizontal／vertical split |
-| `Space h/j/k/l` | 切換 window 或 tmux pane |
-| `Space H/J/K/L` | 調整 window 大小 |
+| `Space ←/→/↑/↓`（也可用 h/j/k/l） | 切換 window 或 tmux pane |
+| `Space Shift+方向鍵`（也可用 H/J/K/L） | 調整 window 大小 |
 | `Space =` | 平均所有 window |
 | `Space z` | 最大化／還原目前 window |
-| `Ctrl-w` | Vim 原生 window prefix |
+| `Ctrl-\` | 回到上一個 window |
 | `Space wv` / `Space ws` | 舊的 split aliases |
-| `Space wh/wl/wk/wj` | 往左／右／上／下開新 split（VSCode Split Editor） |
-| `Space wH/wL/wK/wJ` | 把目前 window 搬到最左／右／上／下 |
+| `Space w` + 方向鍵（也可用 `wh/wj/wk/wl`） | 往左／下／上／右開新 split（VSCode Split Editor） |
+| `Space w` + `Shift+方向鍵`（也可用 `wH/wJ/wK/wL`） | 把目前 window 搬到該方向最邊邊 |
 | `Space wx` | 和下一個 window 互換位置 |
-| `Space ←/→/↑/↓` | 切換 window（等同 `Space h/l/k/j`） |
-| `Space Shift+方向鍵` | 調整 window 大小 |
-| `Space w` + 方向鍵 | 往該方向開新 split |
-| `Space w` + `Shift+方向鍵` | 把 window 搬到該方向最邊邊 |
-| `Ctrl-h/j/k/l` | 快速切換 Neovim 或 tmux pane |
+| `Ctrl-h/j/k/l` | 切換 window，到邊界就跨進 tmux pane（Vim 與 Neovim 都走 `MiyagoNavigate`，沒有 tmux-navigator 時退回 `wincmd`）；這組沒有方向鍵版本，因為 `Ctrl-←/→` 已用於切換 buffer |
+
+三層方向鍵對照（方向鍵是主要入口，hjkl 保留為別名）：
+
+| 動作 | Ghostty | tmux | Vim / Nvim |
+| --- | --- | --- | --- |
+| 切換 pane | Cmd+Alt+方向鍵 | prefix 方向鍵 | Space 方向鍵 |
+| 調整大小 | Cmd+Ctrl+方向鍵，或 Cmd-r 後方向鍵 | prefix Alt+方向鍵（一次 5）／prefix Ctrl+方向鍵 | Space Shift+方向鍵 |
+| 往該方向分割 | Cmd-- / Cmd-\| | prefix - / \| | Space w 方向鍵 |
+| 把視窗搬到最邊 | — | — | Space w Shift+方向鍵 |
+| 捲動模式 | Cmd-[ 後 ↑↓ PgUp PgDn | prefix [ 後方向鍵 | — |
 
 ## Tab
 
@@ -118,7 +139,7 @@ Space prefix 也遵循 tmux 的 pane 操作邏輯：
 | `Space [` / `Space ]` | 上一個／下一個 tab |
 | `Space Tab` | 回到上一個 tab |
 | `Space x` | 關閉目前 tab |
-| `Space 1..9` | 跳到指定 tab |
+| `Space 1..9` | 跳到第 N 個 tab |
 
 ## Terminal / Agent
 
@@ -185,12 +206,12 @@ Nvim 用 `fzf-lua`，Vim 用 `fzf.vim`，兩者共用 `fzf` 與 `rg`。Vim 在�
 
 | 快捷鍵 | 功能 |
 | --- | --- |
-| `Ctrl-P` / `Space ff` | 搜尋檔名 |
+| `Ctrl-p` / `Space ff` | 搜尋檔名 |
 | `Space fg` | 全專案搜尋內容 |
 | `Space fw` | 搜尋游標下的字（Nvim visual 模式搜選取內容） |
 | `Space fb` | 已開啟的 buffer |
 | `Space fr` | 最近開過的檔案 |
-| `Space p` | Command palette：列出所有有說明的快捷鍵，Enter 直接執行（Nvim） |
+| `Space p` / `Space ?` | Command palette：搜尋所有有說明的快捷鍵，Enter 直接執行（Vim 只執行 normal mode 項目） |
 | `Space :` | 列出所有指令（Nvim） |
 | `Space fs` / `Space fS` | 目前檔案的 symbols／整個專案的 symbols（Nvim） |
 
@@ -205,3 +226,9 @@ Git gutter signs 與 inline blame 由 `gitsigns.nvim` 提供（Vim 用 vim-gitgu
 | `Space gp` | 預覽目前 hunk |
 | `Space gt` | 開關行尾的 inline blame |
 | `]h` / `[h` | 下一個 / 上一個 hunk |
+
+## 刻意不用的 key
+
+- `Ctrl-a`、`Ctrl-b`：tmux 的 prefix2／prefix，不能映射；`Ctrl-a` 保留 Vim 原生的數字遞增。
+- ``Ctrl-` ``、`Ctrl-Shift-*`、所有 `Cmd-*`：Ghostty 先吃掉，到不了編輯器，所以沒有 Cmd-f／Cmd-b 這類映射。
+- 無 prefix 的 `Ctrl-h/j/k/l` 是 tmux 與編輯器共用的導航，不改作他用。

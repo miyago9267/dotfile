@@ -87,77 +87,21 @@ local function tree_toggle()
   end
 end
 
-local function navigate_window(direction, tmux_command)
-  if vim.fn.exists(":" .. tmux_command) == 2 then
-    vim.cmd(tmux_command)
-  else
-    vim.cmd("wincmd " .. direction)
-  end
-end
-
-local zoom_restore
-
-local function toggle_zoom()
-  if zoom_restore then
-    vim.cmd(zoom_restore)
-    zoom_restore = nil
-    return
-  end
-
-  zoom_restore = vim.fn.winrestcmd()
-  vim.cmd("wincmd _")
-  vim.cmd("wincmd |")
-end
-
-local function resize_width(amount)
-  vim.cmd("vertical resize " .. (amount > 0 and "+" .. amount or amount))
-end
-
-local function resize_height(amount)
-  vim.cmd("resize " .. (amount > 0 and "+" .. amount or amount))
-end
-
 function M.setup()
   local map = vim.keymap.set
 
-  map("o", "j", "k", { noremap = true, silent = true, desc = "Move up" })
-  map("o", "k", "j", { noremap = true, silent = true, desc = "Move down" })
-  -- VSCode 行為：第一行再往上跳到行首、最後一行再往下跳到行尾
-  local function edge_move(dir, fallback, edge)
-    return function()
-      local line = vim.fn.line(".")
-      local at_edge = dir == "up" and line == 1 or dir == "down" and line == vim.fn.line("$")
-      if at_edge and vim.v.count <= 1 then
-        return edge
-      end
-      return fallback
-    end
+  -- 共用 VSCode 風格 keymap（config/vim/keymaps.vim），Vim 與 Neovim 同一份
+  for _, k in ipairs(vim.g.miyago_keymaps or {}) do
+    map(vim.split(k.modes, ""), k.lhs, k.rhs, { desc = k.desc, expr = k.expr == 1, remap = k.remap == 1, silent = k.loud ~= 1 })
   end
-  local expr = { expr = true, silent = true }
-  map({ "n", "v" }, "j", edge_move("up", "k", "0"), vim.tbl_extend("force", expr, { desc = "Move up" }))
-  map({ "n", "v" }, "k", edge_move("down", "j", "$"), vim.tbl_extend("force", expr, { desc = "Move down" }))
-  map({ "n", "v" }, "<Up>", edge_move("up", "<Up>", "0"), vim.tbl_extend("force", expr, { desc = "Move up" }))
-  map({ "n", "v" }, "<Down>", edge_move("down", "<Down>", "$"), vim.tbl_extend("force", expr, { desc = "Move down" }))
-  map({ "n", "i", "v" }, "<C-s>", "<cmd>write<CR>", { desc = "Save" })
-  map("n", "<C-z>", "u", { desc = "Undo" })
+
   -- VSCode Ctrl-/：切換註解（用內建 gc；多數 terminal 把 Ctrl-/ 送成 Ctrl-_）
   for _, lhs in ipairs({ "<C-/>", "<C-_>" }) do
     map("n", lhs, "gcc", { remap = true, desc = "Toggle comment" })
     map("v", lhs, "gc", { remap = true, desc = "Toggle comment" })
     map("i", lhs, "<C-o>gcc", { remap = true, desc = "Toggle comment" })
   end
-  -- VSCode Alt-Up / Alt-Down：整行（或選取範圍）上下移動，不重新縮排
-  map("n", "<M-Up>", "<cmd>move .-2<CR>", { desc = "Move line up" })
-  map("n", "<M-Down>", "<cmd>move .+1<CR>", { desc = "Move line down" })
-  map("v", "<M-Up>", ":move '<-2<CR>gv", { silent = true, desc = "Move selection up" })
-  map("v", "<M-Down>", ":move '>+1<CR>gv", { silent = true, desc = "Move selection down" })
-  map("i", "<M-Up>", "<Esc><cmd>move .-2<CR>gi", { desc = "Move line up" })
-  map("i", "<M-Down>", "<Esc><cmd>move .+1<CR>gi", { desc = "Move line down" })
-  map("i", "<C-z>", "<C-o>u", { desc = "Undo" })
-  map("n", "<C-f>", "/", { desc = "Search in file" })
-  map("n", "<D-f>", "/", { desc = "Search in file" })
   map("n", "<C-e>", tree_toggle, { desc = "Toggle file tree" })
-  map("n", "<D-b>", tree_toggle, { desc = "Toggle file tree" })
   map("n", "<leader>tt", terminal_toggle, { desc = "Toggle terminal" })
   map("n", "<C-,>", terminal_toggle, { desc = "Toggle terminal" })
   map("n", "<leader>ts", "<cmd>Shell<CR>", { desc = "Open shell" })
@@ -182,19 +126,6 @@ function M.setup()
   map("n", "<leader>ub", toggle_transparency, { desc = "Toggle transparent background" })
   map("n", "<leader>uc", function() vim.opt.cursorline = not vim.opt.cursorline:get() end, { desc = "Toggle cursorline" })
 
-  map("n", "<leader>-", "<cmd>split<CR>", { desc = "Split horizontal" })
-  map("n", "<leader>|", "<cmd>vsplit<CR>", { desc = "Split vertical" })
-  map("n", "<leader>h", function() navigate_window("h", "TmuxNavigateLeft") end, { desc = "Window left" })
-  map("n", "<leader>j", function() navigate_window("j", "TmuxNavigateDown") end, { desc = "Window down" })
-  map("n", "<leader>k", function() navigate_window("k", "TmuxNavigateUp") end, { desc = "Window up" })
-  map("n", "<leader>l", function() navigate_window("l", "TmuxNavigateRight") end, { desc = "Window right" })
-  map("n", "<leader>H", function() resize_width(-2) end, { desc = "Shrink window width" })
-  map("n", "<leader>L", function() resize_width(2) end, { desc = "Grow window width" })
-  map("n", "<leader>K", function() resize_height(-2) end, { desc = "Shrink window height" })
-  map("n", "<leader>J", function() resize_height(2) end, { desc = "Grow window height" })
-  map("n", "<leader>=", "<C-w>=", { desc = "Equalize windows" })
-  map("n", "<leader>z", toggle_zoom, { desc = "Toggle window zoom" })
-
   -- F-keys remain compatibility aliases for older keyboards and remote sessions.
   map("n", "<F1>", toggle_transparency, { desc = "Toggle transparent background" })
   map("n", "<F3>", toggle_numbers, { desc = "Toggle line numbers" })
@@ -209,12 +140,6 @@ function M.setup()
   end, { desc = "Toggle cursorline" })
 
   map("n", "<leader>bb", "<cmd>buffers<CR>", { desc = "List buffers" })
-  map("n", "<leader>bn", "<cmd>bnext<CR>", { desc = "Next buffer" })
-  map("n", "<leader>bp", "<cmd>bprevious<CR>", { desc = "Previous buffer" })
-  map("n", "<C-Left>", "<cmd>bprevious<CR>", { desc = "Previous buffer" })
-  map("n", "<C-Right>", "<cmd>bnext<CR>", { desc = "Next buffer" })
-  map("n", "<leader>bc", "<cmd>enew<CR>", { desc = "New buffer" })
-  map("n", "<leader>bx", "<cmd>bdelete<CR>", { desc = "Close buffer" })
   map("n", "<leader>b?", "<cmd>BufferLinePick<CR>", { desc = "Pick buffer" })
   map("n", "<leader>bq", "<cmd>BufferLinePickClose<CR>", { desc = "Pick and close buffer" })
   map("n", "<leader>b<", "<cmd>BufferLineMovePrev<CR>", { desc = "Move buffer left" })
@@ -225,48 +150,7 @@ function M.setup()
   map("n", "<leader>bP", "<cmd>BufferLineTogglePin<CR>", { desc = "Toggle pin" })
   map("n", "<leader>bd", "<cmd>BufferLineSortByDirectory<CR>", { desc = "Sort by directory" })
   map("n", "<leader>be", "<cmd>BufferLineSortByExtension<CR>", { desc = "Sort by extension" })
-  map("n", "<leader>c", "<cmd>tabnew<CR>", { desc = "New tab" })
-  map("n", "<leader>[", "<cmd>tabprevious<CR>", { desc = "Previous tab" })
-  map("n", "<leader>]", "<cmd>tabnext<CR>", { desc = "Next tab" })
-  map("n", "<leader>x", "<cmd>tabclose<CR>", { desc = "Close tab" })
-  map("n", "<leader><Tab>", "<cmd>tabprevious<CR>", { desc = "Previous tab" })
-  for index = 1, 9 do
-    map("n", "<leader>" .. index, "<cmd>tabnext " .. index .. "<CR>", { desc = "Go to tab " .. index })
-  end
-  map("n", "<leader>wv", "<cmd>vsplit<CR>", { desc = "Vertical split" })
-  map("n", "<leader>ws", "<cmd>split<CR>", { desc = "Horizontal split" })
-  -- VSCode 的 Split Editor Left/Right/Up/Down：把目前 buffer 往指定方向開一個新視窗
-  map("n", "<leader>wh", "<cmd>leftabove vsplit<CR>", { desc = "Split to left" })
-  map("n", "<leader>wl", "<cmd>rightbelow vsplit<CR>", { desc = "Split to right" })
-  map("n", "<leader>wk", "<cmd>leftabove split<CR>", { desc = "Split above" })
-  map("n", "<leader>wj", "<cmd>rightbelow split<CR>", { desc = "Split below" })
-  -- 把目前視窗整個搬到最左/右/上/下
-  map("n", "<leader>wH", "<C-w>H", { desc = "Move window far left" })
-  map("n", "<leader>wL", "<C-w>L", { desc = "Move window far right" })
-  map("n", "<leader>wK", "<C-w>K", { desc = "Move window to top" })
-  map("n", "<leader>wJ", "<C-w>J", { desc = "Move window to bottom" })
-  map("n", "<leader>wx", "<C-w>x", { desc = "Swap with next window" })
-
-  -- 方向鍵版本（與 h/j/k/l 版本等價）
-  local arrows = {
-    { key = "Left", dir = "h", tmux = "TmuxNavigateLeft", split = "leftabove vsplit", resize = function() resize_width(-2) end },
-    { key = "Right", dir = "l", tmux = "TmuxNavigateRight", split = "rightbelow vsplit", resize = function() resize_width(2) end },
-    { key = "Up", dir = "k", tmux = "TmuxNavigateUp", split = "leftabove split", resize = function() resize_height(-2) end },
-    { key = "Down", dir = "j", tmux = "TmuxNavigateDown", split = "rightbelow split", resize = function() resize_height(2) end },
-  }
-  for _, a in ipairs(arrows) do
-    map("n", "<leader><" .. a.key .. ">", function() navigate_window(a.dir, a.tmux) end, { desc = "Focus window " .. a.key })
-    map("n", "<leader><S-" .. a.key .. ">", a.resize, { desc = "Resize window " .. a.key })
-    map("n", "<leader>w<" .. a.key .. ">", "<cmd>" .. a.split .. "<CR>", { desc = "Split " .. a.key })
-    map("n", "<leader>w<S-" .. a.key .. ">", "<C-w>" .. a.dir:upper(), { desc = "Move window far " .. a.key })
-  end
-  map("n", "<C-h>", "<C-w>h", { desc = "Window left" })
-  map("n", "<C-j>", "<C-w>j", { desc = "Window down" })
-  map("n", "<C-k>", "<C-w>k", { desc = "Window up" })
-  map("n", "<C-l>", "<C-w>l", { desc = "Window right" })
-  map("n", "<C-\\>", "<C-w>p", { desc = "Previous window" })
   map("t", "<Esc>", [[<C-\><C-n>]], { desc = "Terminal normal mode" })
-
 end
 
 return M

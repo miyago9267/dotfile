@@ -136,6 +136,7 @@ return {
       { "<leader>fr", "<cmd>FzfLua oldfiles<CR>", desc = "Recent files" },
       -- VSCode Ctrl-Shift-P：列出所有有描述的快捷鍵，Enter 直接執行；<leader>: 列出所有指令
       { "<leader>p", "<cmd>FzfLua keymaps<CR>", desc = "Command palette" },
+      { "<leader>?", "<cmd>FzfLua keymaps<CR>", desc = "Search keymaps" },
       { "<leader>:", "<cmd>FzfLua commands<CR>", desc = "Commands" },
       -- VSCode Ctrl-Shift-O / Ctrl-T
       { "<leader>fs", "<cmd>FzfLua lsp_document_symbols<CR>", desc = "Symbols in file" },

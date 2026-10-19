@@ -28,6 +28,7 @@ set cmdheight=2
 set updatetime=300
 set shortmess+=c
 set whichwrap+=<,>,[,]
+set keymodel=startsel,stopsel
 set signcolumn=yes
 set splitbelow
 set splitright
@@ -36,7 +37,9 @@ set shell=/bin/zsh
 " Keep the habitual force-quit key available in both Vim and Neovim.
 nnoremap Q :q!<CR>
 
-if has('clipboard')
+if has('unnamedplus')
+  set clipboard=unnamedplus
+elseif has('clipboard')
   set clipboard=unnamed
 endif
 
@@ -53,3 +56,6 @@ augroup miyago_shared_editor
   autocmd BufRead,BufNewFile *.ino setfiletype cpp
   autocmd BufRead,BufNewFile *.sage setfiletype python
 augroup END
+
+" 共用 VSCode 風格 keymap（Vim 與 Neovim 同一份）
+execute 'source ' . fnameescape(expand('<sfile>:p:h') . '/keymaps.vim')

@@ -25,6 +25,7 @@ if has('textprop')
   Plug 'APZelos/blamer.nvim'
 endif
 Plug 'tpope/vim-fugitive'
+Plug 'christoomey/vim-tmux-navigator'
 " 新版用了 `..` 語法，Vim 8.1.1114 以前不支援
 if has('patch-8.1.1114')
   Plug 'mengelbrecht/lightline-bufferline'
@@ -133,6 +134,9 @@ endf
 " =====================
 "   Plugin Settings
 " =====================
+
+" christoomey/vim-tmux-navigator（Ctrl-h/j/k/l 由 keymaps.vim 的 MiyagoNavigate 處理）
+let g:tmux_navigator_no_mappings = 1
 
 " Yggdroot/indentLine
 let g:indentLine_char_list=['|', '¦', '┆', '┊']
@@ -257,28 +261,6 @@ let g:lightline#bufferline#enable_devicons=1
 let g:lightline#bufferline#unicode_symbols=1
 let g:lightline#bufferline#clickable=1
 
-nmap <Leader>1 <Plug>lightline#bufferline#go(1)
-nmap <Leader>2 <Plug>lightline#bufferline#go(2)
-nmap <Leader>3 <Plug>lightline#bufferline#go(3)
-nmap <Leader>4 <Plug>lightline#bufferline#go(4)
-nmap <Leader>5 <Plug>lightline#bufferline#go(5)
-nmap <Leader>6 <Plug>lightline#bufferline#go(6)
-nmap <Leader>7 <Plug>lightline#bufferline#go(7)
-nmap <Leader>8 <Plug>lightline#bufferline#go(8)
-nmap <Leader>9 <Plug>lightline#bufferline#go(9)
-nmap <Leader>0 <Plug>lightline#bufferline#go(10)
-
-nmap <Leader>c1 <Plug>lightline#bufferline#delete(1)
-nmap <Leader>c2 <Plug>lightline#bufferline#delete(2)
-nmap <Leader>c3 <Plug>lightline#bufferline#delete(3)
-nmap <Leader>c4 <Plug>lightline#bufferline#delete(4)
-nmap <Leader>c5 <Plug>lightline#bufferline#delete(5)
-nmap <Leader>c6 <Plug>lightline#bufferline#delete(6)
-nmap <Leader>c7 <Plug>lightline#bufferline#delete(7)
-nmap <Leader>c8 <Plug>lightline#bufferline#delete(8)
-nmap <Leader>c9 <Plug>lightline#bufferline#delete(9)
-nmap <Leader>c0 <Plug>lightline#bufferline#delete(10)
-
 " maximbaz/lightline-ale
 let g:lightline#ale#indicator_checking=" "
 let g:lightline#ale#indicator_warnings=""
@@ -350,7 +332,8 @@ let g:ale_detail_to_floating_preview=1
 let g:ale_cursor_detail=1
 let g:ale_hover_cursor=1
 let g:ale_close_preview_on_insert=1
-nmap <silent> <leader>j <Plug>(ale_next_wrap)
+call MiyagoMap('n', ']d', '<Plug>(ale_next_wrap)', 'Next diagnostic', 'remap')
+call MiyagoMap('n', '[d', '<Plug>(ale_previous_wrap)', 'Previous diagnostic', 'remap')
 
 
 " for Vue
@@ -373,9 +356,9 @@ if exists('+autocomplete')
 endif
 
 
-" 上下鍵選擇補全項
-inoremap <silent><expr> <Up> pumvisible() ? "\<C-p>" : "\<Up>"
-inoremap <silent><expr> <Down> pumvisible() ? "\<C-n>" : "\<Down>"
+" 上下鍵選擇補全項；無補全選單時，第一行／最後一行跳到行首／行尾（同 Nvim completion.lua）
+inoremap <silent><expr> <Up> pumvisible() ? "\<C-p>" : line('.') == 1 ? "\<Home>" : "\<Up>"
+inoremap <silent><expr> <Down> pumvisible() ? "\<C-n>" : line('.') == line('$') ? "\<End>" : "\<Down>"
 
 " execution/compilation utils
 fu! CompileRunGcc()
@@ -399,72 +382,14 @@ nnoremap <F9> <ESC>:w<CR>:call CompileRunGcc()<CR>
 nnoremap <F10> <ESC>:w<CR>:call CompileRunGcc()<CR>
 nnoremap <C-,> <ESC>:terminal<CR>
 
-" VSCode 風格快捷鍵
-inoremap <C-s> <ESC>:w<CR>
-nnoremap <C-s> :w<CR>
-nnoremap <C-p> :Files<CR>
-nnoremap <C-w> :bd<CR>
-" Ctrl+f 綁定為搜尋（/）
-inoremap <C-f> <ESC>/
-nnoremap <C-f> /
+" 共用 VSCode 風格 keymap 在 keymaps.vim；以下只放依賴 Vim 外掛的 map
+call MiyagoMap('n', '<C-p>', ':Files<CR>', 'Find files')
+call MiyagoMap('n', '<leader>p', ':call MiyagoKeys()<CR>', 'Search keymaps')
+call MiyagoMap('n', '<leader>?', ':call MiyagoKeys()<CR>', 'Search keymaps')
 
-" 方向鍵支援搜尋結果移動與控制位置
-cnoremap <expr> <Down> getcmdtype() =~ '[/?]' ? "\<CR>n" : "\<Down>"
-cnoremap <expr> <Up>   getcmdtype() =~ '[/?]' ? "\<CR>N" : "\<Up>"
-vnoremap <BS> "_d
-vnoremap <Del> "_d
-
-cnoremap <expr> <Left>  getcmdtype() =~ '[/?]' ? "\<CR>N" : "\<Left>"
-cnoremap <expr> <Right> getcmdtype() =~ '[/?]' ? "\<CR>n" : "\<Right>"
-
-" =====================
-"   VSCode Style Features
-" =====================
-
-" Ctrl/Cmd + C/X/V/Z/A (VSCode style)
-" Copy (visual mode)
-vnoremap <C-c> "+y
-vnoremap <D-c> "+y
-" Cut (visual mode)
-vnoremap <C-x> "+d
-vnoremap <D-x> "+d
-" Paste (insert/command mode)
-inoremap <C-v> <C-r>+
-inoremap <D-v> <C-r>+
-nnoremap <C-v> "+p
-nnoremap <D-v> "+p
-" Undo
-nnoremap <C-z> u
-inoremap <C-z> <C-o>u
-" Select all
-nnoremap <C-a> ggVG
-nnoremap <D-a> ggVG
-
-" Redo
-nnoremap <C-S-z> <C-r>
-nnoremap <D-S-z> <C-r>
-nnoremap <C-y> <C-r>
-inoremap <C-S-z> <C-o><C-r>
-inoremap <D-S-z> <C-o><C-r>
-
-" Go to line
-nnoremap <C-g> :
-
-" Visual mode indent/dedent
-vnoremap <Tab> >gv
-vnoremap <S-Tab> <gv
-
-" =====================
-"   Fn 鍵替代方案
-" =====================
-" 預設 leader 鍵設為空白 (與 Nvim 一致)
-let mapleader=" "
-
-" F2 (Rename) 替代
-nnoremap <leader>rr :%s/<C-r><C-w>//g<Left><Left>
 " F12 (Go to definition) 替代 (原生 vim 跳轉)
-nnoremap <leader>gd <C-]>
-nnoremap <F12> <C-]>
+call MiyagoMap('n', '<leader>gd', '<C-]>', 'Jump to tag definition')
+call MiyagoMap('n', '<F12>', '<C-]>', 'Jump to tag definition')
 
 " Git（與 Nvim 的 <leader>g* 對齊）
 let g:blamer_enabled=1
@@ -473,68 +398,31 @@ let g:blamer_prefix='   '
 let g:blamer_template='<author>, <author-time> • <summary>'
 let g:blamer_relative_time=1
 " 全域搜尋（與 Nvim 的 <leader>f* 對齊）；沒有 rg 的舊系統退回內建 grep + quickfix
-nnoremap <leader>ff :Files<CR>
-nnoremap <leader>fb :Buffers<CR>
-nnoremap <leader>fr :History<CR>
+call MiyagoMap('n', '<leader>ff', ':Files<CR>', 'Find files')
+call MiyagoMap('n', '<leader>fb', ':Buffers<CR>', 'Find buffers')
+call MiyagoMap('n', '<leader>fr', ':History<CR>', 'Recent files')
 if executable('rg')
-  nnoremap <leader>fg :Rg<CR>
-  nnoremap <leader>fw :Rg <C-r><C-w><CR>
+  call MiyagoMap('n', '<leader>fg', ':Rg<CR>', 'Live grep')
+  call MiyagoMap('n', '<leader>fw', ':Rg <C-r><C-w><CR>', 'Grep word under cursor')
 else
-  nnoremap <leader>fg :grep! -rnI --exclude-dir=.git  .<Left><Left>
-  nnoremap <leader>fw :grep! -rnI --exclude-dir=.git <C-r><C-w> .<CR>:copen<CR>
+  call MiyagoMap('n', '<leader>fg', ':grep! -rnI --exclude-dir=.git  .<Left><Left>', 'Live grep', 'loud')
+  call MiyagoMap('n', '<leader>fw', ':grep! -rnI --exclude-dir=.git <C-r><C-w> .<CR>:copen<CR>', 'Grep word under cursor', 'loud')
 endif
 
-" 視窗：往指定方向 split、把視窗搬到邊上（與 Nvim 的 <leader>w* 對齊）
-nnoremap <leader>wh :leftabove vsplit<CR>
-nnoremap <leader>wl :rightbelow vsplit<CR>
-nnoremap <leader>wk :leftabove split<CR>
-nnoremap <leader>wj :rightbelow split<CR>
-nnoremap <leader>wH <C-w>H
-nnoremap <leader>wL <C-w>L
-nnoremap <leader>wK <C-w>K
-nnoremap <leader>wJ <C-w>J
-nnoremap <leader>wx <C-w>x
-" 方向鍵版本
-nnoremap <leader><Left> <C-w>h
-nnoremap <leader><Right> <C-w>l
-nnoremap <leader><Up> <C-w>k
-nnoremap <leader><Down> <C-w>j
-nnoremap <leader><S-Left> :vertical resize -2<CR>
-nnoremap <leader><S-Right> :vertical resize +2<CR>
-nnoremap <leader><S-Up> :resize -2<CR>
-nnoremap <leader><S-Down> :resize +2<CR>
-nnoremap <leader>w<Left> :leftabove vsplit<CR>
-nnoremap <leader>w<Right> :rightbelow vsplit<CR>
-nnoremap <leader>w<Up> :leftabove split<CR>
-nnoremap <leader>w<Down> :rightbelow split<CR>
-nnoremap <leader>w<S-Left> <C-w>H
-nnoremap <leader>w<S-Right> <C-w>L
-nnoremap <leader>w<S-Up> <C-w>K
-nnoremap <leader>w<S-Down> <C-w>J
-
-nnoremap <leader>gB :Git blame<CR>
-nnoremap <leader>gp :GitGutterPreviewHunk<CR>
-nnoremap <leader>gt :BlamerToggle<CR>
-nmap ]h <Plug>(GitGutterNextHunk)
-nmap [h <Plug>(GitGutterPrevHunk)
+call MiyagoMap('n', '<leader>gB', ':Git blame<CR>', 'Git blame')
+call MiyagoMap('n', '<leader>gp', ':GitGutterPreviewHunk<CR>', 'Preview hunk')
+call MiyagoMap('n', '<leader>gt', ':BlamerToggle<CR>', 'Toggle inline blame')
+call MiyagoMap('n', ']h', '<Plug>(GitGutterNextHunk)', 'Next hunk', 'remap')
+call MiyagoMap('n', '[h', '<Plug>(GitGutterPrevHunk)', 'Previous hunk', 'remap')
 
 " Sudo save when forgot to use sudo
 " Use :W! to save with sudo
 command! W w !sudo tee % > /dev/null
 
-" Alt+Up/Down to move lines (VSCode style)
-nnoremap <A-Up> :m .-2<CR>==
-nnoremap <A-Down> :m .+1<CR>==
-inoremap <A-Up> <Esc>:m .-2<CR>==gi
-inoremap <A-Down> <Esc>:m .+1<CR>==gi
-vnoremap <A-Up> :m '<-2<CR>gv=gv
-vnoremap <A-Down> :m '>+1<CR>gv=gv
-
-" Ctrl+/ and Cmd+/ for commenting (VSCode style)
-" Using nerdcommenter plugin
-nmap <C-/> <Plug>NERDCommenterToggle
-nmap <D-/> <Plug>NERDCommenterToggle
-vmap <C-/> <Plug>NERDCommenterToggle
-vmap <D-/> <Plug>NERDCommenterToggle
-imap <C-/> <Esc><Plug>NERDCommenterToggle gi
-imap <D-/> <Esc><Plug>NERDCommenterToggle gi
+" Ctrl+/ 註解（nerdcommenter）；多數 terminal 把 Ctrl-/ 送成 Ctrl-_
+for s:lhs in ['<C-/>', '<C-_>']
+  call MiyagoMap('nx', s:lhs, '<Plug>NERDCommenterToggle', 'Toggle comment', 'remap')
+  call MiyagoMap('i', s:lhs, '<Esc><Plug>NERDCommenterToggle gi', 'Toggle comment', 'remap')
+endfor
+unlet s:lhs
+call MiyagoMap('n', '<C-e>', ':NERDTreeToggle<CR>', 'Toggle file tree')
