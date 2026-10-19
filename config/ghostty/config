@@ -35,6 +35,11 @@ background-image-fit = cover
 background-opacity = 0.96
 background-blur = true
 
+# 視窗內距，讓內容不貼邊，比較像 GUI
+window-padding-x = 10
+window-padding-y = 8
+window-padding-balance = true
+
 # Font
 font-family = "MesloLGS NF"
 font-size = 14
