@@ -92,6 +92,25 @@ return {
       renderer = { group_empty = true, highlight_git = "name" },
       filters = { dotfiles = false },
     },
+    -- 右鍵選單補上新增與刪除，只在 file tree 裡出現
+    config = function(_, opts)
+      require("nvim-tree").setup(opts)
+      local items = {
+        { "New\\ File/Folder", "create" },
+        { "Delete", "remove" },
+      }
+      for _, item in ipairs(items) do
+        vim.cmd(("nnoremenu PopUp.%s <Cmd>lua require('nvim-tree.api').fs.%s()<CR>"):format(item[1], item[2]))
+      end
+      vim.api.nvim_create_autocmd("MenuPopup", {
+        callback = function()
+          local state = vim.bo.filetype == "NvimTree" and "enable" or "disable"
+          for _, item in ipairs(items) do
+            vim.cmd(("nmenu %s PopUp.%s"):format(state, item[1]))
+          end
+        end,
+      })
+    end,
   },
   {
     -- 全域搜尋：與 Vim 共用 fzf binary，內容搜尋走 rg
