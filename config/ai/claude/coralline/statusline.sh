@@ -2415,23 +2415,6 @@ $_JSON_FIELDS
 JSON
 sid="${sid%$'\r'}"  # native Windows jq writes CRLF; the last field keeps the CR
 
-# REMORA has no native Claude rate-limit snapshot. Keep the Codex provider
-# completely outside normal Claude renders and accept only its normalized record.
-if [ "${REMORA_ACTIVE:-0}" = "1" ] && [ -z "$fh_pct" ] && [ -z "$wd_pct" ]; then
-  _coralline_source="${BASH_SOURCE[0]:-$0}"
-  case "$_coralline_source" in
-    */*) _coralline_dir="${_coralline_source%/*}" ;;
-    *) _coralline_dir="." ;;
-  esac
-  if [ -x "$_coralline_dir/codex-quota.py" ] \
-    && _coralline_quota=$("$_coralline_dir/codex-quota.py" 2>/dev/null); then
-    IFS=$'\037' read -r fh_pct fh_rst wd_pct wd_rst _coralline_extra <<QUOTA
-$_coralline_quota
-QUOTA
-    [ -z "$_coralline_extra" ] || { fh_pct=""; fh_rst=""; wd_pct=""; wd_rst=""; }
-  fi
-fi
-
 _SEG_SCAN=" $VL_SEGMENTS $VL_SEGMENTS2 $VL_SEGMENTS3 "
 [ "$VL_FLOAT" = "1" ] && _SEG_SCAN="$_SEG_SCAN$VL_FLOAT_SEGMENTS "
 case "$_SEG_SCAN" in *" git "*|*" stash "*|*" project "*) read_git ;; esac

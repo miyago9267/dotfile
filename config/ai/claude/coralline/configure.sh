@@ -1266,7 +1266,6 @@ install_files() {
   local theme_dir rel
   command -v jq >/dev/null 2>&1 || die "jq is required by coralline and by the installer"
   need_file "$SCRIPT_DIR/statusline.sh"
-  need_file "$SCRIPT_DIR/codex-quota.py"
   need_file "$SCRIPT_DIR/test/sample-input.json"
   [ -d "$SCRIPT_DIR/themes" ] || die "missing themes directory"
 
@@ -1291,12 +1290,6 @@ install_files() {
   # that never replaced the file.
   cp "$SCRIPT_DIR/statusline.sh" "$TARGET_DIR/statusline.sh" \
     || die "could not write $TARGET_DIR/statusline.sh (check permissions on the existing file)"
-  cp "$SCRIPT_DIR/codex-quota.py" "$TARGET_DIR/codex-quota.py" \
-    || die "could not write $TARGET_DIR/codex-quota.py (check permissions on the existing file)"
-  if [ -e "$TARGET_DIR/remora-quota.sh" ] || [ -L "$TARGET_DIR/remora-quota.sh" ]; then
-    rm -f "$TARGET_DIR/remora-quota.sh" \
-      || die "could not remove deprecated $TARGET_DIR/remora-quota.sh"
-  fi
   cp "$SCRIPT_DIR/configure.sh" "$TARGET_DIR/configure.sh"
   cp "$SCRIPT_DIR/test/sample-input.json" "$TARGET_DIR/sample-input.json"
   theme_dir="$SCRIPT_DIR/themes"
@@ -1307,7 +1300,7 @@ install_files() {
   done <<THEMES
 $(cd "$theme_dir" && find . -type f -name '*.conf' | sed 's#^\./##')
 THEMES
-  chmod +x "$TARGET_DIR/statusline.sh" "$TARGET_DIR/codex-quota.py" "$TARGET_DIR/configure.sh"
+  chmod +x "$TARGET_DIR/statusline.sh" "$TARGET_DIR/configure.sh"
   installed=1
 }
 
