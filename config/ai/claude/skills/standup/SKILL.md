@@ -32,6 +32,9 @@ user-invocable: true
    python3 ~/.claude/skills/standup/scripts/collect.py --days 3
    ```
 
+   同時讀 `~/Project/Active/ITRD/.ai/TODO.md`：它是待辦的唯一清單。今日待辦優先從
+   「驗證中」「待做」挑，已標 `[x]` 的不再列成待辦；「等別人」直接對應阻塞欄。
+
    來源是 ITRD / DevOps / itrd-kb / sre-kb 的 git commits（所有 branch、author
    含 `miyago`）與 Claude session 提問。session 沒有 commit 時，代表調查、排查、
    支援類工作，一樣算進去。
@@ -51,6 +54,9 @@ user-invocable: true
 
    待辦要具體到能說出對象（哪個服務、哪個 repo、哪個 alert），不寫「持續優化系統」這種空話；
    可以合理推測，但每條都要能對回某個近期議題。
+
+3a. 報告完成後提議更新 `TODO.md`：把證據顯示已完成的項目移到「最近完成」，新議題補進對應區塊。
+   這是本 skill 唯一允許的寫入，Miyago 同意後才改。
 
 4. 有卡住、等人、需要協作的，列在「阻塞 / 需協助」；沒有就寫「無」。
 
@@ -81,7 +87,7 @@ user-invocable: true
 
 ## 邊界
 
-- 只讀：不 commit、不發訊息、不改 issue、不寫知識庫。
+- 只讀：不 commit、不發訊息、不改 issue、不寫知識庫；唯一例外是 Miyago 同意後更新 `TODO.md`。
 - 證據不足（腳本輸出 `not enough data`）就直接說，請 Miyago 口頭補充，不自己編完成事項。
 - 待辦可以「掰」，完成事項不行。
 - 不把 credential、個資、客戶資料抄進報告；人名權限類變更寫「調整 IAM 權限」即可。
