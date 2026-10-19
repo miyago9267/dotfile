@@ -16,6 +16,7 @@ CONFIG_SETUP_SCRIPTS=(
   setup_gemini.sh
   setup_grok.sh
   setup_pi.sh
+  setup_taste_skill.sh
 )
 
 for name in "${CONFIG_SETUP_SCRIPTS[@]}"; do

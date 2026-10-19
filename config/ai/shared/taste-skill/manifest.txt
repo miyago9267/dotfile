@@ -1,0 +1,14 @@
+brandkit brandkit
+industrial-brutalist-ui brutalist-skill
+gpt-taste gpt-tasteskill
+image-to-code image-to-code-skill
+imagegen-frontend-mobile imagegen-frontend-mobile
+imagegen-frontend-web imagegen-frontend-web
+minimalist-ui minimalist-skill
+full-output-enforcement output-skill
+redesign-existing-projects redesign-skill
+high-end-visual-design soft-skill
+stitch-design-taste stitch-skill
+design-taste-frontend-v1 taste-skill-v1
+design-taste-frontend-v2-experimental taste-skill-v2-experimental
+design-taste-frontend taste-skill

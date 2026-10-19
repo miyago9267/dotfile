@@ -60,6 +60,7 @@ _ALL_ITEMS=(
   "setup_codex.sh|Codex CLI 設定 (symlink)|工具|1|0|config|all|0"
   "setup_gemini.sh|Gemini CLI 設定 (symlink)|工具|1|0|config|all|0"
   "setup_pi.sh|Pi coding agent 設定 (symlink)|工具|1|0|config|all|0"
+  "setup_taste_skill.sh|taste-skill 共用技能 (symlink)|工具|1|0|config|all|0"
   "install_claude.sh|Claude Code CLI|工具|0|0|environment|all|0"
   "install_gemini.sh|Gemini CLI (official npm)|工具|0|0|environment|darwin linux|0"
   "install_codex.sh|Codex CLI (official installer)|工具|0|0|environment|darwin linux|0"

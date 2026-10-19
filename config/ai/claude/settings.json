@@ -481,6 +481,7 @@
     "stingray@stingray": true,
     "warp@claude-code-warp": true,
     "shoal@shoal": true,
+    "taste-skill@taste-skill": true,
     "shoal-dispatch-guard@shoal": true,
     "baton@baton": true
   },
@@ -513,6 +514,12 @@
       "source": {
         "source": "directory",
         "path": "~/.local/share/shoal/claude-marketplace"
+      }
+    },
+    "taste-skill": {
+      "source": {
+        "source": "github",
+        "repo": "Leonxlnx/taste-skill"
       }
     },
     "baton": {
