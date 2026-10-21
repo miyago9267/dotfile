@@ -68,14 +68,26 @@ cmd="${1:-}"
 
 case "$cmd" in
   list)
-    names | while IFS= read -r name; do
-      if claude mcp get "$name" >/dev/null 2>&1 </dev/null; then
-        state=registered
-      else
-        state=not-registered
-      fi
-      printf '%s\t%s\n' "$name" "$state"
-    done
+    python3 -I -c '
+import json, os, sys
+home, config = sys.argv[1], sys.argv[2]
+def load(path):
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+claude = load(os.path.join(home, ".claude.json"))
+cwd = os.path.realpath(os.getcwd())
+scopes = [
+    ("user", claude.get("mcpServers", {})),
+    ("local", claude.get("projects", {}).get(cwd, {}).get("mcpServers", {})),
+    ("project", load(os.path.join(cwd, ".mcp.json")).get("mcpServers", {})),
+]
+for name in json.load(open(config)):
+    found = [scope for scope, servers in scopes if name in servers]
+    print("%s\t%s" % (name, ",".join(found) or "off"))
+' "$HOME" "$CONFIG"
     ;;
   on)
     [ $# -ge 1 ] || usage
