@@ -1,0 +1,34 @@
+{
+  "rea": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "rea-agents@6.5.0",
+      "mcp"
+    ],
+    "env": {
+      "HOPPER_LAUNCHER_PATH": "/Applications/Hopper Disassembler.app/Contents/MacOS/hopper"
+    }
+  },
+  "playwright": {
+    "type": "stdio",
+    "command": "npx",
+    "args": [
+      "-y",
+      "@playwright/mcp@latest"
+    ],
+    "env": {}
+  },
+  "reticle": {
+    "type": "stdio",
+    "command": "$HOME/dotfile/config/ai/shared/jev/reticle-mcp.sh",
+    "args": [],
+    "env": {}
+  },
+  "open-computer-use": {
+    "type": "stdio",
+    "command": "$HOME/dotfile/config/ai/shared/computer-use/computer-use-mcp.sh",
+    "args": [],
+    "env": {}
+  }
+}

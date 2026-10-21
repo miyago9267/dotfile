@@ -14,8 +14,8 @@
 #
 # Two servers, selected with --server:
 #   open-computer-use  the third-party driver (computer-use-mcp.sh)
-#   desktop-ops       the policy-gated layer on top of it (desktop-ops-mcp.sh)
-#   all                both (default)
+#   desktop-ops       the policy-gated layer on top of it (desktop-ops-mcp.sh) (default)
+#   all                both
 #
 # This script never starts an MCP server, never asks for root, and never reads
 # a secret. See config/ai/shared/computer-use/README.md.
@@ -40,7 +40,7 @@ MODE="dry-run"
 INSTALL=0
 DRY_SEEN=0
 OTHER_ACTION=0
-SERVER="all"
+SERVER="desktop-ops"
 SKIPPED=0
 # Set per server by the loop at the bottom.
 NAME=""

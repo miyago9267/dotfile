@@ -42,8 +42,8 @@ if command -v claude >/dev/null 2>&1; then
   claude mcp remove jev-browser >/dev/null 2>&1 || true
   claude mcp remove reticle >/dev/null 2>&1 || true
   claude mcp add --scope user jev-browser -- "$JEv_BROWSER"
-  claude mcp add --scope user reticle -- "$RETICLE"
 fi
+printf '%s\n' 'reticle: opt-in, run script/common/mcp-optional.sh on reticle'
 
 command -v codex >/dev/null 2>&1 || {
   printf '%s\n' 'skip Codex: codex command not found' >&2
