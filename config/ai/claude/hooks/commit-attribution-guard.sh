@@ -1,14 +1,8 @@
 #!/usr/bin/env bash
 
-if ! command -v jq >/dev/null 2>&1; then
-  exit 0
-fi
-
-input=$(cat)
-cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty')
-
-[ -z "$cmd" ] && exit 0
-
+guard_commit_attribution() {
+  set -uo pipefail
+  [[ $cmd =~ git[[:space:]]+commit ]] || exit 0
 if ! printf '%s\n' "$cmd" | grep -Eq '(^|[;&|[:space:]])git[[:space:]]+commit([[:space:]]|$)'; then
   exit 0
 fi
@@ -24,3 +18,13 @@ jq -n '{
     "permissionDecisionReason": "commit attribution guard: remove AI attribution text from the commit message"
   }
 }'
+}
+
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  command -v jq >/dev/null 2>&1 || exit 0
+  input=$(cat)
+  cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)
+  [ -z "$cmd" ] && exit 0
+  cwd=$(printf '%s' "$input" | jq -r '.cwd // empty' 2>/dev/null)
+  guard_commit_attribution
+fi

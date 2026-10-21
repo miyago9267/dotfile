@@ -2,14 +2,9 @@
 # PreToolUse hook: auto-add non-interactive flags to common commands
 # Only modifies safe, additive commands. Never touches remove/purge/autoremove.
 
-if ! command -v jq &>/dev/null; then
-  exit 0
-fi
-
-INPUT=$(cat)
-CMD=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
-
-[ -z "$CMD" ] && exit 0
+guard_auto_yes() {
+  # 快速排除：四種改寫都需要這些字面；bash 比對只會比 grep 寬，命中後仍走原本的 grep
+  [[ $CMD == *apt* || $CMD == *npm* || $CMD == *cp* || $CMD == *mv* ]] || exit 0
 
 MODIFIED=""
 
@@ -58,3 +53,15 @@ jq -n \
       "updatedInput": $updated
     }
   }'
+}
+
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  set -uo pipefail
+  command -v jq >/dev/null 2>&1 || exit 0
+  input=$(cat)
+  cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)
+  [ -z "$cmd" ] && exit 0
+  cwd=$(printf '%s' "$input" | jq -r '.cwd // empty' 2>/dev/null)
+  INPUT=$input; CMD=$cmd
+  guard_auto_yes
+fi

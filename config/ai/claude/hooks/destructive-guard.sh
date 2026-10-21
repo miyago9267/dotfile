@@ -5,12 +5,8 @@
 # 其餘規則回 ask：一般模式會跳確認，bypassPermissions 模式下不擋（Miyago 的選擇）。
 # 本機 git 的 reset --hard、clean 不擋（2026-10-10 Miyago 決定）；force push 與刪遠端 branch/tag 仍 ask。
 # 取代原本的 safe-ops skill；kubectl/gcloud 由 ops-write-guard.sh 處理，git add 由 git-add-guard.sh 處理。
+guard_destructive() {
 set -uo pipefail
-command -v jq >/dev/null 2>&1 || exit 0
-
-input=$(cat)
-cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty')
-[ -z "$cmd" ] && exit 0
 
 # --- SQL：看字樣會不會被執行 ---
 # awk 把指令切成 pipeline / simple command（認得引號、$'..'、$() 與 heredoc），`bash -c "..."` 這類帶空白的
@@ -250,7 +246,12 @@ BEGIN {
 }'
 }
 sql_literal() { printf '%s' "$cmd" | grep -qiE '(drop[[:space:]]+(table|database|schema)|truncate[[:space:]]+table)'; }
-if [ ${#cmd} -gt 65536 ]; then
+# 快速排除：所有 sql 結果都要求字樣含 drop 或 truncate（引號與反斜線拆開的字也會被 awk 接回，先拿掉再比）
+_sqlq=${cmd//[\'\"\\$'\n']/}
+_nc=$(shopt -p nocasematch); shopt -s nocasematch
+if [[ $_sqlq != *drop* && $_sqlq != *truncate* ]]; then
+  sql=""
+elif [ ${#cmd} -gt 65536 ]; then
   # 指令過長不做完整解析（逐字掃描的成本隨長度平方成長）：字面命中就 ask
   sql=""
   sql_literal && sql=ask
@@ -261,6 +262,7 @@ else
   sql=""
   sql_literal && sql=ask
 fi
+eval "$_nc"
 if [ "$sql" = deny ]; then
   jq -n --arg r "destructive-guard：已擋下 DROP / TRUNCATE。這會永久刪除資料或結構、無法復原，agent 不代為執行；請 Miyago 確認目標資料庫後，自己在 terminal 執行。" \
     '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$r}}'
@@ -270,7 +272,7 @@ fi
 reason=""
 sep='(^|[[:space:];&|`(])'
 # 拿掉 git 全域參數（-C path、-c k=v、--git-dir= 等），讓 git -C x reset --hard 也比對得到
-cmd=$(printf '%s' "$cmd" | sed -E ':a
+[[ $cmd == *git* ]] && cmd=$(printf '%s' "$cmd" | sed -E ':a
 s/(git)[[:space:]]+(-C|-c)[[:space:]]+[^[:space:];&|]+/\1/g
 s/(git)[[:space:]]+(--git-dir|--work-tree|--namespace)=[^[:space:];&|]+/\1/g
 s/(git)[[:space:]]+(--no-pager|--bare|-P)([[:space:]])/\1\3/g
@@ -306,3 +308,14 @@ fi
 [ -z "$reason" ] && exit 0
 jq -n --arg r "destructive-guard: ${reason}。先向 Miyago 說明 target、影響範圍與 rollback。" \
   '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"ask",permissionDecisionReason:$r}}'
+}
+
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  set -uo pipefail
+  command -v jq >/dev/null 2>&1 || exit 0
+  input=$(cat)
+  cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)
+  [ -z "$cmd" ] && exit 0
+  cwd=$(printf '%s' "$input" | jq -r '.cwd // empty' 2>/dev/null)
+  guard_destructive
+fi

@@ -13,13 +13,11 @@
 # 其餘（工作 repo 的 sops -d、加密、編輯）維持不擋。gcloud secrets、kubectl get secret
 # 仍是 Miyago 決定不擋的，不要加進來。agent 取用個人 secret 一律走 agent-secret run。
 # 威脅模型是合作型 agent 的意外外洩；bash -c、eval、變數或 alias 展開等主動規避不處理。
+guard_secret() {
 set -uo pipefail
-command -v jq >/dev/null 2>&1 || exit 0
-
-input=$(cat)
-cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)
-[ -z "$cmd" ] && exit 0
-cwd=$(printf '%s' "$input" | jq -r '.cwd // empty' 2>/dev/null)
+# 快速排除：命中只會來自 kubectl / gcloud / security / sec / agent-secret / sops 這些字面（引號拆開的字先接回）
+_q=${cmd//[\'\"\\$'\n']/}
+[[ $_q == *kubectl* || $_q == *gcloud* || $_q == *sec* || $_q == *sops* ]] || exit 0
 user=$(id -un 2>/dev/null || true)
 
 # 比對策略：依 shell 引號規則把指令切成「段」（; & | 換行 ( ) $( ` 分段，引號內不分段），
@@ -245,3 +243,14 @@ END {
 [ -z "$hit" ] && exit 0
 jq -n --arg r "secret-guard: ${hit}，這個指令會把憑證印進 context。需要時由 Miyago 自己在 terminal 執行。" \
   '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$r}}'
+}
+
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  set -uo pipefail
+  command -v jq >/dev/null 2>&1 || exit 0
+  input=$(cat)
+  cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)
+  [ -z "$cmd" ] && exit 0
+  cwd=$(printf '%s' "$input" | jq -r '.cwd // empty' 2>/dev/null)
+  guard_secret
+fi

@@ -83,36 +83,7 @@
       {
         "matcher": "Bash",
         "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/dotfile/config/ai/claude/hooks/auto-yes.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "bash ~/dotfile/config/ai/claude/hooks/git-add-guard.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "bash ~/dotfile/config/ai/claude/hooks/commit-attribution-guard.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "bash ~/dotfile/config/ai/claude/hooks/ops-write-guard.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "bash ~/dotfile/config/ai/claude/hooks/destructive-guard.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "bash ~/dotfile/config/ai/claude/hooks/secret-guard.sh",
-            "timeout": 5
-          }
+          {"type": "command", "command": "bash ~/dotfile/config/ai/claude/hooks/pre-bash.sh", "timeout": 10}
         ]
       },
       {
@@ -176,26 +147,7 @@
             "command": "MIYAGO_RUNTIME=claude python3 ~/dotfile/config/ai/shared/hooks/factory-session-start.py",
             "timeout": 8
           },
-          {
-            "type": "command",
-            "command": "bash ~/dotfile/config/ai/claude/hooks/experience-observe.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "bash ~/dotfile/config/ai/claude/hooks/tty-respond.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "bash ~/dotfile/config/ai/claude/hooks/think-first-router.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "bash ~/dotfile/config/ai/claude/hooks/jev-route.sh",
-            "timeout": 3
-          }
+          {"type": "command", "command": "bash ~/dotfile/config/ai/claude/hooks/prompt-submit.sh", "timeout": 10}
         ]
       },
       {
@@ -460,7 +412,7 @@
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/coralline/statusline.sh",
-    "refreshInterval": 1
+    "refreshInterval": 10
   },
   "subagentStatusLine": {
     "type": "command",

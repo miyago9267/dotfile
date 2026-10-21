@@ -70,7 +70,7 @@ Stingray 的 benchmark。
 
 ## Shoal route advisory
 
-Claude 的 `UserPromptSubmit` hook（`claude/hooks/jev-route.sh` ->
+Claude 的 `UserPromptSubmit` hook（`claude/hooks/prompt-submit.sh` ->
 `shoal_route.py`）會請 Jev 判斷 user prompt 最適合先派哪個 Shoal
 role，再注入一句固定格式的建議。這句建議只是 advisory：不構成 approval，
 AGENTS.md 的 gate 與 dispatch brake 優先。Jev 只能建議 role，或把流程收緊成

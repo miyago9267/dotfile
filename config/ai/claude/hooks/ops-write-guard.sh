@@ -11,12 +11,8 @@
 # kubectl / gcloud 帶 --help、kubectl 帶 --dry-run 時不會改變任何東西，不擋。
 # 指令超過 64KB 不做完整解析，字面命中就 ask。
 
+guard_ops_write() {
 set -uo pipefail
-
-command -v jq >/dev/null 2>&1 || exit 0
-input=$(cat)
-cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty')
-[ -z "$cmd" ] && exit 0
 
 # --- 解析：把指令切成 simple command，找出真的會執行的 kubectl / gcloud ---
 # awk 認得引號、串接（; && || | & 換行）、括號與 $()、heredoc、full path、sudo/env/xargs 這類前綴，
@@ -362,7 +358,12 @@ if [ ${#cmd} -gt 65536 ]; then
   exit 0
 fi
 
-if ! records=$(scan_cmd "$cmd"); then
+# 快速排除：沒有 kubectl / gcloud / kubectx / kctx 字面（引號拆開的字先接回），也沒有 $ 或反引號（變數與 command substitution
+# 可能組出指令名）時，awk 不會有任何輸出，直接略過 awk；後面的 bypass 判斷照常跑
+_q=${cmd//[\'\"\\$'\n']/}
+if [[ $_q != *kube* && $_q != *gcloud* && $_q != *kctx* && $_q != *\$* && $_q != *'`'* ]]; then
+  records=""
+elif ! records=$(scan_cmd "$cmd"); then
   # 解析失敗：指令有提到 kubectl / gcloud 就擋，寧可多擋
   case "$cmd" in
     *kubectl* | *gcloud*)
@@ -506,3 +507,14 @@ case "$best_dec" in
   msg) jq -n --arg m "$best_text" '{systemMessage:$m}' ;;
 esac
 exit 0
+}
+
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  set -uo pipefail
+  command -v jq >/dev/null 2>&1 || exit 0
+  input=$(cat)
+  cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)
+  [ -z "$cmd" ] && exit 0
+  cwd=$(printf '%s' "$input" | jq -r '.cwd // empty' 2>/dev/null)
+  guard_ops_write
+fi
