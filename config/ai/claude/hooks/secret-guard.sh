@@ -16,7 +16,7 @@
 guard_secret() {
 set -uo pipefail
 # 快速排除：命中只會來自 kubectl / gcloud / security / sec / agent-secret / sops 這些字面（引號拆開的字先接回）
-_q=${cmd//[\'\"\\$'\n']/}
+_q=$(printf '%s' "$cmd" | tr -d "'\"\\\\\n")
 [[ $_q == *kubectl* || $_q == *gcloud* || $_q == *sec* || $_q == *sops* ]] || exit 0
 user=$(id -un 2>/dev/null || true)
 

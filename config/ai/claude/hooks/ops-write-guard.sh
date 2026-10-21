@@ -360,7 +360,7 @@ fi
 
 # 快速排除：沒有 kubectl / gcloud / kubectx / kctx 字面（引號拆開的字先接回），也沒有 $ 或反引號（變數與 command substitution
 # 可能組出指令名）時，awk 不會有任何輸出，直接略過 awk；後面的 bypass 判斷照常跑
-_q=${cmd//[\'\"\\$'\n']/}
+_q=$(printf '%s' "$cmd" | tr -d "'\"\\\\\n")
 if [[ $_q != *kube* && $_q != *gcloud* && $_q != *kctx* && $_q != *\$* && $_q != *'`'* ]]; then
   records=""
 elif ! records=$(scan_cmd "$cmd"); then

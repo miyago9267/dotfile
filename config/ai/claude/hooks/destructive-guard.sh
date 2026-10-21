@@ -247,7 +247,7 @@ BEGIN {
 }
 sql_literal() { printf '%s' "$cmd" | grep -qiE '(drop[[:space:]]+(table|database|schema)|truncate[[:space:]]+table)'; }
 # 快速排除：所有 sql 結果都要求字樣含 drop 或 truncate（引號與反斜線拆開的字也會被 awk 接回，先拿掉再比）
-_sqlq=${cmd//[\'\"\\$'\n']/}
+_sqlq=$(printf '%s' "$cmd" | tr -d "'\"\\\\\n")
 _nc=$(shopt -p nocasematch); shopt -s nocasematch
 if [[ $_sqlq != *drop* && $_sqlq != *truncate* ]]; then
   sql=""
