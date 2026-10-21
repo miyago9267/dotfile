@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # SHOAL_ROOT 指向 shoal repo 根目錄。
-source_repo="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
+source_repo="${SHOAL_ROOT:-$HOME/Project/Active/shoal}"
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 target_file="$script_dir/plugins/shoal-opencode.js"
 

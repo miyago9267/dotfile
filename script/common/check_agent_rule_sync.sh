@@ -14,7 +14,7 @@ astra_active_file="$dotfile_dir/config/ai/generated/astra/AGENTS.md"
 claude_settings_file="$dotfile_dir/config/ai/claude/settings.json"
 claude_adapter_file="$dotfile_dir/config/ai/claude/AGENTS.md"
 grok_file="$dotfile_dir/config/ai/grok/AGENTS.md"
-shoal_dir="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
+shoal_dir="${SHOAL_ROOT:-$HOME/Project/Active/shoal}"
 # shoal 由 Claude plugin 安裝；實際安裝處是 plugin cache 裡的 skill（路徑取自 installed_plugins.json）。
 claude_plugin_root="$(jq -r '.plugins["shoal@shoal"][0].installPath // empty' "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/plugins/installed_plugins.json" 2>/dev/null || true)"
 claude_skill_file="$claude_plugin_root/skills/shoal-orchestration/SKILL.md"

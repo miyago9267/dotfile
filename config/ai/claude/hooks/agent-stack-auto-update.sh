@@ -121,7 +121,7 @@ update_shoal() {
   # 各 host 同步與 sha256 檢查（repo-layout P3）。這裡只呼叫它；SHOAL_ROOT 指向 shoal repo 根目錄。
   # 不含 git pull；CLI 寫進 settings.json 的絕對 marketplace path 由最後的 portable_paths.py --fix 改回 ~。
   local src out status
-  src="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
+  src="${SHOAL_ROOT:-$HOME/Project/Active/shoal}"
   [ -f "$src/tools/shoal_install.py" ] || return 1
   out=$(PATH="$HOME/.bun/bin:$PATH" python3 "$src/tools/shoal_install.py" --update --apply 2>&1)
   status=$?
@@ -145,7 +145,7 @@ else
   printf '%s\n' 'shoal update failed'
 fi
 # dispatch guard 隨 Claude plugin 的 hooks 載入，不再用 install_hooks.py 註冊全域 guard。
-shoal_root="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
+shoal_root="${SHOAL_ROOT:-$HOME/Project/Active/shoal}"
 if [ ! -d "$shoal_root/.git" ]; then
   printf '%s\n' "shoal checkout not found at $shoal_root; clone miyago9267/shoal there or set SHOAL_ROOT"
 fi

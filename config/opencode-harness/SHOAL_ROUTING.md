@@ -11,7 +11,7 @@ opencode 不載入這份 plugin，也不共用這份 role model binding。
 到 model 的內部分配，不建立分級指令或分開的啟動流程。harness config
 會載入本機安裝的
 shoal-opencode plugin；目前安裝檔由 shoal repo（本機
-Forks/Fork-Remaster-code/shoal）HEAD 的 hosts/opencode build 產生，位置是
+~/Project/Active/shoal）HEAD 的 hosts/opencode build 產生，位置是
 config/opencode-harness/plugins/shoal-opencode.js。
 
 需要重建 local plugin 時，執行

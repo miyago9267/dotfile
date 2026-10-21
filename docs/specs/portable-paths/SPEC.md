@@ -43,7 +43,7 @@ Miyago 在 macOS、Linux、Windows 三邊共用同一個 dotfile repo。目前 r
 | C. tracked symlink（絕對目標）11 個 | repo 內 4 個：`community-tech-brief`、`desktop-ops`、`jev-tools`、`knowledge-base-router`；repo 外 7 個：`jev-browser`、`jev-choice`、`jev-shadow-report`、`reticle-verify`、`experience-harvest`、`patina`、`sepia` | `setup_claude.sh`、`setup_jev.sh`、各工具 installer |
 | D. 工具設定 | `opencode/opencode.json` x2、`opencode-harness/opencode.json` x3、`claude/remora-proxy/remora.config.toml`、`zsh/.zshrc.d/common.zsh`、`gemini/hooks/agy-auto-update.sh`、`ghostty/config` | 手寫 |
 | E. agent 讀的文字 | `config/ai/runtime-bindings.yaml`（115 處）、`AGENT-ENTRY.md`、`codex/AGENTS.runtime.md`、`gemini/GEMINI.md` 與 generated 版本 | 手寫與 generator |
-| F. 預設路徑假設 | shoal checkout 預設 `~/Project/Active/Forks/Fork-Remaster-code/shoal`，不存在時 setup 與 auto-update 靜默略過 | dotfile |
+| F. 預設路徑假設 | shoal checkout 預設 `~/Project/Active/shoal`，不存在時 setup 與 auto-update 靜默略過 | dotfile |
 
 ## Requirements (EARS)
 

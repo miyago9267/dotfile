@@ -26,7 +26,7 @@ native persona adapter to `$GROK_HOME/AGENTS.md` and installs both launchers in
 
 Shoal orchestration is deliberately separate. Its source of truth is the
 grok output of `shoal` (`hosts/grok/dist`, local repo at
-`~/Project/Active/Forks/Fork-Remaster-code/shoal`). Install or update it with
+`~/Project/Active/shoal`). Install or update it with
 `python3 tools/install_grok.py` from the shoal repo (dry-run by default; add
 `--apply` to write, `--restore <backup-dir> --apply` to roll back). It installs
 agents, roles, the orchestration rules and two native hooks from shoal's

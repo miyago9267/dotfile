@@ -25,7 +25,7 @@ PERSONAL_MODEL_SRC="${PERSONAL_MODEL_SRC:-$DOTFILE_DIR/../Project/AI/agent-works
 SHARED_MEMORY_SRC="$DOTFILE_DIR/config/ai/memories"
 ACTIVE_RULES_DIR="$DOTFILE_DIR/config/ai/generated/codex"
 ACTIVE_RULES_SRC="$ACTIVE_RULES_DIR/AGENTS.md"
-SHOAL_ROOT="${SHOAL_ROOT:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal}"
+SHOAL_ROOT="${SHOAL_ROOT:-$HOME/Project/Active/shoal}"
 
 Y='\033[1;33m'
 G='\033[1;32m'

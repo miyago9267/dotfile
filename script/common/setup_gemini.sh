@@ -23,7 +23,7 @@ GEMINI_HOOKS_DST="$GEMINI_DST/config/hooks.json"
 AGY_SKILL_DST="$GEMINI_DST/config/skills"
 AGY_AGENT_DST="$GEMINI_DST/config/agents"
 # agy 的 shoal 來源是 shoal 的 hosts/agy/dist；維持 symlink 到工作樹（spec R7 明列例外）。
-SHOAL_AGY_SRC="${SHOAL_AGY_SRC:-$HOME/Project/Active/Forks/Fork-Remaster-code/shoal/hosts/agy/dist}"
+SHOAL_AGY_SRC="${SHOAL_AGY_SRC:-$HOME/Project/Active/shoal/hosts/agy/dist}"
 
 Y='\033[1;33m'
 G='\033[1;32m'
