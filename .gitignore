@@ -421,3 +421,6 @@ config/ai/claude/skills/reticle-verify
 config/ai/claude/skills/experience-harvest
 config/ai/claude/skills/patina
 config/ai/claude/skills/sepia
+
+# 本機私用 skill，不進 public repo
+config/ai/claude/skills/qwen21-nsfw-pose/
