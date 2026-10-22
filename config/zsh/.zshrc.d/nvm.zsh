@@ -15,6 +15,7 @@ _nvm_lazy_init() {
 # 把 nvm default 版本的 bin 放進 PATH，讓不經過 zsh function 的程序（agent hook 的
 # /bin/sh、script、editor）也找得到 node。只讀 alias 檔與目錄，不 source nvm.sh。
 _nvm_default_bin() {
+  emulate -L zsh
   local ver=default i
   local -a dirs
   for i in 1 2 3 4; do
