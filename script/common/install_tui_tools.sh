@@ -45,6 +45,7 @@ _install glow      "Glow (markdown renderer)"    glow       glow       glow
 _install slides    "slides (terminal slides)"    slides     slides     slides
 _install presenterm "presenterm (presentations)" presenterm presenterm presenterm
 _install lazysql   "lazysql (database TUI)"      lazysql    lazysql    lazysql
+_install broot     "broot (tree navigator)"      broot      broot      broot
 
 # --- Python TUI tools (via pipx) ---
 _install_pipx() {

@@ -78,3 +78,5 @@ fi
 . "$HOME/.cargo/env"
 
 . "$HOME/.local/bin/env"
+
+[ -f "$HOME/.config/broot/launcher/bash/br" ] && . "$HOME/.config/broot/launcher/bash/br"
