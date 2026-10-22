@@ -46,6 +46,8 @@ _install slides    "slides (terminal slides)"    slides     slides     slides
 _install presenterm "presenterm (presentations)" presenterm presenterm presenterm
 _install lazysql   "lazysql (database TUI)"      lazysql    lazysql    lazysql
 _install broot     "broot (tree navigator)"      broot      broot      broot
+# broot 首次執行會把寫死路徑的 launcher 加進 .zshrc/.bashrc；標成已安裝避免改動，rc 已自行載入
+if is_installed broot; then broot --set-install-state installed >/dev/null 2>&1 || true; fi
 
 # --- Python TUI tools (via pipx) ---
 _install_pipx() {

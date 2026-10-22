@@ -424,3 +424,21 @@ config/ai/claude/skills/sepia
 
 # 本機私用 skill，不進 public repo
 config/ai/claude/skills/qwen21-nsfw-pose/
+
+# setup_taste_skill.sh 每台機器產生的絕對路徑連結
+config/opencode/skills/brandkit
+config/opencode/skills/design-taste-frontend
+config/opencode/skills/design-taste-frontend-v1
+config/opencode/skills/design-taste-frontend-v2-experimental
+config/opencode/skills/full-output-enforcement
+config/opencode/skills/gpt-taste
+config/opencode/skills/high-end-visual-design
+config/opencode/skills/image-to-code
+config/opencode/skills/imagegen-frontend-mobile
+config/opencode/skills/imagegen-frontend-web
+config/opencode/skills/industrial-brutalist-ui
+config/opencode/skills/minimalist-ui
+config/opencode/skills/redesign-existing-projects
+config/opencode/skills/stitch-design-taste
+# coralline statusline 本機測試輸入
+config/ai/claude/coralline/sample-input.json
