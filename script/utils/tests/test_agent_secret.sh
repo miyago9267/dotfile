@@ -86,7 +86,7 @@ broker() {
       }
     elif [ "${REAL_BACKEND:-0}" = 1 ]; then
       _security() { echo "security $*" >> "$CALLS"; cat > "$T/security-stdin" 2>/dev/null; [ "${SEC_OUT:-}" ] && printf '%s' "$SEC_OUT"; return "${SEC_RC:-0}"; }
-      _sops() { echo "sops-bin $*" >> "$CALLS"; [ "${SOPS_OUT:-}" ] && printf '%s' "$SOPS_OUT"; return "${SOPS_RC:-0}"; }
+      _sops() { echo "sops-bin $*" >> "$CALLS"; printf '%s|%s\n' "${SOPS_EDITOR-unset}" "${EDITOR-unset}" > "$T/sopsenv"; [ "${SOPS_OUT:-}" ] && printf '%s' "$SOPS_OUT"; return "${SOPS_RC:-0}"; }
     fi
     if [ "${REAL_BACKEND:-0}" = 3 ]; then
       _sops() { echo "sops-bin $*" >> "$CALLS"; return 1; }
@@ -947,5 +947,29 @@ check doctor_no_confirmation_claim all "! grep -q '視窗同意\\|永遠允許\\
 "$BROKER" > /dev/null 2> "$T/stderr"
 check usage_states_no_confirmation all "grep -q '不會跳確認視窗' '$T/stderr'" "! grep -q '視窗同意\\|永遠允許\\|在場' '$T/stderr'"
 default_table
+
+# === edit：sops 的 --config 與 editor 解析（broker 把 PATH 換成系統目錄，editor 要用呼叫端 PATH 找）===
+mkdir -p "$FAKE_HOME/.age" "$T/edbin"
+: > "$FAKE_HOME/.age/key.txt"; : > "$FAKE_HOME/dotfile/secrets/.sops.yaml"
+printf '#!/bin/sh\n' > "$T/edbin/as-fake-editor"; chmod 755 "$T/edbin/as-fake-editor"
+rm -f "$T/sopsenv"
+( unset EDITOR SOPS_EDITOR; cd /; REAL_BACKEND=1 broker as_main edit ); rc=$?
+check edit_passes_sops_config all ok_rc "called '^sops-bin --config $FAKE_HOME/dotfile/secrets/.sops.yaml $FAKE_HOME/dotfile/secrets/agent.enc.yaml\$'"
+check edit_unset_editor_stays_unset all "grep -qx 'unset|unset' '$T/sopsenv'"
+rm -f "$T/sopsenv"
+( unset SOPS_EDITOR; EDITOR='' REAL_BACKEND=1 broker as_main edit ); rc=$?
+check edit_empty_editor_left_alone all ok_rc "grep -qx 'unset|' '$T/sopsenv'"
+rm -f "$T/sopsenv"
+( unset SOPS_EDITOR; PATH="$T/edbin:$PATH" EDITOR='as-fake-editor -f' REAL_BACKEND=1 broker as_main edit ); rc=$?
+check edit_editor_resolved_from_caller_path all ok_rc "grep -qx 'unset|$T/edbin/as-fake-editor -f' '$T/sopsenv'"
+rm -f "$T/sopsenv"
+( PATH="$T/edbin:$PATH" SOPS_EDITOR=as-fake-editor EDITOR=/usr/bin/vi REAL_BACKEND=1 broker as_main edit ); rc=$?
+check edit_sops_editor_resolved_abs_kept all ok_rc "grep -qx '$T/edbin/as-fake-editor|/usr/bin/vi' '$T/sopsenv'"
+rm -f "$T/sopsenv"
+( unset SOPS_EDITOR; EDITOR=as-no-such-editor-xyz REAL_BACKEND=1 broker as_main edit ); rc=$?
+check edit_unresolvable_editor_dies all bad_rc "grep -q 'as-no-such-editor-xyz' '$T/stderr'" "not_called '^sops-bin'" "absent '$T/sopsenv'"
+( EDITOR=/usr/bin/vi SOPS_EDITOR=as-no-such-editor-xyz REAL_BACKEND=1 broker as_main edit ); rc=$?
+check edit_unresolvable_sops_editor_dies all bad_rc "grep -q 'SOPS_EDITOR' '$T/stderr'" "not_called '^sops-bin'"
+rm -f "$FAKE_HOME/.age/key.txt" "$FAKE_HOME/dotfile/secrets/.sops.yaml"; rmdir "$FAKE_HOME/.age"
 
 [ $fail = 0 ] && echo "all passed ($n cases)"; exit $fail
