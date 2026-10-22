@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# UserPromptSubmit dispatcher：一個 bash process 取代 experience-observe / tty-respond / think-first-router / jev-route。
+# UserPromptSubmit dispatcher：一個 bash process 取代 tty-respond / think-first-router / jev-route。
 # stdin 只解析一次。輸出合併成一份 JSON（additionalContext 以空行串接）。
 # tty-respond 原本回顯的 JSON（原 payload 或 "[input received]" 改寫）不含 Claude 認得的欄位，已省略；
 # 它的副作用（寫 socket / response 檔）與 exit 2（tty: 後面沒有內容）照舊。
@@ -14,31 +14,6 @@ else
 fi
 prompt=${prompt-}; cwd=${cwd-}
 while [[ $prompt == *$'\n' ]]; do prompt=${prompt%$'\n'}; done
-
-observe() {
-  set -eu
-  local summary
-  case "$prompt" in
-    '記住:'*) summary=${prompt#記住:} ;;
-    '記住這個:'*) summary=${prompt#記住這個:} ;;
-    '保留這個偏好:'*) summary=${prompt#保留這個偏好:} ;;
-    'remember:'*) summary=${prompt#remember:} ;;
-    *) return 0 ;;
-  esac
-  summary=${summary# }
-  if [[ -z "$summary" || -z "$cwd" ]]; then return 0; fi
-  MIYAGO_RUNTIME=claude \
-    "${MIYAGO_CONTEXT_HARNESS_BIN:-$HOME/.local/bin/miyago-context-harness}" observe \
-      --workspace-root "${MIYAGO_CONTEXT_HARNESS_ROOT:-$HOME/Project/AI/agent-workspace}" \
-      --task personal-experience-autocapture \
-      --cwd "$cwd" \
-      --kind explicit_preference \
-      --runtime claude \
-      --scope "$cwd" \
-      --source runtime_hook \
-      --summary "$summary" \
-      >/dev/null 2>&1 || true
-}
 
 # 路由順序：// 跳脫 > pty-bridge socket > ask-tty pending 檔 > tty:/res: 前綴 > 放行
 tty_respond() {
@@ -88,7 +63,6 @@ jev_route() {
   printf '%s' "$input" | python3 "$HOME/dotfile/config/ai/shared/jev/shoal_route.py"
 }
 
-[ "$is_json" = 1 ] && (observe)
 (tty_respond) >/dev/null; tty_rc=$?
 o_think=$(think_first)
 o_jev=$(jev_route)
