@@ -236,7 +236,7 @@ check_shoal_marker() {
   fi
 }
 check_shoal_marker claude \
-  "$shoal_dir/hosts/claude/dist/skills/shoal-orchestration/SKILL.md" "$claude_skill_file"
+  "$shoal_dir/plugins/claude/skills/shoal-orchestration/SKILL.md" "$claude_skill_file"
 check_shoal_marker agy \
   "$shoal_dir/hosts/agy/dist/rules/shoal-agy.md" "$gemini_active_file"
 
