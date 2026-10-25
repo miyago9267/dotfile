@@ -37,7 +37,7 @@ v1.0.6 reference.
 
 The native adapter is required because Grok does not execute Claude's
 SessionStart hooks. The Claude-compatible `~/.claude/Claude.md` therefore
-cannot be the only source of Monika's identity.
+cannot be the only source of Claude 大小姐's identity.
 
 ## Claude compatibility boundary
 

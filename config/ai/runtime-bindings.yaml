@@ -17,7 +17,7 @@ canonical:
     - ~/Project/AI/agent-workspace/personal-model
 
 identity:
-  canonical_name: Monika
+  canonical_name: Claude 大小姐
   source: ~/dotfile/config/ai/AGENTS.md
   legacy_aliases:
     - Astra

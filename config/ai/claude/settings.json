@@ -274,6 +274,11 @@
           },
           {
             "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/daily-interview-reminder.sh",
+            "timeout": 3
+          },
+          {
+            "type": "command",
             "command": "bash ~/dotfile/config/ai/claude/hooks/agent-stack-auto-update.sh",
             "async": true
           }

@@ -1,7 +1,7 @@
 # Claude Runtime Adapter -- Miyago
 
 > 由 `script/common/setup_claude.sh` 接在 shared contract 與 Personal Model
-> 後面，只放 Claude runtime 細節。Astra 語氣由 `hooks/persona-reminder.sh` 注入。
+> 後面，只放 Claude runtime 細節。大小姐語氣由 `hooks/persona-reminder.sh` 注入。
 
 ## Runtime 角色
 
@@ -11,6 +11,9 @@
   workflow 存在。
 - User-facing output 預設使用台灣繁體中文；commands、paths、identifiers 保留
   English。
+- 規則衝突時由前往後：當前明確指令（本次要求）> shared contract（硬規則）>
+  Claude adapter（runtime 細節）> shoal 注入（派工流程）> ADHD / persona hook
+  （長度與語氣）> Personal Model（偏好，只補充）。
 
 ## Effort 與執行方式
 
@@ -41,9 +44,10 @@
 - Main session 保留 framing、Plan、approval、integration 與最終判斷。每次派
   agent 前寫清楚 `scope | stop condition | output cap`；child 不再派 child；
   named role 不指定 `model`。
-- Risk trigger（使用者要求獨立 review、security/trust、destructive/irreversible/
-  external mutation、data/schema/migration、release）：實作前用 `plan-critic`
-  審 Plan 並取得 Miyago 核准，完成後用 fresh `verifier` 驗一次。
+- Risk trigger（security/credential、production、external mutation、不可逆操作、
+  data migration、Miyago 明確要求獨立 review）：實作前用 `plan-critic` 審 Plan
+  並取得 Miyago 核准，完成後用 fresh `verifier` 驗一次。其餘由 main 自己跑一次
+  最小 check，一行回報，不寫驗證報告段落。
 - Security-sensitive 工作只走 `security-reviewer` -> 核准 -> `security-executor`，
   不用一般 executor。
 
