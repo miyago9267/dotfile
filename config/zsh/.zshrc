@@ -163,3 +163,6 @@ unset -f __zshrc_prepend_path_if_dir 2>/dev/null
 [ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
 
 [ -f "$HOME/.config/broot/launcher/bash/br" ] && . "$HOME/.config/broot/launcher/bash/br"
+
+# Added by Antigravity IDE
+[ -d "$HOME/.antigravity-ide/antigravity-ide/bin" ] && export PATH="$HOME/.antigravity-ide/antigravity-ide/bin:$PATH"

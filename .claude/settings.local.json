@@ -32,7 +32,9 @@
       "Bash(agy agents *)",
       "Read(//Users/miyago/**)",
       "Bash(pkill *)",
-      "Bash(set *)"
+      "Bash(set *)",
+      "Bash(sed -n 80,200p auth-http.ts)",
+      "Bash(grep -rn \"DEFAULT_ADMIN_AUTH_GUARD_PATHS\\\\|createRequireAuth\\\\|requireAuth\\\\|app.use\\(\" --include=*.ts .)"
     ]
   }
 }

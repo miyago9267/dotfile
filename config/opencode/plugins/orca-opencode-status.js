@@ -1,16 +1,7 @@
-// Why: process-lifetime guard so a recurring parse error on a malformed
-// endpoint file does not spam OpenCode's stderr once per hook post.
-// This guard lives inside the plugin source because the plugin runs in
-// OpenCode's Node process (not Orca's) and has no access to server.ts's
-// equivalent warnedVersions / warnedEnvs Sets.
+// Warn once per plugin process; Orca's own warning guards live in a different process.
 let warnedBadEndpoint = false;
 
-// Why: message.part.updated can fire many times per second during a
-// streaming assistant reply, and each post() calls resolveHookCoords()
-// which reads the endpoint file. The file only changes on Orca restart
-// (rare), so a stat+mtime check is substantially cheaper than a full
-// readFileSync+parse on every streamed part. On stat error we fall
-// through to parse so the fail-open behavior is preserved.
+// Stat before parsing each post: streaming parts are frequent, endpoint rewrites are rare.
 let cachedEndpointKey = "";
 let cachedEndpointValues = null;
 
@@ -21,11 +12,7 @@ function readEndpointFile() {
     const fs = require("fs");
     try {
       const stat = fs.statSync(path);
-      // Why: cache key combines mtime + size + inode. renameSync (used by
-      // writeEndpointFile on the Orca side) allocates a fresh inode on
-      // POSIX and a new Windows file ID on NTFS, so ino changes on every
-      // legitimate rewrite even when mtimeMs resolution is coarse and size
-      // happens to match.
+      // Include inode so atomic rewrites invalidate even with coarse mtime and unchanged size.
       const cacheKey = stat.mtimeMs + ":" + stat.size + ":" + stat.ino;
       if (cacheKey === cachedEndpointKey && cachedEndpointValues) {
         return cachedEndpointValues;
@@ -33,12 +20,7 @@ function readEndpointFile() {
       const contents = fs.readFileSync(path, "utf8");
       const out = {};
       for (const line of contents.split(/\r?\n/)) {
-        // Why: Windows endpoint.cmd uses `set KEY=VALUE`; Unix endpoint.env
-        // uses `KEY=VALUE`. Making `set ` optional lets the same parser
-        // handle both without platform detection in the plugin. Allow
-        // digits in the key for forward-compat with future ORCA_AGENT_HOOK_*
-        // names that may contain numerics, and strip a trailing CR so
-        // mixed-EOL files with lone `\r` do not leak CR into the value.
+        // Accept Windows set prefixes and CR endings alongside Unix endpoint files.
         const m = line.match(/^(?:set\s+)?([A-Z0-9_]+)=(.*)$/);
         if (m) out[m[1]] = m[2].replace(/\r$/, "");
       }
@@ -46,20 +28,13 @@ function readEndpointFile() {
       cachedEndpointValues = out;
       return out;
     } catch (ioErr) {
-      // Why: any stat or read failure (file yanked mid-read, permission
-      // race, unlink between stat and readFileSync) must invalidate the
-      // cache so a transient failure does not lock in a stale parse for
-      // the remaining process lifetime; rethrow to the outer catch.
+      // Invalidate on read/stat failure so transient errors cannot pin stale coordinates.
       cachedEndpointKey = "";
       cachedEndpointValues = null;
       throw ioErr;
     }
   } catch (err) {
-    // Why: warn once per process if the file exists but is unreadable or
-    // malformed — a persistent, silently-swallowed parse error would
-    // otherwise leave the plugin falling back to stale process.env on
-    // every post with no signal. ENOENT / missing env var is the normal
-    // pre-install case; stay silent for it.
+    // Warn on malformed/unreadable files; absence is normal before installation.
     if (err && err.code !== "ENOENT" && !warnedBadEndpoint) {
       warnedBadEndpoint = true;
       console.warn("[orca-hook] failed to parse endpoint file:", err.message);
@@ -69,18 +44,14 @@ function readEndpointFile() {
 }
 
 function resolveHookCoords() {
-  // Why: prefer the on-disk endpoint file over process.env because env was
-  // frozen when OpenCode was fork()ed — stale after an Orca restart. The
-  // file is rewritten on every Orca start(), so sourcing it per post lets
-  // a long-running OpenCode session reach the current server. Falls back
-  // to process.env when the file is absent (first-run / pre-endpoint-file / Orca
-  // never started writing the file).
+  // Prefer endpoint files: inherited environment coordinates become stale after Orca restarts.
   const fileEnv = readEndpointFile() || {};
   return {
     port: fileEnv.ORCA_AGENT_HOOK_PORT || process.env.ORCA_AGENT_HOOK_PORT,
     token: fileEnv.ORCA_AGENT_HOOK_TOKEN || process.env.ORCA_AGENT_HOOK_TOKEN,
     env: fileEnv.ORCA_AGENT_HOOK_ENV || process.env.ORCA_AGENT_HOOK_ENV || "",
     version: fileEnv.ORCA_AGENT_HOOK_VERSION || process.env.ORCA_AGENT_HOOK_VERSION || "",
+    openCodeTui: process.env.ORCA_AGENT_HOOK_ENDPOINT ? fileEnv.ORCA_AGENT_HOOK_OPENCODE_TUI : process.env.ORCA_AGENT_HOOK_OPENCODE_TUI,
   };
 }
 
@@ -114,31 +85,22 @@ let busyRecoveryQueued = false;
 let busyRecoveryUsed = false;
 let busyRecoveryEndpointKey = "";
 let stateArrivalRevision = 0;
-// Why: OpenCode can create directory-scoped factories and concurrent root
-// sessions in one pane; module ownership lets waiting/busy aggregate safely.
+let reportingOpenCodeMajor = 0;
+let reportingOpenCodeTui = false;
+// Module ownership aggregates concurrent root sessions and directory-scoped factories in one pane.
 let nextFactoryID = 0;
 const activeFactoryIDs = new Set();
 const disposingFactoryIDs = new Set();
 const busyRootOwnerBySessionID = new Map();
-// Why: a matching Idle must retire fail-open Busy even when the SDK client
-// is unavailable, without granting an unrelated unknown Idle authority.
+// Only matching provisional Idle may retire fail-open Busy without SDK ancestry.
 const provisionalBusyByKey = new Map();
-// Why: a background child outlives the root turn that spawned it, so the
-// pane must stay Busy on its behalf until its own exact Idle (or its
-// factory's disposal) retires it — otherwise the root Idle completes a task
-// tree that is still working.
+// Background children outlive root turns; retain Busy until exact child Idle/factory disposal.
 const busyChildRootByKey = new Map();
 const pendingAttentionByKey = new Map();
 const rootSessionById = new Map();
 const rootSessionLookupById = new Map();
 
-// Why: message.part.updated re-sends the FULL accumulated text of the part
-// after every streamed append, so posting each event forwards O(n^2) bytes
-// per turn through Orca (loopback HTTP -> main JSON parse -> status compare
-// -> IPC -> renderer store update -> React commit). On Windows that flood
-// saturated both event loops and froze the whole UI a few seconds into a
-// streaming reply. The dashboard only needs a bounded preview at a human
-// cadence: cap the text and trailing-edge coalesce assistant parts.
+// Full accumulated replies per delta cause quadratic traffic; cap and coalesce assistant previews.
 const MESSAGE_PART_THROTTLE_MS = 250;
 const MESSAGE_PART_MAX_CHARS = 4000;
 let pendingAssistantPart = null;
@@ -146,6 +108,21 @@ let assistantPartFlushTimer = null;
 let messagePartPostInFlight = null;
 let deliveredMessagePartFactoryID = null;
 let lastAssistantPartPostAt = 0;
+
+function isOpenCodeCommandProcess(command) {
+  // Compiled binaries put their embedded entry-script path at argv[1].
+  const args = process.argv.slice(1);
+  if (args.length > 0 && /[\\/]/.test(args[0])) args.shift();
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === "--") return false;
+    if (!args[index].startsWith("-")) return args[index] === command;
+    if (args[index] === "--log-level") index += 1;
+  }
+  return false;
+}
+function isOpenCodeRunProcess() {
+  return isOpenCodeCommandProcess("run");
+}
 
 function capMessagePartText(text) {
   return text.length > MESSAGE_PART_MAX_CHARS ? text.slice(0, MESSAGE_PART_MAX_CHARS) : text;
@@ -168,8 +145,7 @@ async function flushPendingAssistantPart(force = false) {
     clearTimeout(assistantPartFlushTimer);
     assistantPartFlushTimer = null;
   }
-  // Why: an idle/waiting transition must wait for every older preview;
-  // keep one post in flight while later snapshots coalesce in memory.
+  // Keep one preview in flight; later status transitions must wait while snapshots coalesce.
   while (messagePartPostInFlight) await messagePartPostInFlight;
   const pending = pendingAssistantPart;
   pendingAssistantPart = null;
@@ -189,8 +165,7 @@ async function flushPendingAssistantPart(force = false) {
 }
 
 function queueAssistantPart(part) {
-  // Why: keep only the latest snapshot — each event already contains the
-  // full accumulated text, so intermediate snapshots are pure waste.
+  // Each event carries full accumulated text; retain only the latest snapshot.
   pendingAssistantPart = part;
   const sinceLastPost = Date.now() - lastAssistantPartPostAt;
   if (sinceLastPost >= MESSAGE_PART_THROTTLE_MS) {
@@ -205,11 +180,7 @@ function queueAssistantPart(part) {
   }
 }
 
-// Why: message.part.updated fires for every Part (text, tool, reasoning)
-// but does not include the message role — that lives on the parent
-// message.updated event. Cache the role per messageID so the plugin can
-// tag a TextPart as user vs assistant when POSTing. Capped at 128 entries
-// so long-running sessions do not grow this map unboundedly.
+// Part events omit role; cache bounded message.updated roles to distinguish prompts from replies.
 const messageRoleById = new Map();
 function rememberMessageRole(messageID, role) {
   if (!messageID || !role) return;
@@ -220,11 +191,7 @@ function rememberMessageRole(messageID, role) {
   messageRoleById.set(messageID, role);
 }
 
-// Why: oh-my-opencode style tools spawn child sessions that emit their
-// own session.idle / message events. Those child completions must not
-// flip the root Orca pane to done or overwrite the parent turn preview.
-// Resolve the full parentID chain so descendant attention can be attributed
-// to the root while child completion and previews remain non-authoritative.
+// Resolve ancestry to roll descendant attention up without granting child completion/preview authority.
 async function resolveRootSessionID(client, sessionID) {
   if (!sessionID) return null;
   if (rootSessionById.has(sessionID)) return rootSessionById.get(sessionID);
@@ -280,8 +247,7 @@ async function lookupRootSessionID(client, sessionID) {
 async function walkSessionParents(client, sessionID, signal) {
   const lineage = [];
   let currentSessionID = sessionID;
-  // Why: malformed or unexpectedly deep ancestry must not monopolize the
-  // lifecycle FIFO even when every individual SDK lookup succeeds.
+  // Bound total ancestry traversal so deep/malformed chains cannot monopolize lifecycle delivery.
   while (lineage.length < MAX_SESSION_ANCESTRY_DEPTH) {
     const cachedRoot = rootSessionById.get(currentSessionID);
     if (cachedRoot) {
@@ -304,9 +270,7 @@ async function walkSessionParents(client, sessionID, signal) {
 }
 
 async function lookupSessionList(client, sessionID, signal) {
-  // Why: point lookup avoids the SDK list page dropping older children;
-  // current SDKs put AbortSignal in a second options argument, while legacy
-  // generated clients accept one request-options object.
+  // Point lookup finds unlisted older children; support current two-argument and legacy SDK calls.
   if (client?.session?.get) {
     const calls = client.session.get.length >= 2
       ? [
@@ -320,7 +284,7 @@ async function lookupSessionList(client, sessionID, signal) {
         if (result?.data?.id === sessionID) return { data: [result.data] };
       } catch {
         if (signal.aborted) throw new Error("session lookup aborted");
-        // Try the other supported SDK generation, then list fallback.
+        // Try another SDK generation, then list fallback.
       }
     }
   }
@@ -332,21 +296,25 @@ async function lookupSessionList(client, sessionID, signal) {
 }
 
 async function post(hookEventName, extraProperties) {
-  // Why: resolve coords per post — the endpoint file may have been
-  // rewritten by a newer Orca since the last call. Pane/tab/worktree IDs
-  // stay on process.env because they are per-PTY (stable for the life of
-  // the OpenCode process), not per-Orca-instance.
+  // Refresh endpoint coordinates per post after Orca restarts; per-PTY identity stays in process.env.
   const coords = resolveHookCoords();
   const paneKey = process.env.ORCA_PANE_KEY;
   if (!coords.port || !coords.token || !paneKey) return false;
+  const tmuxMatch = /^(.*),[0-9]+,[0-9]+$/.exec(process.env.TMUX || "");
+  const tmuxPane = process.env.TMUX_PANE;
+  if (reportingOpenCodeTui && coords.openCodeTui !== "1") return false;
   const url = `http://127.0.0.1:${coords.port}/hook/opencode`;
   const body = JSON.stringify({
     paneKey,
+    ...(tmuxMatch && /^%[0-9]+$/.test(tmuxPane || "") ? { tmux: { socket: tmuxMatch[1], pane: tmuxPane } } : {}),
     launchToken: process.env.ORCA_AGENT_LAUNCH_TOKEN || "",
     tabId: process.env.ORCA_TAB_ID || "",
     worktreeId: process.env.ORCA_WORKTREE_ID || "",
     env: coords.env,
     version: coords.version,
+    ...(reportingOpenCodeMajor ? { opencodeMajor: reportingOpenCodeMajor } : {}),
+    ...(reportingOpenCodeTui ? { opencodeTui: 1 } : {}),
+    ...(reportingOpenCodeMajor < 2 && isOpenCodeCommandProcess("serve") && coords.openCodeTui === "1" ? { opencodeSharedServer: 1 } : {}),
     payload: { hook_event_name: hookEventName, ...(extraProperties || {}) },
   });
   const controller = new AbortController();
@@ -364,8 +332,7 @@ async function post(hookEventName, extraProperties) {
     });
     return response.ok;
   } catch {
-    // Why: OpenCode session events must never fail the agent run just
-    // because Orca is unavailable or the local loopback request failed.
+    // Orca/loopback failures must never fail the agent run.
     return false;
   } finally {
     clearTimeout(timeout);
@@ -373,8 +340,7 @@ async function post(hookEventName, extraProperties) {
 }
 
 function enqueueLifecycle(task) {
-  // Why: OpenCode intentionally fire-and-forgets hook promises, so async
-  // lookups and posts need their own FIFO to preserve event order.
+  // OpenCode does not await hook promises; serialize lookups/posts to preserve event order.
   const run = lifecycleQueue.then(async () => {
     try {
       await task();
@@ -536,8 +502,7 @@ function currentAttention() {
 }
 
 function attentionKey(factoryID, hookEventName, requestID, sourceSessionID) {
-  // Why: custom plugins may reuse request IDs across sessions or factories;
-  // JSON tuple identity prevents one owner from hiding another blocker.
+  // Session/factory-scoped tuples prevent reused request IDs from hiding another owner's blocker.
   return JSON.stringify([factoryID, hookEventName, requestID, sourceSessionID || ""]);
 }
 
@@ -545,6 +510,21 @@ function clearAttentionForSession(sessionID, factoryID) {
   let rootSessionID = null;
   for (const [key, attention] of pendingAttentionByKey) {
     if (attention.sourceSessionID === sessionID && attention.factoryID === factoryID) {
+      pendingAttentionByKey.delete(key);
+      rootSessionID = attention.properties?.sessionID || sessionID;
+    }
+  }
+  return rootSessionID;
+}
+
+// Root turn-end must retire rolled-up child blockers; root Busy alone must not clear them.
+function clearAttentionForTurnEnd(sessionID, factoryID) {
+  let rootSessionID = null;
+  for (const [key, attention] of pendingAttentionByKey) {
+    const ownsAttention =
+      attention.sourceSessionID === sessionID ||
+      attention.properties?.sessionID === sessionID;
+    if (ownsAttention && attention.factoryID === factoryID) {
       pendingAttentionByKey.delete(key);
       rootSessionID = attention.properties?.sessionID || sessionID;
     }
@@ -592,8 +572,7 @@ function provisionalBusyKey(factoryID, sessionID) {
 
 function rememberProvisionalBusy(sessionID, factoryID) {
   const key = provisionalBusyKey(factoryID, sessionID);
-  // Why: active ownership cannot be LRU-evicted without allowing false
-  // Idle; exact matching Idle or factory disposal lifecycle-bounds it.
+  // Live ownership cannot be LRU-evicted; only exact Idle or factory disposal retires it.
   provisionalBusyByKey.delete(key);
   provisionalBusyByKey.set(key, { sessionID, factoryID });
 }
@@ -608,8 +587,7 @@ function busyChildKey(factoryID, sessionID) {
 
 function rememberBusyChild(sessionID, rootSessionID, factoryID) {
   const key = busyChildKey(factoryID, sessionID);
-  // Why: repeated Busy for the same child is not a state change; report one
-  // only when the pane actually gains a running descendant.
+  // Repeated child Busy does not change pane activity.
   if (busyChildRootByKey.get(key)?.sessionID === rootSessionID) return false;
   busyChildRootByKey.delete(key);
   busyChildRootByKey.set(key, { sessionID: rootSessionID, factoryID });
@@ -628,8 +606,7 @@ function clearKnownBusyRoot(sessionID, factoryID) {
 
 function latestBusyOwner() {
   let latest = null;
-  // Why: a running descendant is reported under its ROOT id, and ranks
-  // below a directly busy root so an ongoing turn keeps labelling the pane.
+  // Attribute child work to its root, below directly busy roots that should label the pane.
   for (const busyChild of busyChildRootByKey.values()) {
     latest = busyChild;
   }
@@ -663,8 +640,7 @@ async function publishAggregateStatus(fallbackFactoryID, preferredSessionID) {
 
 async function publishOwnershipChange(fallbackFactoryID, preferredSessionID) {
   stateArrivalRevision += 1;
-  // Why: exact blocker/Busy retirement is authoritative even if ancestry
-  // lookup failed; every older preview must settle before its replacement.
+  // Exact retirement remains authoritative without ancestry; drain old previews before replacing status.
   await flushPendingAssistantPart(true);
   await publishAggregateStatus(fallbackFactoryID, preferredSessionID);
 }
@@ -677,8 +653,7 @@ async function handleLifecycleEvent(client, event, factoryID) {
     event.type === "question.replied" ||
     event.type === "question.rejected";
   if (isResolutionEvent) {
-    // Why: the stored owner already identifies the root, so replies clear
-    // immediately even when OpenCode session lookup is slow or unavailable.
+    // Stored owners let replies clear blockers without waiting for SDK lookup.
     const rootSessionID = clearAttentionForResolution(event, sessionID, factoryID);
     if (rootSessionID) await publishOwnershipChange(factoryID, rootSessionID);
     return;
@@ -686,8 +661,7 @@ async function handleLifecycleEvent(client, event, factoryID) {
   const isAttentionEvent =
     event.type === "permission.asked" ||
     event.type === "question.asked";
-  // Why: attention without OpenCode's required sessionID cannot be
-  // correlated to a later reply/Idle, so it must not become UI authority.
+  // Without a session ID, attention cannot be retired by a matching reply/Idle.
   if (isAttentionEvent && !sessionID) return;
   const canFailOpen =
     statusType === "busy" || statusType === "retry" || isAttentionEvent;
@@ -702,8 +676,7 @@ async function handleLifecycleEvent(client, event, factoryID) {
     busyRootOwnerBySessionID.delete(sessionID);
     busyRootOwnerBySessionID.set(sessionID, factoryID);
   }
-  // Why: child work rolls up to the pane; ignore its normal lifecycle noise,
-  // but preserve blockers that still require the pane owner to respond.
+  // Roll child blockers up to the pane while ignoring non-authoritative child lifecycle events.
   if (childState === true && !isAttentionEvent) {
     let attentionRootSessionID = null;
     let childBusyChanged = false;
@@ -720,13 +693,11 @@ async function handleLifecycleEvent(client, event, factoryID) {
   }
   if (childState === null && !canFailOpen) {
     if (isIdleEvent) {
-      // Why: recorded ownership can safely retire a blocker during an SDK
-      // outage without granting unknown child Idle authority over root state.
+      // Stored ownership permits exact retirement during SDK outages without trusting unknown Idle.
       const attentionRootSessionID = clearAttentionForSession(sessionID, factoryID);
       const clearedProvisionalBusy = clearProvisionalBusy(sessionID, factoryID);
       const clearedKnownBusyRoot = clearKnownBusyRoot(sessionID, factoryID);
-      // Why: exact-session cleanup, so a child whose finishing Idle lands
-      // during an SDK outage cannot pin the pane Busy forever.
+      // Retire exact child activity during SDK outages so Busy cannot remain pinned.
       const clearedBusyChild = clearBusyChild(sessionID, factoryID);
       if (
         attentionRootSessionID ||
@@ -740,8 +711,7 @@ async function handleLifecycleEvent(client, event, factoryID) {
     return;
   }
   if (childState === null && (statusType === "busy" || statusType === "retry")) {
-    // Unknown lineage may be child work, so keep exact provisional ownership
-    // only until matching Idle/disposal; other blockers still take priority.
+    // Keep unresolved Busy ownership provisional until matching Idle/disposal; blockers outrank it.
     clearAttentionForSession(sessionID, factoryID);
     rememberProvisionalBusy(sessionID, factoryID);
     await publishAggregateStatus(factoryID, sessionID);
@@ -749,17 +719,14 @@ async function handleLifecycleEvent(client, event, factoryID) {
   }
   if (event.type === "permission.asked" || event.type === "question.asked") {
     stateArrivalRevision += 1;
-    // Why: attention must share the lifecycle FIFO and retry target so a
-    // delayed Busy post cannot overwrite a newer human blocker.
+    // Queue attention with lifecycle delivery so delayed Busy cannot overwrite newer blockers.
     const hookEventName =
       event.type === "permission.asked" ? "PermissionRequest" : "AskUserQuestion";
-    // Why: show the blocker on the root turn while retaining its real child
-    // owner for exact reply, tool-completion, and disposal cleanup.
+    // Display on the root while retaining child ownership for exact cleanup.
     const properties = { ...(event.properties || {}), sessionID: rootSessionID || sessionID };
     const requestID = properties.id || sessionID || "";
     const key = attentionKey(factoryID, hookEventName, requestID, sessionID);
-    // Why: unresolved blockers are live UI authority and cannot be evicted;
-    // reply, exact Idle, tool completion, or factory disposal retires them.
+    // Unresolved blockers are live authority; retire explicitly, never by cache eviction.
     pendingAttentionByKey.set(key, {
       hookEventName,
       properties,
@@ -772,26 +739,23 @@ async function handleLifecycleEvent(client, event, factoryID) {
   if (isIdleEvent) {
     stateArrivalRevision += 1;
     const idleKey = "idle:" + (sessionID || "");
-    // Why: current OpenCode emits canonical idle followed by deprecated
-    // session.idle; a failed canonical post should keep its backoff.
+    // Deprecated idle follows canonical idle; preserve failed-post backoff.
     if (
       event.type === "session.idle" &&
       desiredStatusKey === idleKey &&
       statusDeliveryDirty &&
       statusRetryTimer
     ) return;
-    // Why: flush the coalesced final reply snapshot before the idle
-    // transition so the done-state preview shows the completed message.
+    // Flush final reply previews before Idle so Done includes the completed text.
     await flushPendingAssistantPart(true);
-    clearAttentionForSession(sessionID, factoryID);
+    clearAttentionForTurnEnd(sessionID, factoryID);
     if (busyRootOwnerBySessionID.get(sessionID) === factoryID) {
       busyRootOwnerBySessionID.delete(sessionID);
     }
     await publishAggregateStatus(factoryID, sessionID);
     return;
   }
-  // Why: recoverable compaction failures emit session.error and continue;
-  // canonical session.status is the authority for actual completion.
+  // Recoverable compaction errors can continue; canonical session.status decides completion.
   if (event.type === "session.error") return;
   if (statusType === "busy" || statusType === "retry") {
     clearAttentionForSession(sessionID, factoryID);
@@ -816,14 +780,11 @@ function normalizeNextLifecycleEvent(event) {
   return event;
 }
 
-// Why: accept the factory argument as an optional opaque parameter instead
-// of destructuring (`async ({ client }) => …`). OpenCode can invoke the
-// plugin factory with undefined during startup, which makes the
-// destructuring form throw synchronously and crash OpenCode with an opaque
-// UnknownError before any event is ever dispatched.
+// OpenCode may call the factory without context; destructuring would crash startup.
 export const OrcaOpenCodeStatusPlugin = async (_ctx) => {
   if (process.env.ORCA_OPENCODE_AGENT && process.env.ORCA_OPENCODE_AGENT !== 'opencode') return {};
   const client = _ctx?.client;
+  const sessionsOutliveDispose = _ctx?.sessionsOutliveDispose === true;
   const factoryID = ++nextFactoryID;
   activeFactoryIDs.add(factoryID);
   let disposed = false;
@@ -834,13 +795,7 @@ export const OrcaOpenCodeStatusPlugin = async (_ctx) => {
     const authorityRevision = stateArrivalRevision;
     const statusType = getStatusType(event);
 
-    // Why: cache the message role BEFORE the async isChildSession check.
-    // OpenCode fires message.updated (user) and message.part.updated (text)
-    // back-to-back; if we awaited isChildSession first, the part.updated
-    // handler could reach messageRoleById.get(...) while the user message.updated
-    // is still suspended on that await — so the part would see an empty cache
-    // and drop the user prompt. Caching is a cheap Map.set with bounded size,
-    // safe to run even for child sessions (the part POST still filters them).
+    // Cache roles before awaiting lineage: back-to-back part events otherwise see no role.
     if (event.type === "message.updated") {
       const info = event.properties && event.properties.info;
       rememberMessageRole(info && info.id, info && info.role);
@@ -849,9 +804,6 @@ export const OrcaOpenCodeStatusPlugin = async (_ctx) => {
     const sessionID = event.properties?.sessionID;
     const updatedPart = event.properties?.part;
 
-    // OpenCode 2 publishes the next-generation event family through the
-    // same plugin event hook. Convert those events into the existing
-    // bounded Orca lifecycle and preview posts.
     if (event.type === "session.next.prompt.admitted") {
       if (!sessionID) return;
       if ((await isChildSession(client, sessionID)) !== false) return;
@@ -897,6 +849,7 @@ export const OrcaOpenCodeStatusPlugin = async (_ctx) => {
       const info = event.properties?.info;
       if (!info?.id || info.parentID) return;
       rememberSessionRoot(info.id, info.id);
+      if (isOpenCodeRunProcess()) return; // a `run` goes Busy at once; its start row only blinks idle
       await enqueueLifecycle(() =>
         disposed ? undefined : post("SessionStart", { sessionID: info.id })
       );
@@ -911,8 +864,7 @@ export const OrcaOpenCodeStatusPlugin = async (_ctx) => {
     ) {
       await enqueueLifecycle(async () => {
         if (disposed) return;
-        // Why: stored ownership clears child questions without waiting on
-        // ancestry lookup even though ordinary child message parts stay hidden.
+        // Stored ownership retires child questions even when ancestry lookup is unavailable.
         const rootSessionID = clearQuestionForToolPart(updatedPart, sessionID, factoryID);
         if (!rootSessionID) return;
         await publishOwnershipChange(factoryID, rootSessionID);
@@ -956,36 +908,19 @@ export const OrcaOpenCodeStatusPlugin = async (_ctx) => {
     if (desiredStatus === "waiting") return;
 
     if (event.type === "message.updated") {
-      // Why: role is already cached above the isChildSession await so the
-      // back-to-back message.part.updated for the same messageID is not
-      // racing against this handler. Nothing more to do here — return to
-      // avoid falling through to the part/session handlers below.
       return;
     }
 
     if (event.type === "message.part.updated") {
-      // Why: a TextPart carries the actual user prompt or assistant reply
-      // text. Skip non-text parts (tool, reasoning, file, …) so we only
-      // forward what the dashboard renders. Role came from the earlier
-      // message.updated event; if we never saw one (e.g. plugin loaded
-      // mid-turn) the role is unknown, and mislabeling the part — a user
-      // prompt displayed as the assistant reply, or vice versa — is worse
-      // than silently dropping a single in-flight text chunk. The next
-      // message.updated event will re-seed the role cache, so subsequent
-      // parts in the same session flow normally.
+      // Unknown roles can mislabel user prompts as replies; skip until message.updated seeds the cache.
       const part = event.properties && event.properties.part;
       if (!part || part.type !== "text" || !part.text) return;
-      // Why: OpenCode injects a finished background task back into the
-      // parent turn as a synthetic `<task id=…>` text part. It is machinery,
-      // not what the human typed or the agent replied — OpenCode hides it
-      // from its own prompt too — so it must not replace the pane preview.
+      // OpenCode hides synthetic background-task text; it must not replace human/assistant previews.
       if (part.synthetic === true) return;
       const role = messageRoleById.get(part.messageID);
       if (!role) return;
       if (role === "user") {
-        // Why: user prompts arrive as a single event, not a stream — post
-        // immediately (still capped) so the throttle slot stays free for
-        // the assistant reply that follows within the same window.
+        // User prompts are single events; post immediately without consuming the assistant throttle slot.
         await postMessagePart(
           { role, text: capMessagePartText(part.text), messageID: part.messageID, sessionID },
           factoryID
@@ -1010,8 +945,7 @@ export const OrcaOpenCodeStatusPlugin = async (_ctx) => {
     nextTextByMessageID.clear();
     disposingFactoryIDs.add(factoryID);
     await enqueueLifecycle(async () => {
-      // An older MessagePart must settle before disposal publishes the
-      // replacement state, or its late Working update could win.
+      // Drain old previews before disposal so late Working updates cannot overwrite its verdict.
       while (messagePartPostInFlight) await messagePartPostInFlight;
       for (const [sessionID, ownerID] of busyRootOwnerBySessionID) {
         if (ownerID === factoryID) busyRootOwnerBySessionID.delete(sessionID);
@@ -1031,25 +965,26 @@ export const OrcaOpenCodeStatusPlugin = async (_ctx) => {
         pendingAssistantPart = null;
       }
       const ownsDeliveredMessagePart = deliveredMessagePartFactoryID === factoryID;
-      if (desiredFactoryID === factoryID || ownsDeliveredMessagePart) {
+      // OpenCode 1 teardown cancels all runs; OpenCode 2 hot reloads preserve runs and publish no Idle.
+      if (sessionsOutliveDispose) {
+        if (desiredFactoryID === factoryID) {
+          clearStatusRetry();
+          statusRevision += 1;
+        }
+      } else if (desiredFactoryID === factoryID || ownsDeliveredMessagePart) {
         clearStatusRetry();
         statusRevision += 1;
-        // A MessagePart may have changed the listener to Working after the
-        // same lifecycle key was delivered; force that key to be reasserted.
+        // Reassert status after MessagePart may have changed the listener to Working.
         statusDeliveryDirty = ownsDeliveredMessagePart;
         busyRecoveryUsed = false;
         busyRecoveryEndpointKey = "";
-        const fallbackFactoryID = Array.from(activeFactoryIDs).find(
-          (id) => id !== factoryID
-        );
+        const fallbackFactoryID = Array.from(activeFactoryIDs).find((id) => id !== factoryID);
         if (fallbackFactoryID !== undefined) {
           await publishAggregateStatus(
             fallbackFactoryID,
             desiredStatusProperties?.sessionID
           );
         } else {
-          // Why: Instance disposal can happen while the PTY stays alive;
-          // publish a final idle so Orca does not retain a dead owner.
           if (!deliveredStatusKey.startsWith("idle:") || ownsDeliveredMessagePart) {
             await setStatus(
               "idle",
@@ -1071,68 +1006,498 @@ export const OrcaOpenCodeStatusPlugin = async (_ctx) => {
   },
   };
 };
+const ORCA_TUI_PLUGIN_ENTRY = new URL("./orca-opencode-status-tui/tui.js", import.meta.url);
+const ORCA_STATUS_AGENT = "opencode";
 
-async function setupOpenCode2Status(ctx) {
-  const controller = new AbortController();
-  const client = { session: { get: (input, options) => ctx.session.get(input, options) } };
-  const hooks = await OrcaOpenCodeStatusPlugin({ client });
-  if (!hooks.event) return async () => {};
-  const promptRegistration = await ctx.session.hook("prompt", async (properties) => {
-    await hooks.event({ event: { type: "session.next.prompt.admitted", properties } });
-  });
-  const consume = async () => {
-    for await (const input of ctx.event.subscribe({ signal: controller.signal })) {
-      if (controller.signal.aborted) break;
-      let type = input.type;
-      let properties = input.data;
-      if (type === "session.created") {
-        properties = { info: { ...properties, id: properties.sessionID } };
-      } else if (type === "session.execution.started") {
-        type = "session.status";
-        properties = { ...properties, status: { type: "busy" } };
-      } else if (type === "session.execution.succeeded" || type === "session.execution.failed" || type === "session.execution.interrupted") {
-        type = "session.status";
-        properties = { ...properties, status: { type: "idle" } };
-      } else if (type === "permission.asked") {
-        properties = { ...properties, permission: properties.action, patterns: properties.resources };
-      } else if (type === "form.created") {
-        type = "question.asked";
-        const form = properties.form;
-        properties = {
-          ...form,
-          questions: form.fields.map((field) => ({
-            header: field.title || form.title,
-            question: field.description || field.title || form.title,
-            options: (field.options || []).map((option) => ({ label: option.label || option.value, description: option.description || "" })),
-            multiple: field.type === "multiselect",
-          })),
-        };
-      } else if (type === "form.replied" || type === "form.cancelled") {
-        type = type === "form.replied" ? "question.replied" : "question.rejected";
-        properties = { ...properties, requestID: properties.id };
-      } else if (type === "session.text.started" || type === "session.text.delta" || type === "session.text.ended") {
-        type = type.replace("session.", "session.next.");
+async function setupLegacyOpenCodeTui(api) {
+  const noop = async () => {};
+  if (!/^1\./.test(String(api?.app?.version || "")) || !process.argv.includes("attach")) return noop;
+  const session = api.state?.session;
+  if (typeof session?.get !== "function" || typeof session.status !== "function" || typeof api.event?.on !== "function") return noop;
+  reportingOpenCodeTui = true;
+  const root = (id) => {
+    const visited = [];
+    let current = id;
+    while (visited.length < MAX_SESSION_ANCESTRY_DEPTH && !visited.includes(current)) {
+      visited.push(current);
+      const parent = session.get(current)?.parentID;
+      if (!parent) {
+        for (const member of visited) rememberSessionRoot(member, current);
+        return current;
       }
-      await hooks.event({ event: { type, properties } });
+      current = parent;
     }
+    return undefined;
   };
-  const consuming = consume().catch((error) => {
-    if (!controller.signal.aborted) console.warn("[orca-hook] event subscription failed:", error.message);
-  });
-  return async () => {
-    controller.abort();
-    await promptRegistration.dispose();
-    await consuming;
-    await hooks.dispose();
+  const eventTypes = ["session.created", "session.deleted", "session.status", "session.idle", "session.error", "message.updated", "message.part.updated", "permission.asked", "permission.replied", "question.asked", "question.replied", "question.rejected", "server.connected"];
+  const ctx = {
+    app: api.app,
+    legacyOpenCodeTui: true,
+    ui: { router: { current: () => {
+      const route = api.route.current;
+      return route?.name === "session" ? { type: "session", sessionID: route.params?.sessionID } : { type: "home" };
+    } } },
+    data: {
+      session: {
+        get: (id) => session.get(id),
+        root,
+        family: (id) => [...rootSessionById.keys()].filter((member) => member !== id && root(member) === id),
+        status: (id) => {
+          const type = session.status(id)?.type;
+          return type === "busy" || type === "retry" ? "running" : "idle";
+        },
+        permission: { list: (id) => session.permission(id) },
+        form: { list: (id) => session.question(id) },
+      },
+      listen: (listener) => {
+        const unsubscribers = eventTypes.map((type) => api.event.on(type, (input) => {
+          const event = input?.details || input;
+          const properties = event?.properties || {};
+          const infoSessionID = type === "session.created" || type === "session.deleted" ? properties.info?.id : properties.info?.sessionID;
+          const sessionID = properties.sessionID || infoSessionID || properties.part?.sessionID;
+          if (sessionID) root(sessionID);
+          if (type === "message.updated") rememberMessageRole(properties.info?.id, properties.info?.role);
+          listener({ details: { type, data: { ...properties, sessionID, ...(type === "session.created" ? properties.info : {}) } } });
+        }));
+        return () => unsubscribers.forEach((unsubscribe) => { if (typeof unsubscribe === "function") unsubscribe(); });
+      },
+    },
   };
+  const dispose = await setupOpenCode2Tui(ctx);
+  api.lifecycle?.onDispose?.(dispose);
+  return dispose;
 }
 
 
-// Why: OpenCode also resolves plugins through the module default export, and that
-// loader rejects the module unless the default exposes `server()` ("must default
-// export an object with server()"). `setup()` does not satisfy it. Keep the named
-// export so the factory-based loader still finds the same instance.
-export default {
+// Non-session owners have no Idle — ignore known sentinels to avoid stranded blockers.
+const NON_SESSION_FORM_OWNERS = new Set(["global"]);
+
+// Normalize blockers once so server and TUI reports reach Orca in the same shape.
+function translateOpenCode2Event(inputType, data) {
+  let type = inputType;
+  let properties = data || {};
+  if (type === "session.created") {
+    properties = { info: { ...properties, id: properties.sessionID } };
+  } else if (type === "session.execution.started") {
+    type = "session.status";
+    properties = { ...properties, status: { type: "busy" } };
+  } else if (type === "session.execution.succeeded" || type === "session.execution.failed" || type === "session.execution.interrupted") {
+    type = "session.status";
+    properties = { ...properties, status: { type: "idle" } };
+  } else if (type === "permission.asked") {
+    properties = { ...properties, permission: properties.action, patterns: properties.resources };
+  } else if (type === "form.created") {
+    const form = properties.form;
+    // Metadata kind is optional; every real-session-owned form must surface a clearable blocker.
+    if (!form || NON_SESSION_FORM_OWNERS.has(form.sessionID)) return null;
+    // Malformed forms must not kill the subscription.
+    const fields = Array.isArray(form.fields) ? form.fields : [];
+    type = "question.asked";
+    properties = {
+      ...form,
+      questions: fields.map((field) => ({
+        header: field.title || form.title,
+        question: field.description || field.title || form.title,
+        options: (field.options || []).map((option) => ({ label: option.label || option.value, description: option.description || "" })),
+        multiple: field.type === "multiselect",
+      })),
+    };
+  } else if (type === "form.replied" || type === "form.cancelled") {
+    type = type === "form.replied" ? "question.replied" : "question.rejected";
+    properties = { ...properties, requestID: properties.id };
+  } else if (type === "session.text.started" || type === "session.text.delta" || type === "session.text.ended") {
+    type = type.replace("session.", "session.next.");
+  }
+  return { type, properties };
+}
+
+// Serve-process environment names only its starter pane; each TUI must report its own pane.
+async function tuiReportsPaneLifecycle() {
+  if (!process.argv.includes("serve")) return false;
+  try {
+    const { statSync } = await import("node:fs");
+    // Older SSH installers may omit the TUI copy; retain server reporting as fallback.
+    return statSync(ORCA_TUI_PLUGIN_ENTRY).isFile();
+  } catch {
+    return false;
+  }
+}
+
+async function setupOpenCode2Status(ctx) {
+  const noop = async () => {};
+  if (isOpenCode2TuiContext(ctx)) {
+    reportingOpenCodeMajor = 2;
+    return setupOpenCode2Tui(ctx);
+  }
+  let hooks;
+  // OpenCode probes varying setup contexts; avoid startup errors when status reporting is unavailable.
+  try {
+    if (!ctx || typeof ctx.session?.hook !== "function" || typeof ctx.event?.subscribe !== "function") return noop;
+    reportingOpenCodeMajor = 2;
+    if (await tuiReportsPaneLifecycle()) return noop;
+    const controller = new AbortController();
+    // Wrap bare OpenCode 2 session records for shared lineage lookup's data.id contract.
+    const client = { session: { get: async (input, options) => { const result = await ctx.session.get(input, options); return result && typeof result.id === "string" ? { data: result } : result; } } };
+    // Hot reload disposes plugins while turns continue.
+    hooks = await OrcaOpenCodeStatusPlugin({ client, sessionsOutliveDispose: true });
+    if (!hooks || typeof hooks.event !== "function") return noop;
+    const promptRegistration = await ctx.session.hook("prompt", async (properties) => {
+      await hooks.event({ event: { type: "session.next.prompt.admitted", properties } });
+    });
+    const consume = async () => {
+      for await (const input of ctx.event.subscribe({ signal: controller.signal })) {
+        if (controller.signal.aborted) break;
+        const translated = translateOpenCode2Event(input.type, input.data);
+        if (!translated) continue;
+        await hooks.event({ event: translated });
+      }
+    };
+    const consuming = consume().catch((error) => {
+      if (!controller.signal.aborted) console.warn("[orca-hook] event subscription failed:", error.message);
+    });
+    return async () => {
+      try {
+        controller.abort();
+        // Finish every owner's cleanup even if an earlier disposer fails.
+        try {
+          await promptRegistration?.dispose?.();
+        } finally {
+          try {
+            await consuming;
+          } finally {
+            await hooks.dispose?.();
+          }
+        }
+      } catch {
+        // Cleanup failures must not fail plugin unload.
+      }
+    };
+  } catch {
+    try { await hooks?.dispose?.(); } catch {}
+    return noop;
+  }
+}
+
+
+const TUI_TICK_MS = 100;
+const TUI_PERMISSION_SETTLE_MS = 500;
+const TUI_EARLY_ROOTS_MAX = 32;
+const TUI_RESOLVED_REQUESTS_MAX = 256;
+const TUI_ENDPOINT_CHECK_TICKS = 50;
+
+function isOpenCode2TuiContext(ctx) {
+  return typeof ctx?.ui?.router?.current === "function" && typeof ctx?.data?.listen === "function";
+}
+
+function boundedSet(set, value, max) {
+  set.delete(value);
+  set.add(value);
+  if (set.size > max) set.delete(set.values().next().value);
+}
+
+// Memory survives hot reload within this TUI process.
+function paneStatusMemory(ctx) {
+  const initial = { owned: [], last: "idle:", lastRoot: "", started: false, endings: [] };
+  if (typeof ctx.storage?.memory === "function") return ctx.storage.memory("pane-status", { initial });
+  // Without memory, reload resembles startup; avoid resetting the pane.
+  const local = { ...initial, started: true };
+  return [local, (mutate) => mutate(local)];
+}
+
+async function setupOpenCode2Tui(ctx) {
+  const noop = async () => {};
+  // Outside an Orca pane, post has no pane identity to report.
+  if (!process.env.ORCA_PANE_KEY) return noop;
+  if (process.env.ORCA_OPENCODE_AGENT && process.env.ORCA_OPENCODE_AGENT !== ORCA_STATUS_AGENT) return noop;
+  if (/^1\./.test(String(ctx.app?.version || "")) && !ctx.legacyOpenCodeTui) return noop;
+  const data = ctx.data.session;
+  if (typeof data?.status !== "function" || typeof data.root !== "function") return noop;
+  let factoryID;
+  try {
+    const [memory, setMemory] = paneStatusMemory(ctx);
+    factoryID = ++nextFactoryID;
+    activeFactoryIDs.add(factoryID);
+    let disposed = false;
+    let lastLevel = null;
+    let ticks = 0;
+    const early = new Map();
+    // Reconnect fetches may arrive after reply events; do not resurrect retired blockers.
+    const resolved = new Set();
+    const permissionSeenAt = new Map();
+
+    const rootOf = (sessionID) => data.root(sessionID) || sessionID;
+    const family = (root) => new Set([root, ...(typeof data.family === "function" ? data.family(root) || [] : [])]);
+    const running = (root) => [...family(root)].some((id) => data.status(id) === "running");
+    const currentRoute = () => {
+      const route = ctx.ui.router.current();
+      return route?.type === "session" && typeof route.sessionID === "string" ? rootOf(route.sessionID) : undefined;
+    };
+    const blocker = (root, seenPermissions) => {
+      let form;
+      for (const member of family(root)) {
+        const permission = (data.permission?.list?.(member) || []).find((request) => {
+          if (resolved.has(request.id)) return false;
+          seenPermissions.add(request.id);
+          if (!permissionSeenAt.has(request.id)) permissionSeenAt.set(request.id, Date.now());
+          // Auto replies follow requests; only unanswered requests need attention.
+          return Date.now() - permissionSeenAt.get(request.id) >= TUI_PERMISSION_SETTLE_MS;
+        });
+        if (permission) return { request: permission, isPermission: true };
+        form ??= (data.form?.list?.(member) || []).find((request) => !resolved.has(request.id));
+      }
+      return form ? { request: form, isPermission: false } : null;
+    };
+    const levelKey = (level) =>
+      (level.kind === "waiting" ? "waiting:" + level.blocker.request.id + ":" + level.root : level.kind + ":" + level.root) +
+      (level.rootFields.root_state ? ":" + JSON.stringify(level.rootFields) : "");
+
+    function rootFields(level) {
+      if (!level.root) return {};
+      const rootRunning = data.status(level.root) === "running";
+      const rootState = rootRunning
+        ? level.kind === "waiting" && level.blocker.request.sessionID === level.root ? "waiting" : "working"
+        : "done";
+      const session = data.get?.(level.root);
+      const ending = (memory.endings || []).find(([id]) => id === level.root);
+      const idleAt = session?.time?.idle;
+      const sameTurn = Number.isFinite(idleAt) && ending?.[2] === idleAt;
+      // Current session data repairs turns missed while the plugin was unloaded.
+      const errorName = !rootRunning && (session?.outcome === "failed"
+        ? (sameTurn && ending[1]) || "UnknownError"
+        : session?.outcome === "interrupted" && sameTurn ? ending[1] : "");
+      return { root_state: rootState, ...(errorName ? { root_turn_error_name: errorName } : {}) };
+    }
+
+    function own(root, owned) {
+      const seen = early.get(root);
+      early.delete(root);
+      if (seen?.created) void enqueueLifecycle(() => post("SessionStart", { sessionID: root }));
+      if (seen?.prompt) postPrompt(root, seen.prompt);
+      return [...owned, root];
+    }
+
+    // Derive from current session data so reconnects self-correct without latched start/end events.
+    function derive() {
+      const route = currentRoute();
+      let owned = [...memory.owned];
+      if (route && !owned.includes(route) && running(route)) owned = own(route, owned);
+      // Retain roots after navigation so turns started here can still reach Done.
+      owned = owned.filter((root) => root === route || running(root));
+      if (owned.join("\n") !== memory.owned.join("\n")) setMemory((draft) => { draft.owned = owned; });
+      const active = owned.filter(running);
+      const seenPermissions = new Set();
+      let waiting;
+      for (const root of active) {
+        // Session data can retain stale blockers after a turn ends; consider only running turns.
+        const found = blocker(root, seenPermissions);
+        if (found && !waiting) waiting = { kind: "waiting", root, blocker: found };
+      }
+      for (const id of permissionSeenAt.keys()) {
+        if (!seenPermissions.has(id)) permissionSeenAt.delete(id);
+      }
+      if (waiting) return waiting;
+      const busy = active.at(-1);
+      return busy ? { kind: "busy", root: busy } : { kind: "idle", root: memory.lastRoot };
+    }
+
+    function publish() {
+      if (disposed) return;
+      if (ctx.legacyOpenCodeTui && resolveHookCoords().openCodeTui !== "1") return;
+      let level;
+      try {
+        level = derive();
+        level.rootFields = rootFields(level);
+      } catch {
+        // Session-data read failures must not kill the listener or tick.
+        return;
+      }
+      const key = levelKey(level);
+      if (key === memory.last) return;
+      setMemory((draft) => {
+        draft.last = key;
+        if (level.kind !== "idle") draft.lastRoot = level.root;
+      });
+      lastLevel = level;
+      void enqueueLifecycle(() => deliver(level, true));
+    }
+
+    async function deliver(level, changed) {
+      // Retire assistant previews queued under the old level.
+      if (changed) stateArrivalRevision += 1;
+      const properties = level.root ? { sessionID: level.root, ...level.rootFields } : {};
+      if (level.kind === "waiting") {
+        const { request, isPermission } = level.blocker;
+        const translated = ctx.legacyOpenCodeTui ? { properties: request } : isPermission
+          ? translateOpenCode2Event("permission.asked", request)
+          : translateOpenCode2Event("form.created", { form: request });
+        if (!translated) return;
+        const hookEventName = isPermission ? "PermissionRequest" : "AskUserQuestion";
+        await flushPendingAssistantPart(true);
+        await setDeliveryTarget("waiting", levelKey(level), hookEventName, { ...translated.properties, ...properties }, factoryID);
+        return;
+      }
+      if (level.kind === "idle") await flushPendingAssistantPart(true);
+      await setDeliveryTarget(level.kind, levelKey(level), level.kind === "busy" ? "SessionBusy" : "SessionIdle", properties, factoryID);
+    }
+
+    function postPrompt(root, prompt) {
+      void enqueueLifecycle(() =>
+        postMessagePart({ role: "user", text: capMessagePartText(prompt.text), messageID: prompt.messageID, sessionID: root }, factoryID),
+      );
+    }
+
+    function remember(root, update) {
+      const seen = { ...(early.get(root) || {}), ...update };
+      early.delete(root);
+      early.set(root, seen);
+      if (early.size > TUI_EARLY_ROOTS_MAX) early.delete(early.keys().next().value);
+    }
+
+    function observe(event) {
+      const properties = event.data || {};
+      const sessionID = properties.sessionID;
+      if (event.type === "server.connected") {
+        // OpenCode resyncs only displayed sessions; refetch owned sessions to clear disconnected replies.
+        for (const root of memory.owned) {
+          for (const member of family(root)) {
+            void data.permission?.sync?.(member)?.catch?.(() => {});
+            void data.form?.sync?.(member)?.catch?.(() => {});
+          }
+        }
+        return;
+      }
+      if (event.type === "permission.replied") return boundedSet(resolved, properties.requestID, TUI_RESOLVED_REQUESTS_MAX);
+      if (event.type === "form.replied" || event.type === "form.cancelled") {
+        return boundedSet(resolved, properties.id, TUI_RESOLVED_REQUESTS_MAX);
+      }
+      if (typeof sessionID !== "string" || !sessionID) return;
+      if (event.type === "session.deleted") {
+        early.delete(sessionID);
+        if (memory.owned.includes(sessionID)) {
+          setMemory((draft) => { draft.owned = draft.owned.filter((id) => id !== sessionID); });
+        }
+        return;
+      }
+      if (event.type === "session.created") {
+        if (!properties.parentID) remember(sessionID, { created: true });
+        return;
+      }
+      const root = rootOf(sessionID);
+      const isOwned = memory.owned.includes(root);
+      if (ctx.legacyOpenCodeTui && event.type === "message.part.updated") {
+        const part = properties.part;
+        const role = messageRoleById.get(part?.messageID);
+        if (sessionID !== root || part?.type !== "text" || part.synthetic === true || typeof part.text !== "string" || !part.text || memory.last.startsWith("waiting:")) return;
+        if (role === "user") {
+          const prompt = { text: part.text, messageID: part.messageID };
+          if (isOwned) postPrompt(root, prompt); else remember(root, { prompt });
+        } else if (role === "assistant" && isOwned) {
+          void enqueueLifecycle(() => queueAssistantPart({ role, text: part.text, messageID: part.messageID, sessionID: root, factoryID, authorityRevision: stateArrivalRevision }));
+        }
+        return;
+      }
+      if (sessionID === root && (isOwned || currentRoute() === root)) {
+        if (event.type === "session.execution.started" || event.type === "session.execution.succeeded" || event.type === "session.execution.failed" || event.type === "session.execution.interrupted") {
+          const errorName = event.type === "session.execution.failed"
+            ? (typeof properties.error?.type === "string" && properties.error.type) || "UnknownError"
+            : event.type === "session.execution.interrupted" && properties.reason === "user" ? "MessageAbortedError" : "";
+          // Hot reload preserves terminal verdicts until this root starts another turn.
+          setMemory((draft) => {
+            draft.endings = (draft.endings || []).filter(([id]) => id !== root);
+            if (errorName) draft.endings = [...draft.endings, [root, errorName, event.created ?? data.get?.(root)?.time?.idle]].slice(-TUI_EARLY_ROOTS_MAX);
+          });
+        }
+      }
+      if (event.type === "session.inbox.enqueued") {
+        // TUI lacks the server's session.hook prompt callback.
+        const item = properties.item;
+        if (sessionID !== root || item?.type !== "user" || typeof item.payload?.text !== "string" || !item.payload.text) return;
+        const prompt = { text: item.payload.text, messageID: properties.inboxID };
+        if (!isOwned) return remember(root, { prompt });
+        if (!memory.last.startsWith("waiting:")) postPrompt(root, prompt);
+        return;
+      }
+      if (event.type === "session.text.ended" && isOwned && sessionID === root && typeof properties.text === "string" && properties.text) {
+        // MessagePart implies Working in Orca and must not bury Needs input.
+        if (memory.last.startsWith("waiting:")) return;
+        const part = { role: "assistant", text: properties.text, messageID: properties.assistantMessageID, sessionID: root, factoryID };
+        // Queue reply previews after this turn's start, prompt and Busy.
+        void enqueueLifecycle(() => queueAssistantPart({ ...part, authorityRevision: stateArrivalRevision }));
+      }
+    }
+
+    // OpenCode updates data before listeners; derive synchronously to avoid stale event queues.
+    const unsubscribe = ctx.data.listen(({ details } = {}) => {
+      if (disposed || !details || typeof details.type !== "string") return;
+      try {
+        observe(details);
+        publish();
+      } catch {
+        // Malformed events must not break the listener.
+      }
+    });
+    // Route changes and reconnect rehydration can happen without events.
+    const tick = setInterval(() => {
+      try {
+        publish();
+        // Ticks must request unchanged-level reposting when Orca restarts and moves the endpoint.
+        if (++ticks % TUI_ENDPOINT_CHECK_TICKS === 0 && lastLevel && desiredFactoryID === factoryID && deliveredEndpointKey !== hookEndpointKey()) {
+          const level = lastLevel;
+          void enqueueLifecycle(() => deliver(level, false));
+        }
+      } catch {}
+    }, TUI_TICK_MS);
+    if (tick.unref) tick.unref();
+    publish();
+    if (!memory.started) {
+      setMemory((draft) => { draft.started = true; });
+      // Fresh starts clear prior-process status with connected idle; reloads retain the terminal verdict.
+      if (memory.last === "idle:") {
+        const route = currentRoute();
+        void enqueueLifecycle(() => post("SessionStart", route ? { sessionID: route } : {}));
+      }
+    }
+    return async () => {
+      try {
+        disposed = true;
+        clearInterval(tick);
+        if (typeof unsubscribe === "function") unsubscribe();
+        // Hot reload rederives memory and unconfirmed delivery in the next generation; publish nothing.
+        await releaseTuiStatusDelivery(factoryID, () => setMemory((draft) => { draft.last = ""; }));
+      } catch {
+        // Cleanup failures must not fail plugin unload.
+      }
+    };
+  } catch {
+    if (factoryID !== undefined) activeFactoryIDs.delete(factoryID);
+    return noop;
+  }
+}
+
+
+
+// Drain previously derived levels before retiring their factory identity.
+function releaseTuiStatusDelivery(factoryID, forgetUndelivered) {
+  return enqueueLifecycle(async () => {
+    disposingFactoryIDs.add(factoryID);
+    while (messagePartPostInFlight) await messagePartPostInFlight;
+    if (pendingAssistantPart?.factoryID === factoryID) {
+      if (assistantPartFlushTimer) clearTimeout(assistantPartFlushTimer);
+      assistantPartFlushTimer = null;
+      pendingAssistantPart = null;
+    }
+    if (desiredFactoryID === factoryID) {
+      if (statusDeliveryDirty) forgetUndelivered();
+      clearStatusRetry();
+      statusRevision += 1;
+    }
+    activeFactoryIDs.delete(factoryID);
+    disposingFactoryIDs.delete(factoryID);
+  });
+}
+
+
+export default process.env.ORCA_OPENCODE_PLUGIN_API === "v1" ? OrcaOpenCodeStatusPlugin : {
   id: "orca-opencode-status",
   server: OrcaOpenCodeStatusPlugin,
   setup: setupOpenCode2Status,
