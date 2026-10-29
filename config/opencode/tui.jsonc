@@ -1,6 +1,5 @@
 {
   "plugin": [
-    "./herdr-tui-session.js",
-    "./plugins/orca-opencode-status-tui/tui.js"
+    "./herdr-tui-session.js"
   ]
 }

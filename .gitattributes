@@ -1,0 +1,4 @@
+# Orca 注入的 hook / plugin 由 script/common/strip_orca.py 在 commit 時移除
+config/ai/claude/settings.json filter=strip-orca
+config/ai/gemini/hooks.json filter=strip-orca
+config/opencode/tui.jsonc filter=strip-orca

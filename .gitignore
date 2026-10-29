@@ -442,3 +442,7 @@ config/opencode/skills/redesign-existing-projects
 config/opencode/skills/stitch-design-taste
 # coralline statusline 本機測試輸入
 config/ai/claude/coralline/sample-input.json
+
+# Orca 自動安裝的 opencode plugin（只屬於裝了 Orca 的機器）
+config/opencode/plugins/orca-opencode-status.js
+config/opencode/plugins/orca-opencode-status-tui/

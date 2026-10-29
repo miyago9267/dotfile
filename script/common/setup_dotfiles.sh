@@ -59,3 +59,9 @@ if [ -d "$dotfile_dir/.git" ] && [ -d "$hooks_dir" ]; then
     echo "  ${Y}[GIT]${N} core.hooksPath -> $hooks_dir"
   fi
 fi
+
+# Orca 會改寫 symlink 進 dotfile 的 config；commit 時用 clean filter 移除，working copy 保留。
+if [ -d "$dotfile_dir/.git" ]; then
+  git -C "$dotfile_dir" config filter.strip-orca.clean "python3 script/common/strip_orca.py"
+  echo "  ${G}[OK]${N} git filter strip-orca"
+fi
