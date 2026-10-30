@@ -111,6 +111,11 @@ compose_active_rules() {
     printf '\n\n<!-- miyago-personal-model:begin -->\n\n'
     if [ -f "$PERSONAL_MODEL_SRC" ]; then
       awk 'NR == 1 && $0 == "---" { frontmatter = 1; next } frontmatter && $0 == "---" { frontmatter = 0; next } !frontmatter { print }' "$PERSONAL_MODEL_SRC"
+    elif grep -Fq '<!-- miyago-personal-model:begin -->' "$ACTIVE_RULES_SRC" 2>/dev/null; then
+      # 本機沒有 PROFILE 時沿用已產生檔內的區塊，避免同步時洗掉 Personal Model
+      awk '/<!-- miyago-personal-model:end -->/ { inside = 0 } inside { lines[++n] = $0 } /<!-- miyago-personal-model:begin -->/ { inside = 1 }
+        END { first = 1; last = n; if (lines[first] == "") first++; if (n >= first && lines[last] == "") last--; for (i = first; i <= last; i++) print lines[i] }' "$ACTIVE_RULES_SRC"
+      printf '%s\n' 'Personal Model source missing; kept existing block.' >&2
     else
       printf '%s\n' 'Personal Model unavailable; use shared contract only.' >&2
     fi
