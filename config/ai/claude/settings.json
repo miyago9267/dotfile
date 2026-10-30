@@ -312,7 +312,8 @@
     "shoal@shoal": true,
     "taste-skill@taste-skill": true,
     "shoal-dispatch-guard@shoal": true,
-    "baton@baton": true
+    "baton@baton": true,
+    "prismantis@prismantis": true
   },
   "extraKnownMarketplaces": {
     "claude-hud": {
@@ -356,8 +357,15 @@
         "source": "directory",
         "path": "~/Project/Active/baton"
       }
+    },
+    "prismantis": {
+      "source": {
+        "source": "github",
+        "repo": "NahumLitvin/prismantis"
+      }
     }
   },
+  "feedbackDrafts": "off",
   "effortLevel": "medium",
   "modelSettings": {
     "claude-opus-5-5": {
@@ -369,11 +377,37 @@
       "options": {
         "instructionFiles": "claude-md-and-agents-md"
       }
+    },
+    "prismantis@prismantis": {
+      "options": {
+        "enabled": true,
+        "theme": "one-dark",
+        "headingStyle": "banner",
+        "tableStyle": "box",
+        "promptStyle": "bubble",
+        "replyStyle": "framed",
+        "clock": "24h",
+        "toolStyle": "tree-bold",
+        "toolOutput": "quiet",
+        "taskStyle": "progress",
+        "rtl": "auto",
+        "highlightNumbers": true,
+        "highlightPaths": true,
+        "mermaidAscii": false,
+        "toolRows": true,
+        "diffStyle": "card",
+        "pieStyle": "round",
+        "mermaid": true,
+        "copyButtons": true,
+        "copyButtonStyle": "inline",
+        "issueHint": true,
+        "diagramHints": true,
+        "latex": true
+      }
     }
   },
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark-ansi",
-  "agentPushNotifEnabled": true,
-  "feedbackDrafts": "off"
+  "agentPushNotifEnabled": true
 }
