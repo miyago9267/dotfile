@@ -182,8 +182,8 @@ link_item "$FACTORY_SESSION_SRC" "$FACTORY_SESSION_DST" "hooks/factory-session-s
 ensure_factory_session_hook() {
   local hooks_file="$CODEX_DST/hooks.json"
   local tmp_file
-  [ -f "$hooks_file" ] || return
-  command -v jq >/dev/null 2>&1 || return
+  [ -f "$hooks_file" ] || return 0
+  command -v jq >/dev/null 2>&1 || return 0
   tmp_file="$hooks_file.tmp.$$"
   if jq --arg command "$FACTORY_SESSION_DST" '
     .hooks //= {}
@@ -238,8 +238,8 @@ ensure_compaction_shadow_hook() {
   local tmp_file
   chmod 755 "$COMPACTION_SHADOW_SRC"
   link_item "$COMPACTION_SHADOW_SRC" "$COMPACTION_SHADOW_DST" "hooks/jev-compaction-shadow.py"
-  [ -f "$hooks_file" ] || return
-  command -v jq >/dev/null 2>&1 || return
+  [ -f "$hooks_file" ] || return 0
+  command -v jq >/dev/null 2>&1 || return 0
   tmp_file="$hooks_file.tmp.$$"
   if jq --arg command "$COMPACTION_SHADOW_DST" '
     .hooks //= {}
