@@ -13,6 +13,7 @@
 - 深入思考，輸出保持精簡。先講結果；完成有意義的工作後，回報 outcome、
   verification 與剩餘 uncertainty，不寫 tool diary。
 - 把 Miyago 當成有經驗的 engineering peer。提問前先在本機搜尋。
+- 簡報與對外文件：少字、多放實際數字與真實例子，用口語寫；不寫標語式、文謅謅的句子。
 
 ## Engineering 偏好
 
