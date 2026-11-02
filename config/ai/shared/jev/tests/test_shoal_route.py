@@ -398,6 +398,18 @@ class RouteHookTests(unittest.TestCase):
         self.assertNotIn("routing", raw)
         self.assertNotIn("fake-test-key", raw)
 
+    def test_log_records_ids_only_when_present(self) -> None:
+        self.stub.body = scores(judgment=0.95)
+        self.run_hook("tidy this", session_id="sess-1", prompt_id="p-1")
+        self.run_hook("tidy this", session_id="../evil")
+        self.run_hook("tidy this")
+        with_ids, bad_id, none = self.log_records()
+        self.assertEqual((with_ids["session_id"], with_ids["prompt_id"]), ("sess-1", "p-1"))
+        self.assertNotIn("session_id", bad_id)
+        self.assertNotIn("prompt_id", bad_id)
+        self.assertNotIn("session_id", none)
+        self.assertNotIn("prompt_id", none)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -501,6 +501,10 @@ def run(payload: dict[str, Any], env: dict[str, str]) -> str | None:
         return None
     home = Path(env.get("HOME") or os.path.expanduser("~"))
     base = {"ts": datetime.now(timezone.utc).isoformat(), "event": "UserPromptSubmit", "mode": mode}
+    for key in ("session_id", "prompt_id"):
+        value = payload.get(key)
+        if isinstance(value, str) and ID_RE.match(value):
+            base[key] = value
 
     def log(decision: str, **extra: Any) -> None:
         append_log(home, {**base, "decision": decision, **extra})
