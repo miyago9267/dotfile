@@ -117,7 +117,7 @@
           {
             "type": "command",
             "command": "bash ~/dotfile/config/ai/claude/hooks/jev-compaction-shadow.sh",
-            "timeout": 3
+            "timeout": 5
           }
         ]
       }
@@ -269,7 +269,7 @@
           {
             "type": "command",
             "command": "bash ~/dotfile/config/ai/claude/hooks/jev-context-shadow.sh",
-            "timeout": 3
+            "timeout": 5
           }
         ]
       }
