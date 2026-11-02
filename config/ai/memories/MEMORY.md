@@ -24,6 +24,9 @@
 - 保持積極的 context compression 與 bounded search；不要載入完整 logs、
   sessions、caches 或 generated trees。
 - Commits 不含 AI attribution。
+- Main session 平常用 medium effort 討論、拆工再派 role（必要時到 high，最高
+  xhigh）；實際的 shell 與修改工作偏好交給 role，換可觀測性與 fresh context。
+  他最在意速度與隧道視野，嚴謹度交給多個 role 把關。
 
 ## Safety 與環境
 
