@@ -89,6 +89,20 @@ QUESTIONS = {
         "It is local, bounded, and easy to undo.",
     ),
 }
+# 只進影子紀錄的大小問題；缺漏不影響 role 判斷。
+SIZE_QUESTIONS = {
+    "size_small": _question(
+        "Can `request` be finished in about 20 tool calls: one file, one bounded fix?",
+        "One file or one bounded change; roughly 20 tool calls or fewer.",
+        "It touches several files or modules, or needs more than about 20 tool calls.",
+    ),
+    "size_large": _question(
+        "Does `request` need more than 60 tool calls, such as multi-module work or design work?",
+        "It is multi-module or needs design work; well over 60 tool calls.",
+        "It fits in 60 tool calls or fewer.",
+    ),
+}
+QUESTIONS.update(SIZE_QUESTIONS)
 
 _B = r"(?<![A-Za-z0-9])"
 _E = r"(?![A-Za-z0-9])"
@@ -448,9 +462,9 @@ def _post(endpoint: str, key: str, text: str) -> dict[str, float] | None:
         return None
     answers = result.get("answers")
     scores = {name: _score(answers, name) for name in QUESTIONS}
-    if any(value is None for value in scores.values()):
+    if any(value is None for name, value in scores.items() if name not in SIZE_QUESTIONS):
         return None
-    return scores  # type: ignore[return-value]
+    return {k: v for k, v in scores.items() if v is not None}
 
 
 def classify(endpoint: str, key: str, text: str) -> dict[str, float] | None:
@@ -475,6 +489,20 @@ def directive(scores: dict[str, float]) -> str | None:
     if scores["needs_plan"] >= PLAN_THRESHOLD:
         text += PLAN_SUFFIX
     return text
+
+
+def size_guess(scores: dict[str, float]) -> str:
+    """Shadow-only task size: s/l need a confident lead; m means confidently neither; else none."""
+    small, large = scores.get("size_small"), scores.get("size_large")
+    if small is None or large is None:
+        return "none"
+    if small >= THRESHOLD and small - large >= MIN_LEAD:
+        return "s"
+    if large >= THRESHOLD and large - small >= MIN_LEAD:
+        return "l"
+    if small <= 1 - THRESHOLD and large <= 1 - THRESHOLD:
+        return "m"
+    return "none"
 
 
 def _denied(cwd: str, home: Path, env: dict[str, str]) -> bool:
@@ -541,7 +569,12 @@ def run(payload: dict[str, Any], env: dict[str, str]) -> str | None:
     emitted = None
     if output:
         emitted = next(name for name, value in ROLE_TEXT.items() if value in output)
-    log("sent", scores={k: round(v, 3) for k, v in scores.items()}, emitted=emitted)
+    log(
+        "sent",
+        scores={k: round(v, 3) for k, v in scores.items()},
+        emitted=emitted,
+        size_guess=size_guess(scores),
+    )
     if emitted:
         write_turn(home, payload, emitted)
     return output

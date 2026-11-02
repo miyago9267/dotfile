@@ -25,7 +25,7 @@ ALLOWED_OUTPUTS = {
 
 
 def scores(**values: float) -> dict:
-    base = {name: 0.1 for name in (*ROLES, "needs_plan")}
+    base = {name: 0.1 for name in (*ROLES, "needs_plan", "size_small", "size_large")}
     base.update(values)
     return {"model": "jev-latest", "answers": {k: {"type": "noul", "noul": v} for k, v in base.items()}}
 
@@ -409,6 +409,32 @@ class RouteHookTests(unittest.TestCase):
         self.assertNotIn("prompt_id", bad_id)
         self.assertNotIn("session_id", none)
         self.assertNotIn("prompt_id", none)
+
+    def test_size_guess_logged_and_never_in_advisory(self) -> None:
+        cases = [
+            (dict(size_small=0.9, size_large=0.1), "s"),
+            (dict(size_small=0.1, size_large=0.9), "l"),
+            (dict(size_small=0.2, size_large=0.3), "m"),
+            (dict(size_small=0.5, size_large=0.5), "none"),
+            (dict(size_small=0.9, size_large=0.8), "none"),
+        ]
+        for extra, expected in cases:
+            self.stub.body = scores(judgment=0.95, **extra)
+            out, _ = self.run_hook("tidy this")
+            self.assertIn(self.context(out), ALLOWED_OUTPUTS)
+            self.assertNotIn("size", out.lower())
+            record = self.log_records()[-1]
+            self.assertEqual(record["size_guess"], expected, extra)
+            self.assertEqual(record["scores"]["size_small"], extra["size_small"])
+
+    def test_size_questions_sent_and_missing_size_is_none(self) -> None:
+        self.stub.body = scores(judgment=0.95)
+        for key in ("size_small", "size_large"):
+            del self.stub.body["answers"][key]
+        out, _ = self.run_hook("tidy this")
+        self.assertIsNotNone(self.context(out))
+        self.assertEqual(self.log_records()[-1]["size_guess"], "none")
+        self.assertTrue({"size_small", "size_large"} <= set(self.stub.requests[-1]["body"]["questions"]))
 
 
 if __name__ == "__main__":
