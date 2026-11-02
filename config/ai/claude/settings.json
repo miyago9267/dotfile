@@ -1,6 +1,7 @@
 {
   "env": {
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "100",
+    "SHOAL_GUARD_LANG": "zh-TW",
     "CLAUDE_CODE_THISTLE_GREBE": "counter_steer",
     "CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS": "1",
     "STINGRAY": "1",

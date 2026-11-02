@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stop hook：最後一則回覆若出現簡體中文，要求用台灣繁體中文重講。
+"""Stop hook：最後一則回覆若出現簡體中文，或整則幾乎只有英文，要求用台灣繁體中文重講。
 
 只看 prose：code fence、inline code、URL、block quote 與「」內的短引用不計。
 任何錯誤一律放行（fail open），re-entry 時不再攔。
@@ -14,6 +14,9 @@ SIMPLIFIED = set(
     "环杂备东头业务号码写读错个从么样请试测览执统证获载线网络页档录变输选择参权"
 )
 MIN_HITS = 3
+CJK = re.compile(r"[一-鿿]")
+WORD = re.compile(r"[A-Za-z]{2,}")
+MIN_EN_WORDS = 8
 
 STRIP = [
     re.compile(r"```.*?```", re.S),
@@ -35,13 +38,17 @@ def main() -> None:
     for pattern in STRIP:
         text = pattern.sub("", text)
     hits = [ch for ch in text if ch in SIMPLIFIED]
-    if len(hits) < MIN_HITS:
+    if len(hits) >= MIN_HITS:
+        sample = "".join(dict.fromkeys(hits))[:10]
+        problem = f"出現簡體字（{sample}）"
+    elif not CJK.search(text) and len(WORD.findall(text)) >= MIN_EN_WORDS:
+        problem = "整則是英文"
+    else:
         return
-    sample = "".join(dict.fromkeys(hits))[:10]
     print(json.dumps({
         "decision": "block",
         "reason": (
-            f"上一則回覆出現簡體字（{sample}）。請把同一則回覆完整改寫成台灣繁體中文，"
+            f"上一則回覆{problem}。請把同一則回覆完整改寫成台灣繁體中文，"
             "內容與結論不變，code、指令與 identifiers 保持原樣。"
         ),
     }, ensure_ascii=False))
