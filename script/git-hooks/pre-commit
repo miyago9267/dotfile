@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # dotfile 的 pre-commit：staged 檔案碰到 guard / broker 相關路徑時，commit 前重跑對應回歸測試。
 #
-#   config/ai/claude/hooks/**、config/ai/shared/jev/**  -> run-all.sh（約 2 分鐘）
+#   config/ai/claude/hooks/**、config/ai/shared/jev/**  -> run-all.sh（約 30 秒，平行執行）
 #   script/utils/agent-secret*、script/utils/tests/**    -> test_agent_secret.sh（約 30 秒）
 #   config/ai/claude/settings.json                       -> jq -e . 合法性檢查
 #   所有 commit                                          -> portable_paths.py --check --staged

@@ -1,29 +1,42 @@
 #!/usr/bin/env bash
-# 一次跑完 hooks/tests 底下所有 test_*.sh，再跑 shared/jev/tests 的 python unittest。
-# 任何一個失敗就 exit 1；失敗的測試會印出完整輸出，結尾印每個測試的 PASS/FAIL 摘要。
+# 平行跑 hooks/tests 底下所有 test_*.sh，再加上 shared/jev/tests 的 python unittest。
+# 每個 suite 的輸出寫進 mktemp 目錄，全部結束後依固定順序印 PASS/FAIL，失敗的 suite 印完整輸出。
+# 任何一個失敗就 exit 1。相容 bash 3.2（macOS /bin/bash）。
 set -u
 DIR="$(cd "$(dirname "$0")" && pwd)"
 JEV_TESTS="$DIR/../../../shared/jev/tests"
-names=(); results=(); fail=0
+WORK=$(mktemp -d) || exit 1
+trap 'rm -rf "$WORK"' EXIT
+names=(); pids=(); fail=0
 
-record() { # name rc output
-  names+=("$1")
-  if [ "$2" = 0 ]; then results+=(PASS); else results+=(FAIL); fail=1; printf '%s\n' "--- $1 (rc=$2) ---" "$3"; fi
+launch() { # name command...：背景執行，輸出進 $WORK/<序號>.out
+  local i=${#names[@]}
+  names+=("$1"); shift
+  "$@" >"$WORK/$i.out" 2>&1 &
+  pids+=("$!")
 }
 
 for t in "$DIR"/test_*.sh; do
   [ -e "$t" ] || continue
-  out=$(bash "$t" 2>&1); rc=$?
-  record "$(basename "$t")" "$rc" "$out"
+  launch "$(basename "$t")" bash "$t"
+done
+launch "jev unittest" bash -c 'cd "$1" 2>/dev/null && python3 -m unittest discover -s "$1" || { echo "找不到目錄 $1"; exit 1; }' _ "$JEV_TESTS"
+
+rcs=()
+for i in "${!names[@]}"; do
+  wait "${pids[$i]}"; rcs+=("$?")
 done
 
-if [ -d "$JEV_TESTS" ]; then
-  out=$(cd "$JEV_TESTS" && python3 -m unittest discover -s "$JEV_TESTS" 2>&1); rc=$?
-else
-  out="找不到目錄 $JEV_TESTS"; rc=1
-fi
-record "jev unittest" "$rc" "$out"
+for i in "${!names[@]}"; do
+  if [ "${rcs[$i]}" != 0 ]; then
+    fail=1
+    printf '%s\n' "--- ${names[$i]} (rc=${rcs[$i]}) ---"
+    cat "$WORK/$i.out"
+  fi
+done
 
 echo "=== 摘要 ==="
-for i in "${!names[@]}"; do printf '%s %s\n' "${results[$i]}" "${names[$i]}"; done
+for i in "${!names[@]}"; do
+  if [ "${rcs[$i]}" = 0 ]; then echo "PASS ${names[$i]}"; else echo "FAIL ${names[$i]}"; fi
+done
 [ $fail = 0 ] && echo "all passed"; exit $fail
