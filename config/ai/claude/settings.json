@@ -10,11 +10,11 @@
   "permissions": {
     "allow": [
       "Bash(*)",
-      "Read(*)",
-      "Write(*)",
-      "Edit(*)",
-      "Glob(*)",
-      "Grep(*)",
+      "Read",
+      "Write(./**)",
+      "Edit(./**)",
+      "Glob",
+      "Grep",
       "WebSearch(*)",
       "WebFetch(*)",
       "mcp__claude_ai_Canva__generate-design",
