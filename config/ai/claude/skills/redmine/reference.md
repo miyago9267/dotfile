@@ -8,7 +8,7 @@
 - Redmine：`https://redmine.dunqian.tw`，工單網址 `https://redmine.dunqian.tw/issues/{id}`
 - GitLab：`https://git.dunqian.tw`
 - Miyago：user id `98`（`miyago.huang`），2026-10-05 起是 Redmine admin，可建專案、查 `/custom_fields.json`
-- 內文格式：Textile。依據是既有工單用 `#` 寫編號清單（#31888）
+- 內文格式：Markdown（CommonMark）。2026-11-03 Redmine 升 7.0.2 後改的；Textile 的 `h3.`、`#` 清單會被畫成字面或大標題（#32210）
 
 ## 專案對應
 
@@ -57,7 +57,7 @@
 | `estimated_hours` | 有給就填 | 有給就填 |
 
 主旨用中文敘述，不帶 `fix:` 這類前綴，例：`PMS會員中心-合作夥伴申請服務網址上限16碼`、`工程需求-限制訂單模糊搜尋預設日期範圍`。
-內文寫原因與改動，改動用 Textile 編號清單。
+內文寫原因與改動，改動用 Markdown 編號清單（`1.`）。
 
 事前開的單做完後回 Step 2 更新：`status_id` 13、`done_ratio` 100、`due_date` 填完成日，note 寫結果。
 
@@ -116,7 +116,7 @@ jq -n --argjson id "$TICKET" --argjson hours "$HOURS" --arg on "$SPENT_ON" --arg
   | rdm POST /time_entries.json
 ```
 
-`JOURNAL_NOTE` 的寫法（Textile 會自動把網址轉成連結）：
+`JOURNAL_NOTE` 的寫法（Markdown 會自動把網址轉成連結）：
 
 ```
 GitLab issue: https://git.dunqian.tw/itrd/pms-user/-/issues/2

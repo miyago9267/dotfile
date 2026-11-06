@@ -150,7 +150,7 @@ GitLab 端（該列的每個 issue、每個 MR）：
 
 1. key 只經 `rdm`。不直接下 `curl`，不讓 key 出現在指令、檔案或輸出。
 2. payload 一律用 `jq -n --arg` 組好從 stdin 餵給 `rdm`，不手寫 JSON 字串。
-3. 工單內文與 note 用 Textile（`#` 是編號清單、`*` 是項目），不用 Markdown。
+3. 工單內文與 note 用 Markdown（CommonMark：`###` 標題、`1.` 編號、`-` 項目、`|---|` 表格），不用 Textile。
 4. 寫入前先讀現值。已有值的欄位不覆寫，同一個連結不重貼。GitLab 的 description 讀不到就不更新。
 5. 別人的單只加 note、只填空的 `Gitlab` 欄位；不改狀態、內文、指派，不刪單。
 6. 建新 tag 一律要當次的明確同意，而且指令帶 `--ref`。tag 不存在時不執行不帶 `--ref` 的 release 指令。
