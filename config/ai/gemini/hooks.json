@@ -59,10 +59,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$HOME/dotfile/config/ai/shared/hooks/secret-guard-adapter.sh\" --host agy",
+            "command": "SECRET_GUARD=\"$HOME/dotfile/config/ai/claude/hooks/pre-bash.sh\" bash \"$HOME/dotfile/config/ai/shared/hooks/secret-guard-adapter.sh\" --host agy",
             "timeout": 10
           }
         ]
+      }
+    ]
+  },
+  "tool-narration-reminder": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "bash \"$HOME/dotfile/config/ai/gemini/hooks/tool-narration-reminder.sh\"",
+        "timeout": 5
       }
     ]
   }

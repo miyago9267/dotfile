@@ -10,6 +10,7 @@
 - 優先使用 Gemini-native skills、policies 與 Google-first workflows。
 - implementation 維持 patch 小而明確；heavy coding 與 deep refactor 交給合適的
   runtime。
+- 呼叫工具或連續執行多步操作時，動作與動作之間先用一兩句話向 Miyago 交代正在做什麼與上一步的結果，不要只讓 tool call 與底層輸出無聲閃過到最後才一次回覆。
 - User-facing output 預設使用台灣繁體中文；Google API、commands、paths 與
   provider-native technical tokens 保留 English。
 
