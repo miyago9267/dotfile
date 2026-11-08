@@ -26,7 +26,16 @@ end
 
 -- 全域 npm 套件目錄（從執行檔的 symlink 反推，例如 /opt/homebrew/lib/node_modules）
 local function global_node_modules(cmd)
-  local real = vim.fn.resolve(vim.fn.exepath(cmd))
+  local exe = vim.fn.exepath(cmd)
+  if exe == "" then
+    return nil
+  end
+  -- Windows 的 npm 全域指令是 prefix 下的 .cmd shim，套件在同層 node_modules
+  if vim.fn.has("win32") == 1 then
+    local dir = vim.fs.normalize(vim.fn.fnamemodify(exe, ":h")) .. "/node_modules"
+    return vim.fn.isdirectory(dir) == 1 and dir or nil
+  end
+  local real = vim.fn.resolve(exe)
   return real:match("^(.*/node_modules)/")
 end
 

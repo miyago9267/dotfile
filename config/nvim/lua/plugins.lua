@@ -4,7 +4,9 @@ local function copilot_ready()
   end
 
   local xdg_config = vim.env.XDG_CONFIG_HOME
-  local config_dir = xdg_config and xdg_config ~= "" and xdg_config or vim.fn.expand("~/.config")
+  local config_dir = xdg_config and xdg_config ~= "" and xdg_config
+    or (vim.fn.has("win32") == 1 and vim.env.LOCALAPPDATA)
+    or vim.fn.expand("~/.config")
   return vim.fn.filereadable(config_dir .. "/github-copilot/apps.json") == 1
 end
 
