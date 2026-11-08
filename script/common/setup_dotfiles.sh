@@ -44,7 +44,12 @@ fi
 # OpenCode reads these stable, runtime-neutral paths. The links preserve one
 # canonical source while keeping config files portable across machines.
 link "$dotfile_dir/config/ai/AGENTS.md" "$config_root/miyago-agent/AGENTS.md"
-link "$workspace_dir/personal-model/PROFILE.md" "$config_root/miyago-agent/personal-model/PROFILE.md"
+personal_model="$workspace_dir/personal-model/PROFILE.md"
+if [ -e "$personal_model" ]; then
+  link "$personal_model" "$config_root/miyago-agent/personal-model/PROFILE.md"
+else
+  echo "  ${Y}[SKIP]${N} personal model source not found: $personal_model"
+fi
 
 # Git hooks：dotfile 的 pre-commit 在 guard / broker 相關檔案變更時重跑回歸測試。
 # 用 core.hooksPath 指向有版控的目錄；若 .git/hooks 有非 sample 的既有 hook 就不覆蓋。
