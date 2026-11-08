@@ -10,7 +10,10 @@ from __future__ import annotations
 
 import json
 import os
-import pwd
+try:
+    import pwd
+except ImportError:  # Windows
+    pwd = None
 import re
 import ssl
 import stat
@@ -549,7 +552,7 @@ def run(payload: dict[str, Any], env: dict[str, str]) -> str | None:
     if not text or RESIDUAL_RE.search(text):
         log("skipped_unsafe")
         return None
-    endpoint = resolve_endpoint(env, str(home), pwd.getpwuid(os.getuid()).pw_dir)
+    endpoint = resolve_endpoint(env, str(home), pwd.getpwuid(os.getuid()).pw_dir if pwd else os.path.expanduser("~"))
     if not endpoint or not _endpoint_allowed(endpoint):
         log("skipped_endpoint")
         return None
