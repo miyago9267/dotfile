@@ -6,6 +6,9 @@ HOOK=${HOOK:-"$(cd "$(dirname "$0")/.." && pwd)/secret-guard.sh"}
 command -v jq >/dev/null 2>&1 || { echo "FAIL 需要 jq"; exit 1; }
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 fail=0; n=0
+# Git Bash：jq 是原生程式，MSYS 會把 / 開頭的參數改寫成 Windows 路徑（/usr/local/bin/kubectl ... 就變了樣）。
+# 測試要餵給 hook 的是原字串，所以關掉參數轉換；其他平台這個變數沒有作用。
+export MSYS2_ARG_CONV_EXCL='*'
 run() { # name expect(deny|none) command
   n=$((n + 1))
   out=$(jq -n --arg c "$3" '{tool_input:{command:$c}}' | bash "$HOOK" 2>/dev/null); rc=$?
@@ -377,6 +380,68 @@ run kube_bash_c none 'bash -c "kubectl config view --raw"'
 run kube_xargs none 'echo --raw | xargs kubectl config view'
 run gcloud_eval none 'eval "gcloud auth print-access-token"'
 run kube_env_u deny 'env -u FOO kubectl config view --raw'
+
+# --- Windows 寫法的執行檔：\ 分隔與 .exe / .cmd / .ps1 副檔名（各平台都跑，basename 的取法不看平台）---
+run win_kubectl_exe deny 'kubectl.exe config view --raw'
+run win_kubectl_exe_upper_ext deny 'kubectl.EXE config view --flatten'
+run win_gcloud_cmd deny 'gcloud.cmd auth print-access-token'
+run win_gcloud_ps1 deny 'gcloud.ps1 auth application-default print-access-token'
+run win_sec_exe deny 'sec.exe show'
+run win_sops_exe deny 'sops.exe -d ~/dotfile/secrets/agent.enc.yaml'
+run win_broker_ps1_edit deny 'agent-secret.ps1 edit'
+run win_broker_ps1_edit_relative deny './agent-secret.ps1 edit'
+run win_kubectl_backslash_path_squote deny "'C:\\Users\\x\\scoop\\shims\\kubectl.exe' config view --raw"
+run win_kubectl_backslash_path_dquote deny '"C:\Users\x\scoop\shims\kubectl.exe" config view --raw'
+run win_gcloud_backslash_path_with_space deny '"C:\Program Files\Google\Cloud SDK\bin\gcloud.cmd" auth print-access-token'
+run win_kubectl_forward_slash_drive deny 'C:/Users/x/scoop/shims/kubectl.exe config view --raw'
+run win_sops_exe_drive_path deny 'C:/Users/x/scoop/shims/sops.exe -d ~/dotfile/secrets/agent.enc.yaml'
+run win_bash_exe_then_script deny '"C:\Program Files\Git\usr\bin\bash.exe" ~/dotfile/script/utils/sec show'
+run win_env_exe_wrapper deny 'env.exe FOO=1 kubectl.exe config view --raw'
+run win_broker_ps1_backslash_edit deny "'C:\\Users\\x\\dotfile\\script\\utils\\agent-secret.ps1' edit"
+run win_dquote_backslash_still_escapes_dollar none 'echo "\$(kubectl.exe config view --raw)"'
+run win_other_tool_exe none 'mykubectl.exe config view --raw'
+run win_exe_not_last_suffix none 'kubectl.exe.bak config view --raw'
+run win_exe_as_argument none 'ls kubectl.exe config view --raw'
+run win_mention_backslash_path none "echo 'C:\\x\\sec.exe show'"
+run win_sops_exe_other_file none 'sops.exe -d other.enc.yaml'
+run win_broker_ps1_list none 'agent-secret.ps1 list'
+run win_broker_ps1_run none 'agent-secret.ps1 run MY_API_TOKEN -- gh.exe api user'
+run win_broker_ps1_put none 'Get-Clipboard | agent-secret.ps1 put MY_API_TOKEN'
+
+# --- Windows 寫法的路徑：只在 Git Bash（OSTYPE 為 msys* / cygwin*）認 C:\... 與 C:/...，不分大小寫 ---
+case "${OSTYPE:-}" in msys*|cygwin*)
+  HW=$(cygpath -w "$HOME"); HM=$(cygpath -m "$HOME")   # C:\Users\<name> 與 C:/Users/<name>
+  run winpath_squote_backslash deny "sops -d '$HW\\dotfile\\secrets\\agent.enc.yaml'"
+  run winpath_dquote_backslash deny "sops -d \"$HW\\dotfile\\secrets\\agent.enc.yaml\""
+  run winpath_forward_slash deny "sops -d $HM/dotfile/secrets/agent.enc.yaml"
+  run winpath_mixed_slashes deny "sops -d '$HM/dotfile\\secrets/agent.enc.yaml'"
+  run winpath_case_insensitive deny "sops -d $(printf '%s' "$HM" | tr 'A-Z' 'a-z')/DOTFILE/Secrets/agent.enc.yaml"
+  run winpath_upper_msys_form deny "sops -d $(printf '%s' "$HOME" | tr 'a-z' 'A-Z')/dotfile/secrets/agent.enc.yaml"
+  run winpath_dotdot deny "sops -d '$HW\\dotfile\\config\\..\\secrets\\agent.enc.yaml'"
+  run winpath_dir_itself deny "sops '$HW\\dotfile\\secrets'"
+  run winpath_tilde_backslash deny "sops -d '~\\dotfile\\secrets\\agent.enc.yaml'"
+  run winpath_edit deny "sops '$HW\\dotfile\\secrets\\agent.enc.yaml'"
+  run winpath_exec_env deny "sops exec-env '$HW\\dotfile\\secrets\\agent.enc.yaml' printenv"
+  run winpath_option_eq deny "sops -d --config=x '$HW\\dotfile\\secrets\\agent.enc.yaml'"
+  run winpath_sops_exe_full_path deny "'$HW\\scoop\\shims\\sops.exe' -d '$HW\\dotfile\\secrets\\agent.enc.yaml'"
+  run_cwd winpath_cwd_backslash_relative deny "$HW\\dotfile" 'sops -d secrets/agent.enc.yaml'
+  run_cwd winpath_cwd_backslash_dot_slash deny "$HW\\dotfile" 'sops -d ./secrets/agent.enc.yaml'
+  run_cwd winpath_cwd_forward_slash_in_secrets deny "$HM/dotfile/secrets" 'sops agent.enc.yaml'
+  run_cwd winpath_cwd_backslash_relative_backslash deny "$HW\\dotfile" "sops -d 'secrets\\agent.enc.yaml'"
+  run_cwd winpath_cwd_dotdot deny "$HW\\dotfile\\script" 'sops -d ../secrets/agent.enc.yaml'
+  run_cwd winpath_cwd_lowercase deny "$(printf '%s' "$HW" | tr 'A-Z' 'a-z')\\dotfile" 'sops -d secrets/agent.enc.yaml'
+  run winpath_lookalike_dir none "sops -d '$HW\\dotfile\\secrets-example\\x.enc.yaml'"
+  run winpath_lookalike_prefix none "sops -d '$HW\\dotfile2\\secrets\\x.enc.yaml'"
+  run winpath_other_drive none "sops -d 'Q${HW#?}\\dotfile\\secrets\\x.enc.yaml'"
+  run winpath_other_user none "sops -d '$HW-other\\dotfile\\secrets\\x.enc.yaml'"
+  run winpath_other_repo none "sops -d 'C:\\work\\secrets\\prod.enc.yaml'"
+  run winpath_mention none "echo \"sops -d $HW\\dotfile\\secrets\\agent.enc.yaml\""
+  run_cwd winpath_cwd_other_dir none "$HW\\dotfile" 'sops -d config/x.enc.yaml'
+  run_cwd winpath_cwd_work_repo none 'C:\work' 'sops -d secrets/app.enc.yaml'
+  run_cwd winpath_cwd_escapes_secrets none "$HW\\dotfile\\secrets" 'sops -d ../other/x.enc.yaml'
+  run_cwd winpath_cwd_version none "$HW\\dotfile\\secrets" 'sops --version'
+  ;;
+esac
 
 # --- 空輸入 ---
 run empty_command none ''

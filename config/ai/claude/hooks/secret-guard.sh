@@ -30,11 +30,23 @@ user=$(id -un 2>/dev/null || true)
 # 起始行上有任何一段是 shell 或 source / .（含經 pipe 接過去）、起始行以 | 結尾、
 # 或 delimiter 沒加引號且內文含 $( 或反引號。
 # sops 的目標路徑：~/、~<目前帳號>/、$HOME/、${HOME}/ 與絕對路徑直接比對；相對路徑以 hook 輸入的 cwd 解析。
-hit=$(printf '%s' "$cmd" | awk -v home="${HOME:-}" -v cwd="$cwd" -v user="$user" '
+# Windows（Git Bash，OSTYPE 為 msys* / cygwin*）：執行檔的 basename 也認 \ 分隔並去掉 .exe / .cmd / .ps1
+# （C:\...\sops.exe、kubectl.exe、agent-secret.ps1）；路徑與 cwd 的 C:\Users\... 與 C:/Users/... 先轉成
+# /c/Users/... 再比對，而且不分大小寫（NTFS）。Claude Code 在 Windows 給的 cwd 就是 C:\... 這種寫法。
+case "${OSTYPE:-}" in msys*|cygwin*) win=1 ;; *) win=0 ;; esac
+home=${HOME:-}
+# awk -v 會解讀跳脫序列：C:\Users 的反斜線要先寫成兩個才會原樣進去
+hit=$(printf '%s' "$cmd" | awk -v home="${home//\\/\\\\}" -v cwd="${cwd//\\/\\\\}" -v user="$user" -v win="$win" '
 function flushword() { if (hasw) words[++nw] = w; w = ""; hasw = 0 }
 function endseg() { flushword(); if (nw > 0) { if (segshell()) lineshell = 1; if (hit == "") check() }; nw = 0 }
 function isassign(x) { return x ~ /^[A-Za-z_][A-Za-z0-9_]*=/ }
-function base(x) { sub(/.*\//, "", x); return x }
+function base(x) { sub(/.*[\/\\]/, "", x); sub(/\.([eE][xX][eE]|[cC][mM][dD]|[pP][sS]1)$/, "", x); return x }
+# Windows 路徑轉成 Git Bash 的寫法：\ 當成分隔符號，C:/ 開頭改成 /c/
+function winpath(p) {
+  gsub(/\\/, "/", p)
+  if (p ~ /^[A-Za-z]:\//) p = "/" tolower(substr(p, 1, 1)) substr(p, 3)
+  return p
+}
 # 把路徑的 . 與 .. 與重複的 / 收掉（純字串處理，不解 symlink）
 function norm(p,   n, parts, k, top, seg, out) {
   n = split(p, parts, "/"); top = 0
@@ -52,12 +64,14 @@ function insecrets(x,   p) {
   p = x
   sub(/^--[A-Za-z-]+=/, "", p)
   if (p ~ /^-/ || (p in sopssub)) return 0   # 選項與子指令不是路徑
+  if (win) p = winpath(p)
   if (substr(p, 1, 2) == "~/") p = home substr(p, 2)
   else if (user != "" && index(p, "~" user "/") == 1) p = home substr(p, length(user) + 2)
   else if (index(p, "$HOME/") == 1) p = home substr(p, 6)
   else if (index(p, "${HOME}/") == 1) p = home substr(p, 8)
   if (substr(p, 1, 1) != "/") { if (cwd == "") return 0; p = cwd "/" p }
   p = norm(p)
+  if (win) p = tolower(p)
   return (p == secdir || index(p, secdir "/") == 1)
 }
 # 本段執行檔在 words[] 的位置；沒有則回 0
@@ -148,7 +162,9 @@ BEGIN {
   optval["xargs"] = "-I -n -P -L -s -E -d -a -J -R -S"
   split("find-generic-password find-internet-password dump-keychain export unlock-keychain", a, " "); for (k in a) secsub[a[k]] = 1
   split("decrypt encrypt edit rotate updatekeys filestatus exec-env exec-file publish keyservice groups set unset help completion", a, " "); for (k in a) sopssub[a[k]] = 1
+  if (win) { home = winpath(home); cwd = winpath(cwd) }
   secdir = norm(home "/dotfile/secrets")
+  if (win) secdir = tolower(secdir)
 }
 { s = (NR == 1 ? "" : s "\n") $0 }
 END {
@@ -159,6 +175,8 @@ END {
     if (sq) { if (c == "\047") sq = 0; else w = w c; i++; continue }
     if (c == "\\") {
       nx = substr(s, i + 1, 1)
+      # 雙引號內的 \ 只跳脫 $ ` " \ 與換行，其餘原樣保留（"C:\Users\..." 的反斜線是路徑的一部分）
+      if (dq && nx != "" && index("$`\"\\\n", nx) == 0) { w = w c; hasw = 1; i++; continue }
       if (nx != "\n") { w = w nx; hasw = 1 }
       i += 2; continue
     }
