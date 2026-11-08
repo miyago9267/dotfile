@@ -17,6 +17,27 @@ PUT_HEX=$(printf '%s' "$PUT_VAL" | od -An -v -tx1 | tr -d ' \n')
 TABLE="$FAKE_HOME/.config/agent-secret/aliases.tsv"
 EF="$FAKE_HOME/.config/agent-secret/secrets.env"
 fail=0; n=0
+REAL_OS=$(/usr/bin/uname -s 2>/dev/null || /bin/uname -s)
+REAL_UID=$(/usr/bin/id -u)
+WIN_UNAME=MINGW64_NT-10.0-26200   # 模擬 Git for Windows 的 bash；本機儲存區是 Credential Manager
+case "$REAL_OS" in MINGW*|MSYS*) WIN=1 ;; *) WIN=0 ;; esac
+if [ $WIN = 1 ]; then
+  # Git Bash 的 chmod 改不了 group/other 位元，stat 的 mode 是合成的。權限類的 case 改成記下 chmod 要求的
+  # mode，再以覆寫的 as_stat 回報；as_perm_problem 之後的判斷照跑。
+  MODES="$T/modes"; mkdir "$MODES"
+  chmod() {
+    command chmod "$@" 2>/dev/null
+    local m=$1 f; shift
+    for f in "$@"; do printf '%s' "$m" > "$MODES/$(printf '%s' "$f" | tr '/' '_')"; done
+  }
+  cat > "$T/winstat.sh" <<EOF
+as_stat() {
+  local k; k=\$(builtin printf '%s' "\$1" | /usr/bin/tr '/' '_')
+  if [[ -f "$MODES/\$k" ]]; then builtin printf '%s %s\n' "\$EUID" "\$(/usr/bin/cat "$MODES/\$k")"
+  else /usr/bin/stat -L -c '%u %a' -- "\$1" 2>/dev/null; fi
+}
+EOF
+fi
 
 mkdir -p "$T/bin" "$FAKE_HOME/.config/agent-secret" "$FAKE_HOME/dotfile/secrets"
 chmod 700 "$FAKE_HOME/.config/agent-secret"
@@ -53,17 +74,41 @@ default_table() {
 # 在 subshell 內執行 broker。KC / SP 決定 stub 行為：found|notfound|error|empty
 # broker 只接受 privileged shell，所以先 set -p；家目錄以覆寫 as_home 指到暫存目錄（HOME 不再有作用）。
 # REAL_BACKEND=1 只 stub 最底層的執行檔；REAL_BACKEND=2 完全不 stub；REAL_BACKEND=3 以檔案模擬 Keychain；
-# REAL_HOME=1 不覆寫 as_home。
+# REAL_HOME=1 不覆寫 as_home。UNAME 是 Windows 的值時走 Credential Manager 那一側：
+# REAL_BACKEND=0 stub backend_wincred（KC 同樣決定行為，names 印 WC_LIST）；REAL_BACKEND=1 stub 最底層的
+# _wincred（印 WC_OUT，以 printf %b 解讀跳脫，回傳 WC_RC）；REAL_BACKEND=3 以檔案模擬不分大小寫的 target。
+# FAKE_PS 指到一個檔案時，as_ps_bin 回傳它（測真正的 _wincred 啟動流程，不啟動 PowerShell）。
 # stdout 存 $T/stdout、stderr 存 $T/stderr，回傳 exit code。
 broker() {
-  : > "$CALLS"; rm -f "$OUT" "$ARGV"
+  : > "$CALLS"; rm -f "$OUT" "$ARGV" "$T/wincred-stdin"
   (
     set -p
+    # Windows 的 chmod 包裝只給測試本身用；chmod 在 broker 的遮蔽檢查清單內，source 前先拿掉
+    [ $WIN = 1 ] && unset -f chmod
     # shellcheck disable=SC1090
     source "$BROKER" || exit 97
+    # shellcheck disable=SC1091
+    [ $WIN = 1 ] && source "$T/winstat.sh"
     [ "${REAL_HOME:-0}" = 1 ] || as_home() { builtin printf '%s' "$FAKE_HOME"; }
     uname() { echo "${UNAME:-Darwin}"; }   # 預設模擬 macOS，測試在 Linux 上也跑同一組 case
+    [ "${FAKE_PS:-}" ] && as_ps_bin() { builtin printf '%s' "$FAKE_PS"; }
     if [ "${REAL_BACKEND:-0}" = 0 ]; then
+      backend_wincred() {
+        echo "wincred $*" >> "$CALLS"
+        case "$1" in
+          put) echo "wincred-stdin $(cat)" >> "$T/putlog"; [ "${KC:-found}" = error ] && return 1; return 0 ;;
+          names)
+            [ "${KC:-found}" = error ] && return 1
+            if [ "${2:-}" = all ]; then printf '%s' "${WC_LIST:-}"; else printf '%s' "${WC_LIST:-}" | sed -n 's/^simple\///p'; fi
+            return 0 ;;
+        esac
+        case "${KC:-found}" in
+          found) [ "$1" = get ] && AS_VALUE=$KC_VAL; return 0 ;;
+          empty) AS_VALUE=""; return 0 ;;
+          notfound) return 3 ;;
+          *) return 1 ;;
+        esac
+      }
       backend_keychain() {
         echo "keychain $*" >> "$CALLS"
         case "$1" in
@@ -88,8 +133,37 @@ broker() {
     elif [ "${REAL_BACKEND:-0}" = 1 ]; then
       _security() { echo "security $*" >> "$CALLS"; cat > "$T/security-stdin" 2>/dev/null; [ "${SEC_OUT:-}" ] && printf '%s' "$SEC_OUT"; return "${SEC_RC:-0}"; }
       _sops() { echo "sops-bin $*" >> "$CALLS"; printf '%s|%s\n' "${SOPS_EDITOR-unset}" "${EDITOR-unset}" > "$T/sopsenv"; [ "${SOPS_OUT:-}" ] && printf '%s' "$SOPS_OUT"; return "${SOPS_RC:-0}"; }
+      _wincred(){ echo "wincred-ps $*" >> "$CALLS"; cat > "$T/wincred-stdin" 2>/dev/null; printf '%b' "${WC_OUT:-}"; return "${WC_RC:-0}"; }
     fi
     if [ "${REAL_BACKEND:-0}" = 3 ]; then
+      # 以檔案模擬 Credential Manager：target 不分大小寫（檔名轉小寫），.name 記下建立時的寫法；
+      # 讀到的名稱與要求的寫法不同就回錯誤，names 只列寫法合法的項目（與 broker 內的 C# 相同）。
+      _wincred() {
+        echo "wincred-ps $*" >> "$CALLS"
+        local op=$1 t=${2:-} f v
+        f="$T/wcstore/$(printf '%s' "$t" | tr 'A-Z/' 'a-z_')"
+        case "$op" in
+          names)
+            [ "${DUMP_RC:-0}" = 0 ] || return "$DUMP_RC"
+            for f in "$T/wcstore"/*.name; do
+              [ -f "$f" ] && sed -n 's/^agent-secret\///p' "$f" | grep -E '^(simple/[A-Z][A-Z0-9_]*|alias/[a-z0-9][a-z0-9-]*)$'
+            done
+            printf 'AS-WINCRED-END\n'; return 0 ;;
+          put)
+            v=$(cat)
+            if [ -f "$f.name" ] && [ "$(cat "$f.name")" != "$t" ]; then return 1; fi
+            printf '%s\n' "$t" > "$f.name"; printf '%s' "$v" > "$f.val"
+            printf 'AS-WINCRED-OK\n'; return 0 ;;
+        esac
+        [ -f "$f.name" ] || { printf 'AS-WINCRED-NOT-FOUND\n'; return 3; }
+        [ "$(cat "$f.name")" = "$t" ] || return 1
+        case "$op" in
+          get) cat "$f.val"; return 0 ;;
+          exists) printf 'AS-WINCRED-OK\n'; return 0 ;;
+          delete) rm -f "$f.name" "$f.val"; printf 'AS-WINCRED-OK\n'; return 0 ;;
+        esac
+        return 1
+      }
       _sops() { echo "sops-bin $*" >> "$CALLS"; return 1; }
       _security() {
         echo "security $*" >> "$CALLS"
@@ -405,10 +479,10 @@ check list_table_missing_still_lists_simple all ok_rc "grep -q 'alias 表不存�
 # === 呼叫端環境的隔離（review finding F1）===
 # 這一段經由帶 -p shebang 的入口檔執行（不是 source 進測試 shell），環境由測試刻意弄髒。
 default_table
-REAL_OS=$(/usr/bin/uname -s 2>/dev/null || /bin/uname -s)
-REAL_UID=$(/usr/bin/id -u)
-if [ "$REAL_OS" = Darwin ]; then FAKE_OS=Linux; EXP_VAL=$KC_VAL; EXP_BACKEND=keychain
-else FAKE_OS=Darwin; EXP_VAL=$SOPS_VAL; EXP_BACKEND=sops; fi
+# LOW：這個平台上最底層 stub 在 CALLS 裡留下的前綴（macOS 是 security，Windows 是 PowerShell 啟動函式）
+if [ "$REAL_OS" = Darwin ]; then FAKE_OS=Linux; EXP_VAL=$KC_VAL; EXP_BACKEND=keychain; LOW='^security'
+elif [ $WIN = 1 ]; then FAKE_OS=Linux; EXP_VAL=$KC_VAL; EXP_BACKEND=wincred; LOW='^wincred-ps'
+else FAKE_OS=Darwin; EXP_VAL=$SOPS_VAL; EXP_BACKEND=sops; LOW='^security'; fi
 printf '%s\n' 'other-key: ENC[AES256_GCM,data:FAKE,type:str]' > "$FAKE_HOME/dotfile/secrets/agent.enc.yaml"
 
 # 入口檔：與正式入口相同的 shebang；家目錄與最底層的執行檔以覆寫 function 替換
@@ -425,12 +499,23 @@ _security() {
   return 0
 }
 _sops() { builtin echo "sops-bin \$*" >> "$CALLS"; builtin printf '%s' "$SOPS_VAL"; return 0; }
+_wincred() {
+  builtin echo "wincred-ps \$*" >> "$CALLS"
+  case \${1:-} in
+    get) builtin printf '%s' "$KC_VAL" ;;
+    put) /bin/cat > "$T/wincred-stdin"; builtin printf 'AS-WINCRED-OK\n' ;;
+    names) builtin printf 'AS-WINCRED-END\n' ;;
+    *) builtin printf 'AS-WINCRED-OK\n' ;;
+  esac
+  return 0
+}
+$([ $WIN = 1 ] && printf 'source "%s"' "$T/winstat.sh")
 as_main "\$@"
 EOF
 chmod 755 "$ENTRY"
 entry() {
   : > "$CALLS"
-  /bin/rm -f "$OUT" "$ARGV" "$T/childpath" "$T/childbashenv" "$T/security-stdin"
+  /bin/rm -f "$OUT" "$ARGV" "$T/childpath" "$T/childbashenv" "$T/security-stdin" "$T/wincred-stdin"
   "$ENTRY" "$@" > "$T/stdout" 2> "$T/stderr" < "${STDIN:-/dev/null}"
 }
 
@@ -493,10 +578,18 @@ check plain_source_refused all bad_rc "! grep -q loaded '$T/stdout'" "grep -q 'p
 # shellcheck disable=SC1090
 ( set -p; printf() { builtin printf "$@"; }; source "$BROKER" && echo loaded ) > "$T/stdout" 2> "$T/stderr"; rc=$?
 check shadowed_builtin_refused all bad_rc "! grep -q loaded '$T/stdout'" "grep -q '遮蔽' '$T/stderr'"
+# 遮蔽檢查清單是兩側的聯集：envfile 用的 mkdir mktemp chmod mv rm，Credential Manager 用的 iconv base64 cygpath env
+for f in mkdir mktemp chmod mv rm iconv base64 cygpath env security sops; do
+  # shellcheck disable=SC1090
+  # function 關鍵字：呼叫端 shell 若有同名 alias（mv -i 這類），名稱不會被 alias 展開
+  # Windows 主機上測試自己的 chmod 包裝要先拿掉，否則清單會先在 chmod 停下
+  ( set -p; [ $WIN = 1 ] && unset -f chmod; eval "function $f { :; }"; source "$BROKER" && echo loaded ) > "$T/stdout" 2> "$T/stderr"; rc=$?
+  check "shadowed_guard_name_refused_[$f]" all bad_rc "! grep -q loaded '$T/stdout'" "grep -q '$f 被函式遮蔽' '$T/stderr'"
+done
 
 # --- PATH 前置假程式 ---
 mkdir "$T/fake"
-for f in cat od tr awk stat id uname readlink dirname security sops; do
+for f in cat od tr awk stat id uname readlink dirname security sops iconv base64 cygpath env; do
   cat > "$T/fake/$f" <<EOF
 #!/bin/sh
 echo "$f \$*" >> "$T/fakelog"
@@ -522,7 +615,7 @@ check fake_path_run_no_fake_called absent "$T/fakelog"
 check fake_path_tier_unaffected stderr_has "alias=tok-sops backend=$EXP_BACKEND"
 check fake_path_restored_for_child cmp -s "$T/expectpath" "$T/childpath"
 PATH="$FAKE_PATH" entry run tok-kc -- "$HELPER" MY_TOKEN; rc=$?
-if [ "$REAL_OS" = Darwin ]; then expect_ok fake_uname_cannot_change_platform "$KC_VAL"
+if [ "$EXP_BACKEND" != sops ]; then expect_ok fake_uname_cannot_change_platform "$KC_VAL"
 else expect_deny fake_uname_cannot_change_platform; fi
 check fake_path_keychain_only_no_fake_called absent "$T/fakelog"
 PATH="$FAKE_PATH" entry run tok-sops -- show-tool MY_TOKEN; rc=$?
@@ -533,12 +626,14 @@ check fake_path_bare_name_no_fake_called absent "$T/fakelog"
 
 chmod 666 "$TABLE"
 PATH="$FAKE_PATH" entry run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
-check fake_stat_id_cannot_pass_bad_perms all bad_rc not_run "absent '$T/fakelog'" "not_called '^security'"
+check fake_stat_id_cannot_pass_bad_perms all bad_rc not_run "absent '$T/fakelog'" "not_called '$LOW'"
 chmod 600 "$TABLE"
 
 STDIN="$T/in" PATH="$FAKE_PATH" entry put tok-sops; rc=$?
 if [ "$REAL_OS" = Darwin ]; then
   check fake_path_put_ok all ok_rc "grep -qx 'add-generic-password -U -s agent-secret -a tok-sops -X $PUT_HEX' '$T/security-stdin'"
+elif [ $WIN = 1 ]; then
+  check fake_path_put_ok_windows all ok_rc "[ \"\$(cat '$T/wincred-stdin')\" = '$PUT_VAL' ]" "called '^wincred-ps put agent-secret/alias/tok-sops$'" "no_dummy '$CALLS'"
 else
   check fake_path_put_off_macos_writes_envfile all ok_rc "absent '$T/security-stdin'" "grep -qx 'tok-sops=$PUT_VAL' '$EF'"
 fi
@@ -559,21 +654,48 @@ printf '%s\n' 'tok-evil|sops|MY_TOKEN|*' "tok-sops|sops|MY_TOKEN|/nonexistent/on
 chmod 600 "$T/evilhome/.config/agent-secret/aliases.tsv"
 HOME="$T/evilhome" entry run tok-evil -- "$HELPER" MY_TOKEN; rc=$?
 expect_deny home_env_cannot_swap_table
-check home_env_cannot_swap_table_no_backend not_called '^security'
+check home_env_cannot_swap_table_no_backend not_called "$LOW"
 HOME="$T/evilhome" entry run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
 expect_ok home_env_still_uses_account_home_table "$EXP_VAL"
 # 真正的 as_home：HOME 被改掉時仍回帳號資料庫裡的家目錄（用 dscl / getent 當獨立對照）
+PS_BIN=/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe
 if [ "$REAL_OS" = Darwin ]; then
   ORACLE=$(/usr/bin/dscl . -read "/Users/$(/usr/bin/id -un)" NFSHomeDirectory 2>/dev/null | /usr/bin/awk '{print $2}')
+elif [ $WIN = 1 ]; then
+  # Git Bash 沒有 getent；改問 .NET（SHGetFolderPath），與 broker 用的 cygpath 是不同的實作
+  ORACLE=$(cygpath -u "$("$PS_BIN" -NoProfile -NonInteractive -Command "[Environment]::GetFolderPath('UserProfile')" | tr -d '\r')")
 else
   ORACLE=$(getent passwd "$REAL_UID" | cut -d: -f6)
 fi
 printf '%s' "${ORACLE%/}" > "$T/oracle"
-HOME="$T/evilhome" REAL_HOME=1 broker as_home; rc=$?
+# UNAME 用真實的平台：as_home 在 Windows 走另一條路
+HOME="$T/evilhome" UNAME="$REAL_OS" REAL_HOME=1 broker as_home; rc=$?
 check as_home_ignores_home_env all ok_rc "[ -s '$T/oracle' ]" "cmp -s '$T/oracle' '$T/stdout'"
-HOME="$T/evilhome" REAL_HOME=1 REAL_BACKEND=2 broker eval 'as_paths; builtin printf "%s" "$AS_TABLE"'; rc=$?
+HOME="$T/evilhome" UNAME="$REAL_OS" REAL_HOME=1 REAL_BACKEND=2 broker eval 'as_paths; builtin printf "%s" "$AS_TABLE"'; rc=$?
 printf '%s' "${ORACLE%/}/.config/agent-secret/aliases.tsv" > "$T/oracle"
 check table_path_derived_from_account_home all ok_rc "cmp -s '$T/oracle' '$T/stdout'"
+if [ $WIN = 1 ]; then
+  # 回歸（2026-10-10 實測的漏洞）：bash 由原生行程啟動時，Git for Windows 的 ~name 會跟著呼叫端的 HOME 走
+  # （nsswitch.conf 的 db_home: env）。as_home 必須仍然回真正的家目錄；對照組確認 ~name 真的被帶走。
+  printf '%s' "${ORACLE%/}" > "$T/oracle"
+  cat > "$T/home-probe" <<EOF
+#!/bin/bash -p
+# shellcheck disable=SC1090
+source "$BROKER" || exit 97
+as_home > "$T/probe-home"
+n=\$(/usr/bin/id -un); builtin eval "h=~\$n"; builtin printf '%s' "\$h" > "$T/probe-tilde"
+EOF
+  EVIL_W=$(cygpath -w "$T/evilhome")
+  cat > "$T/home-probe.ps1" <<EOF
+\$env:HOME='$EVIL_W'; \$env:USERPROFILE='$EVIL_W'; \$env:HOMEDRIVE='Z:'; \$env:HOMEPATH='\\evil'
+& '$(cygpath -w /usr/bin/bash.exe)' -p '$(cygpath -w "$T/home-probe")'
+exit \$LASTEXITCODE
+EOF
+  /bin/rm -f "$T/probe-home" "$T/probe-tilde"
+  "$PS_BIN" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$(cygpath -w "$T/home-probe.ps1")" > "$T/stdout" 2> "$T/stderr"; rc=$?
+  check control_native_parent_home_hijacks_tilde all ok_rc "[ -s '$T/probe-tilde' ]" "! cmp -s '$T/oracle' '$T/probe-tilde'"
+  check as_home_ignores_home_env_from_native_parent all ok_rc "cmp -s '$T/oracle' '$T/probe-home'"
+fi
 
 # --- 其他會影響 shell 行為的變數 ---
 (cd "$T" && CDPATH=/usr entry run tok-sops -- bin/show-tool MY_TOKEN); rc=$?
@@ -771,6 +893,7 @@ check star_npx_argv_no_value no_dummy "$ARGV"
 broker as_main run tok-star -- env JEV_ENABLE=1 "$HELPER" MY_TOKEN; rc=$?
 expect_ok star_env_wrapper_form "$KC_VAL"
 for c in sh /bin/sh bash zsh "$T/bin/innocent-name"; do
+  command -v "$c" >/dev/null 2>&1 || continue   # 這台機器沒裝的 shell 跳過（Git Bash 沒有 zsh）
   broker as_main run tok-star -- "$c" -c 'printf %s "$MY_TOKEN"'; rc=$?
   check "star_allows_${c##*/}_c" all ok_rc "stdout_is '$KC_VAL'"
 done
@@ -825,6 +948,8 @@ check simple_fake_path_restored_for_child cmp -s "$T/expectpath" "$T/childpath"
 STDIN="$T/in" PATH="$FAKE_PATH" entry put MY_SIMPLE; rc=$?
 if [ "$REAL_OS" = Darwin ]; then
   check simple_fake_path_put_ok all ok_rc "grep -qx 'add-generic-password -U -s agent-secret -a MY_SIMPLE -X $PUT_HEX' '$T/security-stdin'"
+elif [ $WIN = 1 ]; then
+  check simple_fake_path_put_ok_windows all ok_rc "[ \"\$(cat '$T/wincred-stdin')\" = '$PUT_VAL' ]" "called '^wincred-ps put agent-secret/simple/MY_SIMPLE$'" "no_dummy '$CALLS'"
 else
   check simple_fake_path_put_off_macos_writes_envfile all ok_rc "absent '$T/security-stdin'" "grep -qx 'MY_SIMPLE=$PUT_VAL' '$EF'"
 fi
@@ -881,13 +1006,13 @@ for loc in en_US.US-ASCII en_US.UTF-8 zh_TW.UTF-8 cs_CZ.UTF-8; do
   expect_ok "locale_${loc}_upper_name_is_simple" "$EXP_VAL"
   check "locale_${loc}_restored_for_child" cmp -s "$T/expectlocale" "$T/childlocale"
   ( export LC_ALL="$loc" LANG="$loc"; entry run tok_x -- "$HELPER" tok_x ); rc=$?
-  check "locale_${loc}_lower_underscore_not_simple" all bad_rc not_run "not_called '^security'" "grep -q '名稱不合法' '$T/stderr'"
+  check "locale_${loc}_lower_underscore_not_simple" all bad_rc not_run "not_called '$LOW'" "grep -q '名稱不合法' '$T/stderr'"
   ( export LC_ALL="$loc" LANG="$loc"; entry run Tok -- "$HELPER" Tok ); rc=$?
-  check "locale_${loc}_mixed_case_rejected" all bad_rc not_run "not_called '^security'"
+  check "locale_${loc}_mixed_case_rejected" all bad_rc not_run "not_called '$LOW'"
   ( export LC_ALL="$loc" LANG="$loc"; entry run tok-sops -- "$HELPER" MY_TOKEN ); rc=$?
   expect_ok "locale_${loc}_registered_alias_ok" "$EXP_VAL"
   ( export LC_ALL="$loc" LANG="$loc"; entry run TOK-SOPS -- "$HELPER" MY_TOKEN ); rc=$?
-  check "locale_${loc}_upper_alias_not_registered" all bad_rc not_run "not_called '^security'"
+  check "locale_${loc}_upper_alias_not_registered" all bad_rc not_run "not_called '$LOW'"
 done
 ( unset LC_ALL LANG LC_COLLATE LC_CTYPE; printf '%s\n' 'unset|unset|unset|unset' > "$T/expectlocale"
   entry run MY_SIMPLE -- "$HELPER" MY_SIMPLE ); rc=$?
@@ -977,6 +1102,432 @@ check edit_unresolvable_editor_dies all bad_rc "grep -q 'as-no-such-editor-xyz' 
 ( EDITOR=/usr/bin/vi SOPS_EDITOR=as-no-such-editor-xyz REAL_BACKEND=1 broker as_main edit ); rc=$?
 check edit_unresolvable_sops_editor_dies all bad_rc "grep -q 'SOPS_EDITOR' '$T/stderr'" "not_called '^sops-bin'"
 rm -f "$FAKE_HOME/.age/key.txt" "$FAKE_HOME/dotfile/secrets/.sops.yaml"; rmdir "$FAKE_HOME/.age"
+# === Windows：Git for Windows 的 bash（uname 為 MINGW* / MSYS*）以 Credential Manager 當本機儲存區 ===
+# 平台以 UNAME stub 成 Windows，所以這一段在 macOS 與 Linux 上也跑；標明「真實 Windows」的區塊才需要 cygpath。
+W=$WIN_UNAME
+TAB=$'\t'
+NF='AS-WINCRED-NOT-FOUND\n'; WOK='AS-WINCRED-OK\n'; WEND='AS-WINCRED-END\n'   # 交給 printf %b
+file_is() { [ "$(cat "$1")" = "$2" ]; }   # $(…) 只去掉結尾的 LF：多出來的 CR 看得到（Git Bash 的 grep 會吃掉 CR）
+count_is() { [ "$(grep -c -- "$1" "$CALLS")" = "$2" ]; }
+stdout_has() { grep -q -- "$1" "$T/stdout"; }
+/bin/rm -f "$FAKE_HOME/dotfile/secrets/agent.enc.yaml"
+
+# --- 解析順序與 fail closed：與 Keychain 那一側相同 ---
+UNAME=$W KC=found broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+expect_ok win_store_hit "$KC_VAL"
+check win_store_hit_backend all "called '^wincred get tok-sops$'" "not_called '^keychain'" "not_called '^sops get'" "stderr_has 'alias=tok-sops backend=wincred'"
+check win_store_hit_no_value_in_logs no_dummy "$T/stderr" "$T/stdout" "$ARGV" "$CALLS"
+UNAME=MSYS_NT-10.0-26200 KC=found broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+expect_ok win_msys_uname_uses_wincred "$KC_VAL"
+check win_msys_uname_backend all "called '^wincred get tok-sops$'" "stderr_has 'backend=wincred'"
+KC=found broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+check mac_still_uses_keychain all ok_rc "called '^keychain get tok-sops$'" "not_called '^wincred'" "stderr_has 'backend=keychain'"
+UNAME=Linux KC=found SP=found broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+check linux_never_calls_wincred all ok_rc "not_called '^wincred'" "not_called '^keychain'"
+UNAME=$W KC=notfound SP=found broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+expect_ok win_notfound_falls_to_sops "$SOPS_VAL"
+check win_notfound_falls_logs_backend stderr_has 'alias=tok-sops backend=sops'
+UNAME=$W KC=error SP=found broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+expect_deny win_store_error_no_fallthrough
+check win_store_error_no_sops_call all "not_called '^sops'" "stderr_has 'Credential Manager 讀取失敗'"
+UNAME=$W KC=notfound SP=notfound broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+expect_deny win_missing_everywhere
+UNAME=$W KC=empty broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+expect_deny win_empty_value
+# keychain-only：名稱沿用，在 Windows 表示只存在這台機器的 Credential Manager
+UNAME=$W KC=found broker as_main run tok-kc -- "$HELPER" MY_TOKEN; rc=$?
+expect_ok win_keychain_only_hit "$KC_VAL"
+UNAME=$W KC=notfound SP=found broker as_main run tok-kc -- "$HELPER" MY_TOKEN; rc=$?
+expect_deny win_keychain_only_never_sops
+check win_keychain_only_never_sops_call not_called '^sops'
+UNAME=$W KC=error SP=found broker as_main run tok-kc -- "$HELPER" MY_TOKEN; rc=$?
+expect_deny win_keychain_only_error
+check win_keychain_only_error_no_sops not_called '^sops'
+# 簡易模式
+UNAME=$W KC=found broker as_main run MY_SIMPLE -- "$HELPER" MY_SIMPLE; rc=$?
+expect_ok win_simple_hit "$KC_VAL"
+check win_simple_logs_mode stderr_has 'name=MY_SIMPLE backend=wincred mode=simple'
+UNAME=$W KC=notfound SP=found broker as_main run MY_SIMPLE -- "$HELPER" MY_SIMPLE; rc=$?
+expect_ok win_simple_notfound_falls_to_sops "$SOPS_VAL"
+UNAME=$W KC=error SP=found broker as_main run MY_SIMPLE -- "$HELPER" MY_SIMPLE; rc=$?
+expect_deny win_simple_error_no_fallthrough
+check win_simple_error_no_sops_call not_called '^sops'
+# 指令限制照舊
+UNAME=$W broker as_main run tok-sops -- "$T/bin/other-tool" MY_TOKEN; rc=$?
+expect_deny win_command_mismatch
+check win_command_mismatch_no_backend all "not_called '^wincred'" "not_called '^sops'"
+
+# --- 注入的變數不被 MSYS 改寫：2026-10-10 實測 /abc/def 這種值交給原生程式時會變成 C:/Program Files/Git/abc/def ---
+( unset MSYS2_ENV_CONV_EXCL; UNAME=$W broker as_main run tok-star -- sh -c 'printf %s "${MSYS2_ENV_CONV_EXCL-unset}"' ); rc=$?
+check win_run_excludes_env_from_msys_conversion all ok_rc "stdout_is 'MY_TOKEN'"
+UNAME=$W MSYS2_ENV_CONV_EXCL='FOO;BAR' broker as_main run MY_SIMPLE -- sh -c 'printf %s "$MSYS2_ENV_CONV_EXCL"'; rc=$?
+check win_run_keeps_caller_exclusions all ok_rc "stdout_is 'MY_SIMPLE;FOO;BAR'"
+( unset MSYS2_ENV_CONV_EXCL; broker as_main run tok-star -- sh -c 'printf %s "${MSYS2_ENV_CONV_EXCL-unset}"' ); rc=$?
+check mac_run_does_not_touch_msys_exclusions all ok_rc "stdout_is 'unset'"
+
+# --- put / rm ---
+: > "$T/putlog"
+UNAME=$W SP=notfound STDIN="$T/in" broker as_main put tok-sops; rc=$?
+check win_put_ok all ok_rc "called '^wincred put tok-sops sops$'" "file_is '$T/putlog' 'wincred-stdin $PUT_VAL'" "stderr_has 'backend=wincred'" "not_called '^keychain'"
+check win_put_value_not_in_args no_dummy "$CALLS" "$T/stderr" "$T/stdout"
+UNAME=$W SP=found STDIN="$T/in" broker as_main put tok-sops; rc=$?
+check win_put_refused_when_in_sops all bad_rc "not_called '^wincred put'"
+UNAME=$W SP=error STDIN="$T/in" broker as_main put tok-sops; rc=$?
+check win_put_refused_when_sops_state_unknown all bad_rc "not_called '^wincred put'"
+UNAME=$W SP=notfound KC=error STDIN="$T/in" broker as_main put tok-sops; rc=$?
+check win_put_backend_error all bad_rc "stderr_has 'Credential Manager 寫入失敗'"
+UNAME=$W SP=notfound STDIN="$T/long" broker as_main put MY_SIMPLE; rc=$?
+check win_put_too_long all bad_rc "not_called '^wincred put'"
+UNAME=$W SP=notfound STDIN="$T/multi" broker as_main put MY_SIMPLE; rc=$?
+check win_put_multiline all bad_rc "not_called '^wincred put'"
+# PowerShell 的 pipe 行尾是 CRLF（Get-Clipboard | agent-secret put）。broker 不處理 CR：真實的 Git Bash 上
+# bash 的 $(...) 會把結尾的 CRLF 當成換行去掉（實測），所以存得進去而且值是乾淨的；其他平台照舊拒絕。
+printf '%s\r\n' "$PUT_VAL" > "$T/in-crlf"; : > "$T/putlog"
+UNAME=$W SP=notfound STDIN="$T/in-crlf" broker as_main put MY_SIMPLE; rc=$?
+if [ $WIN = 1 ]; then
+  check winreal_put_crlf_line_ending_ok all ok_rc "called '^wincred put MY_SIMPLE simple$'" "file_is '$T/putlog' 'wincred-stdin $PUT_VAL'"
+else
+  check win_put_trailing_cr_rejected_off_git_bash all bad_rc "not_called '^wincred put'"
+  SP=notfound STDIN="$T/in-crlf" broker as_main put MY_SIMPLE; rc=$?
+  check mac_put_trailing_cr_still_rejected all bad_rc "not_called '^keychain put'"
+fi
+printf 'DUMMY\rMID\r\n' > "$T/in-crmid"
+UNAME=$W SP=notfound STDIN="$T/in-crmid" broker as_main put MY_SIMPLE; rc=$?
+check win_put_cr_in_middle_rejected all bad_rc "not_called '^wincred put'"
+printf 'DUMMY\r\r\n' > "$T/in-crcr"
+UNAME=$W SP=notfound STDIN="$T/in-crcr" broker as_main put MY_SIMPLE; rc=$?
+check win_put_two_trailing_cr_rejected all bad_rc "not_called '^wincred put'"
+printf '\r\n' > "$T/in-cronly"
+UNAME=$W SP=notfound STDIN="$T/in-cronly" broker as_main put MY_SIMPLE; rc=$?
+check win_put_only_crlf_is_empty all bad_rc "not_called '^wincred put'"
+UNAME=$W broker as_main rm MY_SIMPLE; rc=$?
+check win_rm_ok all ok_rc "called '^wincred delete MY_SIMPLE$'" "stderr_has 'removed name=MY_SIMPLE backend=wincred mode=simple'" "not_called '^keychain'"
+UNAME=$W KC=notfound broker as_main rm MY_SIMPLE; rc=$?
+check win_rm_missing_item_fails all bad_rc "stderr_has 'Credential Manager 沒有這個項目'"
+UNAME=$W KC=error broker as_main rm MY_SIMPLE; rc=$?
+check win_rm_backend_error_fails all bad_rc "stderr_has 'Credential Manager 刪除失敗'"
+UNAME=$W broker as_main rm tok-sops; rc=$?
+check win_rm_registered_refused all bad_rc "not_called '^wincred'"
+
+# --- list / doctor：每次執行只列舉一次（names all），不逐列呼叫 exists ---
+WC_L=$'alias/tok-sops\nalias/tok-kc\nalias/abcd\nsimple/MY_SIMPLE\nsimple/ABC\n'
+UNAME=$W KC=found SP=notfound WC_LIST="$WC_L" broker as_main list; rc=$?
+check win_list_rows all ok_rc \
+  "stdout_has '^tok-sops${TAB}sops${TAB}wincred=yes${TAB}sops=no${TAB}env=MY_TOKEN${TAB}cmds=$HELPER$'" \
+  "stdout_has '^tok-kc${TAB}keychain-only${TAB}wincred=yes${TAB}sops=no${TAB}'" \
+  "stdout_has '^tok-star${TAB}sops${TAB}wincred=no${TAB}sops=no${TAB}'" \
+  "stdout_has '^MY_SIMPLE${TAB}simple${TAB}wincred=yes${TAB}sops=no$'"
+# alias abc：清單裡只有 alias/abcd 與 simple/ABC，前綴或只差大小寫都不算
+check win_list_exact_name_match all "stdout_has '^abc${TAB}sops${TAB}wincred=no${TAB}'" "stdout_has '^ABC${TAB}simple${TAB}wincred=yes${TAB}sops=no$'" "! grep -q '^abcd' '$T/stdout'"
+check win_list_single_enumeration all "count_is '^wincred names' 1" "called '^wincred names all$'" "not_called '^wincred exists'" "not_called '^wincred get'" "not_called '^keychain'"
+check win_list_no_keychain_column all "! grep -q 'keychain=' '$T/stdout'" "no_dummy '$T/stdout' '$T/stderr'"
+UNAME=$W KC=error SP=notfound broker as_main list; rc=$?
+check win_list_enumeration_error_fails all bad_rc "stdout_has '^tok-sops${TAB}sops${TAB}wincred=error${TAB}'" "stderr_has '無法列舉簡易模式的名稱: wincred'" "count_is '^wincred names' 1"
+UNAME=$W KC=found SP=found WC_LIST="$WC_L" broker as_main doctor; rc=$?
+check win_doctor_flags_both_backends all bad_rc "stdout_has '兩個 backend 都有: tok-sops（Credential Manager 會蓋過 sops）'" "stdout_has 'keychain-only 的 alias 出現在 sops: tok-kc'"
+check win_doctor_single_enumeration all "count_is '^wincred names' 1" "not_called '^wincred exists'" "not_called ' get '" "no_dummy '$T/stdout' '$T/stderr'"
+UNAME=$W KC=found SP=notfound WC_LIST="$WC_L" broker as_main doctor; rc=$?
+check win_doctor_clean all ok_rc "grep -qx ok '$T/stdout'" "stdout_has '^INFO 簡易模式 2 個名稱'"
+check win_doctor_mode_check_note stdout_has '^INFO Windows：.*不是 NTFS ACL'
+UNAME=$W KC=error SP=notfound broker as_main doctor; rc=$?
+check win_doctor_enumeration_error all bad_rc "stdout_has '^PROBLEM 無法確認 backend 狀態: tok-sops (wincred=error sops=no)'" "stdout_has '^WARN 無法列舉簡易模式的名稱（wincred）'"
+KC=found SP=notfound broker as_main doctor; rc=$?
+check mac_doctor_has_no_windows_note all ok_rc "! grep -q 'NTFS' '$T/stdout'"
+write_table "kc-star|keychain-only|KC_STAR_TOKEN|*"
+UNAME=$W KC=found SP=notfound WC_LIST="" broker as_main doctor; rc=$?
+check win_doctor_keychain_only_star_warns all ok_rc "stdout_has '^WARN keychain-only 且 allowed_commands 是 \\*：沒有任何讀取限制（Credential Manager 讀取不需要確認.*: kc-star$'" "! grep -q '確認視窗' '$T/stdout'"
+default_table
+"$BROKER" > /dev/null 2> "$T/stderr"
+check usage_mentions_windows_store all "grep -q 'Credential Manager' '$T/stderr'" "grep -q 'wincred=' '$T/stderr'" "grep -q 'agent-secret.ps1' '$T/stderr'"
+
+# --- 真正的 backend_wincred（只 stub 最底層的 _wincred）：target 名稱、兩個訊號才算找不到、輸出再驗一次 ---
+UNAME=$W REAL_BACKEND=1 WC_OUT="$KC_VAL" broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+expect_ok win_real_found "$KC_VAL"
+check win_real_get_target all "called '^wincred-ps get agent-secret/alias/tok-sops$'" "count_is '^wincred-ps' 1" "not_called '^sops-bin'" "not_called '^security'"
+check win_real_get_no_value_in_calls no_dummy "$CALLS" "$T/stderr"
+UNAME=$W REAL_BACKEND=1 WC_OUT="$KC_VAL" broker as_main run MY_SIMPLE -- "$HELPER" MY_SIMPLE; rc=$?
+expect_ok win_real_simple_found "$KC_VAL"
+check win_real_simple_target called '^wincred-ps get agent-secret/simple/MY_SIMPLE$'
+# 兩種模式的 target 用前綴分開：Credential Manager 不分大小寫，abc 與 ABC 不能只靠大小寫區分
+UNAME=$W REAL_BACKEND=1 WC_OUT="$KC_VAL" broker as_main run abc -- "$HELPER" MY_TOKEN; rc=$?
+check win_real_alias_target_prefix all ok_rc "called '^wincred-ps get agent-secret/alias/abc$'"
+UNAME=$W REAL_BACKEND=1 WC_OUT="$KC_VAL" broker as_main run ABC -- "$HELPER" ABC; rc=$?
+check win_real_simple_target_prefix all ok_rc "called '^wincred-ps get agent-secret/simple/ABC$'"
+# 呼叫端的 stdin 原樣留給被注入的指令；PowerShell 那一側拿到的是 /dev/null
+UNAME=$W REAL_BACKEND=1 WC_OUT="$KC_VAL" STDIN="$T/in" broker as_main run tok-star -- cat; rc=$?
+check win_real_run_preserves_caller_stdin all ok_rc "stdout_is '$PUT_VAL'" "[ ! -s '$T/wincred-stdin' ]"
+printf '%s\n' 'tok-sops: ENC[AES256_GCM,data:FAKE,type:str]' 'MY_SIMPLE: ENC[AES256_GCM,data:FAKE,type:str]' 'sops:' '    age: []' \
+  > "$FAKE_HOME/dotfile/secrets/agent.enc.yaml"
+UNAME=$W REAL_BACKEND=1 WC_RC=3 WC_OUT="$NF" SOPS_OUT="$SOPS_VAL" broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+expect_ok win_real_notfound_falls_to_sops "$SOPS_VAL"
+check win_real_notfound_sops_argv called "^sops-bin -d --extract \[\"tok-sops\"\] $FAKE_HOME/dotfile/secrets/agent.enc.yaml$"
+UNAME=$W REAL_BACKEND=1 WC_RC=3 WC_OUT="$NF" SOPS_OUT="$SOPS_VAL" broker as_main run tok-kc -- "$HELPER" MY_TOKEN; rc=$?
+expect_deny win_real_keychain_only_notfound
+check win_real_keychain_only_notfound_no_sops not_called '^sops-bin'
+# exit code 3 但 sentinel 不對：不是「找不到」
+for o in '' 'AS-WINCRED-NOT-FOUND' 'AS-WINCRED-NOT-FOUND\r\n' 'AS-WINCRED-NOT-FOUND\nX' 'as-wincred-not-found\n' 'AS-WINCRED-OK\n' "$KC_VAL"; do
+  UNAME=$W REAL_BACKEND=1 WC_RC=3 WC_OUT="$o" SOPS_OUT="$SOPS_VAL" broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+  check "win_real_rc3_bad_sentinel_fail_closed_[$o]" all bad_rc not_run "not_called '^sops-bin'" "stderr_has 'Credential Manager 讀取失敗'"
+done
+# sentinel 對但 exit code 不是 3（PowerShell 起不來是 126 / 127、當掉、其他錯誤）：一樣不是「找不到」
+for code in 0 1 2 4 5 126 127 128 255; do
+  UNAME=$W REAL_BACKEND=1 WC_RC=$code WC_OUT="$NF" SOPS_OUT="$SOPS_VAL" broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+  check "win_real_rc_${code}_with_sentinel_fail_closed" all bad_rc not_run "not_called '^sops-bin'"
+  UNAME=$W REAL_BACKEND=1 WC_RC=$code WC_OUT="$NF" broker eval 'as_paths; backend_wincred get tok-sops; builtin printf "rc=%s" "$?"'; rc=$?
+  check "win_real_rc_${code}_with_sentinel_is_error_not_3" stdout_is 'rc=1'
+done
+for code in 1 2 126 127 255; do
+  UNAME=$W REAL_BACKEND=1 WC_RC=$code WC_OUT="$KC_VAL" SOPS_OUT="$SOPS_VAL" broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+  check "win_real_rc_${code}_with_value_fail_closed" all bad_rc not_run "not_called '^sops-bin'"
+done
+# get 的輸出再驗一次：結尾多出 CR 或換行、空的、過長、不可列印都拒絕
+head -c 1025 /dev/zero | tr '\0' 'D' > "$T/long1025"; head -c 1024 /dev/zero | tr '\0' 'D' > "$T/long1024"
+for o in "$KC_VAL\r" "$KC_VAL\n" "$KC_VAL\r\n" '' '\n' "DUMMY\tTAB" "DUMMY\nLINE2" 'DUMMY\0001X' "$(cat "$T/long1025")"; do
+  UNAME=$W REAL_BACKEND=1 WC_RC=0 WC_OUT="$o" SOPS_OUT="$SOPS_VAL" broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+  check "win_real_get_output_rejected_[$(printf '%s' "$o" | cut -c1-30)]" all bad_rc not_run "not_called '^sops-bin'"
+done
+UNAME=$W REAL_BACKEND=1 WC_RC=0 WC_OUT="$(cat "$T/long1024")" broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+check win_real_get_max_len_ok all ok_rc "[ \"\$(wc -c < '$OUT' | tr -d ' ')\" = 1024 ]"
+UNAME=$W REAL_BACKEND=1 WC_RC=0 WC_OUT='DUMMY $x "q" `b` end' broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+expect_ok win_real_get_shell_metachars_intact 'DUMMY $x "q" `b` end'
+# exists / delete / put：成功也要 sentinel
+for spec in "0|$WOK|0" "3|$NF|3" "0||1" "0|$NF|1" "3|$WOK|1" "3||1" "1|$WOK|1" "127||1" "0|AS-WINCRED-OK|1"; do
+  IFS='|' read -r wrc wout want <<< "$spec"
+  UNAME=$W REAL_BACKEND=1 WC_RC=$wrc WC_OUT="$wout" broker eval 'as_paths; backend_wincred exists tok-sops; builtin printf "rc=%s" "$?"'; rc=$?
+  check "win_real_exists_[$spec]" all "stdout_is 'rc=$want'" "called '^wincred-ps exists agent-secret/alias/tok-sops$'"
+  UNAME=$W REAL_BACKEND=1 WC_RC=$wrc WC_OUT="$wout" broker eval 'as_paths; backend_wincred delete MY_SIMPLE; builtin printf "rc=%s" "$?"'; rc=$?
+  check "win_real_delete_[$spec]" all "stdout_is 'rc=$want'" "called '^wincred-ps delete agent-secret/simple/MY_SIMPLE$'"
+done
+for nm in 'My_Simple' 'a b' 'x/y' '' '../x' 'A*'; do
+  UNAME=$W REAL_BACKEND=1 WC_OUT="$KC_VAL" broker eval "as_paths; backend_wincred get '$nm'; builtin printf 'rc=%s' \"\$?\""; rc=$?
+  check "win_real_bad_name_never_reaches_powershell_[$nm]" all "stdout_is 'rc=1'" "not_called '^wincred-ps'"
+done
+/bin/rm -f "$FAKE_HOME/dotfile/secrets/agent.enc.yaml"
+UNAME=$W REAL_BACKEND=1 WC_OUT="$WOK" STDIN="$T/in" broker as_main put tok-kc; rc=$?
+check win_real_put_ok all ok_rc "called '^wincred-ps put agent-secret/alias/tok-kc$'" "count_is '^wincred-ps' 1"
+check win_real_put_value_only_on_stdin all "file_is '$T/wincred-stdin' '$PUT_VAL'" "[ \"\$(wc -c < '$T/wincred-stdin' | tr -d ' ')\" = ${#PUT_VAL} ]" "no_dummy '$CALLS' '$T/stderr' '$T/stdout'"
+UNAME=$W REAL_BACKEND=1 WC_OUT="$WOK" STDIN="$T/in-crlf" broker as_main put MY_SIMPLE; rc=$?
+if [ $WIN = 1 ]; then
+  check winreal_put_crlf_stores_clean_value all ok_rc "file_is '$T/wincred-stdin' '$PUT_VAL'" "[ \"\$(wc -c < '$T/wincred-stdin' | tr -d ' ')\" = ${#PUT_VAL} ]"
+else
+  check win_real_put_crlf_rejected_off_git_bash all bad_rc "not_called '^wincred-ps'"
+fi
+UNAME=$W REAL_BACKEND=1 WC_OUT='' STDIN="$T/in" broker as_main put MY_SIMPLE; rc=$?
+check win_real_put_without_ok_sentinel_fails bad_rc
+UNAME=$W REAL_BACKEND=1 WC_RC=1 WC_OUT="$WOK" STDIN="$T/in" broker as_main put MY_SIMPLE; rc=$?
+check win_real_put_error_fails bad_rc
+UNAME=$W REAL_BACKEND=1 WC_RC=3 WC_OUT="$NF" STDIN="$T/in" broker as_main put MY_SIMPLE; rc=$?
+check win_real_put_notfound_is_error bad_rc
+UNAME=$W REAL_BACKEND=1 WC_OUT="$WOK" broker as_main rm MY_SIMPLE; rc=$?
+check win_real_rm_ok all ok_rc "called '^wincred-ps delete agent-secret/simple/MY_SIMPLE$'"
+UNAME=$W REAL_BACKEND=1 WC_RC=3 WC_OUT="$NF" broker as_main rm MY_SIMPLE; rc=$?
+check win_real_rm_missing all bad_rc "stderr_has 'Credential Manager 沒有這個項目'"
+# names：結尾要有 END sentinel；其他前綴的行當成錯誤
+EXP_SIMPLE=$'A_B\nSECOND'; EXP_ALL=$'simple/A_B\nalias/x-y'
+UNAME=$W REAL_BACKEND=1 WC_OUT="simple/A_B\nalias/x-y\nsimple/SECOND\n$WEND" broker eval 'as_paths; backend_wincred names'; rc=$?
+check win_real_names_simple_only all ok_rc 'stdout_is "$EXP_SIMPLE"' "called '^wincred-ps names$'"
+UNAME=$W REAL_BACKEND=1 WC_OUT="simple/A_B\nalias/x-y\n$WEND" broker eval 'as_paths; backend_wincred names all'; rc=$?
+check win_real_names_all all ok_rc 'stdout_is "$EXP_ALL"'
+UNAME=$W REAL_BACKEND=1 WC_OUT="$WEND" broker eval 'as_paths; backend_wincred names all'; rc=$?
+check win_real_names_empty all ok_rc "[ ! -s '$T/stdout' ]"
+for o in '' 'simple/A_B\n' 'simple/A_B\nAS-WINCRED-END' "weird/A_B\n$WEND" "simple/A_B$WEND"; do
+  UNAME=$W REAL_BACKEND=1 WC_OUT="$o" broker eval 'as_paths; backend_wincred names all >/dev/null; builtin printf "rc=%s" "$?"'; rc=$?
+  check "win_real_names_bad_output_is_error_[$o]" stdout_is 'rc=1'
+done
+UNAME=$W REAL_BACKEND=1 WC_RC=1 WC_OUT="$WEND" broker eval 'as_paths; backend_wincred names all; builtin printf "rc=%s" "$?"'; rc=$?
+check win_real_names_error_rc stdout_is 'rc=1'
+UNAME=$W REAL_BACKEND=1 WC_OUT="alias/tok-sops\nsimple/MY_SIMPLE\n$WEND" broker as_main list; rc=$?
+check win_real_list all ok_rc "stdout_has '^tok-sops${TAB}sops${TAB}wincred=yes${TAB}sops=no${TAB}'" "stdout_has '^tok-kc${TAB}keychain-only${TAB}wincred=no${TAB}'" "stdout_has '^MY_SIMPLE${TAB}simple${TAB}wincred=yes${TAB}sops=no$'"
+check win_real_list_single_powershell_call all "count_is '^wincred-ps' 1" "called '^wincred-ps names$'" "not_called '^security'" "not_called '^sops-bin'"
+
+# --- 以檔案模擬的 Credential Manager（target 不分大小寫）：put、list、run、rm 一輪，以及只差大小寫的名稱 ---
+/bin/rm -rf "$T/wcstore"; mkdir "$T/wcstore"
+printf '%s\n' 'DUMMY-NOT-A-SECRET-UPPER' > "$T/in-upper"; printf '%s\n' 'DUMMY-NOT-A-SECRET-LOWER' > "$T/in-lower"
+UNAME=$W REAL_BACKEND=3 broker as_main list; rc=$?
+check win_store_list_empty all ok_rc "! grep -q '${TAB}simple${TAB}' '$T/stdout'" "stdout_has '^abc${TAB}sops${TAB}wincred=no${TAB}'"
+UNAME=$W REAL_BACKEND=3 STDIN="$T/in-upper" broker as_main put ABC; rc=$?
+check win_store_put_simple_ok all ok_rc "called '^wincred-ps put agent-secret/simple/ABC$'"
+UNAME=$W REAL_BACKEND=3 STDIN="$T/in-lower" broker as_main put abc; rc=$?
+check win_store_put_alias_same_letters_ok all ok_rc "called '^wincred-ps put agent-secret/alias/abc$'"
+UNAME=$W REAL_BACKEND=3 broker as_main run ABC -- "$HELPER" ABC; rc=$?
+expect_ok win_store_simple_value_not_mixed_with_alias 'DUMMY-NOT-A-SECRET-UPPER'
+UNAME=$W REAL_BACKEND=3 broker as_main run abc -- "$HELPER" MY_TOKEN; rc=$?
+expect_ok win_store_alias_value_not_mixed_with_simple 'DUMMY-NOT-A-SECRET-LOWER'
+UNAME=$W REAL_BACKEND=3 broker as_main list; rc=$?
+check win_store_list_shows_both all ok_rc "stdout_has '^abc${TAB}sops${TAB}wincred=yes${TAB}sops=no${TAB}'" "stdout_has '^ABC${TAB}simple${TAB}wincred=yes${TAB}sops=no$'" "stdout_has '^tok-sops${TAB}sops${TAB}wincred=no${TAB}'"
+check win_store_list_single_powershell_call all "count_is '^wincred-ps' 1" "no_dummy '$T/stdout' '$T/stderr'"
+UNAME=$W REAL_BACKEND=3 broker as_main doctor; rc=$?
+check win_store_doctor_counts_simple all "stdout_has '^INFO 簡易模式 1 個名稱'" "count_is '^wincred-ps' 1" "no_dummy '$T/stdout'"
+UNAME=$W REAL_BACKEND=3 broker as_main rm ABC; rc=$?
+check win_store_rm_ok ok_rc
+UNAME=$W REAL_BACKEND=3 broker as_main run abc -- "$HELPER" MY_TOKEN; rc=$?
+expect_ok win_store_rm_simple_keeps_alias 'DUMMY-NOT-A-SECRET-LOWER'
+UNAME=$W REAL_BACKEND=3 broker as_main run ABC -- "$HELPER" ABC; rc=$?
+expect_deny win_store_run_after_rm_fails
+UNAME=$W REAL_BACKEND=3 broker as_main rm ABC; rc=$?
+check win_store_rm_again_fails all bad_rc "stderr_has 'Credential Manager 沒有這個項目'"
+# 別的工具建立、只差大小寫的項目（agent-secret/simple/my_simple）：要求 MY_SIMPLE 時是錯誤，不是找不到也不是命中
+printf '%s\n' 'agent-secret/simple/my_simple' > "$T/wcstore/agent-secret_simple_my_simple.name"
+printf '%s' 'DUMMY-NOT-A-SECRET-ODDCASE' > "$T/wcstore/agent-secret_simple_my_simple.val"
+UNAME=$W REAL_BACKEND=3 broker as_main run MY_SIMPLE -- "$HELPER" MY_SIMPLE; rc=$?
+expect_deny win_store_case_mismatch_is_error
+check win_store_case_mismatch_no_fallthrough all "not_called '^sops-bin'" "stderr_has 'Credential Manager 讀取失敗'" "no_dummy '$T/stdout' '$T/stderr'"
+UNAME=$W REAL_BACKEND=3 STDIN="$T/in" broker as_main put MY_SIMPLE; rc=$?
+check win_store_case_mismatch_put_refused all bad_rc "file_is '$T/wcstore/agent-secret_simple_my_simple.val' 'DUMMY-NOT-A-SECRET-ODDCASE'"
+UNAME=$W REAL_BACKEND=3 broker as_main rm MY_SIMPLE; rc=$?
+check win_store_case_mismatch_rm_refused all bad_rc "stderr_has 'Credential Manager 刪除失敗'" "[ -f '$T/wcstore/agent-secret_simple_my_simple.val' ]"
+UNAME=$W REAL_BACKEND=3 broker as_main list; rc=$?
+check win_store_case_mismatch_not_listed all ok_rc "! grep -qi '^my_simple' '$T/stdout'"
+DUMP_RC=1 UNAME=$W REAL_BACKEND=3 broker as_main list; rc=$?
+check win_store_list_enumeration_error_fails all bad_rc "stdout_has '^abc${TAB}sops${TAB}wincred=error${TAB}'"
+/bin/rm -rf "$T/wcstore"
+
+# --- 內建拒絕清單：比對前轉小寫並去掉 .exe；只在 allowed_commands 列出路徑時套用 ---
+for f in cmd.exe PowerShell.EXE Python3.exe Bash.EXE mytool.exe; do cp "$HELPER" "$T/bin/$f"; done
+write_table "tok-exe|sops|MY_TOKEN|$T/bin/cmd.exe,$T/bin/PowerShell.EXE,$T/bin/Python3.exe,$T/bin/Bash.EXE,$T/bin/mytool.exe" "tok-star|sops|MY_TOKEN|*"
+for f in cmd.exe PowerShell.EXE Python3.exe Bash.EXE; do
+  broker as_main run tok-exe -- "$T/bin/$f" MY_TOKEN; rc=$?
+  check "listed_denies_exe_name_[$f]" all bad_rc not_run "not_called '^keychain'" "stderr_has '內建拒絕清單'"
+  UNAME=$W broker as_main run tok-exe -- "$T/bin/$f" MY_TOKEN; rc=$?
+  check "win_listed_denies_exe_name_[$f]" all bad_rc not_run "not_called '^wincred'" "stderr_has '內建拒絕清單'"
+done
+broker as_main run tok-exe -- "$T/bin/mytool.exe" MY_TOKEN; rc=$?
+expect_ok listed_plain_exe_name_ok "$KC_VAL"
+broker as_main run tok-star -- "$T/bin/cmd.exe" MY_TOKEN; rc=$?
+expect_ok star_still_skips_deny_list_for_exe_names "$KC_VAL"
+broker eval 'for b in Rscript RSCRIPT.EXE cmd CMD.EXE powershell PowerShell.exe pwsh.exe ENV sh.exe; do as_cmd_denied "$b" || exit 1; done; exit 0'; rc=$?
+check deny_list_case_and_exe_suffix ok_rc
+broker eval 'for b in gh gh.exe cmder powershell_ise kubectl.EXE exe; do as_cmd_denied "$b" && exit 2; done; exit 0'; rc=$?
+check deny_list_does_not_overmatch ok_rc
+default_table
+
+if [ $WIN = 1 ]; then
+  # === 真實 Windows（Git Bash）才跑：需要 cygpath 與 MSYS 對 .exe 的處理。不啟動 PowerShell、不碰 Credential Manager ===
+  RW=$REAL_OS
+
+  # --- 指令解析：gh、gh.exe、C:\...\gh.exe 解析成同一個字串；allowed_commands 要寫 MSYS 路徑加 .exe ---
+  cp /usr/bin/printenv.exe "$T/bin/wtool.exe"
+  cp "$HELPER" "$T/bin/dual"; cp /usr/bin/printenv.exe "$T/bin/dual.exe"
+  write_table "tok-w|sops|MY_TOKEN|$T/bin/wtool.exe" "tok-noext|sops|MY_TOKEN|$T/bin/wtool" "tok-dual|sops|MY_TOKEN|$T/bin/dual.exe"
+  for c in "$T/bin/wtool" "$T/bin/wtool.exe" "$(cygpath -w "$T/bin/wtool.exe")" "$(cygpath -w "$T/bin/wtool")" "$(cygpath -m "$T/bin/wtool.exe")"; do
+    UNAME=$RW broker as_main run tok-w -- "$c" MY_TOKEN; rc=$?
+    check "winreal_exe_resolves_to_listed_path_[$c]" all ok_rc "stdout_is '$KC_VAL'"
+  done
+  PATH="$T/bin:$PATH" UNAME=$RW broker as_main run tok-w -- wtool MY_TOKEN; rc=$?
+  check winreal_bare_name_resolves_to_exe all ok_rc "stdout_is '$KC_VAL'"
+  UNAME=$RW broker as_main run tok-noext -- "$T/bin/wtool" MY_TOKEN; rc=$?
+  check winreal_allowlist_without_exe_suffix_does_not_match all bad_rc "not_called '^wincred'" "no_dummy '$T/stdout'" "stderr_has '$T/bin/wtool.exe'"
+  # 同目錄同時有 dual（腳本）與 dual.exe：清單只列 dual.exe 時，呼叫 dual 不能被當成 dual.exe
+  UNAME=$RW broker as_main run tok-dual -- "$T/bin/dual" MY_TOKEN; rc=$?
+  check winreal_script_shadowing_exe_not_allowed all bad_rc not_run "not_called '^wincred'"
+  UNAME=$RW broker as_main run tok-dual -- "$T/bin/dual.exe" MY_TOKEN; rc=$?
+  check winreal_listed_exe_next_to_script_ok all ok_rc "stdout_is '$KC_VAL'"
+  default_table
+
+  # --- 真正的 _wincred 啟動流程，PowerShell 換成會記錄環境、argv 與 stdin 的假程式 ---
+  FAKEPS="$T/bin/fake-ps"
+  cat > "$FAKEPS" <<EOF
+#!/bin/bash
+/usr/bin/env > "$T/psenv"
+printf '%s\n' "\$@" > "$T/psargv"
+/usr/bin/cat > "$T/psstdin"
+[ -f "$T/psreply" ] && /usr/bin/cat "$T/psreply"
+[ -f "$T/psreply-err" ] && /usr/bin/cat "$T/psreply-err" >&2
+exit "\$(/usr/bin/cat "$T/psrc" 2>/dev/null || echo 0)"
+EOF
+  chmod 755 "$FAKEPS"
+  ps_reply() { /bin/rm -f "$T/psenv" "$T/psargv" "$T/psstdin" "$T/psreply-err"; printf '%b' "$2" > "$T/psreply"; printf '%s' "$1" > "$T/psrc"; }
+  polluted() {   # 呼叫端把會影響 .NET / PowerShell / MSYS 的變數全部弄髒
+    COR_ENABLE_PROFILING=1 COR_PROFILER='{EVIL-EVIL}' COR_PROFILER_PATH='C:\evil\p.dll' COMPLUS_Version=evil \
+      DOTNET_STARTUP_HOOKS='C:\evil\h.dll' PSModulePath='C:\evil\Modules' SystemRoot='C:\evil' TEMP='C:\evil' TMP='C:\evil' \
+      MSYSTEM=EVIL MSYS_NO_PATHCONV=1 MSYS2_ENV_CONV_EXCL='*' AS_WC_OP=evil AS_WC_TARGET=evil "$@"
+  }
+  ps_reply 0 "$KC_VAL"
+  UNAME=$RW REAL_BACKEND=2 FAKE_PS="$FAKEPS" STDIN="$T/in" polluted broker as_main run MY_SIMPLE -- "$HELPER" MY_SIMPLE; rc=$?
+  expect_ok winreal_launcher_get "$KC_VAL"
+  check winreal_launcher_env_pollution_does_not_reach_powershell all "[ -s '$T/psenv' ]" "! grep -qi 'evil' '$T/psenv'" \
+    "! grep -qi '^COR_\\|^COMPLUS_\\|^DOTNET_\\|^MSYS_NO_PATHCONV\\|^MSYS2_ENV_CONV_EXCL' '$T/psenv'"
+  check winreal_launcher_fixed_env all "grep -qi '^PSModulePath=C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1\\.0\\\\Modules$' '$T/psenv'" \
+    "grep -qi '^SystemRoot=C:\\\\Windows$' '$T/psenv'" "grep -qx 'MSYSTEM=MSYS' '$T/psenv'" "grep -qx 'MSYS2_ARG_CONV_EXCL=\\*' '$T/psenv'" \
+    "grep -qx 'AS_WC_OP=get' '$T/psenv'" "grep -qx 'AS_WC_TARGET=agent-secret/simple/MY_SIMPLE' '$T/psenv'"
+  # env -i 之後只剩 broker 給的變數，加上 bash 與 MSYS runtime 自己補的
+  sed 's/=.*//' "$T/psenv" | sort -u > "$T/psenv-names"
+  check winreal_launcher_env_allowlist all "[ -z \"\$(grep -vix 'SystemRoot\\|TEMP\\|TMP\\|PATH\\|MSYSTEM\\|PSModulePath\\|MSYS2_ARG_CONV_EXCL\\|AS_WC_OP\\|AS_WC_TARGET\\|WINDIR\\|PWD\\|SHLVL\\|_\\|OLDPWD' '$T/psenv-names')\" ]"
+  check winreal_launcher_argv all "grep -qx -- '-NoProfile' '$T/psargv'" "grep -qx -- '-NonInteractive' '$T/psargv'" "grep -qx -- '-EncodedCommand' '$T/psargv'" "no_dummy '$T/psargv' '$T/psenv'"
+  tail -n 1 "$T/psargv" | base64 -d 2>/dev/null | iconv -f UTF-16LE -t UTF-8 > "$T/pssrc" 2>/dev/null
+  check winreal_launcher_script_is_the_embedded_source all "grep -q 'public static class AsWinCred' '$T/pssrc'" "grep -q 'GetLastWin32Error' '$T/pssrc'" "grep -q 'StringComparison.Ordinal' '$T/pssrc'"
+  check winreal_launcher_get_stdin_is_devnull all "[ -f '$T/psstdin' ]" "[ ! -s '$T/psstdin' ]"
+  ps_reply 0 "$KC_VAL"
+  UNAME=$RW REAL_BACKEND=2 FAKE_PS="$FAKEPS" STDIN="$T/in" broker as_main run MY_SIMPLE -- cat; rc=$?
+  check winreal_launcher_run_preserves_caller_stdin all ok_rc "stdout_is '$PUT_VAL'" "[ ! -s '$T/psstdin' ]"
+  ps_reply 0 "$WOK"
+  UNAME=$RW REAL_BACKEND=2 FAKE_PS="$FAKEPS" STDIN="$T/in" polluted broker as_main put MY_SIMPLE; rc=$?
+  check winreal_launcher_put all ok_rc "file_is '$T/psstdin' '$PUT_VAL'" "[ \"\$(wc -c < '$T/psstdin' | tr -d ' ')\" = ${#PUT_VAL} ]" \
+    "grep -qx 'AS_WC_OP=put' '$T/psenv'" "no_dummy '$T/psargv' '$T/psenv' '$T/stderr' '$T/stdout'" "! grep -qi 'evil' '$T/psenv'"
+  ps_reply 0 "$WEND"
+  UNAME=$RW REAL_BACKEND=2 FAKE_PS="$FAKEPS" STDIN="$T/in" broker as_main list; rc=$?
+  check winreal_launcher_list_stdin_is_devnull all ok_rc "grep -qx 'AS_WC_OP=names' '$T/psenv'" "[ ! -s '$T/psstdin' ]"
+  # 找不到要兩個訊號：exit code 3 加 stdout 的 sentinel
+  ps_reply 3 "$NF"
+  UNAME=$RW REAL_BACKEND=2 FAKE_PS="$FAKEPS" broker eval 'as_paths; backend_wincred get MY_SIMPLE; builtin printf "rc=%s" "$?"'; rc=$?
+  check winreal_launcher_notfound_two_signals stdout_is 'rc=3'
+  ps_reply 3 ''; printf 'AS-WINCRED-NOT-FOUND\n' > "$T/psreply-err"
+  UNAME=$RW REAL_BACKEND=2 FAKE_PS="$FAKEPS" broker eval 'as_paths; backend_wincred get MY_SIMPLE; builtin printf "rc=%s" "$?"'; rc=$?
+  check winreal_launcher_sentinel_on_stderr_is_error stdout_is 'rc=1'
+  ps_reply 0 "$NF"
+  UNAME=$RW REAL_BACKEND=2 FAKE_PS="$FAKEPS" broker eval 'as_paths; backend_wincred get MY_SIMPLE; builtin printf "rc=%s" "$?"'; rc=$?
+  check winreal_launcher_sentinel_with_rc0_is_error stdout_is 'rc=1'
+  ps_reply 0 "$KC_VAL\r"
+  UNAME=$RW REAL_BACKEND=2 FAKE_PS="$FAKEPS" broker as_main run MY_SIMPLE -- "$HELPER" MY_SIMPLE; rc=$?
+  expect_deny winreal_launcher_trailing_cr_rejected
+  check winreal_launcher_trailing_cr_no_fallthrough stderr_has 'Credential Manager 讀取失敗'
+  # PowerShell 起不來：檔案不存在、不是可執行的東西 —— 都是錯誤，不會被當成「找不到」而落到 sops
+  printf '%s\n' 'MY_SIMPLE: ENC[AES256_GCM,data:FAKE,type:str]' 'sops:' '    age: []' > "$FAKE_HOME/dotfile/secrets/agent.enc.yaml"
+  printf 'not a program' > "$T/bin/broken-ps"; chmod 755 "$T/bin/broken-ps"
+  for ps in "$T/bin/no-such-powershell.exe" "$T/bin/broken-ps" "$T/bin"; do
+    UNAME=$RW REAL_BACKEND=2 FAKE_PS="$ps" broker eval 'as_paths; backend_wincred get MY_SIMPLE; builtin printf "rc=%s" "$?"'; rc=$?
+    check "winreal_powershell_cannot_start_is_error_not_3_[${ps##*/}]" stdout_is 'rc=1'
+    UNAME=$RW REAL_BACKEND=2 FAKE_PS="$ps" broker as_main run MY_SIMPLE -- "$HELPER" MY_SIMPLE; rc=$?
+    check "winreal_powershell_cannot_start_fail_closed_[${ps##*/}]" all bad_rc not_run "stderr_has 'Credential Manager 讀取失敗'" "! grep -q 'sops 讀取失敗' '$T/stderr'"
+    UNAME=$RW REAL_BACKEND=2 FAKE_PS="$ps" broker as_main list; rc=$?
+    check "winreal_powershell_cannot_start_list_fails_[${ps##*/}]" all bad_rc "stderr_has '無法列舉簡易模式的名稱: wincred'"
+  done
+
+  # --- 真正的 _sops：scoop 的 sops.exe（假程式）、路徑自己轉成 Windows 寫法、呼叫端的 MSYS 與 SOPS 設定進不去 ---
+  mkdir -p "$FAKE_HOME/scoop/shims" "$FAKE_HOME/scoop/apps/sops/current" "$FAKE_HOME/.age"
+  mk_fake_sops() {
+    cat > "$1" <<EOF
+#!/bin/bash
+/usr/bin/env > "$T/sopsenv"
+printf '%s\n' "\$@" > "$T/sopsargv"
+printf '%s' "$2"
+EOF
+    chmod 755 "$1"
+  }
+  mk_fake_sops "$FAKE_HOME/scoop/shims/sops.exe" 'DUMMY-NOT-A-SECRET-SHIM'
+  ps_reply 3 "$NF"
+  UNAME=$RW REAL_BACKEND=2 FAKE_PS="$FAKEPS" MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' MSYS2_ENV_CONV_EXCL='*' \
+    SOPS_AGE_KEY=AGE-SECRET-KEY-DUMMY SOPS_AGE_KEY_FILE=/evil/key.txt SOPS_AGE_KEY_CMD=evil-cmd \
+    broker as_main run MY_SIMPLE -- "$HELPER" MY_SIMPLE; rc=$?
+  expect_ok winreal_sops_scoop_shim_used 'DUMMY-NOT-A-SECRET-SHIM'
+  check winreal_sops_logs_backend stderr_has 'name=MY_SIMPLE backend=sops mode=simple'
+  printf '%s\n' '-d' '--extract' '["MY_SIMPLE"]' "$(cygpath -w "$FAKE_HOME/dotfile/secrets/agent.enc.yaml")" > "$T/expect-sopsargv"
+  check winreal_sops_argv_windows_path cmp -s "$T/expect-sopsargv" "$T/sopsargv"
+  check winreal_sops_env all "grep -qxF 'SOPS_AGE_KEY_FILE=$(cygpath -w "$FAKE_HOME/.age/key.txt")' '$T/sopsenv'" \
+    "grep -qxF 'HOME=$(cygpath -w "$FAKE_HOME")' '$T/sopsenv'" "grep -qxF 'USERPROFILE=$(cygpath -w "$FAKE_HOME")' '$T/sopsenv'" \
+    "grep -qxF 'APPDATA=$(cygpath -w "$FAKE_HOME")\\AppData\\Roaming' '$T/sopsenv'" \
+    "! grep -q '^SOPS_AGE_KEY=\\|^SOPS_AGE_KEY_CMD=\\|^MSYS_NO_PATHCONV=\\|^MSYS2_ARG_CONV_EXCL=\\|^MSYS2_ENV_CONV_EXCL=\\|evil' '$T/sopsenv'"
+  mk_fake_sops "$FAKE_HOME/scoop/apps/sops/current/sops.exe" 'DUMMY-NOT-A-SECRET-APP'
+  ps_reply 3 "$NF"
+  UNAME=$RW REAL_BACKEND=2 FAKE_PS="$FAKEPS" broker as_main run MY_SIMPLE -- "$HELPER" MY_SIMPLE; rc=$?
+  expect_ok winreal_sops_scoop_app_preferred_over_shim 'DUMMY-NOT-A-SECRET-APP'
+  # 非 Windows 平台不找家目錄底下的 scoop
+  ps_reply 3 "$NF"
+  UNAME=Linux REAL_BACKEND=2 broker as_main run MY_SIMPLE -- "$HELPER" MY_SIMPLE; rc=$?
+  check winreal_scoop_sops_not_used_off_windows all bad_rc not_run
+  /bin/rm -rf "$FAKE_HOME/scoop" "$FAKE_HOME/dotfile/secrets/agent.enc.yaml"
+fi
+default_table
 
 # === envfile（非 macOS 的本機來源，Miyago 2026-11-07）===
 # backend_envfile 不 stub：直接讀寫暫存家目錄裡的 secrets.env；UNAME 決定平台。
@@ -984,6 +1535,10 @@ EF_DIR="$FAKE_HOME/.config/agent-secret"
 EF_VAL='DUMMY-NOT-A-SECRET-EF'
 write_ef() { /bin/rm -f "$EF"; printf '%s\n' "$@" > "$EF"; chmod 600 "$EF"; }
 ef_mode() { stat -c '%a' "$1" 2>/dev/null || stat -f '%Lp' "$1"; }
+# Git Bash 的 mode 是合成的，broker 自己 chmod 的結果讀不回來：Windows 主機上不比對 mode（權限拒絕的 case 仍以 MODES 照跑）
+ef_mode_is() { [ $WIN = 1 ] && return 0; [ "$(ef_mode "$1")" = "$2" ]; }
+# Git Bash 的 ln -s 預設複製檔案；建不出真正的 symlink 時，Windows 主機略過 symlink 的 case（其他主機照常失敗）
+ef_symlink_ok() { [ -L "$EF" ] || [ $WIN = 0 ]; }
 no_tmp() { local f; for f in "$EF_DIR"/.secrets.env.*; do [ -e "$f" ] && return 1; done; return 0; }
 write_table "tok-sops|sops|MY_TOKEN|$HELPER" "tok-kc|keychain-only|MY_TOKEN|$HELPER" \
   "tok-multi|sops|MY_TOKEN|$HELPER" "tok-lit|sops|MY_TOKEN|$HELPER" "tok-dup|sops|MY_TOKEN|$HELPER" \
@@ -1045,7 +1600,7 @@ ef_deny() { # <case> <stderr 片段>
 for m in 644 640 604 400 700 660 666; do chmod "$m" "$EF"; ef_deny "ef_mode_${m}_denied" 'mode'; done
 chmod 600 "$EF"
 /bin/mv "$EF" "$T/ef-target"; ln -s "$T/ef-target" "$EF"
-ef_deny ef_symlink_denied 'symlink'
+ef_symlink_ok && ef_deny ef_symlink_denied 'symlink'
 /bin/rm -f "$EF"; /bin/mv "$T/ef-target" "$EF"
 chmod 770 "$EF_DIR"; ef_deny ef_dir_group_writable_denied '所在目錄'
 chmod 702 "$EF_DIR"; ef_deny ef_dir_other_writable_denied '所在目錄'
@@ -1068,11 +1623,46 @@ KC=found SP=notfound broker as_main list; rc=$?
 check ef_macos_list_na all ok_rc "grep -qx 'tok-sops	sops	keychain=yes	sops=no	envfile=n/a	env=MY_TOKEN	cmds=$HELPER' '$T/stdout'"
 cp -p "$EF" "$T/ef-before"
 SP=notfound STDIN="$T/in" broker as_main put tok-sops; rc=$?
-check ef_macos_put_uses_keychain all ok_rc "called '^keychain put tok-sops sops$'" "cmp -s '$EF' '$T/ef-before'" "[ \"\$(ef_mode '$EF')\" = 666 ]"
+check ef_macos_put_uses_keychain all ok_rc "called '^keychain put tok-sops sops$'" "cmp -s '$EF' '$T/ef-before'" "ef_mode_is '$EF' 666"
 chmod 600 "$EF"
-# 真正的入口（不 stub uname）：macOS 走 Keychain，其他平台走 envfile
+
+# --- Windows 永遠不碰 envfile：本機儲存區是 Credential Manager，壞掉的 envfile 不影響，有值也不用 ---
+UNAME=$W KC=found SP=found broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+expect_ok ef_windows_uses_wincred "$KC_VAL"
+check ef_windows_logs_backend all "called '^wincred get tok-sops$'" "stderr_has 'alias=tok-sops backend=wincred'" "not_called '^sops'"
+UNAME=$W KC=notfound SP=found broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+expect_ok ef_windows_ignores_envfile_value "$SOPS_VAL"
+UNAME=$W KC=notfound SP=found broker as_main run MY_SIMPLE -- "$HELPER" MY_SIMPLE; rc=$?
+expect_ok ef_windows_simple_ignores_envfile "$SOPS_VAL"
+UNAME=$W KC=error SP=found broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+check ef_windows_wincred_error_no_envfile_no_sops all bad_rc not_run "not_called '^sops'" "! grep -q envfile '$T/stderr'"
+UNAME=$W KC=found broker as_main run tok-kc -- "$HELPER" MY_TOKEN; rc=$?
+expect_ok ef_windows_keychain_only_uses_wincred "$KC_VAL"
+UNAME=$W KC=notfound SP=found broker as_main run tok-kc -- "$HELPER" MY_TOKEN; rc=$?
+check ef_windows_keychain_only_miss_fail_closed all bad_rc not_run "not_called '^sops'"
+chmod 666 "$EF"
+UNAME=$W KC=found broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
+expect_ok ef_windows_ignores_bad_envfile "$KC_VAL"
+UNAME=$W KC=found SP=notfound WC_LIST='alias/tok-sops
+simple/MY_SIMPLE
+' broker as_main list; rc=$?
+check ef_windows_list_no_envfile_column all ok_rc "grep -qx 'tok-sops	sops	wincred=yes	sops=no	env=MY_TOKEN	cmds=$HELPER' '$T/stdout'" \
+  "grep -qx 'MY_SIMPLE	simple	wincred=yes	sops=no' '$T/stdout'" "! grep -q 'envfile' '$T/stdout'" "! grep -q 'envfile' '$T/stderr'"
+cp -p "$EF" "$T/ef-before"
+UNAME=$W SP=notfound STDIN="$T/in" broker as_main put tok-sops; rc=$?
+check ef_windows_put_uses_wincred all ok_rc "called '^wincred put tok-sops sops$'" "stderr_has 'backend=wincred'" "cmp -s '$EF' '$T/ef-before'" no_tmp "no_dummy '$T/stderr' '$T/stdout'"
+UNAME=$W SP=notfound STDIN="$T/in" broker as_main put MY_SIMPLE; rc=$?
+check ef_windows_put_simple_uses_wincred all ok_rc "called '^wincred put MY_SIMPLE simple$'" "cmp -s '$EF' '$T/ef-before'" no_tmp
+UNAME=$W KC=found broker as_main rm MY_SIMPLE; rc=$?
+check ef_windows_rm_uses_wincred all ok_rc "called '^wincred delete MY_SIMPLE$'" "cmp -s '$EF' '$T/ef-before'"
+chmod 600 "$EF"
+# 真正的入口（不 stub uname）：macOS 走 Keychain，Windows 走 Credential Manager，其他平台走 envfile
 entry run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
-if [ "$REAL_OS" = Darwin ]; then expect_ok ef_entry_real_os "$KC_VAL"; else expect_ok ef_entry_real_os "$EF_VAL"; fi
+if [ "$REAL_OS" = Darwin ]; then expect_ok ef_entry_real_os "$KC_VAL"
+elif [ $WIN = 1 ]; then
+  expect_ok ef_entry_real_os "$KC_VAL"
+  check ef_entry_real_os_windows_backend all "called '^wincred-ps get'" "stderr_has 'backend=wincred'" "not_called '^sops-bin'"
+else expect_ok ef_entry_real_os "$EF_VAL"; fi
 
 # --- list（Linux）：只列 key 名稱，不讀值 ---
 UNAME=Linux SP=notfound broker as_main list; rc=$?
@@ -1087,13 +1677,13 @@ chmod 600 "$EF"
 # --- put（Linux）：umask 077、目錄 700、檔案 600，取代既有 key ---
 /bin/rm -rf "$EF_DIR"
 UNAME=Linux SP=notfound STDIN="$T/in" broker as_main put MY_SIMPLE; rc=$?
-check ef_put_creates all ok_rc "[ -f '$EF' ]" "[ ! -L '$EF' ]" "[ \"\$(ef_mode '$EF')\" = 600 ]" "[ \"\$(ef_mode '$EF_DIR')\" = 700 ]" "grep -qx 'MY_SIMPLE=$PUT_VAL' '$EF'" no_tmp
+check ef_put_creates all ok_rc "[ -f '$EF' ]" "[ ! -L '$EF' ]" "ef_mode_is '$EF' 600" "ef_mode_is '$EF_DIR' 700" "grep -qx 'MY_SIMPLE=$PUT_VAL' '$EF'" no_tmp
 check ef_put_no_keychain_no_leak all "not_called '^keychain'" "no_dummy '$T/stderr' '$T/stdout' '$CALLS'" "stderr_has 'backend=envfile'"
 write_table "tok-sops|sops|MY_TOKEN|$HELPER" "tok-kc|keychain-only|MY_TOKEN|$HELPER"
 write_ef '# keep me' 'OTHER_NAME=DUMMY-NOT-A-SECRET-OTHER' 'tok-sops=DUMMY-NOT-A-SECRET-OLD' 'tok-sops=DUMMY-NOT-A-SECRET-OLD2' 'tok-sops-x=keep'
 UNAME=Linux SP=notfound STDIN="$T/in" broker as_main put tok-sops; rc=$?
 printf '%s\n' '# keep me' 'OTHER_NAME=DUMMY-NOT-A-SECRET-OTHER' 'tok-sops-x=keep' "tok-sops=$PUT_VAL" > "$T/ef-expect"
-check ef_put_replaces all ok_rc "cmp -s '$EF' '$T/ef-expect'" "[ \"\$(ef_mode '$EF')\" = 600 ]" no_tmp
+check ef_put_replaces all ok_rc "cmp -s '$EF' '$T/ef-expect'" "ef_mode_is '$EF' 600" no_tmp
 UNAME=Linux broker as_main run tok-sops -- "$HELPER" MY_TOKEN; rc=$?
 expect_ok ef_put_then_run "$PUT_VAL"
 cp -p "$EF" "$T/ef-before"
@@ -1106,7 +1696,13 @@ UNAME=Linux SP=error STDIN="$T/in" broker as_main put tok-sops; rc=$?; ef_put_de
 UNAME=Linux SP=notfound STDIN="$T/multi" broker as_main put tok-sops; rc=$?; ef_put_deny ef_put_multiline
 UNAME=Linux SP=notfound STDIN="$T/ctl" broker as_main put tok-sops; rc=$?; ef_put_deny ef_put_control_char
 printf 'DUMMY-NOT-A-SECRET-CR\r\n' > "$T/cr"
-UNAME=Linux SP=notfound STDIN="$T/cr" broker as_main put tok-sops; rc=$?; ef_put_deny ef_put_carriage_return
+# Git Bash 的 $(...) 會把結尾的 CRLF 一起去掉（broker 的 cmd_put 有註明），結尾 CR 的 case 只在其他主機跑；
+# 值中間的 CR 每個主機都要拒絕
+if [ $WIN = 0 ]; then
+  UNAME=Linux SP=notfound STDIN="$T/cr" broker as_main put tok-sops; rc=$?; ef_put_deny ef_put_carriage_return
+fi
+printf 'DUMMY-NOT-A-SECRET\rCR\n' > "$T/cr"
+UNAME=Linux SP=notfound STDIN="$T/cr" broker as_main put tok-sops; rc=$?; ef_put_deny ef_put_inner_carriage_return
 UNAME=Linux SP=notfound STDIN=/dev/null broker as_main put tok-sops; rc=$?; ef_put_deny ef_put_empty
 UNAME=Linux SP=notfound STDIN="$T/in" broker as_main put unknown-alias; rc=$?; ef_put_deny ef_put_unknown_alias
 UNAME=Linux SP=notfound STDIN="$T/in" broker as_main put PATH; rc=$?; ef_put_deny ef_put_denylisted_name
@@ -1120,7 +1716,7 @@ UNAME=Linux SP=notfound STDIN="$T/in" broker as_main put MY_SIMPLE; rc=$?; ef_pu
 chmod 700 "$EF_DIR"
 /bin/mv "$EF" "$T/ef-target"; ln -s "$T/ef-target" "$EF"; cp -p "$T/ef-target" "$T/ef-target-before"
 UNAME=Linux SP=notfound STDIN="$T/in" broker as_main put tok-sops; rc=$?
-check ef_put_symlink_refused all bad_rc "[ -L '$EF' ]" "cmp -s '$T/ef-target' '$T/ef-target-before'" no_tmp "stderr_has 'symlink'" "no_dummy '$T/stderr'"
+ef_symlink_ok && check ef_put_symlink_refused all bad_rc "[ -L '$EF' ]" "cmp -s '$T/ef-target' '$T/ef-target-before'" no_tmp "stderr_has 'symlink'" "no_dummy '$T/stderr'"
 /bin/rm -f "$EF" "$T/ef-target" "$T/ef-target-before" "$T/ef-before" "$T/ef-expect"
 default_table
 
