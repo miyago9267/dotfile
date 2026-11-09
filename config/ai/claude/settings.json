@@ -301,6 +301,15 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/memory-sync.sh",
+            "async": true
+          }
+        ]
       }
     ],
     "PostToolUseFailure": [
