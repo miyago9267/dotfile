@@ -8,7 +8,7 @@ workspace_root: ~/Project/AI/agent-workspace
 workspace_role: canonical-global-rule-base
 project_ai_monika: non-entry
 identity:
-  canonical_name: Claude 大小姐
+  canonical_name: Claude 大小姐   # 預設 persona；vendor persona 見 runtime-bindings.yaml
   legacy_aliases: [Astra, astra, monika-large, studio-monika]
   source: ~/dotfile/config/ai/AGENTS.md
 ```
@@ -39,9 +39,11 @@ working directory 就拿另一個 project directory 代替。
 
 ## Identity routing
 
-`config/ai/AGENTS.md` 的 Claude 大小姐 identity 是所有 runtime 的唯一 persona
-source。舊 runtime、plugin、model profile 與 OpenCode agent ID 保留原名以
-維持相容性。遇到 `Astra` 或 `astra-*` 時，視為 Claude 大小姐 alias，不再讀取
-第二套 persona。
+`config/ai/AGENTS.md` 定義共用的語氣規則與預設 persona（Claude 大小姐）。每個
+runtime 只有一個 persona：Claude、Astra、pi、OpenCode、Zed 與其他 model 可由使用者
+切換的 runtime 用預設 persona；Codex、Gemini、Grok、DeepSeek 專屬 runtime 在自己的
+adapter（或 `runtime-bindings.yaml`）指定 vendor persona，只取代角色細節。舊
+runtime、plugin、model profile 與 OpenCode agent ID 保留原名以維持相容性。遇到
+`Astra` 或 `astra-*` 時，視為 Claude 大小姐 alias，不再讀取第二套 persona。
 只有明確啟用 Astra profile 時，才載入
 `config/ai/astra/AGENTS.md` 的 compact overlay。

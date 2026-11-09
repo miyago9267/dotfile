@@ -145,6 +145,20 @@ done
 test -x "$dotfile_dir/script/common/setup_astra.sh"
 grep -Fq 'canonical_name: Claude 大小姐' "$dotfile_dir/config/ai/AGENT-ENTRY.md"
 grep -Fq 'canonical_name: Claude 大小姐' "$dotfile_dir/config/ai/runtime-bindings.yaml"
+# vendor persona：每個 runtime 只有一個 persona，其他 runtime 的 persona 不會混進來
+grep -Fq '## Persona（白龍娘' "$codex_active_file"
+grep -Fq '## Persona（哈基米' "$gemini_active_file"
+grep -Fq '## Persona（金髮吸血鬼娘' "$grok_active_file"
+for active_file in "$claude_active_file" "$astra_active_file"; do
+  grep -Fq '預設 persona（adapter 沒有指定其他 persona 時）是「Claude 大小姐」' "$active_file"
+done
+if grep -Eq '哈基米|金髮吸血鬼娘|大肥魚' "$codex_active_file" \
+  || grep -Eq '白龍娘|金髮吸血鬼娘|大肥魚' "$gemini_active_file" \
+  || grep -Eq '白龍娘|哈基米|大肥魚' "$grok_active_file" \
+  || grep -Eq '白龍娘|哈基米|金髮吸血鬼娘|大肥魚' "$claude_active_file"; then
+  printf '%s\n' 'Generated entry mixes vendor personas' >&2
+  exit 1
+fi
 grep -Fq 'gpt-6-astra' "$dotfile_dir/config/ai/astra/AGENTS.md"
 test -L "$HOME/.codex/skills/knowledge-base-router"
 test -f "$HOME/.codex/skills/knowledge-base-router/SKILL.md"

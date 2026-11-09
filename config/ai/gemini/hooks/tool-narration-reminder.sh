@@ -33,7 +33,7 @@ jq -n --arg tools "$silent_tools" '{
   injectSteps: [
     {
       systemMessage: {
-        systemMessage: ("上一動無聲呼叫了工具（" + $tools + "）而沒有輸出文字。這一步請先用一兩句話（維持 Claude 大小姐語氣）向 Miyago 交代剛才做了什麼、看到什麼，以及接下來要做什麼，不要只讓 tool call 無聲閃過。")
+        systemMessage: ("上一動無聲呼叫了工具（" + $tools + "）而沒有輸出文字。這一步請先用一兩句話（維持你的 persona 語氣）向 Miyago 交代剛才做了什麼、看到什麼，以及接下來要做什麼，不要只讓 tool call 無聲閃過。")
       }
     }
   ]

@@ -25,6 +25,16 @@ identity:
     - monika-large
     - studio-monika
   compatibility: "舊 runtime entry、plugin name 與 agent ID 保留；它們只提供 adapter，不提供第二套 persona"
+  persona_policy: >-
+    語氣與溝通規則所有 runtime 共用；canonical_name 是預設 persona。每個 runtime 只有一個
+    persona，由 runtime 的 persona 欄位指定，且只取代角色細節。model 可由使用者切換的
+    runtime（Claude、astra、pi、OpenCode、Zed）維持預設 persona。
+  persona_source: "形象取自 B 站畫師 ZipZipPipe（胖次狐）的社群 AI 娘二創，非官方設定，只當語氣風味"
+  vendor_personas:
+    codex: 白龍娘（Codex 工程變體）
+    gemini: 哈基米（Gemini 貓娘）
+    grok: 金髮吸血鬼娘
+    deepseek: 大肥魚（鯨魚娘）
 
 audit_state:
   audited_at: 2026-08-19
@@ -92,6 +102,7 @@ mechanisms:
 runtimes:
   claude:
     family: claude-code
+    persona: Claude 大小姐
     source_root: ~/dotfile/config/ai/claude
     adapter_source: ~/dotfile/config/ai/claude/AGENTS.md
     target_root: ~/.claude
@@ -122,6 +133,7 @@ runtimes:
 
   codex:
     family: codex-cli
+    persona: 白龍娘（Codex 工程變體）
     source_root: ~/dotfile/config/ai/codex
     adapter_source: ~/dotfile/config/ai/codex/AGENTS.md
     target_root: ~/.codex
@@ -158,6 +170,7 @@ runtimes:
 
   astra:
     family: codex-model-profile
+    persona: Claude 大小姐
     source_root: ~/dotfile/config/ai/astra
     adapter_source: ~/dotfile/config/ai/astra/AGENTS.md
     target_root: "explicit ASTRA_TARGET_ROOT"
@@ -188,6 +201,7 @@ runtimes:
 
   gemini:
     family: gemini-cli
+    persona: 哈基米（Gemini 貓娘）
     source_root: ~/dotfile/config/ai/gemini
     adapter_source: ~/dotfile/config/ai/gemini/GEMINI.md
     target_root: ~/.gemini
@@ -221,6 +235,7 @@ runtimes:
 
   grok:
     family: grok-cli
+    persona: 金髮吸血鬼娘
     source_root: ~/dotfile/config/ai/grok
     adapter_source: ~/dotfile/config/ai/grok/AGENTS.md
     target_root: ~/.grok
@@ -247,6 +262,7 @@ runtimes:
 
   opencode-daily:
     family: opencode
+    persona: Claude 大小姐
     source_root: ~/dotfile/config/opencode
     adapter_source: ~/dotfile/config/opencode/AGENTS.md
     target_root: ~/.config/opencode
@@ -275,6 +291,7 @@ runtimes:
 
   opencode-harness:
     family: opencode
+    persona: Claude 大小姐
     source_root: ~/dotfile/config/opencode-harness
     adapter_source: null
     target_root: ~/.config/opencode-harness
@@ -298,6 +315,7 @@ runtimes:
 
   opencode-studio:
     family: opencode
+    persona: Claude 大小姐
     source_root: ~/dotfile/config/opencode-studio
     adapter_source: ~/dotfile/config/opencode-studio/AGENTS.md
     target_root: ~/.config/opencode-studio
@@ -321,6 +339,8 @@ runtimes:
 
   deepseek-harness:
     family: deepseek-harness
+    persona: 大肥魚（鯨魚娘）
+    persona_brief: "藍長髮、鯨魚耳鰭與大尾巴、深藍白女僕裝；傲嬌，偶爾迷糊犯錯但會認真補好，會自嘲 DeepSleep；不使用『以貓娘回答』之類的迷因。尚無 adapter 檔，安裝後再落地。"
     ownership: official-deepseek
     installation: "npx @deepseek-ai/dsh web"
     source_root: external-not-installed
@@ -364,6 +384,7 @@ runtimes:
 
   deepseek-tui:
     family: deepseek-tui
+    persona: 大肥魚（鯨魚娘）
     ownership: community
     installation: "npm install -g deepseek-tui or cargo install deepseek-tui-cli"
     source_root: external-not-installed

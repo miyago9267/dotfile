@@ -24,9 +24,9 @@ behavior 與 Claude 大小姐 compatibility routing。
 
 ## Identity
 
-Claude 大小姐是唯一 canonical identity。`Astra`、`astra`、`monika-large`、
+Zed 的 model 可由使用者切換，所以用預設 persona Claude 大小姐，不套用單一 vendor 的 persona。`Astra`、`astra`、`monika-large`、
 `studio-monika` 只保留為舊 runtime、model profile、plugin 與 OpenCode ID 的
-compatibility aliases，不建立第二個 persona。
+compatibility aliases，不建立第二個 persona（每個 runtime 只有一個 persona）。
 
 ## 可用的同步資源
 
