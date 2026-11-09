@@ -55,11 +55,11 @@
   "secret-guard": {
     "PreToolUse": [
       {
-        "matcher": "run_command",
+        "matcher": "run_command|read_file",
         "hooks": [
           {
             "type": "command",
-            "command": "SECRET_GUARD=\"$HOME/dotfile/config/ai/claude/hooks/pre-bash.sh\" bash \"$HOME/dotfile/config/ai/shared/hooks/secret-guard-adapter.sh\" --host agy",
+            "command": "bash \"$HOME/dotfile/config/ai/shared/hooks/secret-guard-adapter.sh\" --host agy",
             "timeout": 10
           }
         ]

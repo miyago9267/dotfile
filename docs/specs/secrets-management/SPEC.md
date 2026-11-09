@@ -290,7 +290,7 @@ Claude 的邊界是 `settings.json` 的 `Read(...)` deny 加 `secret-guard.sh`�
 | --- | --- | --- | --- |
 | Codex | `setup_codex.sh` 把 `secret-guard.sh` 註冊到 `PreToolUse`（matcher `Bash`） | 未做，另案 | 跑 `setup_codex.sh` 後 |
 | OpenCode | `plugins/secret-guard.js` 在 `tool.execute.before` 經 adapter 呼叫 guard，命中就 throw | `opencode.json` 的 `permission.read` | `~/.config/opencode` 是 symlink，下次啟動 |
-| agy | `hooks.json` 的 `secret-guard` 區塊（`PreToolUse`，matcher `run_command`）經 adapter | `antigravity-cli/settings.json` 的 `read_file` / `write_file` deny | hooks 是 symlink，立即；settings 要跑 `setup_gemini.sh` |
+| agy | `hooks.json` 的 `secret-guard` 區塊（`PreToolUse`，matcher `run_command\|read_file`）經 adapter；agy 另有分級：讀憑證 `force_ask`、不可逆操作 deny（見 adapter header） | `antigravity-cli/settings.json` 的 `write_file` deny；憑證 `read_file` 放 ask，交給 hook 的 `force_ask` | hooks 是 symlink，立即；settings 要跑 `setup_gemini.sh` |
 | Grok | 未做 | 未做 | -- |
 
 有官方文件支持的部分：
