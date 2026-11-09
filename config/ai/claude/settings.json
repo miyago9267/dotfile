@@ -267,6 +267,15 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/memory-sync.sh",
+            "async": true
+          }
+        ]
       }
     ],
     "Stop": [
@@ -313,6 +322,15 @@
             "type": "command",
             "command": "bash ~/dotfile/config/ai/claude/hooks/session-claim.sh end",
             "timeout": 5
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/dotfile/config/ai/claude/hooks/memory-sync.sh",
+            "timeout": 3
           }
         ]
       }

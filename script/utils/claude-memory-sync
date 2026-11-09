@@ -1,0 +1,188 @@
+#!/usr/bin/env python3
+"""Two-way sync of Claude per-project memory between this Mac and the ITRD workstation.
+
+Runs only on macOS; the workstation never has to reach the Mac. Local project dirs
+`-Users-miyago*` map to remote `-home-miyago*`. Three-way merge against the last synced
+state: one-sided edits and deletions propagate, a file edited on both sides keeps the
+newer copy (the other goes to ~/.claude/memory-sync/conflicts/), and MEMORY.md indexes
+are unioned and pruned to files that exist.
+
+Usage: claude-memory-sync [--dry-run]
+"""
+import hashlib, io, json, os, re, shutil, subprocess, sys, tarfile, time
+
+HOSTS = [["miyago@192.168.1.248"], ["-p", "4096", "miyago@211.75.42.58"]]
+LP, RP = "-Users-miyago", "-home-miyago"
+PROJ = os.path.expanduser("~/.claude/projects")
+STATE_DIR = os.path.expanduser("~/.claude/memory-sync")
+STATE = f"{STATE_DIR}/state.json"
+LINK = re.compile(r"\]\(([^)]+\.md)\)")
+DRY = "--dry-run" in sys.argv
+
+
+def ssh(host, cmd, data=None):
+    return subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=4", *host, cmd],
+                          input=data, capture_output=True, timeout=60)
+
+
+def pick_host():
+    for h in HOSTS:
+        try:
+            if ssh(h, "true").returncode == 0:
+                return h
+        except subprocess.TimeoutExpired:
+            pass
+    return None
+
+
+def lpath(k):
+    d, f = k.split("/")
+    return f"{PROJ}/{LP}{d}/memory/{f}"
+
+
+def local_tree():
+    tree = {}
+    for p in os.listdir(PROJ):
+        d = f"{PROJ}/{p}/memory"
+        if p.startswith(LP) and os.path.isdir(d):
+            for f in os.listdir(d):
+                if f.endswith(".md") and not f.startswith("._"):
+                    path = f"{d}/{f}"
+                    tree[f"{p[len(LP):]}/{f}"] = (open(path, "rb").read(), os.path.getmtime(path))
+    return tree
+
+
+def remote_tree(host):
+    cmd = (f"cd ~/.claude/projects && find . -path './{RP}*/memory/*.md' ! -name '._*' -print0"
+           " | tar czf - --null -T -")
+    r = ssh(host, cmd)
+    if r.returncode != 0:
+        raise SystemExit(f"remote tar failed: {r.stderr.decode()[-200:]}")
+    tree = {}
+    with tarfile.open(fileobj=io.BytesIO(r.stdout)) as t:
+        for m in t.getmembers():
+            if m.isfile():
+                p, _, f = m.name.lstrip("./").split("/")
+                if p.startswith(RP):
+                    tree[f"{p[len(RP):]}/{f}"] = (t.extractfile(m).read(), m.mtime)
+    return tree
+
+
+def h(b):
+    return hashlib.sha256(b).hexdigest()
+
+
+def merge_index(a, b):
+    lines = a.decode().splitlines()
+    have = {m.group(1) for l in lines if (m := LINK.search(l))}
+    lines += [l for l in b.decode().splitlines() if (m := LINK.search(l)) and m.group(1) not in have]
+    return ("\n".join(lines).rstrip("\n") + "\n").encode()
+
+
+def prune_index(content, present):
+    keep = [l for l in content.decode().splitlines() if not (m := LINK.search(l)) or m.group(1) in present]
+    return ("\n".join(keep).rstrip("\n") + "\n").encode()
+
+
+def main():
+    if sys.platform != "darwin":
+        return
+    os.makedirs(STATE_DIR, exist_ok=True)
+    lock = f"{STATE_DIR}/lock"
+    try:
+        os.mkdir(lock)
+    except FileExistsError:
+        if time.time() - os.path.getmtime(lock) < 300:
+            return
+    try:
+        host = pick_host()
+        if not host:
+            print("claude-memory-sync: workstation unreachable, skipped")
+            return
+        base = json.load(open(STATE)) if os.path.exists(STATE) else {}
+        L, R = local_tree(), remote_tree(host)
+        merged, conflicts = {}, []
+        for k in sorted(set(L) | set(R)):
+            l, r, b = L.get(k), R.get(k), base.get(k)
+            if l and r:
+                if l[0] == r[0]:
+                    merged[k] = l
+                elif b == h(l[0]):
+                    merged[k] = r
+                elif b == h(r[0]):
+                    merged[k] = l
+                elif k.endswith("/MEMORY.md"):
+                    newer, older = (l, r) if l[1] >= r[1] else (r, l)
+                    merged[k] = (merge_index(newer[0], older[0]), time.time())
+                else:
+                    newer, older = (l, r) if l[1] >= r[1] else (r, l)
+                    merged[k] = newer
+                    conflicts.append((k, older[0]))
+            else:
+                only = l or r
+                if b and b == h(only[0]):
+                    continue  # deleted on the other side, unchanged here
+                merged[k] = only
+        # prune index lines that point at files no longer present
+        dirs = {k.split("/")[0] for k in merged}
+        for d in dirs:
+            ik = f"{d}/MEMORY.md"
+            if ik in merged:
+                present = {k.split("/")[1] for k in merged if k.startswith(d + "/")}
+                pruned = prune_index(merged[ik][0], present)
+                if pruned != merged[ik][0]:
+                    merged[ik] = (pruned, time.time())
+
+        to_local = [k for k in merged if L.get(k, (None,))[0] != merged[k][0]]
+        to_remote = [k for k in merged if R.get(k, (None,))[0] != merged[k][0]]
+        del_local = [k for k in L if k not in merged]
+        del_remote = [k for k in R if k not in merged]
+        summary = (f"claude-memory-sync: ->local {len(to_local)}, ->remote {len(to_remote)}, "
+                   f"del local {len(del_local)}, del remote {len(del_remote)}, conflicts {len(conflicts)}")
+        if DRY:
+            print(summary)
+            for name, ks in [("->local", to_local), ("->remote", to_remote),
+                             ("del local", del_local), ("del remote", del_remote)]:
+                for k in ks:
+                    print(f"  {name} {k}")
+            return
+
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        for k, content in conflicts:
+            c = f"{STATE_DIR}/conflicts/{stamp}/{k}"
+            os.makedirs(os.path.dirname(c), exist_ok=True)
+            open(c, "wb").write(content)
+        for k in to_local:
+            path = lpath(k)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            open(path, "wb").write(merged[k][0])
+            os.utime(path, (merged[k][1], merged[k][1]))
+        for k in del_local:
+            os.remove(lpath(k))
+
+        if to_remote or del_remote:
+            buf = io.BytesIO()
+            with tarfile.open(fileobj=buf, mode="w:gz", format=tarfile.GNU_FORMAT) as t:
+                for k in to_remote:
+                    info = tarfile.TarInfo(f"{RP}{k.split('/')[0]}/memory/{k.split('/')[1]}")
+                    info.size, info.mtime, info.mode = len(merged[k][0]), int(merged[k][1]), 0o644
+                    t.addfile(info, io.BytesIO(merged[k][0]))
+                dl = "\n".join(f"{RP}{k.split('/')[0]}/memory/{k.split('/')[1]}" for k in del_remote).encode() + b"\n"
+                info = tarfile.TarInfo(".claude-memory-sync-delete")
+                info.size = len(dl)
+                t.addfile(info, io.BytesIO(dl))
+            cmd = ("cd ~/.claude/projects && tar xzf - && "
+                   "while IFS= read -r f; do [ -n \"$f\" ] && rm -f -- \"$f\"; done < .claude-memory-sync-delete; "
+                   "rm -f .claude-memory-sync-delete")
+            r = ssh(host, cmd, buf.getvalue())
+            if r.returncode != 0:
+                raise SystemExit(f"remote write failed: {r.stderr.decode()[-200:]}")
+
+        json.dump({k: h(v[0]) for k, v in merged.items()}, open(STATE, "w"), indent=0, sort_keys=True)
+        print(summary)
+    finally:
+        shutil.rmtree(lock, ignore_errors=True)
+
+
+if __name__ == "__main__":
+    main()
