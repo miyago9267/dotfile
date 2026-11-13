@@ -5,7 +5,6 @@ set -e
 platform_guard "kubectl" darwin linux:apt linux:pacman
 # kubectx/kubens：k8s 指令（k8s ctx / k8s ns 用）
 [ "$(uname)" = "Darwin" ] && command -v brew >/dev/null && ! command -v kubectx >/dev/null && brew install kubectx
-[ "$(uname)" = "Darwin" ] && command -v brew >/dev/null && [ ! -d /Applications/Headlamp.app ] && brew install --cask headlamp
 is_installed kubectl && skip_installed "kubectl"
 
 Y="$(printf '\033[1;33m')"
