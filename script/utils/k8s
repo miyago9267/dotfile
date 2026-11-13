@@ -3,7 +3,7 @@
 # 沒帶名稱的地方用 fzf 挑；不認得的子指令原樣交給 kubectl（k8s get svc = kubectl get svc）。
 # 只顯示 secret 的 key 名稱與長度，不印值。
 #
-#   k8s                      顯示目前 context / namespace
+#   k8s                      顯示目前 context / namespace 與這份說明（k8s help 只看說明）
 #   k8s ctx [name|-]         切 context（kubectx）
 #   k8s ns  [name|-]         切 namespace（kubens）
 #   k8s pods [filter]        列 pod（可用字串過濾）
@@ -20,12 +20,20 @@
 # CTX、NS：臨時指定 context / namespace（不設就用目前的）。
 # Secret Manager：SM（名稱，預設同 k8s secret；正式站要 SM=pms-production-secrets）、
 #                 PROJECT（預設 production-1386）、REF（keys 的比對基準，預設 pms-production-secrets）
+#
+# 範例：
+#   k8s ctx prod && k8s ns production
+#   k8s hist pms
+#   pbpaste | SM=pms-production-secrets k8s rotate pms PRE_CHECKIN_PASSWORD
+#   CTX=test NS=testing k8s keys pms-testing-qa1
+# 介面版：k9s（Shift-2 deploy 樹、Shift-H 歷史、Shift-W 改 secret、Shift-E 改 configmap、? 看全部）
 set -euo pipefail
 
 PROJECT="${PROJECT:-production-1386}"
 REF="${REF-pms-production-secrets}"
 
 die() { printf '\033[1;31m%s\033[0m\n' "$*" >&2; exit 1; }
+usage() { sed -n '2,/^set -euo/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'; }
 # CTX / NS 有設就覆蓋目前的 context / namespace（k9s 外掛會帶進來）
 kubectl() { command kubectl ${CTX:+--context "$CTX"} ${NS:+--namespace "$NS"} "$@"; }
 ctx() { [ -n "${CTX:-}" ] && { echo "$CTX"; return; }; kubectl config current-context; }
@@ -180,7 +188,7 @@ cmd_hist() {
 
 cmd="${1:-}"; shift || true
 case "$cmd" in
-  "")      printf 'context   %s\nnamespace %s\n' "$(ctx)" "$(ns)" ;;
+  "")      printf '\033[1;33mcontext   %s\nnamespace %s\033[0m\n\n' "$(ctx)" "$(ns)"; usage ;;
   ctx)     kubectx "$@" ;;
   ns)      kubens "$@" ;;
   pods)    if [ -n "${1:-}" ]; then kubectl get pods -o wide | awk -v f="$1" 'NR==1 || index($0,f)'; else kubectl get pods -o wide; fi ;;
@@ -200,6 +208,6 @@ case "$cmd" in
   rotate)  [ $# -eq 2 ] || die "用法：pbpaste | k8s rotate <deploy> <KEY>"; cmd_rotate "$1" "$2" ;;
   cm)      cmd_cm "${1:-}" ;;
   hist)    cmd_hist "${1:-}" ;;
-  help|-h|--help) sed -n '2,/^set -euo/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//' ;;
+  help|-h|--help) usage ;;
   *)       kubectl "$cmd" "$@" ;;
 esac
