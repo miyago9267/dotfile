@@ -3,7 +3,7 @@ set -e
 . "$(dirname "$0")/_platform.sh"
 
 platform_guard "kubectl" darwin linux:apt linux:pacman
-# kubectx/kubens：kx、kn alias 用（見 config/zsh/.zshrc.d/kube.zsh）
+# kubectx/kubens：k8s 指令（k8s ctx / k8s ns 用）
 [ "$(uname)" = "Darwin" ] && command -v brew >/dev/null && ! command -v kubectx >/dev/null && brew install kubectx
 is_installed kubectl && skip_installed "kubectl"
 

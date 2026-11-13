@@ -7,7 +7,8 @@
 | `gq` | git add + commit + push 一步到位 | `gq "commit message"` |
 | `hs` | 快速 HTTP server | `hs [port]`（預設 8000） |
 | `jp` | JSON 格式化 | `jp '{"a":1}'` 或 `curl ... \| jp` |
-| `ksec` | 比對與輪替 k8s deployment 的 secret（SM 同名 dotenv 為源頭，只顯示 key 名稱，新值讀剪貼簿）；預設用目前 context/namespace（kx、kn 切換） | `ksec keys pms-testing-qa1`、`ksec rotate pms-testing-qa1 OAUTH_ACCESS_TOKEN`、`kx test; kn testing; ksec keys pms-testing` |
+| `k8s` | kubectl 常用操作短指令（ctx/ns 切換、pods、logs、sh、restart、env），沒給名稱就 fzf 挑，其餘原樣轉 kubectl | `k8s ctx`、`k8s ns`、`k8s logs`、`k8s sh pms-testing`、`k8s get svc` |
+| `ksec` | 比對與輪替 k8s deployment 的 secret（SM 同名 dotenv 為源頭，只顯示 key 名稱，新值讀剪貼簿）；預設用目前 context/namespace（k8s ctx、k8s ns 切換） | `ksec keys pms-testing-qa1`、`ksec rotate pms-testing-qa1 OAUTH_ACCESS_TOKEN`、`k8s ctx test; k8s ns testing; ksec keys pms-testing` |
 | `md2pdf` | Markdown 轉 PDF（版面比照 VSCode Markdown PDF；需要 bun 與 Chrome） | `md2pdf doc.md`、`md2pdf -o out.pdf doc.md`、`md2pdf --no-header *.md` |
 | `pf` | 查找佔用 port 的 process | `pf 3000` |
 | `qb` | 快速備份（加時間戳） | `qb myfile.conf` |

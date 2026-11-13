@@ -5,7 +5,7 @@
 #   ksec keys   <deploy>          列出 deploy 讀的 secret，比對 k8s / SM / 參考 secret 的 key
 #   ksec rotate <deploy> <KEY>    把剪貼簿的值寫進 SM 新版本 → patch k8s 單一 key → restart → 驗證
 #
-# 預設用目前的 kubectl context 與 namespace（用 kx / kn 切換）；可用 CTX、NS 臨時覆蓋。
+# 預設用目前的 kubectl context 與 namespace（用 k8s ctx / k8s ns 切換）；可用 CTX、NS 臨時覆蓋。
 # 其他環境變數：PROJECT（production-1386）、
 #           REF（比對用的參考 SM secret，預設 pms-production-secrets；設空字串則不比對）
 set -euo pipefail
