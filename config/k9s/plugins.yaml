@@ -1,0 +1,36 @@
+# k9s 外掛：把 dotfile 的 k8s 指令掛進 k9s。$CONTEXT / $NAMESPACE / $NAME 由 k9s 帶入。
+plugins:
+  secret-keys:
+    shortCut: Shift-K
+    description: Secret keys
+    scopes: [deployments]
+    command: bash
+    background: false
+    args:
+      - -c
+      - 'CTX="$CONTEXT" NS="$NAMESPACE" k8s keys "$NAME" | less -R'
+
+  secret-rotate:
+    shortCut: Shift-W
+    description: Write secret
+    scopes: [deployments]
+    command: bash
+    background: false
+    args:
+      - -c
+      - |
+        read -r -p "KEY: " key
+        read -r -s -p "新值（不顯示；直接 Enter 用剪貼簿）: " val; echo
+        [ -n "$val" ] || val="$(pbpaste)"
+        printf '%s' "$val" | CTX="$CONTEXT" NS="$NAMESPACE" k8s rotate "$NAME" "$key"
+        read -r -n1 -p "按任意鍵回到 k9s" _
+
+  configmap-edit:
+    shortCut: Shift-E
+    description: Edit (ArgoCD aware)
+    scopes: [configmaps]
+    command: bash
+    background: false
+    args:
+      - -c
+      - 'CTX="$CONTEXT" NS="$NAMESPACE" k8s cm "$NAME"; read -r -n1 -p "按任意鍵回到 k9s" _'

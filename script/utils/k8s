@@ -14,7 +14,9 @@
 #   k8s keys [deploy]        比對 secret 的 key：k8s / Secret Manager / 正式站
 #   <來源> | k8s rotate <deploy> <KEY>
 #                            stdin 的值 → SM 新版本 → patch k8s 單一 key → 重啟讀這份 secret 的 deploy → 驗證
+#   k8s cm [configmap]       改 configmap：ArgoCD 管的就開 repo 原始檔 → commit / push；其餘 kubectl edit
 #
+# CTX、NS：臨時指定 context / namespace（不設就用目前的）。
 # Secret Manager：SM（名稱，預設同 k8s secret；正式站要 SM=pms-production-secrets）、
 #                 PROJECT（預設 production-1386）、REF（keys 的比對基準，預設 pms-production-secrets）
 set -euo pipefail
@@ -23,8 +25,10 @@ PROJECT="${PROJECT:-production-1386}"
 REF="${REF-pms-production-secrets}"
 
 die() { printf '\033[1;31m%s\033[0m\n' "$*" >&2; exit 1; }
-ctx() { kubectl config current-context; }
-ns() { local n; n="$(kubectl config view --minify -o jsonpath='{..namespace}')"; echo "${n:-default}"; }
+# CTX / NS 有設就覆蓋目前的 context / namespace（k9s 外掛會帶進來）
+kubectl() { command kubectl ${CTX:+--context "$CTX"} ${NS:+--namespace "$NS"} "$@"; }
+ctx() { [ -n "${CTX:-}" ] && { echo "$CTX"; return; }; kubectl config current-context; }
+ns() { [ -n "${NS:-}" ] && { echo "$NS"; return; }; local n; n="$(kubectl config view --minify -o jsonpath='{..namespace}')"; echo "${n:-default}"; }
 sm_get() { gcloud secrets versions access latest --secret "$1" --project "$PROJECT"; }
 sm_has() { gcloud secrets describe "$1" --project "$PROJECT" >/dev/null 2>&1; }
 env_keys() { grep -E '^[A-Za-z_][A-Za-z0-9_]*=' | cut -d= -f1 | sort -u; }
@@ -118,6 +122,26 @@ cmd_rotate() {
   printf '\033[1;32m   pod 的 %s 與輸入值一致\033[0m\n' "$key"
 }
 
+cmd_cm() {
+  local c app repo file msg
+  c="$(pick configmap "${1:-}")"
+  app="$(kubectl get configmap "$c" -o jsonpath='{.metadata.labels.argocd\.argoproj\.io/instance}')"
+  if [ -z "$app" ]; then kubectl edit configmap "$c"; return; fi
+  repo="${ARGOCD_REPO:-$HOME/Project/Active/ITRD/devops/argocd}"
+  [ -d "$repo/.git" ] || die "configmap/$c 由 ArgoCD app $app 管，但找不到 repo（設 ARGOCD_REPO）"
+  git -C "$repo" pull -q --ff-only || die "repo 無法 fast-forward，先手動處理 $repo"
+  file="$(grep -rlE "^  name: $c\$" "$repo/k8s-yaml" | xargs grep -lE "^  namespace: $(ns)\$" 2>/dev/null | head -20)"
+  [ -n "$file" ] || die "repo 裡找不到 $(ns)/$c 的原始檔"
+  [ "$(echo "$file" | wc -l)" -gt 1 ] && file="$(echo "$file" | fzf --prompt='原始檔> ')"
+  printf '\033[1;33mconfigmap/%s 由 ArgoCD app %s 管，改原始檔：%s\033[0m\n' "$c" "$app" "${file#$repo/}"
+  "${EDITOR:-vi}" "$file"
+  git -C "$repo" diff --quiet -- "$file" && { echo "沒有變更"; return; }
+  git -C "$repo" --no-pager diff --stat -- "$file"
+  read -r -p "commit 訊息（空白取消）： " msg </dev/tty
+  [ -n "$msg" ] || { echo "未 commit，變更留在 $repo"; return; }
+  git -C "$repo" commit -q -m "$msg" -- "$file" && git -C "$repo" push -q && echo "已 push，ArgoCD 會自動 sync；subPath 掛載的 .env 要重啟 pod 才生效"
+}
+
 cmd="${1:-}"; shift || true
 case "$cmd" in
   "")      printf 'context   %s\nnamespace %s\n' "$(ctx)" "$(ns)" ;;
@@ -138,6 +162,7 @@ case "$cmd" in
            done ;;
   keys)    cmd_keys "${1:-}" ;;
   rotate)  [ $# -eq 2 ] || die "用法：pbpaste | k8s rotate <deploy> <KEY>"; cmd_rotate "$1" "$2" ;;
-  help|-h|--help) sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//' ;;
-  *)       exec kubectl "$cmd" "$@" ;;
+  cm)      cmd_cm "${1:-}" ;;
+  help|-h|--help) sed -n '2,/^set -euo/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//' ;;
+  *)       kubectl "$cmd" "$@" ;;
 esac

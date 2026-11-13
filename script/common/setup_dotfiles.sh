@@ -32,6 +32,12 @@ link "$dotfile_dir/config/opencode"          "$config_root/opencode"
 link "$dotfile_dir/config/opencode-harness"  "$config_root/opencode-harness"
 link "$dotfile_dir/config/opencode-studio"   "$config_root/opencode-studio"
 
+# k9s：macOS 讀 ~/Library/Application Support/k9s，其他平台讀 XDG config
+if [ "$(uname)" = "Darwin" ]; then k9s_dir="$HOME/Library/Application Support/k9s"; else k9s_dir="$config_root/k9s"; fi
+mkdir -p "$k9s_dir"
+link "$dotfile_dir/config/k9s/plugins.yaml" "$k9s_dir/plugins.yaml"
+link "$dotfile_dir/config/k9s/hotkeys.yaml" "$k9s_dir/hotkeys.yaml"
+
 # Warp (macOS): settings、Monika 主題與 tab configs（+ 選單直接在指定 repo 啟動各 agent CLI）
 if [ -d "$HOME/.warp" ]; then
   mkdir -p "$HOME/.warp/themes"

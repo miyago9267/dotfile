@@ -1,0 +1,26 @@
+# 在任何畫面按 Shift-數字 直接跳到常用資源
+hotKeys:
+  shift-1:
+    shortCut: Shift-1
+    description: Pods
+    command: pods
+  shift-2:
+    shortCut: Shift-2
+    description: Deployments
+    command: deploy
+  shift-3:
+    shortCut: Shift-3
+    description: Events
+    command: events
+  shift-4:
+    shortCut: Shift-4
+    description: ConfigMaps
+    command: cm
+  shift-5:
+    shortCut: Shift-5
+    description: Secrets
+    command: secrets
+  shift-0:
+    shortCut: Shift-0
+    description: Contexts
+    command: ctx
