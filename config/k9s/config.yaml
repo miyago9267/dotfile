@@ -1,0 +1,10 @@
+# k9s 精簡設定：關掉裝飾與更新提示，開滑鼠，預設進 deployment 列表
+k9s:
+  defaultView: deploy
+  skipLatestRevCheck: true
+  ui:
+    enableMouse: true
+    logoless: true
+    noIcons: true
+    splashless: true
+    reactive: true
