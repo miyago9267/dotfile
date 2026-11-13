@@ -30,3 +30,8 @@ _k8s() {
   esac
 }
 compdef _k8s k8s
+
+# Headlamp（k8s GUI）：從 shell 啟動才帶得到 PATH 裡的 gke-gcloud-auth-plugin，從 Dock 點開會連不上 GKE
+if [ -x /Applications/Headlamp.app/Contents/MacOS/Headlamp ]; then
+  headlamp() { nohup /Applications/Headlamp.app/Contents/MacOS/Headlamp "$@" >/dev/null 2>&1 &! }
+fi
