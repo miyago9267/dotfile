@@ -7,6 +7,7 @@
 | `gq` | git add + commit + push 一步到位 | `gq "commit message"` |
 | `hs` | 快速 HTTP server | `hs [port]`（預設 8000） |
 | `jp` | JSON 格式化 | `jp '{"a":1}'` 或 `curl ... \| jp` |
+| `ksec` | 比對與輪替 k8s deployment 的 secret（SM 同名 dotenv 為源頭，只顯示 key 名稱，新值讀剪貼簿）；預設 CTX=test NS=testing | `ksec keys pms-testing-qa1`、`ksec rotate pms-testing-qa1 OAUTH_ACCESS_TOKEN`、`CTX=prod NS=production ksec keys pms-production` |
 | `md2pdf` | Markdown 轉 PDF（版面比照 VSCode Markdown PDF；需要 bun 與 Chrome） | `md2pdf doc.md`、`md2pdf -o out.pdf doc.md`、`md2pdf --no-header *.md` |
 | `pf` | 查找佔用 port 的 process | `pf 3000` |
 | `qb` | 快速備份（加時間戳） | `qb myfile.conf` |
