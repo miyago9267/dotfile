@@ -1,6 +1,7 @@
 #!/bin/bash
 # k8s: kubectl 常用操作的短指令，一律套用目前的 context / namespace。
 # 沒帶名稱的地方用 fzf 挑；不認得的子指令原樣交給 kubectl（k8s get svc = kubectl get svc）。
+# 只顯示 secret 的 key 名稱與長度，不印值。
 #
 #   k8s                      顯示目前 context / namespace
 #   k8s ctx [name|-]         切 context（kubectx）
@@ -9,14 +10,25 @@
 #   k8s logs [deploy|pod]    追 log（-f，最近 200 行；多 container 時用 fzf 挑）
 #   k8s sh   [deploy|pod]    進 container 開 shell
 #   k8s restart [deploy]     rollout restart 並等待完成
-#   k8s env  [deploy]        列出 deploy 讀的 configmap / secret 與 key 名稱（不印值）
-#   k8s keys <deploy>        = ksec keys
-#   <來源> | k8s rotate <deploy> <KEY>  = ksec rotate
+#   k8s env  [deploy]        列出 deploy 讀的 configmap / secret 與 key 名稱
+#   k8s keys [deploy]        比對 secret 的 key：k8s / Secret Manager / 正式站
+#   <來源> | k8s rotate <deploy> <KEY>
+#                            stdin 的值 → SM 新版本 → patch k8s 單一 key → 重啟讀這份 secret 的 deploy → 驗證
+#
+# Secret Manager：SM（名稱，預設同 k8s secret；正式站要 SM=pms-production-secrets）、
+#                 PROJECT（預設 production-1386）、REF（keys 的比對基準，預設 pms-production-secrets）
 set -euo pipefail
+
+PROJECT="${PROJECT:-production-1386}"
+REF="${REF-pms-production-secrets}"
 
 die() { printf '\033[1;31m%s\033[0m\n' "$*" >&2; exit 1; }
 ctx() { kubectl config current-context; }
 ns() { local n; n="$(kubectl config view --minify -o jsonpath='{..namespace}')"; echo "${n:-default}"; }
+sm_get() { gcloud secrets versions access latest --secret "$1" --project "$PROJECT"; }
+sm_has() { gcloud secrets describe "$1" --project "$PROJECT" >/dev/null 2>&1; }
+env_keys() { grep -E '^[A-Za-z_][A-Za-z0-9_]*=' | cut -d= -f1 | sort -u; }
+yes_or_die() { read -r -p "確定？[y/N] " a </dev/tty; [ "$a" = y ] || die "已取消，沒有任何變動"; }
 
 pick() { # pick <kind> [preset]：有給名稱就用，沒給就 fzf
   [ -n "${2:-}" ] && { echo "$2"; return; }
@@ -36,6 +48,76 @@ container_of() { # 多個 container 時用 fzf 挑
   echo "$cs" | fzf --prompt="container> " || die "已取消"
 }
 
+secrets_of() { # deploy 用 envFrom 讀的 secret
+  kubectl get deploy "$1" -o jsonpath='{range .spec.template.spec.containers[*].envFrom[*]}{.secretRef.name}{"\n"}{end}' | grep -v '^$' | sort -u
+}
+
+users_of() { # 用 envFrom 讀這份 secret 的所有 deploy
+  kubectl get deploy -o go-template='{{range .items}}{{$n := .metadata.name}}{{range .spec.template.spec.containers}}{{range .envFrom}}{{if .secretRef}}{{$n}} {{.secretRef.name}}{{"\n"}}{{end}}{{end}}{{end}}{{end}}' |
+    awk -v s="$1" '$2==s{print $1}' | sort -u
+}
+
+secret_keys() { kubectl get secret "$1" -o go-template='{{range $k,$v := .data}}{{$k}}{{"\n"}}{{end}}' | sort -u; }
+
+cmd_keys() {
+  local d s sm tmp k
+  d="$(pick deploy "${1:-}")"
+  tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+  if [ -n "$REF" ]; then sm_get "$REF" | env_keys >"$tmp/ref"; else : >"$tmp/ref"; fi
+  for s in $(secrets_of "$d"); do
+    sm="${SM:-$s}"
+    secret_keys "$s" >"$tmp/k8s"
+    if sm_has "$sm"; then sm_get "$sm" | env_keys >"$tmp/sm"; printf '\033[1;36msecret/%s\033[0m  (SM %s)\n' "$s" "$sm"
+    else : >"$tmp/sm"; printf '\033[1;36msecret/%s\033[0m  (SM 沒有 %s，名稱不同時用 SM=<name>)\n' "$s" "$sm"; fi
+    printf '%-40s k8s  SM   %s\n' KEY "${REF:-ref}"
+    sort -u "$tmp/k8s" "$tmp/sm" "$tmp/ref" | while read -r k; do
+      printf '%-40s %s    %s    %s\n' "$k" \
+        "$(grep -qx "$k" "$tmp/k8s" && echo ✓ || echo ·)" \
+        "$(grep -qx "$k" "$tmp/sm" && echo ✓ || echo ·)" \
+        "$(grep -qx "$k" "$tmp/ref" && echo ✓ || echo ·)"
+    done
+  done
+}
+
+cmd_rotate() {
+  local d="$1" key="$2" s sm val users u
+  [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || die "KEY 格式不對：$key"
+  [ -t 0 ] && die "請把新值用 pipe 餵進來，例如：pbpaste | k8s rotate $d $key"
+  val="$(cat)"
+  [ -n "$val" ] || die "stdin 是空的"
+  [[ "$val" != *$'\n'* ]] || die "新值中間有換行，dotenv 放不下"
+  set -- $(secrets_of "$d")
+  [ $# -eq 1 ] || die "$d 讀了 $# 個 secret（$*），請用 SECRET=<name> 指定"
+  s="${SECRET:-$1}"; sm="${SM:-$s}"
+  sm_has "$sm" || die "SM 沒有 $PROJECT/${sm}；名稱不同時用 SM=<name> 指定"
+  users="$(users_of "$s")"
+  printf '\033[1;33m目標：%s / %s\033[0m\n  secret/%s ← SM %s/%s\n  key %s（%s，新值長度 %s）\n  會重啟：%s\n' \
+    "$(ctx)" "$(ns)" "$s" "$PROJECT" "$sm" "$key" \
+    "$(sm_get "$sm" | grep -q "^$key=" && echo 取代既有值 || echo 新增)" "${#val}" "$(echo $users)"
+  yes_or_die
+
+  echo "1/4 寫入 SM 新版本"
+  { sm_get "$sm" | grep -v "^$key="; printf '%s=%s\n' "$key" "$val"; } |
+    gcloud secrets versions add "$sm" --project "$PROJECT" --data-file=- --format='value(name)' | sed 's|.*/|   SM version |'
+
+  # 只 patch 這個 key：k8s secret 可能有不在 SM dotenv 的 key（如 PASSPORT_*），整份 apply 會刪掉它們
+  echo "2/4 patch k8s secret 的 $key"
+  printf '{"data":{"%s":"%s"}}' "$key" "$(printf '%s' "$val" | base64 | tr -d '\n')" |
+    kubectl patch secret "$s" --type merge --patch-file /dev/stdin
+
+  echo "3/4 重啟讀這份 secret 的 deploy"
+  for u in $users; do kubectl rollout restart "deploy/$u" >/dev/null; done
+  for u in $users; do
+    [ "$(kubectl get deploy "$u" -o jsonpath='{.spec.replicas}')" = 0 ] && { echo "   $u replicas=0，略過"; continue; }
+    kubectl rollout status "deploy/$u" --timeout=600s
+  done
+  [ "$(kubectl get deploy "$d" -o jsonpath='{.spec.replicas}')" = 0 ] && { echo "   $d replicas=0，沒有 pod 可驗證"; return; }
+
+  echo "4/4 驗證 pod 內的值"
+  [ "$(kubectl exec "deploy/$d" -- printenv "$key" 2>/dev/null)" = "$val" ] || die "   pod 的 $key 與輸入值不一致"
+  printf '\033[1;32m   pod 的 %s 與輸入值一致\033[0m\n' "$key"
+}
+
 cmd="${1:-}"; shift || true
 case "$cmd" in
   "")      printf 'context   %s\nnamespace %s\n' "$(ctx)" "$(ns)" ;;
@@ -47,15 +129,15 @@ case "$cmd" in
            kubectl exec -it "$t" -c "$c" -- sh -c 'command -v bash >/dev/null && exec bash || exec sh' ;;
   restart) d="$(pick deploy "${1:-}")"
            printf '\033[1;33m重啟 %s / %s deploy/%s\033[0m\n' "$(ctx)" "$(ns)" "$d"
-           read -r -p "確定？[y/N] " a; [ "$a" = y ] || die "已取消"
+           yes_or_die
            kubectl rollout restart "deploy/$d" && kubectl rollout status "deploy/$d" --timeout=300s ;;
   env)     d="$(pick deploy "${1:-}")"
            for r in $(kubectl get deploy "$d" -o jsonpath='{range .spec.template.spec.containers[*].envFrom[*]}{.configMapRef.name}{"\t"}{.secretRef.name}{"\n"}{end}{range .spec.template.spec.volumes[*]}{.configMap.name}{"\t"}{.secret.secretName}{"\n"}{end}' | awk -F'\t' '$1!=""{print "configmap/"$1} $2!=""{print "secret/"$2}' | sort -u); do
              printf '\033[1;36m%s\033[0m\n' "$r"
              kubectl get "$r" -o go-template='{{range $k,$v := .data}}  {{$k}}{{"\n"}}{{end}}'
            done ;;
-  keys)    exec ksec keys "$@" ;;
-  rotate)  exec ksec rotate "$@" ;;
-  help|-h|--help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//' ;;
+  keys)    cmd_keys "${1:-}" ;;
+  rotate)  [ $# -eq 2 ] || die "用法：pbpaste | k8s rotate <deploy> <KEY>"; cmd_rotate "$1" "$2" ;;
+  help|-h|--help) sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//' ;;
   *)       exec kubectl "$cmd" "$@" ;;
 esac
