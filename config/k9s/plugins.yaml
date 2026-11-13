@@ -10,6 +10,16 @@ plugins:
       - -c
       - 'CTX="$CONTEXT" NS="$NAMESPACE" k8s keys "$NAME" | less -R'
 
+  deploy-history:
+    shortCut: Shift-H
+    description: History
+    scopes: [deployments]
+    command: bash
+    background: false
+    args:
+      - -c
+      - 'CTX="$CONTEXT" NS="$NAMESPACE" k8s hist "$NAME" 2>&1 | less -R'
+
   secret-rotate:
     shortCut: Shift-W
     description: Write secret

@@ -14,6 +14,7 @@
 #   k8s keys [deploy]        比對 secret 的 key：k8s / Secret Manager / 正式站
 #   <來源> | k8s rotate <deploy> <KEY>
 #                            stdin 的值 → SM 新版本 → patch k8s 單一 key → 重啟讀這份 secret 的 deploy → 驗證
+#   k8s hist [deploy]        歷史：rollout 版本、最近事件、ArgoCD git 紀錄、SM 版本
 #   k8s cm [configmap]       改 configmap：ArgoCD 管的就開 repo 原始檔 → commit / push；其餘 kubectl edit
 #
 # CTX、NS：臨時指定 context / namespace（不設就用目前的）。
@@ -142,6 +143,41 @@ cmd_cm() {
   git -C "$repo" commit -q -m "$msg" -- "$file" && git -C "$repo" push -q && echo "已 push，ArgoCD 會自動 sync；subPath 掛載的 .env 要重啟 pod 才生效"
 }
 
+h() { printf '\n\033[1;36m== %s\033[0m\n' "$*"; }
+
+cmd_hist() {
+  local d sel app path repo s
+  d="$(pick deploy "${1:-}")"
+  sel="$(kubectl get deploy "$d" -o go-template='{{range $k,$v := .spec.selector.matchLabels}}{{$k}}={{$v}},{{end}}' | sed 's/,$//')"
+
+  h "rollout 版本（新到舊）"
+  kubectl get rs -l "$sel" --sort-by=.metadata.creationTimestamp \
+    -o custom-columns='REV:.metadata.annotations.deployment\.kubernetes\.io/revision,CREATED:.metadata.creationTimestamp,READY:.status.readyReplicas,IMAGE:.spec.template.spec.containers[0].image' |
+    awk 'NR==1{print; next} {a[++n]=$0} END{for(i=n;i>0&&i>n-10;i--) print a[i]}'
+
+  h "最近事件（deploy、rs、pod）"
+  kubectl get events --sort-by=.lastTimestamp \
+    -o custom-columns='LAST:.lastTimestamp,TYPE:.type,REASON:.reason,OBJECT:.involvedObject.name,MESSAGE:.message' |
+    awk -v d="$d" 'NR==1 || index($4,d)==1' | tail -20 | cut -c1-200
+
+  app="$(kubectl get deploy "$d" -o jsonpath='{.metadata.labels.argocd\.argoproj\.io/instance}')"
+  if [ -n "$app" ]; then
+    path="$(command kubectl --context "${ARGOCD_CTX:-prod}" -n argocd get application "$app" -o jsonpath='{.spec.source.path}' 2>/dev/null || true)"
+    repo="${ARGOCD_REPO:-$HOME/Project/Active/ITRD/devops/argocd}"
+    h "ArgoCD app $app 的設定變更（${path:-找不到 path}）"
+    if [ -n "$path" ] && [ -d "$repo/.git" ]; then
+      git -C "$repo" fetch -q 2>/dev/null || true
+      git -C "$repo" --no-pager log -10 --format='%ad  %<(14,trunc)%an %s' --date=format:'%m-%d %H:%M' origin/HEAD -- "$path"
+    fi
+  fi
+
+  for s in $(secrets_of "$d"); do
+    sm_has "${SM:-$s}" || continue
+    h "SM ${SM:-$s} 版本（secret/$s 的源頭）"
+    gcloud secrets versions list "${SM:-$s}" --project "$PROJECT" --limit 5 --format='table(name,state,createTime.date("%Y-%m-%d %H:%M"))'
+  done
+}
+
 cmd="${1:-}"; shift || true
 case "$cmd" in
   "")      printf 'context   %s\nnamespace %s\n' "$(ctx)" "$(ns)" ;;
@@ -163,6 +199,7 @@ case "$cmd" in
   keys)    cmd_keys "${1:-}" ;;
   rotate)  [ $# -eq 2 ] || die "用法：pbpaste | k8s rotate <deploy> <KEY>"; cmd_rotate "$1" "$2" ;;
   cm)      cmd_cm "${1:-}" ;;
+  hist)    cmd_hist "${1:-}" ;;
   help|-h|--help) sed -n '2,/^set -euo/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//' ;;
   *)       kubectl "$cmd" "$@" ;;
 esac

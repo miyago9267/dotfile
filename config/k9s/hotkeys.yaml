@@ -6,8 +6,8 @@ hotKeys:
     command: pods
   shift-2:
     shortCut: Shift-2
-    description: Deployments
-    command: deploy
+    description: Deploy tree
+    command: xray deploy
   shift-3:
     shortCut: Shift-3
     description: Events
