@@ -468,5 +468,6 @@
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark-ansi",
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "switchModelsOnFlag": false
 }
