@@ -6,7 +6,7 @@
 #   ksec rotate <deploy> <KEY>    把剪貼簿的值寫進 SM 新版本 → patch k8s 單一 key → restart → 驗證
 #
 # 預設用目前的 kubectl context 與 namespace（用 k8s ctx / k8s ns 切換）；可用 CTX、NS 臨時覆蓋。
-# 其他環境變數：PROJECT（production-1386）、
+# 其他環境變數：SM（SM secret 名稱，預設同 k8s secret）、PROJECT（production-1386）、
 #           REF（比對用的參考 SM secret，預設 pms-production-secrets；設空字串則不比對）
 set -euo pipefail
 
@@ -27,6 +27,11 @@ secrets_of() {
     grep -v '^$' | sort -u
 }
 
+users_of() {
+  kc get deploy -o go-template='{{range .items}}{{$n := .metadata.name}}{{range .spec.template.spec.containers}}{{range .envFrom}}{{if .secretRef}}{{$n}} {{.secretRef.name}}{{"\n"}}{{end}}{{end}}{{end}}{{end}}' |
+    awk -v s="$1" '$2==s{print $1}' | sort -u
+}
+
 k8s_keys() {
   kc get secret "$1" -o go-template='{{range $k,$v := .data}}{{$k}}{{"\n"}}{{end}}' | sort -u
 }
@@ -38,7 +43,7 @@ cmd_keys() {
   for s in $(secrets_of "$deploy"); do
     printf '\n\033[1;36m%s\033[0m' "$s"
     k8s_keys "$s" >"$tmp/k8s"
-    if sm_has "$s"; then sm_get "$s" | env_keys >"$tmp/sm"; echo "  (SM: $PROJECT/$s)"
+    if sm_has "${SM:-$s}"; then sm_get "${SM:-$s}" | env_keys >"$tmp/sm"; echo "  (SM: $PROJECT/${SM:-$s})"
     else : >"$tmp/sm"; echo "  (SM 無同名 secret)"; fi
     [ -n "$REF" ] || : >"$tmp/ref"
     printf '%-40s k8s  SM   %s\n' KEY "${REF:-ref}"
@@ -60,27 +65,33 @@ cmd_rotate() {
   set -- $(secrets_of "$deploy")
   [ $# -eq 1 ] || die "$deploy 讀了 $# 個 secret（$*），請用 SECRET=<name> 指定"
   s="${SECRET:-$1}"
-  sm_has "$s" || die "SM 沒有 $PROJECT/${s}，這個 secret 不是從 SM 來的"
-  printf '\033[1;33m目標：%s / %s\033[0m\n  deploy/%s ← secret/%s ← SM %s/%s\n  key %s（新值長度 %s）\n' \
-    "$CTX" "$NS" "$deploy" "$s" "$PROJECT" "$s" "$key" "${#val}"
-  read -r -p "確定輪替？[y/N] " ans
+  local sm="${SM:-$s}" users d
+  sm_has "$sm" || die "SM 沒有 $PROJECT/${sm}；名稱不同時用 SM=<name> 指定"
+  users="$(users_of "$s")"
+  printf '\033[1;33m目標：%s / %s\033[0m\n  secret/%s ← SM %s/%s\n  key %s（%s，新值長度 %s）\n  會重啟：%s\n' \
+    "$CTX" "$NS" "$s" "$PROJECT" "$sm" "$key" \
+    "$(sm_get "$sm" | grep -q "^$key=" && echo 取代既有值 || echo 新增)" "${#val}" "$(echo $users)"
+  read -r -p "確定？[y/N] " ans
   [ "$ans" = y ] || die "已取消，沒有任何變動"
 
   echo "1/4 寫入 SM 新版本"
-  { sm_get "$s" | grep -v "^$key="; printf '%s=%s\n' "$key" "$val"; } |
-    gcloud secrets versions add "$s" --project "$PROJECT" --data-file=- --format='value(name)' | sed 's|.*/|   SM version |'
+  { sm_get "$sm" | grep -v "^$key="; printf '%s=%s\n' "$key" "$val"; } |
+    gcloud secrets versions add "$sm" --project "$PROJECT" --data-file=- --format='value(name)' | sed 's|.*/|   SM version |'
 
   # 只 patch 這個 key：k8s secret 可能有不在 SM dotenv 的 key（如 PASSPORT_*），整份 apply 會刪掉它們
   echo "2/4 patch k8s secret 的 $key"
   printf '{"data":{"%s":"%s"}}' "$key" "$(printf '%s' "$val" | base64 | tr -d '\n')" |
     kc patch secret "$s" --type merge --patch-file /dev/stdin
 
-  echo "3/4 restart"
-  kc rollout restart "deploy/$deploy" >/dev/null
+  echo "3/4 restart 所有讀這份 secret 的 deploy"
+  for d in $users; do kc rollout restart "deploy/$d" >/dev/null; done
+  for d in $users; do
+    [ "$(kc get deploy "$d" -o jsonpath='{.spec.replicas}')" = 0 ] && { echo "   $d replicas=0，略過"; continue; }
+    kc rollout status "deploy/$d" --timeout=600s
+  done
   if [ "$(kc get deploy "$deploy" -o jsonpath='{.spec.replicas}')" = 0 ]; then
-    echo "   replicas=0，沒有 pod 可驗證；scale up 後會吃到新值"; return
+    echo "   $deploy replicas=0，沒有 pod 可驗證；scale up 後會吃到新值"; return
   fi
-  kc rollout status "deploy/$deploy" --timeout=300s
 
   echo "4/4 驗證 pod 內的值"
   if [ "$(kc exec "deploy/$deploy" -- printenv "$key" 2>/dev/null)" = "$val" ]; then
