@@ -11,7 +11,7 @@
 #   k8s restart [deploy]     rollout restart 並等待完成
 #   k8s env  [deploy]        列出 deploy 讀的 configmap / secret 與 key 名稱（不印值）
 #   k8s keys <deploy>        = ksec keys
-#   k8s rotate <deploy> <KEY>= ksec rotate
+#   <來源> | k8s rotate <deploy> <KEY>  = ksec rotate
 set -euo pipefail
 
 die() { printf '\033[1;31m%s\033[0m\n' "$*" >&2; exit 1; }
