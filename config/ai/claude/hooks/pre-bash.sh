@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# PreToolUse(Bash) dispatcher：一個 bash process 依序跑六個 guard，取代六個獨立 hook。
+# PreToolUse(Bash) dispatcher：一個 bash process 依序跑七個 guard，取代六個獨立 hook（slack-zh 為新增）。
 # 每個 guard 是各自檔案裡的函式（檔案單獨執行時行為不變），在 subshell 內執行（fork，不另開 bash）。
 # 原本六個 hook 平行執行、由 Claude 合併結果；這裡用同樣的優先序：
-#   deny > ask > allow；同級取檔案順序第一個（auto-yes, git-add, commit-attribution, ops-write, destructive, secret）。
+#   deny > ask > allow；同級取檔案順序第一個（auto-yes, git-add, commit-attribution, ops-write, destructive, secret, slack-zh）。
 #   auto-yes 的 updatedInput 與 ops-write 的 systemMessage 與決定無關，會併入最後輸出。
 set -u
 command -v jq >/dev/null 2>&1 || exit 0
@@ -20,6 +20,7 @@ INPUT=$input CMD=$cmd
 . "$D/ops-write-guard.sh"
 . "$D/destructive-guard.sh"
 . "$D/secret-guard.sh"
+. "$D/slack-zh-guard.sh"
 
 deny="" ask="" allow="" upd="" msgs=""
 collect() { # output
@@ -39,6 +40,7 @@ collect "$(guard_commit_attribution)"
 collect "$(guard_ops_write)"
 collect "$(guard_destructive)"
 collect "$(guard_secret)"
+collect "$(guard_slack_zh)"
 
 win=${deny:-${ask:-$allow}}
 if [ -z "$win" ]; then
