@@ -9,7 +9,7 @@ command -v jq >/dev/null 2>&1 || { echo "FAIL 需要 jq"; exit 1; }
 fail=0; n=0
 run() { # name expect(ask|deny|none) command [reason 子字串]
   n=$((n + 1))
-  out=$(jq -n --arg c "$3" '{tool_input:{command:$c}}' | bash "$HOOK" 2>/dev/null); rc=$?
+  out=$(printf '%s' "$3" | jq -Rs '{tool_input:{command:.}}' | bash "$HOOK" 2>/dev/null); rc=$?
   dec=$(printf '%s' "$out" | jq -r '.hookSpecificOutput.permissionDecision // empty' 2>/dev/null)
   text=$(printf '%s' "$out" | jq -r '.hookSpecificOutput.permissionDecisionReason // empty' 2>/dev/null)
   ok=0

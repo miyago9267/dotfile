@@ -11,7 +11,7 @@ fail=0; n=0
 export MSYS2_ARG_CONV_EXCL='*'
 run() { # name expect(deny|none) command
   n=$((n + 1))
-  out=$(jq -n --arg c "$3" '{tool_input:{command:$c}}' | bash "$HOOK" 2>/dev/null); rc=$?
+  out=$(printf '%s' "$3" | jq -Rs '{tool_input:{command:.}}' | bash "$HOOK" 2>/dev/null); rc=$?
   dec=$(printf '%s' "$out" | jq -r '.hookSpecificOutput.permissionDecision // empty' 2>/dev/null)
   text=$(printf '%s' "$out" | jq -r '.hookSpecificOutput.permissionDecisionReason // empty' 2>/dev/null)
   ok=0
@@ -21,7 +21,7 @@ run() { # name expect(deny|none) command
 }
 run_cwd() { # name expect(deny|none) cwd command：帶 cwd 欄位，驗證相對路徑的解析
   n=$((n + 1))
-  out=$(jq -n --arg c "$4" --arg d "$3" '{cwd:$d,tool_input:{command:$c}}' | bash "$HOOK" 2>/dev/null); rc=$?
+  out=$(printf '%s' "$4" | jq -Rs --arg d "$3" '{cwd:$d,tool_input:{command:.}}' | bash "$HOOK" 2>/dev/null); rc=$?
   dec=$(printf '%s' "$out" | jq -r '.hookSpecificOutput.permissionDecision // empty' 2>/dev/null)
   ok=0
   if [ "$2" = none ]; then [ -z "$out" ] && ok=1; else [ "$dec" = "$2" ] && ok=1; fi

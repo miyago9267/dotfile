@@ -34,7 +34,7 @@ fail=0; n=0
 RUN_PATH=$PATH
 run() { # name expect(ask|deny|allow|msg|none) ctx(stub 回傳的 current-context；空字串或 !fail 代表取不到) command [輸出子字串]
   n=$((n + 1))
-  out=$(jq -n --arg c "$4" '{tool_input:{command:$c}}' | PATH="$RUN_PATH" STUB_CTX="$3" "$BASH_BIN" "$HOOK" 2>/dev/null); rc=$?
+  out=$(printf '%s' "$4" | jq -Rs '{tool_input:{command:.}}' | PATH="$RUN_PATH" STUB_CTX="$3" "$BASH_BIN" "$HOOK" 2>/dev/null); rc=$?
   dec=$(printf '%s' "$out" | jq -r '.hookSpecificOutput.permissionDecision // empty' 2>/dev/null)
   text=$(printf '%s' "$out" | jq -r '.hookSpecificOutput.permissionDecisionReason // .systemMessage // empty' 2>/dev/null)
   ok=0
