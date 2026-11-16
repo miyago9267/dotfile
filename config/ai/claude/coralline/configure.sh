@@ -15,7 +15,7 @@ P10K_FILE="${P10K_CONFIG:-$HOME/.p10k.zsh}"
 
 # Fallback list, used only when the runtime statusline cannot be scanned.
 # The live list is derived from statusline.sh's seg_* functions by load_segment_choices.
-SEGMENT_CHOICES="dir project git node python model effort ctx cache toks ttft limit5h limit7d burn lines cost style duration stash clock"
+SEGMENT_CHOICES="dir project git node python model relay effort ctx cache toks ttft limit5h limit7d burn lines cost style duration stash clock"
 DEFAULT_SEGMENTS="dir git model ctx limit5h limit7d cost clock"
 THEME_CHOICES=""
 theme_choices_loaded=0
@@ -70,7 +70,10 @@ Options:
   --subagent-rows=on|off
                Register (or remove) the subagent panel renderer in Claude
                settings and exit — the non-interactive twin of the wizard's
-               closing question, for AI installs and upgrades.
+               closing question, for AI installs and upgrades. Claude Code
+               2.1.323 and later ignores that setting; there, put
+               VL_SUB_INLINE=1 in coralline.conf instead (rows under the
+               main bar).
   --import-p10k
                Import ~/.p10k.zsh without opening the setup menu.
   --wizard     Open the visual wizard directly.
@@ -135,12 +138,16 @@ theme_count() {
 # statusline.sh shows up here automatically — mirrors the theme auto-scan above.
 # NOTE: segment_names() below mirrors this seg_* discovery pattern for the upgrade
 # report; keep the two in sync if the discovery regex changes.
+# The exclusions are the old names of helpers that are no longer seg_* (seg_len,
+# seg_limit, seg_limit_elapsed, now text_width, limit_pill, limit_elapsed_ok);
+# an installed copy predating the rename is read by the upgrade report, so they
+# stay listed.
 load_segment_choices() {
   local statusline discovered s ordered=""
   statusline=$(runtime_statusline)
   [ -f "$statusline" ] || return 0
   discovered=" $(grep -oE '^seg_[A-Za-z0-9_]+' "$statusline" \
-    | sed 's/^seg_//' | grep -Ev '^(len|limit)$' | tr '\n' ' ') "
+    | sed 's/^seg_//' | grep -Ev '^(len|limit|limit_elapsed)$' | tr '\n' ' ') "
   [ "$discovered" = "  " ] && return 0
   # Show segments in the canonical SEGMENT_CHOICES order (keeping only the ones
   # that still exist), then append any newly added segments not listed there, so
@@ -156,7 +163,7 @@ load_segment_choices() {
 # load_segment_choices' discovery so detection and the wizard agree on "segment".
 segment_names() {  # $1=statusline file
   grep -oE '^seg_[A-Za-z0-9_]+' "$1" 2>/dev/null \
-    | sed 's/^seg_//' | grep -Ev '^(len|limit)$' | sort -u | tr '\n' ' '
+    | sed 's/^seg_//' | grep -Ev '^(len|limit|limit_elapsed)$' | sort -u | tr '\n' ' '
 }
 
 # Space-separated, sorted-unique BOOLEAN opt-in knob names: VL_/CORALLINE_
@@ -656,6 +663,9 @@ render_preview() {
   # the preview so they render the real interpreter version; the saved config is
   # untouched and keeps the fork-free default.
   printf 'VL_RUNTIME_PROBE=1\n' >> "$tmp"
+  # relay reads the status file model-relay writes for the session, and the
+  # sample payload's session has none; give the preview a provider to show.
+  printf 'VL_RELAY_PREVIEW=glm\n' >> "$tmp"
   cache=$(preview_cache_path "$tmp" "$cols")
   printf '\nPreview (%s cols):\n' "$cols"
   if [ ! -f "$cache" ]; then
@@ -1232,7 +1242,7 @@ EOF
 }
 
 write_final_config() {
-  local tmp
+  local tmp backup stamp n=0
   tmp=$(mktemp "${TMPDIR:-/tmp}/coralline-config.XXXXXX") || exit 1
   write_candidate_config "$tmp"
   if [ -f "$CONFIG_FILE" ]; then
@@ -1252,7 +1262,16 @@ write_final_config() {
   # leaving $CONFIG_FILE a directory that statusline.sh never sources.
   [ -d "$CONFIG_FILE" ] && die "config path $CONFIG_FILE is a directory, expected a file"
   mkdir -p "$(dirname "$CONFIG_FILE")" || die "could not create $(dirname "$CONFIG_FILE")"
-  mv "$tmp" "$CONFIG_FILE" || die "could not write $CONFIG_FILE"
+  # The wizard builds the new file from its own answers, not from the old one, so
+  # anything added by hand goes with the overwrite: keep the old file beside it.
+  if [ -f "$CONFIG_FILE" ] && ! cmp -s "$CONFIG_FILE" "$tmp"; then
+    stamp=$(date +%Y%m%d%H%M%S)
+    backup="$CONFIG_FILE.bak.$stamp"
+    while [ -e "$backup" ]; do n=$((n + 1)); backup="$CONFIG_FILE.bak.$stamp.$n"; done
+    cp -p "$CONFIG_FILE" "$backup" || { rm -f "$tmp"; die "could not back up $CONFIG_FILE; left unchanged"; }
+    printf 'Previous config kept at %s\n' "$backup"
+  fi
+  publish_file "$tmp" "$CONFIG_FILE" || die "could not write $CONFIG_FILE"
   printf '%sWrote%s %s\n' "$T_GREEN" "$T_RESET" "$CONFIG_FILE"
   [ "$float_enabled" = "1" ] && print_float_help
   # Return success explicitly: the trailing float test above is 1 when float is
@@ -1260,6 +1279,74 @@ write_final_config() {
   # `write_final_config || exit 0` bail before the verification render. The only
   # intentional non-zero exit is the "user declined overwrite" path above.
   return 0
+}
+
+link_target() {  # → _LT: what a symlink finally points at (the path itself when it is none)
+  local p="$1" t n=0
+  _LT=""
+  while [ -L "$p" ]; do
+    n=$((n + 1)); [ "$n" -le 8 ] || return 1
+    t=$(readlink "$p") || return 1
+    case "$t" in (/*) p="$t" ;; (*) p="$(dirname "$p")/$t" ;; esac
+  done
+  _LT="$p"
+}
+
+publish_file() {  # $1=finished temp file $2=the user's file; non-zero on failure, $1 is gone either way
+  # A regular file is replaced by rename (atomic). A symlink is followed and its
+  # target replaced the same way, through a temp file beside the target: renaming
+  # over the link itself would turn it into a regular file and cut a config kept
+  # in a dotfiles repo off from the live one, and writing through it with a
+  # redirect could leave it empty if the write failed.
+  local dst="$2" beside
+  if [ -L "$dst" ]; then
+    link_target "$dst" || { rm -f "$1"; return 1; }
+    dst="$_LT"
+    # the link has to end at an existing regular file: a dangling link or one to
+    # a directory is refused before anything is written
+    [ -f "$dst" ] || { rm -f "$1"; return 1; }
+    beside="$dst.new.$$"
+    if cp "$1" "$beside" && mv -f "$beside" "$dst"; then rm -f "$1"; return 0; fi
+    rm -f "$beside" "$1"
+    return 1
+  fi
+  mv "$1" "$dst" && return 0
+  rm -f "$1"
+  return 1
+}
+
+install_one() {  # $1=source $2=destination $3=x to make it executable
+  # Copy beside the destination and rename over it: Claude Code runs the installed
+  # statusline.sh every second, and an in-place cp lets it read a half-written
+  # file. Every copy is checked; a failure stops the install before settings.json
+  # is touched. Two cases still write in place, as the installer always did: a
+  # directory that takes no new file (a read-only install dir whose files are
+  # writable), and a rename the system refuses (a file held open on Windows). A
+  # destination that is a symlink is written through, so the link survives.
+  local src="$1" dst="$2" dir tmp
+  dir=$(dirname "$dst"); tmp="$dst.new.$$"
+  mkdir -p "$dir" || die "could not create $dir"
+  # A directory where the file belongs (or a link to one) would swallow the copy:
+  # mv and cp both put the file inside it and report success.
+  [ ! -d "$dst" ] || die "$dst is a directory, expected a file"
+  if [ -L "$dst" ] || [ ! -w "$dir" ]; then
+    cp "$src" "$dst" || die "could not write $dst (check permissions on the existing file)"
+    [ "${3:-}" != x ] || chmod +x "$dst" 2>/dev/null
+    return 0
+  fi
+  _INSTALL_TMP="$tmp"
+  if ! cp "$src" "$tmp"; then
+    rm -f "$tmp"; _INSTALL_TMP=""
+    die "could not write $dst (check free space and permissions on $dir)"
+  fi
+  [ "${3:-}" != x ] || chmod +x "$tmp" || { rm -f "$tmp"; _INSTALL_TMP=""; die "could not make $dst executable"; }
+  if ! mv -f "$tmp" "$dst" 2>/dev/null; then
+    # the complete temp copy is the source now, so a refused rename still ends
+    # with a whole file or with the old one
+    cp "$tmp" "$dst" || { rm -f "$tmp"; _INSTALL_TMP=""; die "could not replace $dst (check permissions on the existing file)"; }
+    rm -f "$tmp"
+  fi
+  _INSTALL_TMP=""
 }
 
 install_files() {
@@ -1284,23 +1371,27 @@ install_files() {
       report_upgrade_delta "$TARGET_DIR/statusline.sh" "$SCRIPT_DIR/statusline.sh" "$_bak"
     fi
   fi
-  mkdir -p "$TARGET_DIR/themes"
-  # Fail loud if the runtime overwrite cannot happen (e.g. an unreadable/unwritable
-  # old statusline.sh) instead of reporting a successful, feature-adding upgrade
-  # that never replaced the file.
-  cp "$SCRIPT_DIR/statusline.sh" "$TARGET_DIR/statusline.sh" \
-    || die "could not write $TARGET_DIR/statusline.sh (check permissions on the existing file)"
-  cp "$SCRIPT_DIR/configure.sh" "$TARGET_DIR/configure.sh"
-  cp "$SCRIPT_DIR/test/sample-input.json" "$TARGET_DIR/sample-input.json"
+  mkdir -p "$TARGET_DIR/themes" || die "could not create $TARGET_DIR/themes"
+  # An interrupt between a copy and its rename would leave <file>.new.<pid>
+  # behind for good (the pid differs on every run); the script's own traps are
+  # installed only after the argument loop that calls this.
+  _INSTALL_TMP=""
+  trap '[ -z "$_INSTALL_TMP" ] || rm -f "$_INSTALL_TMP"; exit 130' INT TERM HUP
+  # Fail loud on any file that cannot be written, instead of reporting a
+  # successful upgrade over a half-replaced install. The runtime goes last: if an
+  # earlier copy fails, the statusline that is running stays the old, whole one.
   theme_dir="$SCRIPT_DIR/themes"
   while IFS= read -r rel; do
     [ -n "$rel" ] || continue
-    mkdir -p "$TARGET_DIR/themes/$(dirname "$rel")"
-    cp "$theme_dir/$rel" "$TARGET_DIR/themes/$rel"
+    install_one "$theme_dir/$rel" "$TARGET_DIR/themes/$rel"
   done <<THEMES
 $(cd "$theme_dir" && find . -type f -name '*.conf' | sed 's#^\./##')
 THEMES
-  chmod +x "$TARGET_DIR/statusline.sh" "$TARGET_DIR/configure.sh"
+  install_one "$SCRIPT_DIR/test/sample-input.json" "$TARGET_DIR/sample-input.json"
+  # Copying configure.sh onto itself (a wizard run from the install dir) is a no-op.
+  [ "$SCRIPT_DIR/configure.sh" -ef "$TARGET_DIR/configure.sh" ] || install_one "$SCRIPT_DIR/configure.sh" "$TARGET_DIR/configure.sh" x
+  [ "$SCRIPT_DIR/statusline.sh" -ef "$TARGET_DIR/statusline.sh" ] || install_one "$SCRIPT_DIR/statusline.sh" "$TARGET_DIR/statusline.sh" x
+  trap - INT TERM HUP
   installed=1
 }
 
@@ -1337,36 +1428,103 @@ settings_merge() {  # apply jq filter $1 (plus any --arg pairs after it) to sett
     rm -f "$tmp"
     die "failed to create $SETTINGS_FILE"
   fi
-  if ! mv "$tmp" "$SETTINGS_FILE"; then
-    rm -f "$tmp"
+  if ! publish_file "$tmp" "$SETTINGS_FILE"; then
     die "could not replace $SETTINGS_FILE; original left unchanged${backup:+, backup written to $backup}"
   fi
 }
 
+settings_runs_coralline() {  # $1=settings key; exit 0 when its command runs this install's statusline.sh
+  # The path as typed, shell-quoted the way this installer writes it, or spelled
+  # with ~, $HOME or ${HOME}; a wrapper around the script (an env prefix, extra flags)
+  # still counts. The path has to be a word of its own: it starts the command or
+  # follows whitespace, a quote or "=", and it ends the command or is followed by
+  # whitespace, a quote or a shell operator. So statusline.sh.bak-... is not it,
+  # nor is a longer path that merely ends with ours. The command is not parsed as
+  # shell: a path that only appears in a comment or as an argument still counts.
+  local raw="$TARGET_DIR/statusline.sh" quoted tilde="" var="" brace=""
+  [ -s "$SETTINGS_FILE" ] || return 1
+  printf -v quoted '%q' "$raw"
+  case "$raw" in ("$HOME"/*) tilde="~${raw#"$HOME"}"; var="\$HOME${raw#"$HOME"}"; brace="\${HOME}${raw#"$HOME"}" ;; esac
+  jq -e --arg k "$1" --arg raw "$raw" --arg quoted "$quoted" --arg tilde "$tilde" --arg var "$var" --arg brace "$brace" '
+    .[$k] as $s
+    | ($s | type) == "object" and ($s.command | type) == "string"
+      and any([$raw, $quoted, $tilde, $var, $brace][] | select(length > 0);
+              . as $p | ($s.command | split($p)) as $parts
+              | any(range(1; $parts | length);
+                    ($parts[. - 1] | test("(^|[\\s\"\u0027=])$")) and ($parts[.] | test("^($|[\\s\"\u0027><|;&)])"))))
+  ' "$SETTINGS_FILE" >/dev/null 2>&1
+}
+
 update_settings() {
   local command
+  # An update leaves a statusLine that already runs this install exactly as the
+  # user has it: refreshInterval, padding, a wrapped command. Only a first install,
+  # or a statusLine that runs something else, gets the fresh entry.
+  if settings_runs_coralline statusLine; then
+    # Ours but without "type": "command", which Claude Code needs: add only that.
+    if ! jq -e '.statusLine.type == "command"' "$SETTINGS_FILE" >/dev/null 2>&1; then
+      settings_merge '.statusLine.type = "command"'
+      printf 'Updated %s (statusLine type set; the rest left as it is)\n' "$SETTINGS_FILE"
+      return 0
+    fi
+    printf '%s already runs coralline; statusLine left as it is\n' "$SETTINGS_FILE"
+    return 0
+  fi
   printf -v command 'bash %q' "$TARGET_DIR/statusline.sh"
   settings_merge '.statusLine = {"type": "command", "command": $command, "refreshInterval": 1}' \
     --arg command "$command"
   printf 'Updated %s\n' "$SETTINGS_FILE"
 }
 
-subagent_enabled() {  # exit 0 when settings.json registers the subagent renderer
-  [ -f "$SETTINGS_FILE" ] || return 1
-  jq -e '
-    .subagentStatusLine as $s |
-    if ($s | type) != "object" then false
-    elif $s.type != "command" then false
-    elif ($s.command | type) != "string" then false
-    else ($s.command | endswith(" --subagent"))
-    end
-  ' "$SETTINGS_FILE" >/dev/null 2>&1
+subagent_state() {  # → _SUB_STATE: absent | ours | untyped | broken | foreign | unreadable, in one jq call
+  # ours: a command that runs a script named statusline.sh (or the native
+  # statusline.ps1) with --subagent as its first argument: any copy, an env prefix,
+  # a trailing redirection, a Windows path. The install path is not compared,
+  # since a documented custom entry runs a copy elsewhere; the flag right after
+  # that file name is what marks the renderer. enable leaves it exactly as it is
+  # and disable removes it. untyped: the same command without "type": "command";
+  # enable adds only the type. broken: nothing anyone could run (true, a number,
+  # an empty object or one with nothing but our type, a blank command or string);
+  # enable replaces it and disable removes it. foreign: any other command or
+  # string, or an object in a shape that is not ours; neither touches it. unreadable: settings.json does not parse; the caller goes on
+  # to settings_merge, which stops with the parse error and a backup.
+  _SUB_STATE=absent
+  [ -s "$SETTINGS_FILE" ] || return 0
+  _SUB_STATE=$(jq -r '
+    .subagentStatusLine as $s
+    | if $s == null then "absent"
+      elif ($s | type) == "string" then (if ($s | test("^\\s*$")) then "broken" else "foreign" end)
+      elif ($s | type) != "object" then "broken"
+      elif ($s.command | type) != "string" then
+        (if ($s | del(.type) | length) == 0 and ($s.type == null or $s.type == "command") then "broken" else "foreign" end)
+      elif ($s.command | test("^\\s*$")) then "broken"
+      elif ($s.command | test("(^|[/\\\\\\s\"\u0027])statusline\\.(sh|ps1)[\"\u0027]?\\s+[\"\u0027]?--subagent($|[\\s\"\u0027><|;&)])"))
+        then (if $s.type == "command" then "ours" else "untyped" end)
+      else "foreign" end
+  ' "$SETTINGS_FILE" 2>/dev/null) || _SUB_STATE=unreadable
+  case "$_SUB_STATE" in (absent|ours|untyped|broken|foreign) ;; (*) _SUB_STATE=unreadable ;; esac
 }
 
 enable_subagent_statusline() {
   # No refreshInterval here: Claude Code documents it for statusLine only;
   # subagentStatusLine re-renders on panel events.
   local command
+  # Another tool's subagentStatusLine is the user's, not ours to replace; our own
+  # entry is left as it is, wrapper and all.
+  subagent_state
+  if [ "$_SUB_STATE" = foreign ]; then
+    printf '%s has a subagentStatusLine from another tool; left unchanged. Remove it to let coralline draw the rows.\n' "$SETTINGS_FILE" >&2
+    return 1
+  fi
+  if [ "$_SUB_STATE" = ours ]; then
+    printf '%s already has the coralline subagent panel rows; left as it is\n' "$SETTINGS_FILE"
+    return 0
+  fi
+  if [ "$_SUB_STATE" = untyped ]; then
+    settings_merge '.subagentStatusLine.type = "command"'
+    printf 'Updated %s (subagentStatusLine type set; the rest left as it is)\n' "$SETTINGS_FILE"
+    return 0
+  fi
   printf -v command 'bash %q --subagent' "$TARGET_DIR/statusline.sh"
   settings_merge '.subagentStatusLine = {"type": "command", "command": $command}' \
     --arg command "$command"
@@ -1375,6 +1533,12 @@ enable_subagent_statusline() {
 
 disable_subagent_statusline() {
   [ -s "$SETTINGS_FILE" ] || return 0
+  subagent_state
+  if [ "$_SUB_STATE" = foreign ]; then
+    printf '%s has a subagentStatusLine from another tool; left unchanged\n' "$SETTINGS_FILE" >&2
+    return 0
+  fi
+  [ "$_SUB_STATE" != absent ] || return 0
   settings_merge 'del(.subagentStatusLine)'
   printf 'Updated %s (subagent panel rows disabled)\n' "$SETTINGS_FILE"
 }
@@ -1400,9 +1564,16 @@ verify_subagent_render() {  # preview the panel-row bodies with the user's theme
 
 offer_subagent_rows() {  # opt-in toggle; default answer = current state (no change)
   local cur=n
-  subagent_enabled && cur=y
-  if yes_no "Render subagent panel rows in your coralline theme (Claude Code >= 2.1.205)" "$cur"; then
-    [ "$cur" = "y" ] || enable_subagent_statusline
+  # The same classification the toggles act on, so the default and the no-change
+  # shortcut cannot disagree with them. Another tool owns the rows: nothing to ask.
+  subagent_state
+  if [ "$_SUB_STATE" = foreign ]; then
+    printf '%s has a subagentStatusLine from another tool; coralline leaves the subagent rows to it.\n' "$SETTINGS_FILE"
+    return 0
+  fi
+  case "$_SUB_STATE" in (ours|untyped) cur=y ;; esac
+  if yes_no "Render subagent panel rows in your coralline theme (Claude Code 2.1.205-2.1.322; 2.1.323+ ignores it, use VL_SUB_INLINE=1)" "$cur"; then
+    [ "$cur" = "y" ] || enable_subagent_statusline || return 0
     verify_subagent_render
   else
     [ "$cur" = "n" ] || disable_subagent_statusline
@@ -1537,7 +1708,7 @@ for arg in "$@"; do
     --install) install_files; update_settings ;;
     --install-only) install_only=1; install_files; update_settings ;;
     --default) setup_mode="default" ;;
-    --subagent-rows=on)  enable_subagent_statusline;  verify_subagent_render; exit 0 ;;
+    --subagent-rows=on)  enable_subagent_statusline || exit 1; verify_subagent_render; exit 0 ;;
     --subagent-rows=off) disable_subagent_statusline; exit 0 ;;
     --import-p10k) setup_mode="import-p10k" ;;
     --wizard) setup_mode="wizard" ;;

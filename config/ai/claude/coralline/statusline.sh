@@ -37,6 +37,8 @@ VL_LEAN_CAP_R=""                # lean only — trailing cap glyph drawn in the 
 VL_LEAN_CAP_L=""                # lean only — leading cap glyph: the left-facing
                                 # mirror of VL_LEAN_CAP_R at the bar's start; needs
                                 # VL_LEAN_BG, empty = flat (stock p10k classic: flat)
+VL_LEAN_FG=""                   # lean only — replaces VL_FG_TEXT (gauge/status inks keep
+                                # theirs); empty = each segment's accent
 VL_LAYOUT="fixed"               # fixed: one line per VL_SEGMENTS* var
                                 # auto:  single line, wraps when the window is narrow
 VL_MAX_LINES=3                  # auto only — wrap into at most this many lines
@@ -45,6 +47,9 @@ VL_WRAP_MARGIN=4                # auto only — keep this many columns free on t
 VL_SEGMENTS="dir git model ctx limit5h limit7d cost clock"
 VL_SEGMENTS2=""                 # fixed only — optional second line
 VL_SEGMENTS3=""                 # fixed only — optional third line
+VL_HEAD_SEGMENTS=""             # either layout — segments drawn on a line of their own
+                                # above the rest (e.g. "relay"); not counted in
+                                # VL_MAX_LINES, and skipped when all of them hide
 VL_BAR_WIDTH=5
 VL_BAR_FILL="▰"
 VL_BAR_EMPTY="▱"
@@ -77,6 +82,10 @@ VL_NOCOLOR=0                    # internal: fg()/bg() emit nothing when 1 (plain
 
 # ── Subagent panel rows (--subagent mode) ────────────────────────────────────
 VL_SUB_SEGMENTS="name model ctx elapsed"  # panel-row segment list (subseg_*)
+VL_SUB_INLINE=0                 # 1: the MAIN statusline appends one such row per running subagent
+                                #   (Claude Code >= 2.1.323 ignores subagentStatusLine and never calls --subagent)
+VL_SUB_INLINE_MAX=5             # inline rows shown at most; the rest collapse into "+N more"
+VL_SUB_INLINE_STALE=10          # minutes without transcript writes before an unfinished agent counts as gone
 VL_BG_SUB_MODEL=""              # panel-row colors; empty → fall back to the
 VL_BG_SUB_CTX=""                #   main-bar counterparts (model/ctx/duration)
 VL_BG_SUB_ELAPSED=""
@@ -145,6 +154,9 @@ VL_BG_DIR="81,166,199"
 VL_BG_PROJECT=""               # optional; falls back to VL_BG_DIR when empty
 VL_BG_GIT_OK=65
 VL_BG_STASH=""                 # optional; falls back to VL_BG_GIT_OK when empty
+VL_BG_RELAY=""                 # optional; falls back to VL_BG_STYLE when empty (not
+                               # VL_BG_MODEL or VL_BG_EFFORT: relay sits between them)
+VL_RELAY_PREVIEW=""            # internal: provider the wizard preview shows for relay
 VL_BG_GIT_DIRTY=130
 VL_BG_MODEL=173
 VL_BG_CTX=238
@@ -171,8 +183,8 @@ printf -v VL_TTFT_GLYPH '\xef\x89\x91'   # U+F251 Nerd Font hourglass-start (wor
 VL_RUNTIME_PROBE=0              # node/python: 1 = also detect via `node`/`python3`
                                # on PATH when no pin file (forks per render; off by default)
 VL_GIT_CACHE_TTL=0              # seconds to reuse `git status` per cwd (0 = off: one git fork
-                               # per render). Cached under $XDG_CACHE_HOME/coralline/; marks
-                               # lag the working tree by up to this many seconds.
+                               # per render). Cached in CORALLINE_DIR/git/; marks lag the
+                               # working tree by up to this many seconds.
 
 VL_FG_TEXT=231
 VL_FG_DIM=245
@@ -212,7 +224,7 @@ knob_validate_all() {
   knob_bounded "$VL_WARN_PCT"           3 0   100   50 VL_WARN_PCT
   knob_bounded "$VL_HOT_PCT"            3 0   100   75 VL_HOT_PCT
   knob_bounded "$VL_MAX_LINES"          2 1   64    3 VL_MAX_LINES
-  knob_bounded "${VL_GIT_CACHE_TTL:-0}"      4 0   3600  0 VL_GIT_CACHE_TTL
+  knob_bounded "$VL_GIT_CACHE_TTL"      4 0   3600  0 VL_GIT_CACHE_TTL
   knob_bounded "$VL_WRAP_MARGIN"        5 0   32767 4 VL_WRAP_MARGIN
   knob_bounded "$CORALLINE_BURN_WINDOW" 5 60  86400 600  CORALLINE_BURN_WINDOW
   knob_bounded "$BURN_TRIM"             4 1   3000  1500 BURN_TRIM
@@ -528,6 +540,12 @@ state_abs_path() {  # → _SAP; lexical absolute path, including MSYS drive form
   local p="$1" drive rest part out=""
   _SAP=""
   [ -n "$p" ] && [ "${#p}" -le 4096 ] || return 1
+  # Already canonical (what every caller after the first pass hands back): the
+  # walk below would rebuild the same string, so skip it. Anything with an empty,
+  # "." or ".." component, a backslash or a drive letter takes the walk.
+  case "$p" in
+    (/?*) case "$p/" in (*//*|*/./*|*/../*|*\\*) ;; (*) _SAP="$p"; return 0 ;; esac ;;
+  esac
   p="${p//\\//}"
   case "$p" in
     (//*) return 1 ;;
@@ -542,14 +560,14 @@ state_abs_path() {  # → _SAP; lexical absolute path, including MSYS drive form
     part="${rest%%/*}"
     case "$part" in
       (''|.) ;;
-      (..) [ -n "$out" ] || return 1; out="${out%/*}" ;;
+      # ${out%/*} leaves a single component as it is, so pop it by hand
+      (..) [ -n "$out" ] || return 1; case "$out" in (*/*) out="${out%/*}" ;; (*) out="" ;; esac ;;
       (*) out="${out:+$out/}$part" ;;
     esac
     [ "$rest" = "$part" ] && break
     rest="${rest#*/}"
   done
   _SAP="/${out}"
-  [ "$_SAP" != "/" ] || _SAP="/"
 }
 
 state_no_symlink_path() {  # → _SNP; every existing ancestor and target is non-link
@@ -672,7 +690,7 @@ state_gate() {  # canonicalize one render's values and state namespaces
   # CORALLINE_BURN_WINDOW / BURN_TRIM / BURN_SLACK are validated once, right
   # after the config loads (see knob_bounded above), not here.
 
-  _CUR5_VALID=0; _CUR7_VALID=0; _CUR_BURN_VALID=0
+  _CUR5_VALID=0; _CUR7_VALID=0; _CUR_BURN_VALID=0; _CUR5_NONE=0
   _CUR5_PCT=0; _CUR5_CANON=""; _CUR5_TSV=""; _CUR5_RST=0
   _CUR7_PCT=0; _CUR7_CANON=""; _CUR7_TSV=""; _CUR7_RST=0
   _CUR_BURN_SAMP=0; _CUR_BURN_PCT=0; _CUR_BURN_TSV=""; _CUR_BURN_RST=0
@@ -692,6 +710,10 @@ state_gate() {  # canonicalize one render's values and state namespaces
       [ "$_CUR7_RST" -gt "$NOW" ] && [ "$_CUR7_RST" -le $(( NOW + RL_MAX_7D )) ] && _CUR7_VALID=1
     fi
   fi
+  # A live 7d window with an empty five_hour reading: no 5h window (see rl_choose).
+  # Claude Code's builder emits five_hour only for a live window, always numeric. The
+  # gauge (rl_choose) and the projection (burn_estimate) both read this one flag.
+  [ -z "${fh_pct:-}" ] && [ "$_CUR7_VALID" = 1 ] && _CUR5_NONE=1
   if [ "$_CUR5_VALID" = 1 ] && state_epoch "$NOW" 12; then
     _CUR_BURN_SAMP=$_SE_VALUE; _CUR_BURN_RST=$_CUR5_RST
     _CUR_BURN_PCT=$_CUR5_PCT; _CUR_BURN_TSV=$_CUR5_TSV; _CUR_BURN_VALID=1
@@ -876,16 +898,16 @@ state_limit_entry_ok() {  # $1=base $2=root $3=path $4=name
 }
 
 rl_sample() {  # $1=canonical base $2=pct_milli $3=reset
-  local base="$1" pct="$2" rst="$3" root name path
+  local base="$1" pct="$2" rst="$3" root name path other seen=0 max LC_ALL=C
   [ "${_STATE_MUTATE:-0}" = 1 ] || return 0
   if [ "$base" = "${_SL5_BASE:-}" ]; then
     [ "${_STATE_RL5_SAFE:-0}" = 1 ] && [ "${_CUR5_VALID:-0}" = 1 ] \
       && [ "$pct" = "$_CUR5_PCT" ] && [ "$rst" = "$_CUR5_RST" ] || return 0
-    root=$_SL5_ROOT
+    root=$_SL5_ROOT; max=$RL_MAX_5H
   elif [ "$base" = "${_SL7_BASE:-}" ]; then
     [ "${_STATE_RL7_SAFE:-0}" = 1 ] && [ "${_CUR7_VALID:-0}" = 1 ] \
       && [ "$pct" = "$_CUR7_PCT" ] && [ "$rst" = "$_CUR7_RST" ] || return 0
-    root=$_SL7_ROOT
+    root=$_SL7_ROOT; max=$RL_MAX_7D
   else return 0; fi
   state_limit_root_ok "$base" "$root" || return 0
   if [ ! -d "$root" ]; then
@@ -901,6 +923,20 @@ rl_sample() {  # $1=canonical base $2=pct_milli $3=reset
     state_limit_entry_ok "$base" "$root" "$path" "$name" >/dev/null 2>&1 || true
     return 0
   fi
+  # An entry below the latest one is removed by rl_latest's GC in this same
+  # render, and since a session's own reading always wins its own window nobody
+  # reads it: skip it instead of paying a mkdir and an rmdir on every render.
+  # Only an entry rl_latest would itself take as the winner counts (a real, empty
+  # directory with a reset inside the horizon), so a stray file or a planted
+  # far-future name cannot silence the store. Names are fixed-width digits, so
+  # the string order is the numeric one, and it is rl_latest's order (reset,
+  # then pct): change one and the other has to follow. Bounded like its scan.
+  for other in "$root"/*; do
+    seen=$(( seen + 1 )); [ "$seen" -le 512 ] || break
+    other="${other##*/}"
+    [[ "$other" > "$name" ]] || continue
+    state_limit_entry_ok "$base" "$root" "$root/$other" "$other" && [ "$_SLN_RST" -le $(( NOW + max )) ] && return 0
+  done
   state_paths_revalidate || return 0
   state_no_symlink_path "$path" && [ "$_SNP" = "$path" ] && [ ! -e "$path" ] && [ ! -L "$path" ] || return 0
   mkdir "$path" 2>/dev/null || true
@@ -958,14 +994,34 @@ rl_latest() {  # $1=canonical base $2=max secs ahead $3=mutate → _LL_*
 # Nothing in the payload timestamps an observation, so a stale high reading is
 # indistinguishable from a current one and cannot be aged out; the only reliable
 # evidence for this session's own window is this session's own snapshot.
-# The store keeps its purpose where it still has better information: it wins when
-# it holds a NEWER reset (another session already rolled into the next window),
-# and it is the sole source whenever this session has no valid reading at all.
-rl_choose() {  # $1=5|7; this session's window beats the store; a newer stored window beats it
+# The store is the sole source only when this session has no valid reading at all.
+# It used to win with a NEWER reset too, on the theory that another session had
+# already rolled into the next window. One account cannot do that while this
+# session's own reset is still ahead (windows do not overlap; a roll-over makes the
+# own reading invalid first), so a newer stored reset almost always meant ANOTHER
+# account: windows of one CLAUDE_CONFIG_DIR served by a relay's fallback account,
+# or a /login switch. Measured 2026-11-10: a team-1 window whose payload said 5h 61%
+# / 7d 10% rendered 0% / 0%, the team-2 windows another session had stored with
+# later resets. Cost: after an upstream early reset, an idle session keeps its
+# pre-reset reading until its next response or its old reset passes.
+rl_choose() {  # $1=5|7; this session's valid reading wins; the store fills in only without one
   local which="$1" valid="$_LL_VALID" rst="${_LL_RST:-0}" pct="$_LL_PCT_MILLI" crst cpct cvalid
   if [ "$which" = 5 ]; then cvalid=$_CUR5_VALID; crst=$_CUR5_RST; cpct=$_CUR5_PCT
   else cvalid=$_CUR7_VALID; crst=$_CUR7_RST; cpct=$_CUR7_PCT; fi
-  if [ "$cvalid" = 1 ] && { [ "$valid" = 0 ] || [ "$crst" -ge "$rst" ]; }; then
+  # A payload that carries a live 7d window but no five_hour has already received
+  # an API response, so it is not a session waiting for its first one: the account
+  # has no 5h window (reported 2026-11 for the Ultra plan; on this host every
+  # session stopped writing 5h readings at once). Borrowing the store's 5h entry,
+  # written while the account still had one, kept a stale gauge on screen until
+  # that entry's reset passed, up to five hours later. Mixed accounts in one config
+  # dir make it persistent: another account keeps re-publishing a live 5h window.
+  # Claude Code drops a window from the payload once its reset passes (Qt/Ve in the
+  # 2.1.319 builder), so a session idle past its own 5h reset looks the same and
+  # shows no 5h gauge until its next response, as before #64; accepted, since
+  # that session cannot tell the store's window is its own account's.
+  # The test is _CUR5_NONE (state_gate), which burn_estimate reads too.
+  [ "$which" = 5 ] && [ "${_CUR5_NONE:-0}" = 1 ] && valid=0
+  if [ "$cvalid" = 1 ]; then
     valid=1; rst=$crst; pct=$cpct
   fi
   if [ "$which" = 5 ]; then _STATE_RL5_VALID=$valid; _STATE_RL5_RST=$rst; _STATE_RL5_PCT=$pct
@@ -1116,8 +1172,16 @@ burn_eta_5h() {  # → _B5_* from canonical TSV; $1=allow trim/heal mutation
         close(tmp)
       }
       if (curvalid) add_obs(crst + 0, csamp + 0, cpct + 0)
+      # Our own reading names the window. A later reset in the store is taken as
+      # another account (a relay fallback account or a /login switch in this
+      # config dir), as the gauges do since #112. The cost is the same as theirs:
+      # after an early upstream reset an idle session keeps projecting its old
+      # window, whose samples stop arriving, until its next response or until
+      # that reset passes; the bar and the gauge at least describe one window.
+      # (No apostrophes here: this comment sits inside the single-quoted awk.)
       maxrst = 0
-      for (i = 1; i <= n; i++) if (rs[i] > maxrst) maxrst = rs[i]
+      if (curvalid) maxrst = crst + 0
+      else for (i = 1; i <= n; i++) if (rs[i] > maxrst) maxrst = rs[i]
       if (maxrst <= 0) { print "warming 0 0 0 0"; exit }
       m = 0
       for (i = 1; i <= n; i++) if (rs[i] == maxrst) {
@@ -1244,6 +1308,9 @@ burn_est_adopt() {  # → 0 iff _B5_* adopted from a fresh, fully validated esti
   # renders warming through the TSV and an adopted active estimate through
   # the cache.
   [ "$rst" -le $(( NOW + RL_MAX_5H )) ] || return 1
+  # A published estimate for another window (the leader's own, when it is on
+  # another account) is not ours to adopt; the caller then parses for itself.
+  [ "$rst" = "${_CUR_BURN_RST:-0}" ] || return 1
   case "${s:-}" in (active|idle|warming) ;; (*) return 1 ;; esac
   # Canonical form, the same rule state_epoch applies: a leading zero is
   # rejected rather than tolerated, because these three fields reach bash
@@ -1273,21 +1340,31 @@ burn_estimate() {  # → _BURN_STATE _BURN_LABEL _BURN_ETA _BURN_RATE _BURN_TTR
     burn_est_publish
   elif [ "${_BURN_LOST:-0}" = 1 ] && [ "${_CUR_BURN_VALID:-0}" = 1 ] && burn_est_adopt; then
     :
+  elif [ "${_CUR5_NONE:-0}" = 1 ]; then
+    :  # the 5h result is overridden below; skip the read-only parse and its fork
   else
     burn_eta_5h 0
   fi
   # The 5h projection needs the same rebinding the 7d one gets: whenever the synced
   # state is what the gauge draws, the ETA has to be projected from that same window.
-  # Two ways they diverge. With no reading of our own the history can still sit on
-  # the window that just closed, since an expired reset stays plausible to the reader
-  # and its TTR clamps to zero. With a valid reading of our own that rl_choose lets a
-  # NEWER stored window beat, the history holds only our older window, and the
-  # session that published the newer one need not have burn enabled to contribute
-  # samples for it. Both put an active ETA for one window beside a gauge for another,
-  # so gate on the stored state alone, not on whether we have a reading. burn_eta_5h
+  # With no reading of our own the history can still sit on the window that just
+  # closed, since an expired reset stays plausible to the reader and its TTR clamps
+  # to zero, and the session that published the stored window need not have burn
+  # enabled to contribute samples for it. That puts an active ETA for one window
+  # beside a gauge for another, so gate on the stored state alone. burn_eta_5h
   # reports the window it used as NOW + _B5_TTR; falling back to warming when it does
   # not match is honest, no samples for that window have been observed yet.
-  if [ "$VL_LIMIT_SYNC" = 1 ] && [ "${_STATE_RL5_VALID:-0}" = 1 ] \
+  # A payload with no 5h window (_CUR5_NONE) gets no 5h projection, with sync on or
+  # off: the shared history still holds the window recorded before, or another
+  # account's. The election above still runs, so this session keeps doing the
+  # maintenance-only claim (trim, heal, sweep); it never publishes, since that
+  # needs _CUR_BURN_VALID. idle, not warming: for a plan without a 5h limit nothing
+  # is pending, and warming would leave burn on "unknown" for good whenever 7d is
+  # not projecting. The cost is a session idle past its own 5h reset (the payload
+  # drops the expired window) resting on 7d alone, as its hidden gauge does.
+  if [ "${_CUR5_NONE:-0}" = 1 ]; then
+    _B5_STATE=idle; _B5_ETA=inf; _B5_RATE="0.0000000000"; _B5_TTR=0
+  elif [ "$VL_LIMIT_SYNC" = 1 ] && [ "${_STATE_RL5_VALID:-0}" = 1 ] \
      && [ $(( NOW + _B5_TTR )) -ne "${_STATE_RL5_RST:-0}" ]; then
     _B5_STATE=warming; _B5_ETA=inf; _B5_RATE="0.0000000000"; _B5_TTR=0
   fi
@@ -1406,11 +1483,12 @@ json_escape() {
 
 # Resolved model ID → short display name → _MS. The subagent panel's per-task
 # model is an ID (claude-haiku-4-5-20251001), not the main statusline's
-# display_name. Strip claude- and a trailing date stamp, dot the version, map
-# the known families (bash 3.2 has no ${var^}). Anything unrecognized passes
-# through verbatim — never wrong, merely verbose.
+# display_name. Strip claude- and a trailing date stamp, dot the version and
+# capitalize the family: any family of plain lowercase letters, so a new one
+# (fable, then mythos) needs no entry here. bash 3.2 has no ${var^}, hence the
+# lookup. Anything else passes through verbatim — never wrong, merely verbose.
 model_short() {
-  local s="$1" fam ver
+  local s="$1" fam ver lo=abcdefghijklmnopqrstuvwxyz up=ABCDEFGHIJKLMNOPQRSTUVWXYZ i
   _MS="$1"
   case "$s" in (claude-*) ;; (*) return 0 ;; esac
   s="${s#claude-}"
@@ -1418,14 +1496,9 @@ model_short() {
   case "$s" in (*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]) s="${s%-*}" ;; esac
   fam="${s%%-*}" ; ver="${s#"$fam"}" ; ver="${ver#-}"
   case "$ver" in (''|*[!0-9-]*) return 0 ;; esac
-  case "$fam" in
-    (fable)  fam="Fable"  ;;
-    (opus)   fam="Opus"   ;;
-    (sonnet) fam="Sonnet" ;;
-    (haiku)  fam="Haiku"  ;;
-    (*) return 0 ;;
-  esac
-  _MS="$fam ${ver//-/.}"
+  case "$fam" in (''|*[!abcdefghijklmnopqrstuvwxyz]*) return 0 ;; esac
+  i="${lo%%"${fam:0:1}"*}"
+  _MS="${up:${#i}:1}${fam:1} ${ver//-/.}"
 }
 
 # ── Git state (single subprocess, parsed once, used by git/stash segments) ──
@@ -1436,68 +1509,96 @@ model_short() {
 export GIT_OPTIONAL_LOCKS=0
 GIT_BRANCH="" GIT_MARKS="" GIT_AB="" GIT_DIRTY=0 GIT_ROOT=""
 read_git() {
-  local line oid="" head="" a="" b="" staged=0 unstaged=0 untracked=0 out="" hit=0
+  local line oid="" head="" a="" b="" staged=0 unstaged=0 untracked=0 hit=0 out="" had_c=0
+  local gdir="$CORALLINE_DIR/git" gname gfile="" gstamp gcwd gbr gmarks gab
   [ -n "$cwd" ] || return
-  # Optional TTL cache of the raw porcelain text. File = "<epoch> <cwd>" line +
-  # the output; the cwd in the header makes filename collisions harmless. A hit
-  # is read with builtins only; any cache failure silently falls back to git.
-  local gcdir="${XDG_CACHE_HOME:-$HOME/.cache}/coralline/git" cfile="" all="" stamp
+  # Optional TTL cache (VL_GIT_CACHE_TTL) of the parsed result: one file per cwd,
+  # named after it, in CORALLINE_DIR/git, created 0700 because the names are
+  # repo paths. A linked directory and link or non-file entries are never used. One
+  # line of \x1f-separated fields (a non-whitespace IFS keeps empty ones): stamp,
+  # cwd, branch, marks, ahead/behind; no working-tree file names. The cwd field
+  # turns a sanitized-name collision into a miss. Entries are published by temp
+  # file + mv (one fork per miss, beside the git one it already pays): measured,
+  # two sessions rewriting one entry with plain >| let a reader see a complete,
+  # newline-terminated line spliced from both once the line reaches ~1000 bytes.
+  # A hit reads with builtins only. A name past NAME_MAX is never
+  # attempted. The class is spelled out: bash 3.2 matches A-Z by collation.
   if [ "$VL_GIT_CACHE_TTL" -gt 0 ]; then
-    cfile="$gcdir/${cwd//[!A-Za-z0-9._-]/_}"
-    if [ -r "$cfile" ] && [ -O "$cfile" ] && [ -O "$gcdir/.private" ] && [ ! -L "$gcdir/.private" ]; then
-      read -r -d '' all < "$cfile"
-      stamp="${all%% *}"
-      case "$stamp" in ''|*[!0123456789]*) ;; *)
-        if [ "$NOW" -ge "$stamp" ] && [ $((NOW - 10#$stamp)) -lt "$VL_GIT_CACHE_TTL" ] \
-           && [ "${all%%$'\n'*}" = "$stamp $cwd" ]; then
-          out="${all#*$'\n'}"; out="${out%$'\n'}"; hit=1
+    gname="${cwd//[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]/_}"
+    if [ "${#gname}" -le 255 ] && [ ! -L "$gdir" ]; then
+      gfile="$gdir/$gname"
+    fi
+    if [ -z "$gfile" ]; then :
+    elif [ -L "$gfile" ] || { [ -e "$gfile" ] && [ ! -f "$gfile" ]; }; then gfile=""
+    elif IFS=$'\x1f' read -r gstamp gcwd gbr gmarks gab 2>/dev/null < "$gfile" \
+         && [ "$gcwd" = "$cwd" ] && [ -n "$gbr" ] && [ "${#gstamp}" -le 12 ]; then
+      case "$gstamp" in (''|*[!0123456789]*) ;; (*)
+        gstamp=$(( 10#$gstamp ))
+        if [ "$gstamp" -le "$NOW" ] && [ $(( NOW - gstamp )) -lt "$VL_GIT_CACHE_TTL" ]; then
+          GIT_BRANCH=$gbr GIT_MARKS=$gmarks GIT_AB=$gab hit=1
         fi ;;
       esac
     fi
   fi
-  if [ "$hit" -eq 0 ]; then
-    # Only a successful status is cached, so a transient failure cannot pin an
-    # empty result for the TTL (non-repo cwds exit 128 and are not cached).
-    # Entries hold repo paths and branch names, so the directory must be ours and
-    # 0700. The .private marker records that: a new dir gets it on creation, a
-    # pre-existing owned dir is tightened once. Reads require the marker too.
-    # Publish is rename-only; the mv is paid once per TTL window per cwd.
-    if out=$(git -C "$cwd" status --porcelain=v2 --branch 2>/dev/null) && [ -n "$cfile" ]; then
-      [ -d "$gcdir" ] || { mkdir -p "${gcdir%/*}" && mkdir -m 700 "$gcdir" && : > "$gcdir/.private"; } 2>/dev/null
-      if [ -d "$gcdir" ] && [ -O "$gcdir" ] && [ ! -L "$gcdir" ]; then
-        # The marker must be an owned regular file, not a symlink. Tighten the
-        # dir first so nobody can plant a marker later, then create it only if
-        # nothing (file or symlink) is there. Later misses skip this block.
-        if [ ! -O "$gcdir/.private" ] || [ -L "$gcdir/.private" ]; then
-          chmod 700 "$gcdir" 2>/dev/null && [ ! -L "$gcdir/.private" ] && [ ! -e "$gcdir/.private" ] \
-            && : > "$gcdir/.private" 2>/dev/null
-        fi
-        if [ -O "$gcdir/.private" ] && [ ! -L "$gcdir/.private" ]; then
-          { printf '%s %s\n%s\n' "$NOW" "$cwd" "$out" > "$cfile.$$" && mv -f "$cfile.$$" "$cfile"; } 2>/dev/null \
-            || rm -f "$cfile.$$" 2>/dev/null
-        fi
-      fi
-    fi
-  fi
-  while IFS= read -r line; do
-    case "$line" in
-      "# branch.oid "*)      oid="${line#\# branch.oid }" ;;
-      "# branch.head "*)     head="${line#\# branch.head }" ;;
-      "# branch.ab "*)       set -- ${line#\# branch.ab }; a="${1#+}"; b="${2#-}" ;;
-      "? "*)                 untracked=1 ;;
-      [12]" "*)              line="${line#? }"
-                             case "${line:0:1}" in [!.]) staged=1 ;; esac
-                             case "${line:1:1}" in [!.]) unstaged=1 ;; esac ;;
-      "u "*)                 unstaged=1 ;;
-    esac
-  done <<GIT
+  if [ "$hit" = 0 ]; then
+    # Only a status that exits 0 is cached: one that printed its headers and then
+    # failed would otherwise pin incomplete marks for the whole TTL.
+    out=$(git -C "$cwd" status --porcelain=v2 --branch 2>/dev/null) || gfile=""
+    while IFS= read -r line; do
+      case "$line" in
+        "# branch.oid "*)      oid="${line#\# branch.oid }" ;;
+        "# branch.head "*)     head="${line#\# branch.head }" ;;
+        "# branch.ab "*)       set -- ${line#\# branch.ab }; a="${1#+}"; b="${2#-}" ;;
+        "? "*)                 untracked=1 ;;
+        [12]" "*)              line="${line#? }"
+                               case "${line:0:1}" in [!.]) staged=1 ;; esac
+                               case "${line:1:1}" in [!.]) unstaged=1 ;; esac ;;
+        "u "*)                 unstaged=1 ;;
+      esac
+    done <<GIT
 $out
 GIT
-  [ -z "$oid" ] && return                     # not a repo
-  if [ "$head" = "(detached)" ] || [ -z "$head" ]; then
-    GIT_BRANCH="${oid:0:7}"
-  else
-    GIT_BRANCH="$head"
+    [ -z "$oid" ] && return                   # not a repo
+    if [ "$head" = "(detached)" ] || [ -z "$head" ]; then
+      GIT_BRANCH="${oid:0:7}"
+    else
+      GIT_BRANCH="$head"
+    fi
+    [ "$staged"    -eq 1 ] && GIT_MARKS="${GIT_MARKS}+"
+    [ "$unstaged"  -eq 1 ] && GIT_MARKS="${GIT_MARKS}!"
+    [ "$untracked" -eq 1 ] && GIT_MARKS="${GIT_MARKS}?"
+    [ "${a:-0}" -gt 0 ] 2>/dev/null && GIT_AB="${GIT_AB}⇡${a}"
+    [ "${b:-0}" -gt 0 ] 2>/dev/null && GIT_AB="${GIT_AB}⇣${b}"
+    # Writes follow the toks store: none under CORALLINE_NO_SAMPLE, and a new
+    # entry first evicts, so the cache holds about TOKS_KEEP cwds (concurrent
+    # creations can each add one past it, as in the toks store). The dir is
+    # made by the first entry (one mkdir, on a miss that already forked git); an
+    # uncreatable one retries it on each miss.
+    if [ -n "$gfile" ] && [ "${CORALLINE_NO_SAMPLE:-0}" != 1 ]; then
+      if [ ! -e "$gfile" ]; then
+        { [ -d "$gdir" ] || mkdir -p -m 700 "$gdir"; } 2>/dev/null
+        toks_evict git/
+      fi
+      # The temp name is short and dot-led: it cannot overflow NAME_MAX, match an
+      # entry (those start with _), or count toward eviction's git/* glob.
+      # Anything already at that name (a stale temp or a planted link) is removed
+      # and this render publishes nothing, so it is never opened: noclobber alone
+      # refuses only a regular file and would open a link to a FIFO and block.
+      # noclobber (O_EXCL, as in state_burn_lead) still covers a regular file
+      # appearing between that test and the open. All builtins until the mv.
+      # ponytail: a render killed between printf and mv leaves one .tmp.<pid>;
+      # nothing sweeps them, add one if they are ever seen piling up.
+      if [ -e "$gdir/.tmp.$$" ] || [ -L "$gdir/.tmp.$$" ]; then
+        rm -f "$gdir/.tmp.$$" 2>/dev/null
+      else
+        case $- in *C*) had_c=1 ;; esac
+        set -C
+        { printf '%s\x1f%s\x1f%s\x1f%s\x1f%s\n' "$NOW" "$cwd" "$GIT_BRANCH" "$GIT_MARKS" "$GIT_AB" \
+            > "$gdir/.tmp.$$" && mv -f "$gdir/.tmp.$$" "$gfile"; } 2>/dev/null \
+          || { { [ -e "$gdir/.tmp.$$" ] || [ -L "$gdir/.tmp.$$" ]; } && rm -f "$gdir/.tmp.$$" 2>/dev/null; }
+        [ "$had_c" = 1 ] || set +C
+      fi
+    fi
   fi
   # Stable project name (seg_project): basename of the MAIN repo root, which is
   # shared by every linked worktree — so it stays constant whichever worktree
@@ -1512,11 +1613,6 @@ GIT
       GIT_ROOT="${cdir##*/}"
     fi ;;
   esac
-  [ "$staged"    -eq 1 ] && GIT_MARKS="${GIT_MARKS}+"
-  [ "$unstaged"  -eq 1 ] && GIT_MARKS="${GIT_MARKS}!"
-  [ "$untracked" -eq 1 ] && GIT_MARKS="${GIT_MARKS}?"
-  [ "${a:-0}" -gt 0 ] 2>/dev/null && GIT_AB="${GIT_AB}⇡${a}"
-  [ "${b:-0}" -gt 0 ] 2>/dev/null && GIT_AB="${GIT_AB}⇣${b}"
   [ -n "$GIT_MARKS" ] && GIT_DIRTY=1
 }
 # ── Segments ─────────────────────────────────────────────────────────────────
@@ -1529,13 +1625,26 @@ ESC=$'\033'
 # char as 3, inflating every segment so the auto-layout wrap fires far too early.
 # Wide CJK / kana / Hangul / fullwidth / emoji code points count as 2 columns,
 # combining and zero-width marks as 0, everything else as 1. Pure bash, no subprocess.
-seg_len() {
+text_width() {
   local s="$1" plain="" LC_ALL=C n i b cp c2 c3 c4 w=0
   while [ "${s#*$ESC}" != "$s" ]; do          # strip CSI "...m" color escapes
     plain+="${s%%$ESC*}"
     s="${s#*$ESC}" ; s="${s#*m}"
   done
   plain+="$s"
+  # Printable ASCII is one column each and is most of every segment: count it in
+  # one expansion and walk only what is left (glyphs, CJK, stray bytes). Under
+  # the local LC_ALL=C one character is one byte and [[:print:]] matched exactly
+  # 0x20-0x7E on macOS (bash 3.2 and 5.3) and Linux; test-width's CJK cases fail
+  # if a C locale ever counts a high byte as printable. A range would follow the
+  # collation on 3.2. Only up to 256 bytes: bash 3.2 does this expansion in
+  # quadratic time, and past a few hundred bytes the plain walk is faster there.
+  # Malformed UTF-8 is measured approximately either way; with the ASCII gone, a
+  # truncated sequence can also take bytes of the next non-ASCII character.
+  if [ "${#plain}" -le 256 ]; then
+    s="${plain//[[:print:]]/}"
+    w=$(( ${#plain} - ${#s} )) ; plain="$s"
+  fi
   n=${#plain} ; i=0
   while [ "$i" -lt "$n" ]; do
     printf -v b '%d' "'${plain:i:1}" ; [ "$b" -lt 0 ] && b=$((b + 256))
@@ -1578,7 +1687,7 @@ seg_len() {
 push() {
   # SEG_LEN[] is read only by the auto-layout wrap; fixed-layout print_range never
   # touches it, so skip the per-char width scan entirely outside auto layout.
-  if [ "$VL_LAYOUT" = "auto" ]; then seg_len "$2" ; else SEG_LEN_R=0 ; fi
+  if [ "$VL_LAYOUT" = "auto" ]; then text_width "$2" ; else SEG_LEN_R=0 ; fi
   SEG_BGS[${#SEG_BGS[@]}]="$1"
   SEG_TXT[${#SEG_TXT[@]}]="$2"
   SEG_LEN[${#SEG_LEN[@]}]="$SEG_LEN_R"
@@ -1586,7 +1695,7 @@ push() {
 
 seg_project() {  # repo-root name in a repo; falls back to dir outside one (unless dir is already shown)
   if [ -z "$GIT_ROOT" ]; then
-    case " $VL_SEGMENTS $VL_SEGMENTS2 $VL_SEGMENTS3 " in *" dir "*) return 0 ;; esac
+    case "$_SEG_ROWS" in *" dir "*) return 0 ;; esac
     seg_dir; return
   fi
   fg "$VL_FG_TEXT"; trunc "$GIT_ROOT" "$VL_NAME_MAX"
@@ -1596,7 +1705,13 @@ seg_project() {  # repo-root name in a repo; falls back to dir outside one (unle
 seg_dir() {  # current directory, long paths collapsed to ~/a/…/z
   [ -n "$cwd" ] || return 0
   local tilde='~'; local short="${cwd/#"$HOME"/$tilde}" n last
-  local IFS='/'; set -- $short; n=$#
+  # set -f: the split must not glob, or a directory named "a*" is replaced by
+  # whatever matches it in the render's working directory
+  local IFS='/' nog=0
+  case $- in (*f*) ;; (*) set -f; nog=1 ;; esac
+  set -- $short
+  [ "$nog" = 0 ] || set +f
+  n=$#
   if [ "$n" -gt "$VL_PATH_DEPTH" ]; then
     eval "last=\${$n}"
     short="$1/$2/…/$last"
@@ -1690,7 +1805,7 @@ seg_cache() {  # prompt-cache hit ratio, and the countdown to the cache expiring
 # the last transcript resolution; tries counts lookups that found nothing since it.
 # The sid must be lowercase hex and dashes (a Claude Code session UUID); the
 # classes are spelled out because bash 3.2 matches [a-f] by locale collation.
-TOKS_KEEP=32                    # internal: max per-session files kept in CORALLINE_DIR
+TOKS_KEEP=32                    # internal: toks-* files kept in CORALLINE_DIR (and git/ cache entries)
 TOKS_TAIL=1048576               # internal: transcript bytes read to find a response
 TOKS_TRIES=3                    # internal: lookups per response before it is given up
 toks_sample() {  # once per render → _TOKS_OK, _TOKS_RATE, _TOKS_DEC, _TOKS_TTFT ("" = none)
@@ -1800,10 +1915,12 @@ toks_transcript() {  # $1=in $2=out → _TT: "decode ttft_ms" (ttft may be -) | 
 # Runs only when a session creates its file (its first render, or after being
 # evicted), so the steady state stays fork-free. Each creation removes at most
 # the single least-recently-written file once TOKS_KEEP is reached, which keeps
-# the store bounded. Evicting a live but idle session costs it one re-anchor.
-toks_evict() {
+# the store near TOKS_KEEP (concurrent creations can each add one past it). Evicting a live but idle session costs it one re-anchor.
+# read_git bounds its per-cwd git cache the same way with $1=git/, so
+# TOKS_KEEP is also that cache's bound.
+toks_evict() {  # $1=path prefix under CORALLINE_DIR (default toks-)
   local f oldest="" n=0
-  for f in "$CORALLINE_DIR"/toks-*; do
+  for f in "$CORALLINE_DIR/${1:-toks-}"*; do
     [ -f "$f" ] && [ ! -L "$f" ] || continue
     n=$(( n + 1 ))
     [ -z "$oldest" ] || [ "$f" -ot "$oldest" ] && oldest="$f"
@@ -1850,7 +1967,7 @@ seg_ttft() {  # time to first token of the last response that opened with thinki
   push "$bg" "${_FG} ${g}${v}${fgd}${unit} "
 }
 
-seg_limit() {  # $1=label $2=pct $3=resets_at $4=bg $5=canonical pct_milli(optional)
+limit_pill() {  # $1=label $2=pct $3=resets_at $4=bg $5=canonical pct_milli(optional)
   [ -n "$2" ] || return 0
   local v fgc rst=""
   if [ -n "${5:-}" ]; then state_round_even "$5" 1000; v=$_RE
@@ -1874,7 +1991,7 @@ seg_limit() {  # $1=label $2=pct $3=resets_at $4=bg $5=canonical pct_milli(optio
 # missing or malformed reset leaves _CUR*_RST at 0 and must NOT render, or the
 # bar would claim an elapsed window that was never observed; a reset beyond the
 # window ceiling is the corrupt/sentinel snapshot rejected in #32 and must not
-# render a countdown days or years out. seg_limit shows an elapsed reset as
+# render a countdown days or years out. limit_pill shows an elapsed reset as
 # "now", which is what v0.11 displayed here.
 # The fallback is for a window that JUST elapsed, so it is bounded by the same
 # ceiling that validates a future reset. Claude Code keeps replaying the last
@@ -1883,14 +2000,14 @@ seg_limit() {  # $1=label $2=pct $3=resets_at $4=bg $5=canonical pct_milli(optio
 # closed three days earlier. Rendering those as the current window is worse than
 # rendering nothing, and past the bound the segment falls through to the store,
 # which by construction only holds windows that are still open.
-seg_limit_elapsed() {  # $1=canonical pct $2=parsed reset $3=max elapsed age; sets _SLE_OK
+limit_elapsed_ok() {  # $1=canonical pct $2=parsed reset $3=max elapsed age; sets _SLE_OK
   _SLE_OK=0
   [ -n "$1" ] || return 0
   [ "$2" -gt 0 ] && [ "$2" -le "$NOW" ] && [ $(( NOW - $2 )) -le "$3" ] && _SLE_OK=1
   return 0
 }
-# Ownership is decided once, in rl_choose: this session's own reading always wins
-# its own window, and the store wins only with a strictly newer reset. Requiring
+# Ownership is decided once, in rl_choose: this session's own valid reading always
+# wins, and the store fills in only when there is none. Requiring
 # _CUR*_VALID again HERE did not add protection, it removed the store's documented
 # last job — "the sole source whenever this session has no valid reading at all".
 # The payload carries rate_limits only once the session has received an API
@@ -1910,24 +2027,24 @@ seg_limit_elapsed() {  # $1=canonical pct $2=parsed reset $3=max elapsed age; se
 seg_limit5h() {  # 5h rate-limit gauge with reset countdown
   local p="$fh_pct" r="$fh_rst" m=""
   if [ "$VL_LIMIT_SYNC" = 1 ]; then
-    seg_limit_elapsed "${_CUR5_CANON:-}" "${_CUR5_RST:-0}" "$RL_MAX_5H"
+    limit_elapsed_ok "${_CUR5_CANON:-}" "${_CUR5_RST:-0}" "$RL_MAX_5H"
     if [ "${_STATE_RL5_VALID:-0}" = 1 ]; then m=$_STATE_RL5_PCT; r=$_STATE_RL5_RST
     elif [ "$_SLE_OK" = 1 ]; then m=$_CUR5_PCT; r=$_CUR5_RST
     else return 0; fi
     printf -v p '%d.%03d' $(( m / 1000 )) $(( m % 1000 ))
   fi
-  seg_limit "5h" "$p" "$r" "$VL_BG_5H" "$m"
+  limit_pill "5h" "$p" "$r" "$VL_BG_5H" "$m"
 }
 seg_limit7d() {  # 7d rate-limit gauge with reset countdown
   local p="$wd_pct" r="$wd_rst" m=""
   if [ "$VL_LIMIT_SYNC" = 1 ]; then
-    seg_limit_elapsed "${_CUR7_CANON:-}" "${_CUR7_RST:-0}" "$RL_MAX_7D"
+    limit_elapsed_ok "${_CUR7_CANON:-}" "${_CUR7_RST:-0}" "$RL_MAX_7D"
     if [ "${_STATE_RL7_VALID:-0}" = 1 ]; then m=$_STATE_RL7_PCT; r=$_STATE_RL7_RST
     elif [ "$_SLE_OK" = 1 ]; then m=$_CUR7_PCT; r=$_CUR7_RST
     else return 0; fi
     printf -v p '%d.%03d' $(( m / 1000 )) $(( m % 1000 ))
   fi
-  seg_limit "7d" "$p" "$r" "$VL_BG_7D" "$m"
+  limit_pill "7d" "$p" "$r" "$VL_BG_7D" "$m"
 }
 
 seg_cost() {  # session cost in USD
@@ -2044,6 +2161,41 @@ seg_effort() {  # reasoning effort level (low/medium/high/xhigh/max); glyph ψ i
   push "$VL_BG_EFFORT" "${_FG} ψ ${label} "
 }
 
+# model-relay's state for this session, from the status file its hook writes on
+# every change: <config dir>/model-relay-status/<session_id>, one line
+# "kind<TAB>label" (kind: claude, pinned, failover, limit, offline, direct). The read
+# builtin takes it, so the segment adds no fork. A missing file (model-relay not
+# installed, or not yet written) or a line without its newline reads as nothing.
+relay_sample() {  # → relay_kind, relay ("" = none)
+  relay_kind="" relay=""
+  # a plain file name only: the id comes from the payload and becomes a path
+  case "$sid" in (''|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]*) return 0 ;; esac
+  local f="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/model-relay-status/$sid"
+  [ -f "$f" ] || return 0                   # -f: a FIFO here must not block
+  { IFS=$'\t' read -r relay_kind relay < "$f"; } 2>/dev/null || { relay_kind="" relay=""; }
+  case "$relay_kind" in (claude|pinned|failover|limit|offline|direct) ;; (*) relay_kind="" relay=""; return 0 ;; esac
+  relay="${relay%$'\r'}"
+  relay="${relay%\[*\]}"                   # a [1m]-style context hint is not part of the name
+  # A model id is plain ASCII; anything else (an escape sequence planted in the
+  # provider config) is dropped. The class is spelled out: bash 3.2 ranges follow
+  # the locale's collation.
+  relay="${relay//[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._:\/@+ -]/}"
+  [ -n "$relay" ] || relay=provider        # a name with nothing left still shows its kind
+}
+
+seg_relay() {  # model-relay: which model this session talks to (claude, a pinned provider, offline)
+  local p="${relay:-$VL_RELAY_PREVIEW}" note=""
+  [ -n "$p" ] || return 0
+  case "$relay_kind" in
+    (failover) note=" · failover" ;;
+    (limit)    note=" · limit" ;;
+    (direct)   note=" · direct" ;;
+  esac
+  trunc "$p" "$VL_NAME_MAX"
+  fg "$VL_FG_TEXT"
+  push "${VL_BG_RELAY:-$VL_BG_STYLE}" "${_FG} ↪ ${_TR}${note} "
+}
+
 seg_stash() {  # git stash count
   [ -n "$GIT_BRANCH" ] || return 0
   local n
@@ -2056,7 +2208,7 @@ seg_stash() {  # git stash count
 # ── Runtime detection (node / python segments) ───────────────────────────────
 # Each sets the global _RT to a label for directory $1 (empty when nothing is
 # detected), so the seg_* callers read a global instead of a $() subshell — the
-# fork-free convention used by fg/_FG, trunc/_TR, seg_len/SEG_LEN_R.
+# fork-free convention used by fg/_FG, trunc/_TR, text_width/SEG_LEN_R.
 #
 # The pin-file path (.nvmrc / .python-version, walking up ancestors) is always
 # tried first and never forks. The interpreter probe DOES fork, so it is gated
@@ -2164,6 +2316,15 @@ subagent_role() {  # → _SUB_ROLE ; reads $_SUB_BASE.meta.json
   _SUB_ROLE="$role"
 }
 
+subagent_meta_effort() {  # → _SUB_EFFORT ; effort in $_SUB_BASE.meta.json (the cheap source; agreed with the transcript on 41/41 local agents that had it)
+  local path="$_SUB_BASE.meta.json" line re='"effort":"(low|medium|high|xhigh|max)"'
+  _SUB_EFFORT=""
+  [ -r "$path" ] || return 1
+  IFS= read -r line < "$path" || [ -n "$line" ] || return 1
+  [[ $line =~ $re ]] || return 1
+  _SUB_EFFORT="${BASH_REMATCH[1]}"
+}
+
 subagent_effort() {  # → _SUB_EFFORT ; effort the task's first API response recorded
   # Claude Code writes the effort it actually sent on every assistant line of the
   # subagent transcript, and omits it where it sent none (Haiku 4.5), so this is
@@ -2187,6 +2348,75 @@ subagent_effort() {  # → _SUB_EFFORT ; effort the task's first API response re
     return 1
   done < "$path"
   return 1
+}
+
+subagent_desc() {  # → _SUB_DESC ; task description from $_SUB_BASE.meta.json, scrubbed
+  local path="$_SUB_BASE.meta.json" line rest seg out=""
+  _SUB_DESC=""
+  [ -r "$path" ] || return 1
+  IFS= read -r line < "$path" || [ -n "$line" ] || return 1
+  case "$line" in (*'"description":"'*) rest="${line#*\"description\":\"}" ;; (*) return 1 ;; esac
+  while :; do  # up to the first unescaped quote; \" becomes ", any other escape is dropped below
+    seg="${rest%%\"*}"
+    [ "$seg" != "$rest" ] || return 1
+    out+="$seg" ; rest="${rest#*\"}"
+    case "$seg" in (*\\) out="${out%\\}\"" ;; (*) break ;; esac
+  done
+  out="${out//\\[nrt]/ }" ; out="${out//\\u[[:xdigit:]][[:xdigit:]][[:xdigit:]][[:xdigit:]]/}" ; out="${out//\\/}"
+  sub_scrub "$out" ; out="${_SS#"${_SS%%[![:space:]]*}"}" ; out="${out%"${out##*[![:space:]]}"}"
+  [ -n "$out" ] || return 1
+  _SUB_DESC="$out"
+}
+
+sub_scrub() {  # → _SS ; drop C0, DEL and C1 (UTF-8 U+0080-009F) — the bash twin of the jq scrub below
+  local LC_ALL=C s="$1"
+  s="${s//[[:cntrl:]]/}"
+  _SS="${s//$'\xc2'[$'\x80'-$'\x9f']/}"
+}
+
+subagent_start() {  # → _SUB_START ; first timestamp in the first three lines of $_SUB_BASE.jsonl
+  # Line 1 is the prompt, with its timestamp after it; the lines after it follow
+  # ~0.1 s later. Regex captures, not ${x#*pat}: that is quadratic in bash 3.2
+  # (30 KB took ~0.6 s), and a prompt line can be far bigger than that.
+  local path="$_SUB_BASE.jsonl" line n=0 re='"timestamp":"([0-9TZ:.-]+)"'
+  _SUB_START=""
+  [ -r "$path" ] || return 1
+  while [ "$n" -lt 3 ] && IFS= read -r line; do
+    n=$((n + 1))
+    if [[ $line =~ $re ]]; then _SUB_START="${BASH_REMATCH[1]}" ; return 0 ; fi
+  done < "$path"
+  return 1
+}
+
+subagent_tokens() {  # → _SUB_TOK _SUB_MODEL ; context size and model of the newest assistant response
+  # A subagent transcript has no running total, so one tail (32 KiB) and the last
+  # assistant line carrying a usage block. Only assistant lines count: a user
+  # line's toolUseResult can hold another agent's usage object. The model is the
+  # same line's message.model, so it is lost, and the row shows without it, only
+  # when that line is longer than the window. Context = input + cache read + cache
+  # write (what the response was prompted with). Case globs and regex captures
+  # only: pattern removal on a line this long is quadratic.
+  local path="$_SUB_BASE.jsonl" chunk line last="" v k sum=0 re
+  _SUB_TOK="" ; _SUB_MODEL=""
+  [ -r "$path" ] || return 1
+  chunk=$(tail -c 32768 "$path" 2>/dev/null) || return 1
+  while IFS= read -r line; do
+    case "$line" in (*'"type":"assistant"'*) case "$line" in (*'"usage":{'*) last="$line" ;; esac ;; esac
+  done <<TAIL
+$chunk
+TAIL
+  [ -n "$last" ] || return 1
+  re='"message":\{"model":"([A-Za-z0-9._:-]+)"'
+  [[ $last =~ $re ]] && _SUB_MODEL="${BASH_REMATCH[1]}"
+  for k in input_tokens cache_creation_input_tokens cache_read_input_tokens; do
+    re="\"$k\":([0-9]+)"
+    if [[ $last =~ $re ]]; then
+      v="${BASH_REMATCH[1]}"
+      [ "${#v}" -le 12 ] && sum=$(( sum + 10#$v ))
+    fi
+  done
+  [ "$sum" -gt 0 ] || return 1
+  _SUB_TOK="$sum"
 }
 
 subseg_name() {  # identity + task label; each falls back independently
@@ -2260,9 +2490,15 @@ subseg_elapsed() {  # wall-clock since startTime; hidden when unparseable
 
 # ── Render ───────────────────────────────────────────────────────────────────
 build_segments() {
-  local s
+  local s words nog=0
   SEG_BGS=() ; SEG_TXT=() ; SEG_LEN=()
-  for s in $1; do
+  # Split without globbing, as words_of does for the scan: a name such as "g?t"
+  # must not turn into a file that happens to match it. noglob is put back as it
+  # was before the segments run (a coralline.conf may have set it).
+  case $- in (*f*) ;; (*) set -f; nog=1 ;; esac
+  words=($1)
+  [ "$nog" = 0 ] || set +f
+  for s in ${words[@]+"${words[@]}"}; do
     command -v "seg_$s" >/dev/null 2>&1 && "seg_$s"
   done
 }
@@ -2324,6 +2560,86 @@ term_cols() {  # → _COLS
   _COLS="$c"
 }
 
+render_sub_row() {  # → _ROW ; one panel row from the t_* globals and VL_SUB_SEGMENTS; rc 1 when no segment drew
+  local s
+  SEG_BGS=() ; SEG_TXT=() ; SEG_LEN=()
+  for s in $VL_SUB_SEGMENTS; do
+    command -v "subseg_$s" >/dev/null 2>&1 && "subseg_$s"
+  done
+  [ "${#SEG_BGS[@]}" -gt 0 ] || return 1
+  render_range 0 $(( ${#SEG_BGS[@]} - 1 ))
+}
+
+# Opt-in (VL_SUB_INLINE=1): one row per running subagent under the main bar, for
+# Claude Code >= 2.1.323 where subagentStatusLine is gone and --subagent is never
+# called. Source: ${transcript%.jsonl}/subagents/agent-<id>.{jsonl,meta.json}.
+# Live finding: meta.json exists from the start of a run (agentType, description,
+# effort, toolUseId) and only gains "finished":true at the end, so a row needs no
+# main-transcript lookup. A meta-less agent still gets a row, named "agent".
+# Running = no finished flag and a transcript write within VL_SUB_INLINE_STALE
+# minutes (one find, which is also the only listing); crashed or abandoned agents
+# age out. Rows are ordered by start time and capped at VL_SUB_INLINE_MAX, so a new
+# agent never evicts a row already on screen. They follow every main-bar line and
+# are not counted in VL_MAX_LINES. Nothing here may fail the main bar: every
+# read degrades to a hidden field or a hidden row. Cost: one find, plus one tail
+# per shown row when `ctx` or `model` is listed; everything else is in-shell reads.
+sub_inline_rows() {
+  [ "$VL_SUB_INLINE" = 1 ] || return 0
+  case "$transcript" in (*.jsonl) ;; (*) return 0 ;; esac
+  local dir="${transcript%.jsonl}/subagents" max="$VL_SUB_INLINE_MAX" stale="$VL_SUB_INLINE_STALE"
+  local files f id line i total shown ep more
+  local -a KEY=() BASE=() START=()
+  dir="${dir//\\//}"
+  case "$dir" in (-*) return 0 ;; esac
+  [ -d "$dir" ] || return 0
+  case "$max" in (''|*[!0-9]*) max=5 ;; (*) [ "${#max}" -le 4 ] && max=$(( 10#$max )) || max=5 ;; esac
+  case "$stale" in (''|*[!0-9]*) stale=10 ;; (*) [ "${#stale}" -le 6 ] && stale=$(( 10#$stale )) || stale=10 ;; esac
+  [ "$max" -gt 0 ] || return 0
+  [ "$stale" -gt 0 ] || stale=10
+  files=$(find "$dir" -maxdepth 1 -name 'agent-*.jsonl' -mmin "-$stale" 2>/dev/null) || return 0
+  [ -n "$files" ] || return 0
+  while IFS= read -r f; do
+    id="${f##*/agent-}" ; id="${id%.jsonl}"
+    subagent_base "$transcript" "$id" || continue
+    line=""
+    [ -r "$_SUB_BASE.meta.json" ] && { IFS= read -r line < "$_SUB_BASE.meta.json" || :; }
+    case "$line" in (*'"finished":true'*) continue ;; esac
+    ep=0
+    subagent_start && sub_epoch "$_SUB_START" && ep="$_EP"
+    i=${#BASE[@]}  # insertion sort: oldest start first
+    while [ "$i" -gt 0 ] && [ "${KEY[i-1]}" -gt "$ep" ]; do
+      KEY[i]="${KEY[i-1]}" ; BASE[i]="${BASE[i-1]}" ; START[i]="${START[i-1]}" ; i=$((i - 1))
+    done
+    KEY[i]="$ep" ; BASE[i]="$_SUB_BASE" ; START[i]="$_SUB_START"
+  done <<FILES
+$files
+FILES
+  total=${#BASE[@]}
+  [ "$total" -gt 0 ] || return 0
+  shown=$total ; [ "$shown" -le "$max" ] || shown=$max
+  VL_LAYOUT=fixed  # rows are single lines: skip the wrap-width scan
+  for ((i=0; i<shown; i++)); do
+    _SUB_BASE="${BASE[i]}"
+    t_name="" ; t_label="" ; t_desc="" ; t_role="" ; t_effort="" ; t_type=agent ; t_status=running
+    t_model="" ; t_cws="" ; t_tok="" ; t_start="${START[i]}"
+    subagent_role && t_role="$_SUB_ROLE"
+    subagent_desc && t_desc="$_SUB_DESC"
+    case " $VL_SUB_SEGMENTS " in (*' ctx '*|*' model '*) subagent_tokens ; t_tok="$_SUB_TOK" ; t_model="$_SUB_MODEL" ;; esac
+    case " $VL_SUB_SEGMENTS " in
+      (*' effort '*) { subagent_meta_effort || subagent_effort; } && t_effort="$_SUB_EFFORT" ;;
+    esac
+    render_sub_row && printf '%s\n' "$_ROW"
+  done
+  more=$(( total - shown ))
+  if [ "$more" -gt 0 ]; then
+    SEG_BGS=() ; SEG_TXT=() ; SEG_LEN=()
+    fg "${VL_FG_SUB_DIM:-$VL_FG_DIM}"
+    push "${VL_BG_SUB_NAME:-$VL_BG_DIR}" "${_FG} +${more} more "
+    render_range 0 0 && printf '%s\n' "$_ROW"
+  fi
+  return 0
+}
+
 # ── Subagent panel mode ──────────────────────────────────────────────────────
 # stdin: {columns, tasks:[…]} (Claude Code subagentStatusLine, v2.1.205+ for
 # model/contextWindowSize). stdout: one {"id","content"} line per row. Reuses
@@ -2377,12 +2693,7 @@ if [ "$SUBAGENT_MODE" = "1" ]; then
       subagent_role && t_role="$_SUB_ROLE"
       case " $VL_SUB_SEGMENTS " in (*' effort '*) subagent_effort && t_effort="$_SUB_EFFORT" ;; esac
     fi
-    SEG_BGS=() ; SEG_TXT=() ; SEG_LEN=()
-    for s in $VL_SUB_SEGMENTS; do
-      command -v "subseg_$s" >/dev/null 2>&1 && "subseg_$s"
-    done
-    [ "${#SEG_BGS[@]}" -gt 0 ] || continue
-    render_range 0 $(( ${#SEG_BGS[@]} - 1 ))
+    render_sub_row || continue
     json_escape "$_ROW" ; sub_row="$_JS"
     json_escape "$t_id"
     printf '{"id":"%s","content":"%s"}\n' "$_JS" "$sub_row"
@@ -2460,9 +2771,24 @@ $_JSON_FIELDS
 JSON
 sid="${sid%$'\r'}"  # native Windows jq writes CRLF; the last field keeps the CR
 
-_SEG_SCAN=" $VL_SEGMENTS $VL_SEGMENTS2 $VL_SEGMENTS3 "
-[ "$VL_FLOAT" = "1" ] && _SEG_SCAN="$_SEG_SCAN$VL_FLOAT_SEGMENTS "
+# Every segment drawn in a row (seg_project reads it too); _SEG_SCAN adds float's.
+# The lists are split on any whitespace when they are drawn (build_segments), so
+# the scan strings are normalized the same way: with a tab or a newline between
+# two names, `*" git "*` never matched, the segment was drawn and its sampler
+# never ran (git vanished, burn showed its idle mark). Not named seg_*: the
+# wizard and the upgrade report list every seg_* function as a segment.
+words_of() {  # $1=segment lists → _SW: the names, single-spaced, with a space at each end
+  local IFS=$' \t\n' nog=0
+  case $- in (*f*) ;; (*) set -f; nog=1 ;; esac
+  set -- $1
+  [ "$nog" = 0 ] || set +f
+  _SW=" $* "
+}
+words_of "$VL_HEAD_SEGMENTS $VL_SEGMENTS $VL_SEGMENTS2 $VL_SEGMENTS3"; _SEG_ROWS="$_SW"
+_SEG_SCAN="$_SEG_ROWS"
+if [ "$VL_FLOAT" = "1" ]; then words_of "$VL_FLOAT_SEGMENTS"; _SEG_SCAN="$_SEG_ROWS${_SW# }"; fi
 case "$_SEG_SCAN" in *" git "*|*" stash "*|*" project "*) read_git ;; esac
+case "$_SEG_SCAN" in (*" relay "*) relay_sample ;; esac
 
 # The disabled/default path performs no state work. Enabled paths canonicalize
 # values and namespaces once, then use the released TSV/compact-directory flow.
@@ -2519,21 +2845,34 @@ emit_float() {
     line="${line:+$line$VL_FLOAT_SEP}$s"
   done
   VL_NOCOLOR="$_nc" ; BOLD="$_b" ; NORM="$_n" ; R="$_r"
-  dir=$(dirname "$VL_FLOAT_FILE")
-  mkdir -p "$dir"
+  # No dirname fork, and no mkdir for a directory that exists: this runs on every
+  # render. (A directory that cannot be created still costs a failed mkdir each
+  # time.) A path that names no file (empty, a trailing slash, an existing
+  # directory, where mv would drop the temp file inside it) is skipped. A write
+  # that fails stays off the render's stderr.
+  case "$VL_FLOAT_FILE" in (''|*/) return 0 ;; esac
+  [ ! -d "$VL_FLOAT_FILE" ] || return 0
+  case "$VL_FLOAT_FILE" in (*/*) dir="${VL_FLOAT_FILE%/*}"; [ -n "$dir" ] || dir=/ ;; (*) dir=. ;; esac
+  [ -d "$dir" ] || mkdir -p "$dir" 2>/dev/null || return 0
   tmp="$dir/.float.tmp.$$"
-  printf '%s\n' "$line" > "$tmp" && mv -f "$tmp" "$VL_FLOAT_FILE" || rm -f "$tmp"
+  { printf '%s\n' "$line" > "$tmp"; } 2>/dev/null && mv -f "$tmp" "$VL_FLOAT_FILE" 2>/dev/null || rm -f "$tmp" 2>/dev/null
 }
 
 [ "$VL_FLOAT" = "1" ] && emit_float
 
+if [ -n "$VL_HEAD_SEGMENTS" ]; then
+  build_segments "$VL_HEAD_SEGMENTS"
+  [ "${#SEG_BGS[@]}" -gt 0 ] && print_range 0 $(( ${#SEG_BGS[@]} - 1 ))
+fi
+
 if [ "$VL_LAYOUT" = "auto" ]; then
   build_segments "$VL_SEGMENTS"
   total=${#SEG_BGS[@]}
-  [ "$total" -eq 0 ] && exit 0
+  [ "$total" -eq 0 ] && { sub_inline_rows; exit 0; }
   term_cols; W="$_COLS"
   if [ "$W" -le 0 ] || [ "$VL_MAX_LINES" -le 1 ]; then
     print_range 0 $((total - 1))
+    sub_inline_rows
     exit 0
   fi
   # Reserve a right-hand margin so wrapped lines never touch the window edge.
@@ -2561,4 +2900,5 @@ else
     [ "${#SEG_BGS[@]}" -gt 0 ] && print_range 0 $(( ${#SEG_BGS[@]} - 1 ))
   done
 fi
+sub_inline_rows
 exit 0

@@ -5,7 +5,8 @@
     "CLAUDE_CODE_THISTLE_GREBE": "counter_steer",
     "CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS": "1",
     "STINGRAY": "1",
-    "STINGRAY_SHAPE3": "1"
+    "STINGRAY_SHAPE3": "1",
+    "CLAUDE_CODE_PLUGIN_DIRS": "~/dotfile/config/ai/claude/mods/coralline-agents"
   },
   "permissions": {
     "allow": [
