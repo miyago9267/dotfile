@@ -26,6 +26,8 @@
 - 保持積極的 context compression 與 bounded search；不要載入完整 logs、
   sessions、caches 或 generated trees。
 - Commits 不含 AI attribution。
+- 選模型、派工與審查關卡時，優先序是成本 > 速度 > 安全性（2026-11-16）。
+  安全性排最後只影響模型等級與審查次數；secret、sudo 與不可逆操作的硬規則照舊。
 - Main session 平常用 medium effort 討論、拆工再派 role（必要時到 high，最高
   xhigh）；實際的 shell 與修改工作偏好交給 role，換可觀測性與 fresh context。
   他最在意速度與隧道視野，嚴謹度交給多個 role 把關。
