@@ -297,6 +297,13 @@ return {
     },
   },
   {
+    -- 滑鼠拖曳分隔線記住大小、雙擊還原、拖 winbar 交換／搬移視窗；本機有 ~/Project/Active/Packages/driftwood.nvim 時用 local 版
+    "miyago9267/driftwood.nvim",
+    dev = true,
+    lazy = false,
+    opts = { winbar = true },
+  },
+  {
     -- multi-root workspace；本機有 ~/Project/Active/Packages/archipelago.nvim 時用 local 版（見 init.lua 的 dev）
     "miyago9267/archipelago.nvim",
     dev = true,
