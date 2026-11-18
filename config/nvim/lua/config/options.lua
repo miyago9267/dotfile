@@ -18,6 +18,19 @@ function M.setup()
   vim.opt.writebackup = false
   vim.opt.completeopt = { "menu", "menuone", "noselect" }
 
+  -- SSH 遠端沒有本機剪貼簿：複製走 OSC52 交給本機 terminal；貼上用 nvim 自己的暫存，避免 terminal 擋讀取請求而卡住
+  if vim.env.SSH_TTY and vim.env.DISPLAY == nil and vim.env.WAYLAND_DISPLAY == nil then
+    local osc52 = require("vim.ui.clipboard.osc52")
+    local function paste()
+      return { vim.split(vim.fn.getreg(""), "\n"), vim.fn.getregtype("") }
+    end
+    vim.g.clipboard = {
+      name = "OSC 52",
+      copy = { ["+"] = osc52.copy("+"), ["*"] = osc52.copy("*") },
+      paste = { ["+"] = paste, ["*"] = paste },
+    }
+  end
+
   if vim.fn.has("win32") == 1 then
     -- :terminal 與 :! 改走 PowerShell 7，不落回 cmd.exe
     if vim.fn.executable("pwsh") == 1 then

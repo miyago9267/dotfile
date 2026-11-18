@@ -361,7 +361,13 @@ return {
         animate = { enabled = false },
         options = {
           left = { size = 32 },
-          right = { size = 0.30 },
+          -- 30% 在窄視窗（SSH、分割的 terminal）只剩三十幾欄，agent 的 TUI 會被擠扁；至少給 80 欄，但不超過一半
+          right = {
+            size = function()
+              local cols = vim.o.columns
+              return math.max(math.floor(cols * 0.30), math.min(80, math.floor(cols / 2)))
+            end,
+          },
           bottom = { size = 12 },
         },
         left = {
