@@ -5,8 +5,7 @@
     "CLAUDE_CODE_THISTLE_GREBE": "counter_steer",
     "CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS": "1",
     "STINGRAY": "1",
-    "STINGRAY_SHAPE3": "1",
-    "CLAUDE_CODE_PLUGIN_DIRS": "~/dotfile/config/ai/claude/mods/coralline-agents"
+    "STINGRAY_SHAPE3": "1"
   },
   "permissions": {
     "allow": [
@@ -468,6 +467,7 @@
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark-ansi",
+  "switchModelsOnFlag": false,
   "agentPushNotifEnabled": true,
-  "switchModelsOnFlag": false
+  "advisorModel": "fable"
 }

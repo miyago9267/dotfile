@@ -1,1 +1,0 @@
-{ "name": "coralline-agents", "version": "0.1.0", "description": "Draws running subagents as coralline-style powerline pills above the prompt", "types": "./types/index.d.ts" }
