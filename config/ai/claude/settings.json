@@ -216,6 +216,11 @@
             "type": "command",
             "command": "bash ~/dotfile/config/ai/claude/hooks/subagent-stop-reminder.sh",
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/dotfile/config/ai/claude/hooks/zh-tw-guard.py",
+            "timeout": 5
           }
         ]
       }

@@ -18,4 +18,10 @@ run single_hit pass '{"last_assistant_message":"這裡有一個这字而已。",
 run reentry pass '{"last_assistant_message":"这个问题已经处理完了，我们现在进行下一步。","stop_hook_active":true}'
 run english pass '{"last_assistant_message":"All done.","stop_hook_active":false}'
 run bad_json pass 'not json'
+run subagent_simplified block '{"hook_event_name":"SubagentStop","last_assistant_message":"这个问题已经处理完了，我们现在进行下一步。","stop_hook_active":false}'
+run subagent_english pass '{"hook_event_name":"SubagentStop","last_assistant_message":"All done. The fetch returned the page content without any issues here.","stop_hook_active":false}'
+tr=$(mktemp)
+printf '%s\n' '{"type":"user","message":{"role":"user","content":"hi"}}' '{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"这个问题已经处理完了，我们现在进行下一步。"}]}}' > "$tr"
+run subagent_transcript block "{\"hook_event_name\":\"SubagentStop\",\"agent_transcript_path\":\"$tr\",\"stop_hook_active\":false}"
+rm -f "$tr"
 [ $fail = 0 ] && echo "all passed"; exit $fail
