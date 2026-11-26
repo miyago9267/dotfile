@@ -1,6 +1,6 @@
 # common cmd
-# 互動式 -i alias 只在互動 shell 生效，避免 agent 背景 cp/mv 卡在覆寫確認
-if [[ $- == *i* ]]; then
+# 互動式 -i alias 只在互動 shell 生效，避免 agent 背景 cp/mv 卡在覆寫確認；Claude Code 的 shell snapshot 也是互動 shell 拍的，靠 CLAUDECODE 排除
+if [[ $- == *i* && -z ${CLAUDECODE-} ]]; then
   alias rm='rm -i'
   alias cp='cp -i -r'
   alias mv='mv -i'
