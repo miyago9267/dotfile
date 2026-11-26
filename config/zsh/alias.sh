@@ -1,7 +1,10 @@
 # common cmd
-alias rm='rm -i'
-alias cp='cp -i -r'
-alias mv='mv -i'
+# 互動式 -i alias 只在互動 shell 生效，避免 agent 背景 cp/mv 卡在覆寫確認
+if [[ $- == *i* ]]; then
+  alias rm='rm -i'
+  alias cp='cp -i -r'
+  alias mv='mv -i'
+fi
 alias l='ls -l'
 alias ll='ls -alFh'
 alias py='uv run python'
