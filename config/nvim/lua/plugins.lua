@@ -106,6 +106,11 @@ return {
     -- 右鍵選單補上新增與刪除，只在 file tree 裡出現
     config = function(_, opts)
       require("nvim-tree").setup(opts)
+      -- tree 視窗不顯示 EndOfBuffer 的 ~，只影響這個視窗的 fillchars
+      vim.api.nvim_create_autocmd("BufWinEnter", {
+        pattern = "NvimTree_*",
+        callback = function() vim.opt_local.fillchars:append({ eob = " " }) end,
+      })
       local items = {
         { "New\\ File/Folder", "create" },
         { "Delete", "remove" },
