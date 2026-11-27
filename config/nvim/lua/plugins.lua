@@ -320,7 +320,8 @@ return {
       local image = vim.fn.expand("~/.warp/themes/Monika.png")
       return {
         image = image,
-        opacity = 0.05, -- VSCode 反轉透明度 0.95
+        opacity = 0.25,
+        dim = 0.6, -- 圖先壓暗 60% 再疊 25%，底色接近主題、圖看得到
         blur = 40, -- VSCode blur 20px，Retina 2 倍
         enabled = vim.uv.fs_stat(image) ~= nil,
       }
