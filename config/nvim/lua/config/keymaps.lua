@@ -73,7 +73,6 @@ local function toggle_transparency()
     vim.cmd("highlight NormalFloat guibg=NONE ctermbg=NONE")
     vim.cmd("highlight SignColumn guibg=NONE ctermbg=NONE")
     vim.cmd("highlight EndOfBuffer guibg=NONE ctermbg=NONE")
-    vim.cmd("highlight NvimTreeNormal guibg=NONE ctermbg=NONE")
   else
     vim.cmd.colorscheme("edge")
   end

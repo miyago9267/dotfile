@@ -19,6 +19,15 @@ return {
       vim.g.edge_style = "neon"
       vim.g.edge_enable_italic = true
       vim.g.edge_disable_italic_comment = true
+      -- edge 預設把 nvim-tree 側欄調暗，這裡讓它跟編輯區一致
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        pattern = "edge",
+        callback = function()
+          for from, to in pairs({ NvimTreeNormal = "Normal", NvimTreeEndOfBuffer = "EndOfBuffer", NvimTreeCursorLine = "CursorLine" }) do
+            vim.api.nvim_set_hl(0, from, { link = to })
+          end
+        end,
+      })
       vim.cmd.colorscheme("edge")
     end,
   },
