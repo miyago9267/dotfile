@@ -143,7 +143,9 @@ compose_active_rules() {
     if shoal_bootstrap=$(git -C "$SHOAL_ROOT" show HEAD:templates/agents-md.bootstrap.md 2>/dev/null); then
       printf '\n%s\n' "$shoal_bootstrap"
     else
-      printf 'shoal bootstrap unavailable at %s; AGENTS.md generated without shoal-codex block\n' "$SHOAL_ROOT" >&2
+      # 本機沒有 shoal 時沿用已產生檔 adapter 結尾之後的區塊，避免同步時洗掉（與 Personal Model 同策略）
+      awk 'kept { print } /<!-- runtime-adapter:end -->/ { kept = 1 }' "$ACTIVE_RULES_SRC" 2>/dev/null
+      printf 'shoal bootstrap unavailable at %s; kept existing shoal-codex block\n' "$SHOAL_ROOT" >&2
     fi
   } > "$tmp_file"
   mv "$tmp_file" "$ACTIVE_RULES_SRC"

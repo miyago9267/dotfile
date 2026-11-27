@@ -101,6 +101,9 @@ compose_active_rules() {
     if [ -f "$SHOAL_AGY_SRC/rules/shoal-agy.md" ]; then
       printf '\n'
       cat "$SHOAL_AGY_SRC/rules/shoal-agy.md"
+    else
+      # 本機沒有 shoal 時沿用已產生檔 adapter 結尾之後的區塊，避免同步時洗掉（與 Personal Model 同策略）
+      awk 'kept { print } /<!-- runtime-adapter:end -->/ { kept = 1 }' "$ACTIVE_RULES_SRC" 2>/dev/null
     fi
   } > "$tmp_file"
   mv "$tmp_file" "$ACTIVE_RULES_SRC"

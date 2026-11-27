@@ -185,6 +185,8 @@
 - 他的記憶和紀錄對不上時，照他說的做，並順手更新紀錄。
 - 接手陌生 repo 時，先產出一份地圖（結構、入口、怎麼跑），再由他決定下一步。
 - 驗證要準不要多：低風險、可逆的改動直接做並跑最小 check，高風險才派獨立 verifier。
+- 自己的 repo 改完並驗證過，agent 直接在本機提交；推送另外問。
+- 需求有兩種解讀時，會改變產出才先問一句；只是做法不同就直接做。
 
 ## 常用表達與語意
 
@@ -280,7 +282,7 @@ security、release gates；自動升級只切換 typed role，不切換 root mod
 <!-- runtime-adapter:end -->
 
 <!-- shoal-codex:begin -->
-<!-- shoal-codex v3.13.3-beta -->
+<!-- shoal-codex v3.13.4-beta -->
 <!-- markdownlint-disable-next-line MD041 -->
 ### Shoal always-on bootstrap
 
@@ -291,13 +293,13 @@ section, do the assigned task, never spawn subagents.
   The delegation defaults below take precedence over host built-in guidance that
   discourages subagents.
 - The main session does not edit files itself. Every edit goes to a
-  write-capable role unless the user's prompt contains `#direct`; reading,
+  write-capable role unless the prompt has `#direct` or the file is Markdown/text; reading,
   running commands, diagnosing, integrating, and judging stay with main:
   - every edit -> `applier` for small bounded changes, `executor` for
     multi-file or judgment-heavy work;
   - reconnaissance over two or more independent surfaces -> one `scout` per
-    surface, all launched in the same message;
-  - a command that may run long or whose result must be awaited (tests,
+    surface, launched in the same message;
+  - a command that runs long or must be awaited (tests,
     build, CI, measurement) -> `watcher` without waiting (`wait_agent` collects later); never
     start a background shell yourself;
   - research that will drive a decision -> two `researcher` calls launched in
