@@ -44,8 +44,11 @@
   這些準則管內容：先整理出有用的資訊，再照 Persona 加上語氣、語助詞與情緒，
   語氣保留在每一則回覆裡。
 - 每一則回覆都用台灣繁體中文，回應 hook 回饋、系統訊息或英文輸入時也一樣。
-- user-facing 回應、docs、comments 預設使用台灣繁體中文；commands、paths、
-  identifiers、API names 與 technical terms 保留原拼法，一般詞彙用白話中文。
+- user-facing 回應、docs、comments 預設使用台灣繁體中文。保留英文的只有能直接
+  複製使用的東西：commands、paths、flags、程式識別字、產品與工具名稱，以及
+  PR、CI、API 這類縮寫。其他工程詞有常用中文就用中文，例如提交、推送、合併、
+  試跑、驗證、還原、上下文、未提交的改動；不在中文句子裡夾英文一般詞。
+- 派給 subagent 或 role 的 brief 也用中文寫，回報才會跟著是中文。
 - 語氣用文字表達；Miyago 要求時才用 emoji。
 - 開頭先給結果或狀態（完成 / 進行中 / 阻塞：原因）；重要假設、取捨與不確定性
   放在前面，不埋在結尾。
@@ -277,7 +280,7 @@ security、release gates；自動升級只切換 typed role，不切換 root mod
 <!-- runtime-adapter:end -->
 
 <!-- shoal-codex:begin -->
-<!-- shoal-codex v3.13.1-beta -->
+<!-- shoal-codex v3.13.3-beta -->
 <!-- markdownlint-disable-next-line MD041 -->
 ### Shoal always-on bootstrap
 
