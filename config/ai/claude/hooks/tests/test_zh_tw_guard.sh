@@ -24,4 +24,45 @@ tr=$(mktemp)
 printf '%s\n' '{"type":"user","message":{"role":"user","content":"hi"}}' '{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"这个问题已经处理完了，我们现在进行下一步。"}]}}' > "$tr"
 run subagent_transcript block "{\"hook_event_name\":\"SubagentStop\",\"agent_transcript_path\":\"$tr\",\"stop_hook_active\":false}"
 rm -f "$tr"
+
+# 逐段檢查：message 以 jq-free 的 python 產生，避免跳脫問題
+msg() { python3 -c 'import json,sys;print(json.dumps({"last_assistant_message":sys.argv[1],"stop_hook_active":False},ensure_ascii=False))' "$1"; }
+run en_para_between_zh block "$(msg $'先處理第一步，已經完成。\n\nExport header wasn\'t matched by my sed and the fix is now applied to every file.\n\n接著處理第二步。')"
+run ja_sentence block "$(msg '了解しました。では次に設定を確認します。')"
+run zh_with_identifiers pass "$(msg $'這段說明提到 fooBar、baz_qux、src/app/main.ts 還有 zh-tw-guard.py，另外 getUserById 與 config.json 也有改。')"
+run path_list pass "$(msg $'- config/ai/claude/hooks/zh-tw-guard.py\n- config/ai/claude/hooks/tests/test_zh_tw_guard.sh\n- a1b2c3d4e5f6\n- 9f8e7d6c5b4a')"
+run en_table pass "$(msg $'結果如下：\n\n| name | value | description of the field | another column here |\n| --- | --- | --- | --- |\n| alpha | beta | gamma delta epsilon | zeta eta theta iota |\n\n完成。')"
+run single_no pass "$(msg '這個助詞「の」表示所有，例如 A の B。')"
+run kana_quoted pass "$(msg $'日文的「了解しました」是禮貌說法。\n\n行內寫法 `では次に設定を確認します` 也一樣。\n\n```\nでは次に設定を確認します。了解しました。\n```\n\n結束。')"
+run furigana pass "$(msg $'値段（ねだん）は安いです。\n\n高い（たかい）と安い（やすい）を覚えましょう。')"
+run mixed_zh_ja pass "$(msg $'**判斷線索**：に行く 前面固定用地點，而且助詞は、を、が 要分清楚，不會跟 から 混用。')"
+run subagent_en_para pass '{"hook_event_name":"SubagentStop","last_assistant_message":"中文開頭。\n\nExport header wasn'"'"'t matched by my sed and the fix is now applied to every file.","stop_hook_active":false}'
+run subagent_ja pass "$(python3 -c 'import json;print(json.dumps({"hook_event_name":"SubagentStop","last_assistant_message":"了解しました。では次に設定を確認します。","stop_hook_active":False},ensure_ascii=False))')"
+
+# PostToolUse：假 transcript
+pt=$(mktemp)
+python3 - "$pt" <<'EOF'
+import json, sys
+def rec(blocks, mid="m1"):
+    return json.dumps({"type": "assistant", "message": {"id": mid, "role": "assistant", "content": blocks}})
+en = "Export header wasn't matched by my sed and the fix is now applied to every file."
+lines = [
+    '{"type":"user","message":{"role":"user","content":"hi"}}',
+    rec([{"type": "text", "text": en}]),
+    rec([{"type": "tool_use", "id": "toolu_A", "name": "Bash", "input": {}}]),
+    rec([{"type": "tool_use", "id": "toolu_B", "name": "Bash", "input": {}}]),
+]
+open(sys.argv[1], "w").write("\n".join(lines) + "\n")
+EOF
+runpt() { # name expect(remind|quiet) json
+  out=$(printf '%s' "$3" | python3 "$HOOK")
+  if [ "$2" = remind ]; then echo "$out" | grep -q '"hookEventName": "PostToolUse"' && echo "$out" | grep -q additionalContext || { echo "FAIL $1: $out"; fail=1; }
+  else [ -z "$out" ] || { echo "FAIL $1: $out"; fail=1; }; fi
+}
+runpt post_first remind "{\"hook_event_name\":\"PostToolUse\",\"transcript_path\":\"$pt\",\"tool_use_id\":\"toolu_A\"}"
+runpt post_second quiet "{\"hook_event_name\":\"PostToolUse\",\"transcript_path\":\"$pt\",\"tool_use_id\":\"toolu_B\"}"
+runpt post_no_id quiet "{\"hook_event_name\":\"PostToolUse\",\"transcript_path\":\"$pt\"}"
+runpt post_unknown_id quiet "{\"hook_event_name\":\"PostToolUse\",\"transcript_path\":\"$pt\",\"tool_use_id\":\"toolu_Z\"}"
+runpt post_bad_json quiet 'not json'
+rm -f "$pt"
 [ $fail = 0 ] && echo "all passed"; exit $fail
