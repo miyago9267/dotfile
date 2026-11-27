@@ -66,15 +66,15 @@ local function toggle_numbers()
   vim.opt.relativenumber = vim.opt.number:get()
 end
 
-local function toggle_transparency()
-  vim.g.miyago_transparent = not vim.g.miyago_transparent
-  if vim.g.miyago_transparent then
-    vim.cmd("highlight Normal guibg=NONE ctermbg=NONE")
-    vim.cmd("highlight NormalFloat guibg=NONE ctermbg=NONE")
-    vim.cmd("highlight SignColumn guibg=NONE ctermbg=NONE")
-    vim.cmd("highlight EndOfBuffer guibg=NONE ctermbg=NONE")
-  else
-    vim.cmd.colorscheme("edge")
+local seaglass_missing_warned = false
+
+local function toggle_background()
+  local ok, seaglass = pcall(require, "seaglass")
+  if ok then
+    seaglass.toggle()
+  elseif not seaglass_missing_warned then
+    seaglass_missing_warned = true
+    vim.notify("seaglass.nvim not loaded", vim.log.levels.WARN)
   end
 end
 
@@ -122,18 +122,18 @@ function M.setup()
 
   map("n", "<leader>un", toggle_numbers, { desc = "Toggle line numbers" })
   map("n", "<leader>uf", tree_toggle, { desc = "Toggle file tree" })
-  map("n", "<leader>ub", toggle_transparency, { desc = "Toggle transparent background" })
+  map("n", "<leader>ub", toggle_background, { desc = "Toggle background image" })
   map("n", "<leader>uc", function() vim.opt.cursorline = not vim.opt.cursorline:get() end, { desc = "Toggle cursorline" })
 
   -- F-keys remain compatibility aliases for older keyboards and remote sessions.
-  map("n", "<F1>", toggle_transparency, { desc = "Toggle transparent background" })
+  map("n", "<F1>", toggle_background, { desc = "Toggle background image" })
   map("n", "<F3>", toggle_numbers, { desc = "Toggle line numbers" })
   map("n", "<F4>", tree_toggle, { desc = "Toggle file tree" })
   map("n", "<F12>", "<C-]>", { desc = "Jump to tag definition" })
 
   vim.api.nvim_create_user_command("ToggleNumber", toggle_numbers, { desc = "Toggle line numbers" })
   vim.api.nvim_create_user_command("ToggleFileTree", tree_toggle, { desc = "Toggle file tree" })
-  vim.api.nvim_create_user_command("ToggleTransparency", toggle_transparency, { desc = "Toggle transparent background" })
+  vim.api.nvim_create_user_command("ToggleTransparency", toggle_background, { desc = "Toggle background image" })
   vim.api.nvim_create_user_command("ToggleCursorline", function()
     vim.opt.cursorline = not vim.opt.cursorline:get()
   end, { desc = "Toggle cursorline" })

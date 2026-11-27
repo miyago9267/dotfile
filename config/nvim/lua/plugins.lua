@@ -311,6 +311,22 @@ return {
     },
   },
   {
+    -- 編輯器背景圖（kitty graphics，需 Ghostty／kitty 與 magick）；本機有 ~/Project/Active/Packages/seaglass.nvim 時用 local 版
+    "miyago9267/seaglass.nvim",
+    dev = true,
+    lazy = false,
+    cond = vim.fn.has("nvim-0.12") == 1,
+    opts = function()
+      local image = vim.fn.expand("~/.warp/themes/Monika.png")
+      return {
+        image = image,
+        opacity = 0.2, -- 圖的濃度，0 到 1
+        blur = 0, -- 高斯模糊 sigma
+        enabled = vim.uv.fs_stat(image) ~= nil,
+      }
+    end,
+  },
+  {
     -- 滑鼠拖曳分隔線記住大小、雙擊還原、拖 winbar 交換／搬移視窗；本機有 ~/Project/Active/Packages/driftwood.nvim 時用 local 版
     "miyago9267/driftwood.nvim",
     dev = true,
