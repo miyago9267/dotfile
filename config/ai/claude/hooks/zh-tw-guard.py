@@ -34,6 +34,7 @@ TAIL_BYTES = 256 * 1024
 STRIP = [
     re.compile(r"```.*?```", re.S),
     re.compile(r"`[^`\n]*`"),
+    re.compile(r"\[[^\]\n]*\]\([^)\n]*\)"),
     re.compile(r"https?://\S+"),
     re.compile(r"^\s*>.*$", re.M),
     re.compile(r"「[^」\n]{0,40}」"),

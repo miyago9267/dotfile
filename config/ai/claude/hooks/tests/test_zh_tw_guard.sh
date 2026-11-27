@@ -38,6 +38,8 @@ run furigana pass "$(msg $'値段（ねだん）は安いです。\n\n高い（�
 run mixed_zh_ja pass "$(msg $'**判斷線索**：に行く 前面固定用地點，而且助詞は、を、が 要分清楚，不會跟 から 混用。')"
 run subagent_en_para pass '{"hook_event_name":"SubagentStop","last_assistant_message":"中文開頭。\n\nExport header wasn'"'"'t matched by my sed and the fix is now applied to every file.","stop_hook_active":false}'
 run subagent_ja pass "$(python3 -c 'import json;print(json.dumps({"hook_event_name":"SubagentStop","last_assistant_message":"了解しました。では次に設定を確認します。","stop_hook_active":False},ensure_ascii=False))')"
+run md_sources_list pass "$(msg $'這次查到的結論是新版本已經修正這個問題，影響範圍只限於舊設定。\n\nSources:\n- [Kubernetes Release Notes for Version One Point Two Three](https://example.com/a)\n- [Migration Guide Overview and Steps Here](https://example.com/b)\n- [Known Issues Tracker Summary Page](https://example.com/c)')"
+run md_link_in_en block "$(msg $'The fix landed in the release, see [the upstream changelog entry for details](https://example.com/x) and then we verified every file.')"
 
 # PostToolUse：假 transcript
 pt=$(mktemp)
