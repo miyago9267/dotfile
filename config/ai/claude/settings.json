@@ -441,9 +441,10 @@
   "effortLevel": "medium",
   "modelSettings": {
     "claude-opus-5-5": {
-      "effortLevel": "medium"
+      "effortLevel": "xhigh"
     }
   },
+  "advisorModel": "fable",
   "pluginConfigs": {
     "agents-md@builtin": {
       "options": {
@@ -482,6 +483,5 @@
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark-ansi",
   "switchModelsOnFlag": false,
-  "agentPushNotifEnabled": true,
-  "advisorModel": "fable"
+  "agentPushNotifEnabled": true
 }
